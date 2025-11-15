@@ -1,0 +1,10 @@
+name: zAuctionHouse
+version: ${version}
+main: fr.maxlego08.zauctionhouse.ZAuctionPlugin
+api-version: '1.21'
+authors: [ Maxlego08 ]
+description: Buy, resell, rent, bid your items!
+website: https://groupez.dev/
+folia-supported: true
+depend:
+  - zMenu

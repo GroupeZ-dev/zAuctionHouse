@@ -1,0 +1,40 @@
+################################################################################################################################
+#
+# ███████╗░█████╗░██╗░░░██╗░█████╗░████████╗██╗░█████╗░███╗░░██╗██╗░░██╗░█████╗░██╗░░░██╗░██████╗███████╗██╗░░░██╗░░██╗██╗
+# ╚════██║██╔══██╗██║░░░██║██╔══██╗╚══██╔══╝██║██╔══██╗████╗░██║██║░░██║██╔══██╗██║░░░██║██╔════╝██╔════╝██║░░░██║░██╔╝██║
+# ░░███╔═╝███████║██║░░░██║██║░░╚═╝░░░██║░░░██║██║░░██║██╔██╗██║███████║██║░░██║██║░░░██║╚█████╗░█████╗░░╚██╗░██╔╝██╔╝░██║
+# ██╔══╝░░██╔══██║██║░░░██║██║░░██╗░░░██║░░░██║██║░░██║██║╚████║██╔══██║██║░░██║██║░░░██║░╚═══██╗██╔══╝░░░╚████╔╝░███████║
+# ███████╗██║░░██║╚██████╔╝╚█████╔╝░░░██║░░░██║╚█████╔╝██║░╚███║██║░░██║╚█████╔╝╚██████╔╝██████╔╝███████╗░░╚██╔╝░░╚════██║
+# ╚══════╝╚═╝░░╚═╝░╚═════╝░░╚════╝░░░░╚═╝░░░╚═╝░╚════╝░╚═╝░░╚══╝╚═╝░░╚═╝░╚════╝░░╚═════╝░╚═════╝░╚══════╝░░░╚═╝░░░░░░░░╚═╝
+#
+#   Sponsor: https://minestrator.com/a/FAIRYSKY
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+# Enables detailed logs and error messages in the console.
+# If you need support, make sure to activate this option and check your console logs.
+enable-debug: false
+
+# Database configuration.
+# It is strongly recommended to use a database to store all plugin data.
+database-configuration:
+  # Prefix applied to all tables created by the plugin.
+  # If you use the same database for multiple plugins, this helps avoid conflicts.
+  # It is recommended not to change this value once the plugin is in use.
+  table-prefix: "zauctionhouse_"
+  # IP address of the machine hosting your database.
+  host: 192.168.10.10
+  # Port of your database server.
+  # Default MySQL port: 3306
+  port: 3306
+  # Username used to log into the database.
+  user: homestead
+  # Password associated with the database user.
+  password: 'secret'
+  # Name of the database where data will be stored.
+  database: zauctionhouse
+  # Enables SQL debugging.
+  # Activates verbose SQL logs, useful for identifying database issues.
+  debug: false

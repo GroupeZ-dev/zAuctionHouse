@@ -1,19 +1,98 @@
+import org.gradle.kotlin.dsl.invoke
+
 plugins {
-    id("java")
+    `java-library`
+    id("com.gradleup.shadow") version "9.0.0-beta11"
+    id("re.alwyn974.groupez.repository") version "1.0.0"
 }
 
 group = "fr.maxlego08.zauctionhouse"
-version = "1.0-SNAPSHOT"
+version = "4.0.0.0"
+
+extra.set("targetFolder", file("target/"))
+extra.set("apiFolder", file("target-api/"))
+extra.set("classifier", System.getProperty("archive.classifier"))
+extra.set("sha", System.getProperty("github.sha"))
+
+allprojects {
+    apply(plugin = "java-library")
+    apply(plugin = "com.gradleup.shadow")
+    apply(plugin = "re.alwyn974.groupez.repository")
+
+    group = "fr.maxlego08.zauctionhouse"
+    version = rootProject.version
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+
+        maven {
+            name = "papermc"
+            url = uri("https://repo.papermc.io/repository/maven-public/")
+        }
+    }
+
+    java {
+        withSourcesJar()
+        withJavadocJar()
+    }
+
+    tasks.shadowJar {
+
+        archiveBaseName.set("zAuctionHouse")
+        archiveAppendix.set(if (project.path == ":") "" else project.name)
+        archiveClassifier.set("")
+    }
+
+    tasks.compileJava {
+        options.encoding = "UTF-8"
+    }
+
+    tasks.javadoc {
+        options.encoding = "UTF-8"
+        if (JavaVersion.current().isJava9Compatible)
+            (options as StandardJavadocDocletOptions).addBooleanOption("html5", true)
+    }
+
+    dependencies {
+        compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
+    }
+}
 
 repositories {
-    mavenCentral()
+
 }
 
 dependencies {
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    api(projects.api)
+    // api(projects.hooks)
+
 }
 
-tasks.test {
-    useJUnitPlatform()
+tasks {
+    shadowJar {
+
+
+        rootProject.extra.properties["sha"]?.let { sha ->
+            archiveClassifier.set("${rootProject.extra.properties["classifier"]}-${sha}")
+        } ?: run {
+            archiveClassifier.set(rootProject.extra.properties["classifier"] as String?)
+        }
+        destinationDirectory.set(rootProject.extra["targetFolder"] as File)
+    }
+
+    build {
+        dependsOn(shadowJar)
+    }
+
+    compileJava {
+        options.release = 21
+    }
+
+    processResources {
+        from("resources")
+        filesMatching("plugin.yml") {
+            expand("version" to project.version)
+        }
+    }
 }
