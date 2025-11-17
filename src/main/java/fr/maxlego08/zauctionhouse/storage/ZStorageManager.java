@@ -10,6 +10,8 @@ import fr.maxlego08.sarah.logger.JULogger;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.storage.Repository;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
+import fr.maxlego08.zauctionhouse.storage.migrations.CreateAuctionItemMigration;
+import fr.maxlego08.zauctionhouse.storage.migrations.CreateLogsMigration;
 import fr.maxlego08.zauctionhouse.storage.migrations.CreatePlayerMigration;
 import fr.maxlego08.zauctionhouse.storage.repository.Repositories;
 import fr.maxlego08.zauctionhouse.storage.repository.repositeries.PlayerRepository;
@@ -47,6 +49,8 @@ public class ZStorageManager implements StorageManager {
         MigrationManager.setDatabaseConfiguration(databaseConfiguration);
 
         MigrationManager.registerMigration(new CreatePlayerMigration());
+        MigrationManager.registerMigration(new CreateLogsMigration());
+        MigrationManager.registerMigration(new CreateAuctionItemMigration());
 
         this.repositories = new Repositories(plugin, this.databaseConnection);
         this.repositories.register(PlayerRepository.class, new PlayerRepository(plugin, this.databaseConnection));

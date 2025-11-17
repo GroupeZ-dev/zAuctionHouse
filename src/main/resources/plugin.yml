@@ -8,3 +8,4 @@ website: https://groupez.dev/
 folia-supported: true
 depend:
   - zMenu
+  - PlaceholderAPI

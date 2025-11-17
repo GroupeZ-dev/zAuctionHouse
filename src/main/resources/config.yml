@@ -44,3 +44,13 @@ database-configuration:
   # Enables SQL debugging.
   # Activates verbose SQL logs, useful for identifying database issues.
   debug: false
+
+message-colors:
+  - key: "<primary>"
+    color: "#24d65d"
+  - key: "<secondary>"
+    color: "#656665"
+  - key: "<error>"
+    color: "#ff0000"
+  - key: "<success>"
+    color: "#00ff00"
