@@ -1,0 +1,10 @@
+economies:
+  - type: VAULT
+    is-enable: true
+    name: vault
+    display-name: "Vault"
+    format: "%price%$"
+    symbol: "v"
+    # permission: "zauctionhouse.economy.vault"
+    withdraw-reason: "Purchase of x%amount% %item% (zAuctionHouse)"
+    deposit-reason: "Sale of x%amount% %item% (zAuctionHouse)"

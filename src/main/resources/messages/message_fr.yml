@@ -1,0 +1,7 @@
+prefix: "<primary>zAuctionHouse <secondary>• "
+
+command-syntax-error: "<error>Vous devez ex cuter la commande comme ceci#656665: &f%syntax%"
+command-no-permission: "<error>Vous n'avez pas la permission d'ex cuter cette commande."
+command-no-console: "<error>Seul un joueur peut ex cuter cette commande."
+command-no-arg: "<error>Impossible de trouver la commande avec ses arguments."
+command-syntaxe-help: "&f%syntax% #656665» &7%description%"

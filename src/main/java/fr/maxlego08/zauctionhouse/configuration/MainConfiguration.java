@@ -21,8 +21,10 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     @Override
     public void load() {
 
-        super.loadYamlConfirmation(this.plugin, this.plugin.getConfig());
+        // ToDo, add the system to load a config.yml by language,
+        //  this allows to have the comments in the user’s language.
 
+        super.loadYamlConfirmation(this.plugin, this.plugin.getConfig());
     }
 
     @Override

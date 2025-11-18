@@ -7,10 +7,12 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.InventoriesLoader;
 import fr.maxlego08.zauctionhouse.api.configuration.Configuration;
 import fr.maxlego08.zauctionhouse.api.configuration.ConfigurationFile;
+import fr.maxlego08.zauctionhouse.api.economy.EconomyManager;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
 import fr.maxlego08.zauctionhouse.command.CommandManager;
 import fr.maxlego08.zauctionhouse.command.commands.CommandAuction;
 import fr.maxlego08.zauctionhouse.configuration.MainConfiguration;
+import fr.maxlego08.zauctionhouse.economy.ZEconomyManager;
 import fr.maxlego08.zauctionhouse.listeners.PlayerListener;
 import fr.maxlego08.zauctionhouse.loader.MessageLoader;
 import fr.maxlego08.zauctionhouse.loader.ZInventoriesLoader;
@@ -39,6 +41,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     private final ConfigurationFile messageLoader = new MessageLoader(this);
     private final CommandManager commandManager = new CommandManager(this);
     private final AuctionManager auctionManager = new ZAuctionManager(this);
+    private final EconomyManager economyManager = new ZEconomyManager(this);
     private InventoriesLoader inventoriesLoader;
     private boolean isEnabled = false;
     private PlatformScheduler platformScheduler;
@@ -81,8 +84,9 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     }
 
     private void loadFiles() {
-        this.configuration.load();
-        this.messageLoader.load();
+        this.configuration.load(); // Load config.yml
+        this.messageLoader.load(); // Load messages.yml
+        this.economyManager.loadEconomies(); // Load economies.yml
     }
 
     @Override
@@ -112,6 +116,11 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     @Override
     public InventoriesLoader getInventoriesLoader() {
         return this.inventoriesLoader;
+    }
+
+    @Override
+    public EconomyManager getEconomyManager() {
+        return this.economyManager;
     }
 
     private void addListener(Listener listener) {
