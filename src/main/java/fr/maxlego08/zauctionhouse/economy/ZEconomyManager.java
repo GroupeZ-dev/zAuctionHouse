@@ -5,6 +5,7 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.economy.EconomyManager;
 import fr.maxlego08.zauctionhouse.api.event.events.AuctionLoadEconomyEvent;
+import fr.maxlego08.zauctionhouse.api.utils.AuctionItemType;
 import fr.traqueur.currencies.Currencies;
 import fr.traqueur.currencies.CurrencyProvider;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -13,6 +14,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -22,6 +24,7 @@ public class ZEconomyManager implements EconomyManager {
 
     private final AuctionPlugin plugin;
     private final Set<AuctionEconomy> economies = new HashSet<>();
+    private final Map<AuctionItemType, AuctionEconomy> defaultEconomies = new HashMap<>();
 
     public ZEconomyManager(AuctionPlugin plugin) {
         this.plugin = plugin;
@@ -63,6 +66,26 @@ public class ZEconomyManager implements EconomyManager {
         for (Map<?, ?> map : configuration.getMapList("economies")) {
             loadEconomy(file, new TypedMapAccessor((Map<String, Object>) map));
         }
+
+        this.defaultEconomies.clear();
+        for (AuctionItemType value : AuctionItemType.values()) {
+            var economyName = configuration.getString("default-economy." + value.name().toLowerCase(), null);
+            if (economyName == null) {
+                this.plugin.getLogger().severe("Default economy for " + value.name() + " is not set, skip it...");
+                continue;
+            }
+            var economy = getEconomy(economyName);
+            if (economy.isEmpty()) {
+                this.plugin.getLogger().severe("Default economy for " + value.name() + " is not set, skip it...");
+                continue;
+            }
+            this.defaultEconomies.put(value, economy.get());
+        }
+    }
+
+    @Override
+    public AuctionEconomy getDefaultEconomy(AuctionItemType auctionItemType) {
+        return this.defaultEconomies.get(auctionItemType);
     }
 
     /**

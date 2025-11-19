@@ -8,3 +8,8 @@ economies:
     # permission: "zauctionhouse.economy.vault"
     withdraw-reason: "Purchase of x%amount% %item% (zAuctionHouse)"
     deposit-reason: "Sale of x%amount% %item% (zAuctionHouse)"
+
+default-economy:
+  sell: vault
+  rent: vault
+  bid: vault

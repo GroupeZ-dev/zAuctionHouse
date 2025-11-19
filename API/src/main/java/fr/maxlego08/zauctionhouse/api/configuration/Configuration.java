@@ -24,5 +24,5 @@ public interface Configuration extends ConfigurationFile {
 
     List<MessageColor> getMessageColors();
 
-    CommandConfiguration loadCommandConfiguration(String path);
+    <T extends Enum<T>> CommandConfiguration<T> loadCommandConfiguration(String path, Class<T> enumClass);
 }

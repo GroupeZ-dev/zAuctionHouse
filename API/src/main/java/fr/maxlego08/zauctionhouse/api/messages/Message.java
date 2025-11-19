@@ -25,6 +25,8 @@ public enum Message {
     COMMAND_DESCRIPTION_AUCTION_SELL("Add an item to the sale"),
     COMMAND_DESCRIPTION_AUCTION_RENT("Add an item for rent"),
     COMMAND_DESCRIPTION_AUCTION_BID("Add an item to the auction"),
+
+    SELL_ERROR_AIR("<error>Are you stupid ? You can’t sell air !")
     ;
 
     private AuctionPlugin plugin;

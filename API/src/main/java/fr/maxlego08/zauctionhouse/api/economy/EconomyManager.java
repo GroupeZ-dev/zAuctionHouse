@@ -1,5 +1,7 @@
 package fr.maxlego08.zauctionhouse.api.economy;
 
+import fr.maxlego08.zauctionhouse.api.utils.AuctionItemType;
+
 import java.util.Collection;
 import java.util.Optional;
 
@@ -14,4 +16,6 @@ public interface EconomyManager {
     Optional<AuctionEconomy> getEconomy(String economyName);
 
     void loadEconomies();
+
+    AuctionEconomy getDefaultEconomy(AuctionItemType auctionItemType);
 }

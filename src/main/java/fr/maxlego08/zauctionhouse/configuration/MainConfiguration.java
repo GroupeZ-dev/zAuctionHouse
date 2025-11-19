@@ -9,6 +9,7 @@ import fr.maxlego08.zauctionhouse.api.messages.MessageColor;
 import fr.maxlego08.zauctionhouse.utils.YamlLoader;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -42,27 +43,43 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     }
 
     @Override
-    public CommandConfiguration loadCommandConfiguration(String path) {
+    public <T extends Enum<T>> CommandConfiguration<T> loadCommandConfiguration(String path, Class<T> enumClass) {
         var config = plugin.getConfig();
 
         var aliases = config.getStringList(path + "aliases");
-        var arguments = new ArrayList<CommandArgumentConfiguration>();
+        var arguments = new ArrayList<CommandArgumentConfiguration<T>>();
 
         for (Map<?, ?> map : config.getMapList(path + "arguments")) {
             TypedMapAccessor accessor = new TypedMapAccessor((Map<String, Object>) map);
 
             var name = accessor.getString("name");
             if (name == null) {
-                this.plugin.getLogger().severe("Impossible to find an aliases name for " + path);
+                this.plugin.getLogger().severe("Missing name for " + path);
+                continue;
+            }
+
+            T enumValue;
+            try {
+                enumValue = Enum.valueOf(enumClass, name.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                var possible = Arrays.stream(enumClass.getEnumConstants()).map(Enum::name).toList();
+                this.plugin.getLogger().severe("Invalid enum value '" + name + "' for enum " + enumClass.getSimpleName() + ". Possible values: " + String.join(", ", possible));
+                continue;
+            }
+
+
+            var displayName = accessor.getString("display-name", name);
+            if (displayName == null) {
+                this.plugin.getLogger().severe("Impossible to find an aliases display-name for " + path);
                 continue;
             }
 
             var required = accessor.getBoolean("required", false);
             var autoCompletion = accessor.getList("auto-completion").stream().map(String::valueOf).toList();
 
-            arguments.add(new CommandArgumentConfiguration(name, required, autoCompletion));
+            arguments.add(new CommandArgumentConfiguration<>(enumValue, displayName, required, autoCompletion));
         }
 
-        return new CommandConfiguration(aliases, arguments);
+        return new CommandConfiguration<>(aliases, arguments);
     }
 }
