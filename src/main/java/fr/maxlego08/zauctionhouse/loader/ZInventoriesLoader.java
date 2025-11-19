@@ -13,7 +13,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.io.File;
-import java.util.Locale;
 
 public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
 
@@ -21,7 +20,6 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
     private final PatternManager patternManager;
     private final ButtonManager buttonManager;
     private final InventoryManager inventoryManager;
-    private final Locale locale = Locale.getDefault();
 
     public ZInventoriesLoader(AuctionPlugin plugin) {
         this.plugin = plugin;
@@ -117,16 +115,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
 
     private void copyFiles(String path, String... files) {
         for (String fileName : files) {
-
-            final String pathFileName = path + "/" + fileName + ".yml";
-            String finalFileName = pathFileName;
-            String localFileName = path + "/" + locale.getLanguage() + "/" + fileName + ".yml";
-
-            if (this.plugin.resourceExist(localFileName)) {
-                finalFileName = localFileName;
-            }
-
-            this.plugin.saveResource(finalFileName, pathFileName, false);
+            this.plugin.saveFile(path + "/" + fileName + ".yml", false);
         }
     }
 

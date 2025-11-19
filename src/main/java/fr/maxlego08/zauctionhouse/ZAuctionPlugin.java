@@ -31,11 +31,13 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.logging.Level;
 
 public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
 
+    private final Locale locale = Locale.getDefault();
     private final StorageManager storageManager = new ZStorageManager(this);
     private final Configuration configuration = new MainConfiguration(this);
     private final ConfigurationFile messageLoader = new MessageLoader(this);
@@ -49,7 +51,10 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     @Override
     public void onEnable() {
 
-        this.saveDefaultConfig();
+        var dataFolder = this.getDataFolder();
+        if (!dataFolder.exists()) dataFolder.mkdirs();
+
+        this.saveFile("config.yml", true);
 
         FoliaLib foliaLib = new FoliaLib(this);
         this.platformScheduler = foliaLib.getScheduler();
@@ -218,5 +223,22 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         } catch (Exception exception) {
             exception.printStackTrace();
         }
+    }
+
+    @Override
+    public void saveFile(String resourcePath, boolean saveOrUpdate) {
+        this.saveFile(resourcePath, resourcePath, saveOrUpdate);
+    }
+
+    @Override
+    public void saveFile(String resourcePath, String toPath, boolean saveOrUpdate) {
+        var langResourcePath = locale.getLanguage() + "/" + resourcePath;
+        var finalPath = resourcePath;
+        if (this.resourceExist(langResourcePath)) {
+            finalPath = langResourcePath;
+        }
+
+        if (saveOrUpdate) this.saveOrUpdateConfiguration(finalPath, toPath, false);
+        else this.saveResource(finalPath, toPath, false);
     }
 }

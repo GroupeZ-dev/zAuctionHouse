@@ -1,7 +1,6 @@
 package fr.maxlego08.zauctionhouse.api;
 
 import com.tcoded.folialib.impl.PlatformScheduler;
-import fr.maxlego08.menu.api.InventoryManager;
 import fr.maxlego08.zauctionhouse.api.configuration.Configuration;
 import fr.maxlego08.zauctionhouse.api.economy.EconomyManager;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
@@ -28,5 +27,9 @@ public interface AuctionPlugin extends Plugin {
     void saveResource(String resourcePath, String toPath, boolean replace);
 
     void saveOrUpdateConfiguration(String resourcePath, String toPath, boolean replace);
+
+    void saveFile(String resourcePath, boolean saveOrUpdate);
+
+    void saveFile(String resourcePath, String toPath, boolean saveOrUpdate);
 
 }

@@ -4,4 +4,4 @@ command-syntax-error: "<error>You must execute the command like this#656665: &f%
 command-no-permission: "<error>You do not have permission to run this command."
 command-no-console: "<error>Only one player can execute this command."
 command-no-arg: "<error>Impossible to find the command with its arguments."
-command-syntaxe-help: "&f%syntax% #656665» &7%description%"
+command-syntax-help: "&f%syntax% #656665» &7%description%"

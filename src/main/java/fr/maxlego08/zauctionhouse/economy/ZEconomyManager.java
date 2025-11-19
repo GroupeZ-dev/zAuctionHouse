@@ -53,7 +53,7 @@ public class ZEconomyManager implements EconomyManager {
 
         File file = new File(this.plugin.getDataFolder(), "economies.yml");
         if (!file.exists()) {
-            this.plugin.saveResource("economies.yml", true);
+            this.plugin.saveFile("economies.yml", false);
         }
 
         AuctionLoadEconomyEvent event = new AuctionLoadEconomyEvent(this.plugin, this);
