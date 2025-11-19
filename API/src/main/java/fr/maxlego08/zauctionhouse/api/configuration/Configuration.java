@@ -1,5 +1,6 @@
 package fr.maxlego08.zauctionhouse.api.configuration;
 
+import fr.maxlego08.zauctionhouse.api.configuration.commands.CommandConfiguration;
 import fr.maxlego08.zauctionhouse.api.messages.MessageColor;
 
 import java.util.List;
@@ -22,4 +23,6 @@ public interface Configuration extends ConfigurationFile {
     boolean isEnableDebug();
 
     List<MessageColor> getMessageColors();
+
+    CommandConfiguration loadCommandConfiguration(String path);
 }

@@ -21,7 +21,11 @@ public enum Message {
 
     INVENTORY_NOT_FOUND("<error>Impossible to find the inventory <white>%inventory-name%<error>."),
 
-    COMMAND_DESCRIPTION_AUCTION("Open auction house");
+    COMMAND_DESCRIPTION_AUCTION("Open auction house"),
+    COMMAND_DESCRIPTION_AUCTION_SELL("Add an item to the sale"),
+    COMMAND_DESCRIPTION_AUCTION_RENT("Add an item for rent"),
+    COMMAND_DESCRIPTION_AUCTION_BID("Add an item to the auction"),
+    ;
 
     private AuctionPlugin plugin;
     private List<AuctionMessage> messages = new ArrayList<>();

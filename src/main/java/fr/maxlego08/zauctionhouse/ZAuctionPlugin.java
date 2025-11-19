@@ -65,7 +65,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
 
         this.addListener(new PlayerListener(this));
 
-        this.commandManager.registerCommand(this, "zauctionhouse", new CommandAuction(this), List.of("ah"));
+        this.commandManager.registerCommand(this, "zauctionhouse", new CommandAuction(this), getConfig().getStringList("commands.main-command.aliases"));
 
         this.inventoriesLoader = new ZInventoriesLoader(this);
         this.inventoriesLoader.load();

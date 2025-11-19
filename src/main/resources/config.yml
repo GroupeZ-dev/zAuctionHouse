@@ -56,3 +56,38 @@ message-colors:
     color: "#ff0000"
   - key: "<success>"
     color: "#00ff00"
+
+# Configuration des commandes, aliases, arguments
+# Pour reload cette configuration, vous devez relancer votre serveur !
+commands:
+  # Commande principale, /zauctionhouse
+  main-command:
+    # Aliases de la commande principale
+    aliases:
+      - "ah"
+      - "hdv"
+      - "auction"
+      - "zauction"
+
+  # Commande de vente /zauctionhouse sell
+  sell:
+    aliases:
+      - "sell"
+      - "s"
+      - "vendre"
+    arguments:
+      - name: "price"
+        required: true
+        auto-completion:
+          - 1000
+          - 10000
+          - 25000
+      - name: "amount"
+        required: false
+        auto-completion:
+          - '1'
+          - '%max-stack-size%'
+      - name: "economy"
+        required: false
+        auto-completion:
+          - "vault"
