@@ -32,6 +32,7 @@ public abstract class VCommandArgument<T extends Enum<T>> extends VCommand {
 
     protected void forEachArgument(String path, Function<CommandArgumentConfiguration<T>, CollectionBiConsumer> consumer) {
         var commandArgument = this.plugin.getConfiguration().loadCommandConfiguration(path, enumClass);
+        this.addSubCommand(commandArgument.aliases());
 
         var arguments = commandArgument.arguments();
         for (int index = 0; index != arguments.size(); index++) {
