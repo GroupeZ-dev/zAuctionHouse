@@ -3,11 +3,13 @@ package fr.maxlego08.zauctionhouse.loader;
 import fr.maxlego08.menu.api.ButtonManager;
 import fr.maxlego08.menu.api.InventoryManager;
 import fr.maxlego08.menu.api.exceptions.InventoryException;
+import fr.maxlego08.menu.api.loader.NoneLoader;
 import fr.maxlego08.menu.api.pattern.PatternManager;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.InventoriesLoader;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
+import fr.maxlego08.zauctionhouse.buttons.ZAuctionListingButton;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -85,6 +87,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
 
         this.buttonManager.unregisters(this.plugin);
 
+        this.buttonManager.register(new NoneLoader(this.plugin, ZAuctionListingButton.class, "ZAUCTIONHOUSE_LISTING"));
     }
 
     @Override

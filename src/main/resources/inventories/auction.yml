@@ -1,3 +1,17 @@
 name: "&8Auction House"
 size: 54
 items:
+  displayItems:
+    type: ZAUCTIONHOUSE_LISTING
+    is-permanent: true
+    slots:
+      - 10-16
+      - 19-25
+      - 28-34
+      - 37-43
+    else:
+      slots:
+        - 22
+      item:
+        material: BARRIER
+        name: '&c&nNo Items Found'

@@ -1,0 +1,40 @@
+package fr.maxlego08.zauctionhouse.buttons;
+
+import fr.maxlego08.menu.api.button.PaginateButton;
+import fr.maxlego08.menu.api.engine.InventoryEngine;
+import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+
+public class ZAuctionListingButton extends PaginateButton {
+
+    private final AuctionPlugin plugin;
+
+    public ZAuctionListingButton(Plugin plugin) {
+        this.plugin = (AuctionPlugin) plugin;
+    }
+
+    @Override
+    public void onRender(Player player, InventoryEngine inventoryEngine) {
+
+        var manager = this.plugin.getAuctionManager();
+        var items = manager.getSortItems(player);
+
+        paginate(items, inventoryEngine, (slot, item) -> {
+            inventoryEngine.addItem(slot, item.buildItemStack(player)).setClick(event -> {
+
+            });
+        });
+
+        player.removeMetadata("auction-items", this.plugin);
+    }
+
+    @Override
+    public int getPaginationSize(Player player) {
+
+        var manager = this.plugin.getAuctionManager();
+        var items = manager.getSortItems(player);
+
+        return items.size();
+    }
+}

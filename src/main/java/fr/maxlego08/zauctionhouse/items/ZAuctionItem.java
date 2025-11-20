@@ -3,6 +3,7 @@ package fr.maxlego08.zauctionhouse.items;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.items.AuctionItem;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.math.BigDecimal;
@@ -21,5 +22,10 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
     @Override
     public ItemStack getItemStack() {
         return itemStack;
+    }
+
+    @Override
+    public ItemStack buildItemStack(Player player) {
+        return this.itemStack.clone();
     }
 }

@@ -13,6 +13,7 @@ import fr.maxlego08.zauctionhouse.services.RemoveService;
 import fr.maxlego08.zauctionhouse.services.SellService;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import org.bukkit.entity.Player;
+import org.bukkit.metadata.FixedMetadataValue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -87,5 +88,18 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     @Override
     public void removeItem(StorageType storageType, int itemId) {
         getItems(storageType).removeIf(item -> item.getId() == itemId);
+    }
+
+    @Override
+    public List<Item> getSortItems(Player player) {
+
+        if (player.hasMetadata("auction-items")) {
+            return (List<Item>) player.getMetadata("auction-items").getFirst().value();
+        }
+
+        var items = getItems(StorageType.STORAGE);
+        player.setMetadata("auction-items", new FixedMetadataValue(this.plugin, items));
+
+        return items;
     }
 }

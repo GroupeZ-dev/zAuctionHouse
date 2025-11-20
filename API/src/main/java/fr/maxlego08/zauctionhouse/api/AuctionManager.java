@@ -29,4 +29,6 @@ public interface AuctionManager {
 
     void removeItem(StorageType storageType, int itemId);
 
+    List<Item> getSortItems(Player player);
+
 }
