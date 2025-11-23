@@ -1,4 +1,4 @@
-name: "&8Auction House"
+name: "#0c1719Auction House (%page%/%max-page%)"
 size: 54
 items:
   displayItems:
@@ -14,4 +14,156 @@ items:
         - 22
       item:
         material: BARRIER
-        name: '&c&nNo Items Found'
+        name: '&cNo items found'
+
+  decoration:
+    slots:
+      - '0-8'
+      - '47'
+      - '51'
+    item:
+      material: LIGHT_BLUE_STAINED_GLASS_PANE
+      name: "<white>"
+
+  expired-items:
+    type: INVENTORY
+    plugin: zAuctionHouse
+    inventory: expired
+    slot: 45
+    is-permanent: true
+    item:
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjdhYWRmZjlkZGM1NDZmZGNlYzZlZDU5MTljYzM5ZGZhOGQwYzA3ZmY0YmM2MTNhMTlmMmU2ZDdmMjU5MyJ9fX0="
+      name: "#2CCED2<bold>ᴇxᴘɪʀᴇᴅ ɪᴛᴇᴍs"
+      lore:
+        - "#92ffffYou have #2CCED2%zauctionhouse_expired_item% #92ffffexpired item(s)."
+        - ""
+        - "#8c8c8c• #2CCED2Click to open"
+
+  purchased-items:
+    type: INVENTORY
+    plugin: zAuctionHouse
+    inventory: purchased
+    slot: 46
+    is-permanent: true
+    item:
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjM3Y2FlNWM1MWViMTU1OGVhODI4ZjU4ZTBkZmY4ZTZiN2IwYjFhMTgzZDczN2VlY2Y3MTQ2NjE3NjEifX19"
+      name: "#2CCED2<bold>ᴘᴜʀᴄʜᴀsᴇᴅ ɪᴛᴇᴍs"
+      lore:
+        - "#92ffffYou have #2CCED2%zauctionhouse_buying_item% #92ffffbought item(s)."
+        - ""
+        - "#8c8c8c• #2CCED2Click to open"
+
+  owned-items:
+    type: INVENTORY
+    plugin: zAuctionHouse
+    inventory: items
+    slot: 53
+    is-permanent: true
+    item:
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjU4MDdjYzRjM2I2OTU4YWVhNjE1NmU4NDUxOGQ5MWE0OWM1ZjMyOTcxZTZlYjI2OWEyM2EyNWEyNzE0NSJ9fX0="
+      name: "#2CCED2<bold>ʏᴏᴜʀ ɪᴛᴇᴍs"
+      lore:
+        - "#92ffffYou have #2CCED2%zauctionhouse_currents_item% #92ffffitem(s) on sale."
+        - ""
+        - "#8c8c8c• #2CCED2Click to open"
+
+  previous:
+    is-permanent: true
+    type: PREVIOUS
+    slot: 48
+    item:
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjllYTFkODYyNDdmNGFmMzUxZWQxODY2YmNhNmEzMDQwYTA2YzY4MTc3Yzc4ZTQyMzE2YTEwOThlNjBmYjdkMyJ9fX0="
+      name: "#2CCED2<bold>ᴘʀᴇᴠɪᴏᴜs ᴘᴀɢᴇ"
+      lore:
+        - "#92ffffGo to the previous page."
+        - ""
+        - "#8c8c8c• #2CCED2Click to open"
+    else:
+      item:
+        material: LIGHT_BLUE_STAINED_GLASS_PANE
+        name: "<white>"
+
+  next:
+    is-permanent: true
+    type: NEXT
+    slot: 50
+    item:
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODI3MWE0NzEwNDQ5NWUzNTdjM2U4ZTgwZjUxMWE5ZjEwMmIwNzAwY2E5Yjg4ZTg4Yjc5NWQzM2ZmMjAxMDVlYiJ9fX0="
+      name: "#2CCED2<bold>ɴᴇxᴛ ᴘᴀɢᴇ"
+      lore:
+        - "#92ffffGo to the next page."
+        - ""
+        - "#8c8c8c• #2CCED2Click to open"
+    else:
+      item:
+        material: LIGHT_BLUE_STAINED_GLASS_PANE
+        name: "<white>"
+
+  informations:
+    slot: 49
+    is-permanent: true
+    item:
+      material: BELL
+      name: "#2CCED2<bold>ᴀᴜᴄᴛɪᴏɴ ɪɴғᴏʀᴍᴀᴛɪᴏɴ"
+      lore:
+        - "#92ffffWelcome to the auction house."
+        - "#92ffffTrade items with other players."
+        - ""
+        - "#92ffffUsage#8c8c8c:"
+        - "#2CCED2/ah sell #92ffff<price> [<amount>]"
+        - ""
+        - "#92ffffNumber of items#8c8c8c: #2CCED2%zauctionhouse_counts%"
+        - "#92ffffSort type#8c8c8c: #2CCED2%zauctionhouse_sorting%"
+        - ""
+        - "#8c8c8c• #2CCED2Click to refresh the items"
+
+  change-sort:
+    # type: ZAUCTIONHOUSE_CHANGE_SORTING
+    is-permanent: true
+    sorting:
+      - sorting: DECREASING_DATE
+        display: "Decreasing date"
+      - sorting: DECREASING_PRICE
+        display: "Decreasing price"
+      - sorting: ASCENDING_DATE
+        display: "Ascending date"
+      - sorting: ASCENDING_PRICE
+        display: "Ascending price"
+      - sorting: ALPHABETICAL_NAME
+        display: "Alphabetical name"
+      - sorting: REVERSE_ALPHABETICAL_NAME
+        display: "Reverse alphabetical name"
+      - sorting: SELLER_NAME_ALPHABETICAL
+        display: "Seller name alphabetical"
+      - sorting: SELLER_NAME_REVERSE_ALPHABETICAL
+        display: "Seller name reverse alphabetical"
+      - sorting: MATERIAL_TYPE_ALPHABETICAL
+        display: "Material type alphabetical"
+      - sorting: MATERIAL_TYPE_REVERSE_ALPHABETICAL
+        display: "Material type reverse alphabetical"
+      - sorting: ITEM_STACK_SIZE_ASCENDING
+        display: "Item stack size ascending"
+      - sorting: ITEM_STACK_SIZE_DESCENDING
+        display: "Item stack size descending"
+    enableText: ' #F27438➜ %sorting%'
+    disableText: ' #76CDCD➜ %sorting%'
+    slot: 52
+    item:
+      material: HOPPER
+      name: "#2CCED2<bold>sᴏʀᴛ ᴛʏᴘᴇ"
+      lore:
+        - "#92ffffAvailable sort types:"
+        - "%DECREASING_DATE%"
+        - "%DECREASING_PRICE%"
+        - "%ASCENDING_DATE%"
+        - "%ASCENDING_PRICE%"
+        - "%ALPHABETICAL_NAME%"
+        - "%REVERSE_ALPHABETICAL_NAME%"
+        - "%SELLER_NAME_ALPHABETICAL%"
+        - "%SELLER_NAME_REVERSE_ALPHABETICAL%"
+        - "%MATERIAL_TYPE_ALPHABETICAL%"
+        - "%MATERIAL_TYPE_REVERSE_ALPHABETICAL%"
+        - "%ITEM_STACK_SIZE_ASCENDING%"
+        - "%ITEM_STACK_SIZE_DESCENDING%"
+        - ""
+        - "#8c8c8c• #2CCED2Click to change the sort type"
