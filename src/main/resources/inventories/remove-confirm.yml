@@ -1,0 +1,47 @@
+name: '&8Remove'
+size: 27
+items:
+  
+  remove:
+    type: ZAUCTIONHOUSE_CONFIRM_REMOVE_LISTED
+    item:
+      material: GREEN_STAINED_GLASS_PANE
+      name: ''
+      lore:
+        - "         #2bba43ʀᴇᴍᴏᴠᴇ"
+        - "          #8c8c8c&m      "
+        - ""
+        - " #8c8c8c• #92bed8ᴄʟɪᴄᴋ #e6fff3ᴛᴏ ʀᴇᴍᴏᴠᴇ #8c8c8c• "
+    slots:
+      - 0-2
+      - 9-11
+      - 18-20
+  
+  deny:
+    type: BACK
+    item:
+      material: RED_STAINED_GLASS_PANE
+      name: ""
+      lore:
+        - "          #c42323ʙᴀᴄᴋ"
+        - "          #8c8c8c&m      "
+        - ""
+        - " #8c8c8c• #92bed8ᴄʟɪᴄᴋ #e6fff3ᴛᴏ ɢᴏ ʙᴀᴄᴋ #8c8c8c• "
+    slots:
+      - 6-8
+      - 15-17
+      - 24-26
+
+  decoration:
+    item:
+      material: GRAY_STAINED_GLASS_PANE
+      name: '&e'
+    slots:
+      - 3-5
+      - 12
+      - 14
+      - 21-23
+
+  show:
+    type: ZAUCTIONHOUSE_SHOW
+    slot: 13

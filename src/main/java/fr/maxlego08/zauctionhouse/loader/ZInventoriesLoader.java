@@ -9,7 +9,12 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.InventoriesLoader;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
-import fr.maxlego08.zauctionhouse.buttons.ZAuctionListingButton;
+import fr.maxlego08.zauctionhouse.buttons.ConfirmRemoveListedButton;
+import fr.maxlego08.zauctionhouse.buttons.ExpiredItemsButton;
+import fr.maxlego08.zauctionhouse.buttons.ListedItemsButton;
+import fr.maxlego08.zauctionhouse.buttons.OwnedItemsButton;
+import fr.maxlego08.zauctionhouse.buttons.PurchasedItemsButton;
+import fr.maxlego08.zauctionhouse.buttons.ShowButton;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -87,7 +92,12 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
 
         this.buttonManager.unregisters(this.plugin);
 
-        this.buttonManager.register(new NoneLoader(this.plugin, ZAuctionListingButton.class, "ZAUCTIONHOUSE_LISTING"));
+        this.buttonManager.register(new NoneLoader(this.plugin, ListedItemsButton.class, "ZAUCTIONHOUSE_LISTED_ITEMS"));
+        this.buttonManager.register(new NoneLoader(this.plugin, ExpiredItemsButton.class, "ZAUCTIONHOUSE_EXPIRED_ITEMS"));
+        this.buttonManager.register(new NoneLoader(this.plugin, OwnedItemsButton.class, "ZAUCTIONHOUSE_OWNED_ITEMS"));
+        this.buttonManager.register(new NoneLoader(this.plugin, PurchasedItemsButton.class, "ZAUCTIONHOUSE_PURCHASED_ITEMS"));
+        this.buttonManager.register(new NoneLoader(this.plugin, ShowButton.class, "ZAUCTIONHOUSE_SHOW"));
+        this.buttonManager.register(new NoneLoader(this.plugin, ConfirmRemoveListedButton.class, "ZAUCTIONHOUSE_CONFIRM_REMOVE_LISTED"));
     }
 
     @Override
@@ -112,7 +122,11 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
 
     private void createInventoriesFile() {
         copyFiles("inventories",
-                "auction"
+                "auction",
+                "expired",
+                "items",
+                "purchased",
+                "remove-confirm"
         );
     }
 

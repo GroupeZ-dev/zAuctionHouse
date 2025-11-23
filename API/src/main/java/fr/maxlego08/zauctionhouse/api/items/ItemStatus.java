@@ -9,6 +9,8 @@ public enum ItemStatus {
     REMOVED, // L'item a été retiré
     PURCHASED, // L'item a été acheté
 
+    DELETED, // L'item a supprimé
+
     ;
 
 

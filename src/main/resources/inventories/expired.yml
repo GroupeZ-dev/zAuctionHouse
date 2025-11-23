@@ -1,9 +1,8 @@
-name: "&8Auction House"
+name: '&8Expired items &8(&f%page%&8/&f%max-page%&8)'
 size: 54
 items:
-  displayItems:
-    type: ZAUCTIONHOUSE_LISTED_ITEMS
-    is-permanent: true
+  items:
+    type: ZAUCTIONHOUSE_EXPIRED_ITEMS
     slots:
       - 10-16
       - 19-25

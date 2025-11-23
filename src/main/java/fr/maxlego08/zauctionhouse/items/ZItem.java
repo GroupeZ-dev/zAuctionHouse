@@ -22,8 +22,11 @@ public abstract class ZItem implements Item {
     protected final BigDecimal price;
     protected final AuctionEconomy auctionEconomy;
     protected final Date createdAt;
+
     protected Date expiredAt;
     protected ItemStatus itemStatus = ItemStatus.AVAILABLE;
+    protected UUID buyerUniqueId;
+    protected String buyerName;
 
     public ZItem(AuctionPlugin plugin, int id, UUID sellerUniqueId, String sellerName, BigDecimal price, AuctionEconomy auctionEconomy, Date createdAt, Date expiredAt) {
         this.plugin = plugin;
@@ -128,5 +131,21 @@ public abstract class ZItem implements Item {
     @Override
     public void setStatus(ItemStatus status) {
         this.itemStatus = status;
+    }
+
+    @Override
+    public UUID getBuyerUniqueId() {
+        return this.buyerUniqueId;
+    }
+
+    @Override
+    public String getBuyerName() {
+        return this.buyerName;
+    }
+
+    @Override
+    public void setBuyer(Player player) {
+        this.buyerUniqueId = player.getUniqueId();
+        this.buyerName = player.getName();
     }
 }

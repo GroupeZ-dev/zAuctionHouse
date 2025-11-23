@@ -176,16 +176,31 @@ expiration:
       enable: false
 
 item-lore:
-  auction-item:
+  listed-auction-item:
     - ""
     - "<white>⌂ <#e6fff3>sᴇʟʟᴇʀ<#8c8c8c>: <#92bed8>%seller%"
     - "<white>☆ <#e6fff3>ᴘʀɪᴄᴇ<#8c8c8c>: <#ffacd5>%price%"
-    - "<white>⌚ <#e6fff3>ᴇxᴘɪʀᴇ<#8c8c8c>: <#969696>%time%"
+    - "<white>⌚ <#e6fff3>ᴇxᴘɪʀᴇ<#8c8c8c>: <#969696>%time-remaining%"
     - ""
     - "%status%"
+  expired-item:
+    - ""
+    - " <white>⌚ <#e6fff3>ᴇxᴘɪʀᴇ<#8c8c8c>: <#969696>%time-remaining%"
+    - ""
+    - "<#8c8c8c>• #92bed8ᴄʟɪᴄᴋ <#e6fff3>ᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
+  purchased-item:
+    - ""
+    - " <white>⌚ <#e6fff3>ᴇxᴘɪʀᴇ<#8c8c8c>: <#969696>%time-remaining%"
+    - ""
+    - "<#8c8c8c>• #92bed8ᴄʟɪᴄᴋ <#e6fff3>ᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
+  owned-item:
+    - ""
+    - " <white>⌚ <#e6fff3>ᴇxᴘɪʀᴇ<#8c8c8c>: <#969696>%time-remaining%"
+    - ""
+    - "<#8c8c8c>• #92bed8ᴄʟɪᴄᴋ <#e6fff3>ᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
   status:
-    seller: "<#8c8c8c>• <#92bed8>ᴄʟɪᴄᴋ <#e6fff3>ᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
-    buyer: "<#8c8c8c>• <#92bed8>ᴄʟɪᴄᴋ <#e6fff3>ᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"
+    seller: "<#8c8c8c>• <#92bed8>ᴄʟɪᴄᴋ <<#e6fff3>>ᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
+    buyer: "<#8c8c8c>• <#92bed8>ᴄʟɪᴄᴋ <<#e6fff3>>ᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"
 
 time:
   # ---- Unités (singulier / pluriel) ----
@@ -224,9 +239,24 @@ action:
     # On donne l'item après l'avoir acheté
     give-item: false
 
-  remove-from-listing:
+  remove-listed-item:
     # On donne l'item après avoir retiré l'item de la vente
     give-item: false
+
+    # On ouvre l'inventaire après l'avoir retiré
+    open-inventory: true
+
+  remove-expired-item:
+
+    # On ouvre l'inventaire après l'avoir retiré
+    open-inventory: true
+
+  remove-purchased-item:
+
+    # On ouvre l'inventaire après l'avoir retiré
+    open-inventory: true
+
+  remove-owned-item:
 
     # On ouvre l'inventaire après l'avoir retiré
     open-inventory: true

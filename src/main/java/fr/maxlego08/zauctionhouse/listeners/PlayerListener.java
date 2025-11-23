@@ -4,6 +4,7 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 public class PlayerListener implements Listener {
 
@@ -16,6 +17,11 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onConnect(PlayerJoinEvent event) {
         this.plugin.getStorageManager().upsertPlayer(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        this.plugin.getAuctionManager().removeCache(event.getPlayer());
     }
 
 }

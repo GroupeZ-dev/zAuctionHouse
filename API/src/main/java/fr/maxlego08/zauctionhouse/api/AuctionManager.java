@@ -1,13 +1,17 @@
 package fr.maxlego08.zauctionhouse.api;
 
+import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.items.Item;
 import fr.maxlego08.zauctionhouse.api.items.StorageType;
 import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
+import fr.maxlego08.zauctionhouse.api.cache.PlayerCache;
 import org.bukkit.entity.Player;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
 
 public interface AuctionManager {
 
@@ -23,13 +27,31 @@ public interface AuctionManager {
 
     List<Item> getItems(StorageType storageType);
 
+    List<Item> getItems(StorageType storageType, Predicate<Item> predicate);
+
+    List<Item> getItems(StorageType storageType, Predicate<Item> predicate, Comparator<Item> comparator);
+
     void addItem(StorageType storageType, Item item);
 
     void removeItem(StorageType storageType, Item item);
 
     void removeItem(StorageType storageType, int itemId);
 
-    List<Item> getSortItems(Player player);
+    List<Item> getItemsListedForSale(Player player);
 
-    void removeItemFromListing(Player player, Item item);
+    List<Item> getExpiredItems(Player player);
+
+    List<Item> getPlayerOwnedItems(Player player);
+
+    List<Item> getPurchasedItems(Player player);
+
+    PlayerCache getCache(Player player);
+
+    void clearPlayersCache(PlayerCacheKey key);
+
+    void removeCache(Player player);
+
+    void removeListedItem(Player player, Item item);
+
+    void removeExpiredItem(Player player, Item item);
 }

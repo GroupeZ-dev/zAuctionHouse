@@ -32,7 +32,7 @@ public class AuctionItemRepository extends Repository {
             schema.string("economy_name", auctionEconomy.getName());
             schema.decimal("price", price);
             schema.object("expired_at", expiredAtDate);
-            schema.object("storage_type", StorageType.LISTING);
+            schema.object("storage_type", StorageType.LISTED);
         });
         return new ZAuctionItem(this.plugin, auctionId, seller.getUniqueId(), seller.getName(), price, auctionEconomy, new Date(), expiredAtDate, clonedItemStack);
     }

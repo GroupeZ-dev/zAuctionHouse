@@ -3,7 +3,7 @@ package fr.maxlego08.zauctionhouse.command.commands;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.configuration.commands.arguments.CommandSellArguments;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
-import fr.maxlego08.zauctionhouse.api.event.events.AuctionPreSellEvent;
+import fr.maxlego08.zauctionhouse.api.event.events.sell.AuctionPreSellEvent;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.utils.AuctionItemType;
 import fr.maxlego08.zauctionhouse.api.utils.Permission;

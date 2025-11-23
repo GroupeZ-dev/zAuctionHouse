@@ -3,6 +3,7 @@ package fr.maxlego08.zauctionhouse.api.inventories;
 public enum Inventories {
 
     AUCTION("auction"),
+    REMOVE_CONFIRM("remove-confirm"),
 
     ;
 

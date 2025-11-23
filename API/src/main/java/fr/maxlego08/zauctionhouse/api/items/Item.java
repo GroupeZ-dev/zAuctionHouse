@@ -8,6 +8,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 public interface Item {
@@ -32,6 +33,8 @@ public interface Item {
 
     ItemStack buildItemStack(Player player);
 
+    ItemStack buildItemStack(Player player, List<String> lore);
+
     Placeholders createPlaceholders(Player player);
 
     String createStatus(Player player);
@@ -53,4 +56,10 @@ public interface Item {
     int getAmount();
 
     String getTranslationKey();
+
+    UUID getBuyerUniqueId();
+
+    String getBuyerName();
+
+    void setBuyer(Player player);
 }

@@ -1,4 +1,4 @@
-package fr.maxlego08.zauctionhouse.api.event.events;
+package fr.maxlego08.zauctionhouse.api.event.events.sell;
 
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.event.CancelledAuctionEvent;

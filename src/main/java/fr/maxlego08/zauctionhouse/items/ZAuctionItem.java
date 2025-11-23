@@ -10,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 public class ZAuctionItem extends ZItem implements AuctionItem {
@@ -28,8 +29,12 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
 
     @Override
     public ItemStack buildItemStack(Player player) {
+        return this.buildItemStack(player, this.plugin.getConfiguration().getItemLore().listedAuctionLore());
+    }
 
-        var config = this.plugin.getConfiguration().getItemLore();
+    @Override
+    public ItemStack buildItemStack(Player player, List<String> lore) {
+
         var meta = this.plugin.getInventoriesLoader().getInventoryManager().getMeta();
 
         var itemStack = this.itemStack.clone();
@@ -37,10 +42,9 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
 
         Placeholders placeholders = createPlaceholders(player);
 
-        meta.updateLore(itemMeta, config.auctionItemLore().stream().map(placeholders::parse).toList(), LoreType.APPEND);
+        meta.updateLore(itemMeta, lore.stream().map(placeholders::parse).toList(), LoreType.APPEND);
         itemStack.setItemMeta(itemMeta);
         return itemStack;
-
     }
 
     @Override

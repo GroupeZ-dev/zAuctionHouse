@@ -5,6 +5,8 @@ import org.bukkit.entity.Player;
 
 public interface AuctionRemoveService {
 
-    void removeItemFromListing(Player player, Item item);
+    void removeListedItem(Player player, Item item);
+
+    void removeExpiredItem(Player player, Item item);
 
 }
