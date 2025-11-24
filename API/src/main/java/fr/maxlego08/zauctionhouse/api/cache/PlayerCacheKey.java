@@ -1,7 +1,7 @@
 package fr.maxlego08.zauctionhouse.api.cache;
 
 import com.google.common.reflect.TypeToken;
-import fr.maxlego08.zauctionhouse.api.items.Item;
+import fr.maxlego08.zauctionhouse.api.item.Item;
 
 import java.util.Collections;
 import java.util.List;

@@ -7,10 +7,10 @@ import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveExpiredItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveListedItemEvent;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
-import fr.maxlego08.zauctionhouse.api.items.AuctionItem;
-import fr.maxlego08.zauctionhouse.api.items.Item;
-import fr.maxlego08.zauctionhouse.api.items.ItemStatus;
-import fr.maxlego08.zauctionhouse.api.items.StorageType;
+import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
+import fr.maxlego08.zauctionhouse.api.item.Item;
+import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
+import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
@@ -186,7 +186,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         removeItem(StorageType.LISTED, item);
 
         clearPlayersCache(PlayerCacheKey.ITEMS_LISTED); // Suppression du cache global
-        clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED); // Suppression du cache du joueur
+        clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED, PlayerCacheKey.ITEMS_EXPIRED); // Suppression du cache du joueur
 
         if (configuration.getActions().giveItemAfterRemovingListedItem() && item.canReceiveItem(player)) {
 

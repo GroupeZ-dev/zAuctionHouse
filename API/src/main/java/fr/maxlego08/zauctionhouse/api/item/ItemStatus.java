@@ -1,4 +1,4 @@
-package fr.maxlego08.zauctionhouse.api.items;
+package fr.maxlego08.zauctionhouse.api.item;
 
 public enum ItemStatus {
 

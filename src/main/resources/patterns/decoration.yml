@@ -1,0 +1,11 @@
+name: "zauctionhouse-decoration"
+size: 54
+items:
+  decoration:
+    is-permanent: true
+    slots:
+      - '0-8'
+      - '45-53'
+    item:
+      material: LIGHT_BLUE_STAINED_GLASS_PANE
+      name: "<white>"

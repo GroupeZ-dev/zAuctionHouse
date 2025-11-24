@@ -1,4 +1,4 @@
-package fr.maxlego08.zauctionhouse.api.items;
+package fr.maxlego08.zauctionhouse.api.item;
 
 import fr.maxlego08.menu.api.utils.Placeholders;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;

@@ -13,6 +13,7 @@
 #
 ################################################################################################################################
 
+date-format: dd/MM/yyyy HH:mm:ss
 # Enables detailed logs and error messages in the console.
 # If you need support, make sure to activate this option and check your console logs.
 enable-debug: false
@@ -25,11 +26,10 @@ storage-type: SQLITE
 
 # Database configuration.
 # It is strongly recommended to use a database to store all plugin data.
-database-configuration:
-  # Prefix applied to all tables created by the plugin.
+database-configuration: # Prefix applied to all tables created by the plugin.
   # If you use the same database for multiple plugins, this helps avoid conflicts.
   # It is recommended not to change this value once the plugin is in use.
-  table-prefix: "zauctionhouse_"
+  table-prefix: zauctionhouse_
   # IP address of the machine hosting your database.
   host: 192.168.10.10
   # Port of your database server.
@@ -38,7 +38,7 @@ database-configuration:
   # Username used to log into the database.
   user: homestead
   # Password associated with the database user.
-  password: 'secret'
+  password: secret
   # Name of the database where data will be stored.
   database: zauctionhouse
   # Enables SQL debugging.
@@ -48,52 +48,50 @@ database-configuration:
 # Vous permet de définir des clés qui seront remplacées par la couleur pour vos messages.
 # Cela permet de simplifier la configuration de vos messages
 message-colors:
-  - key: "<primary>"
-    color: "#24d65d"
-  - key: "<secondary>"
-    color: "#656665"
-  - key: "<error>"
-    color: "#ff0000"
-  - key: "<success>"
-    color: "#00ff00"
+  - key: <primary>
+    color: '#24d65d'
+  - key: <secondary>
+    color: '#656665'
+  - key: <error>
+    color: '#ff0000'
+  - key: <success>
+    color: '#00ff00'
 
 # Configuration des commandes, aliases, arguments
 # Pour reload cette configuration, vous devez relancer votre serveur !
-commands:
-  # Commande principale, /zauctionhouse
-  main-command:
-    # Aliases de la commande principale
+commands: # Commande principale, /zauctionhouse
+  main-command: # Aliases de la commande principale
     aliases:
-      - "ah"
-      - "hdv"
-      - "auction"
-      - "zauction"
-
+      - ah
+      - hdv
+      - auction
+      - zauction
+  
   # Commande de vente /zauctionhouse sell
   sell:
     aliases:
-      - "sell"
-      - "s"
-      - "vendre"
+      - sell
+      - s
+      - vendre
     arguments:
-      - name: "price"
-        display-name: "price"
+      - name: price
+        display-name: price
         required: true
         auto-completion:
           - 1000
           - 10000
           - 25000
-      - name: "amount"
-        display-name: "amount"
+      - name: amount
+        display-name: amount
         required: false
         auto-completion:
           - '1'
           - '%max-stack-size%'
-      - name: "economy"
-        display-name: "economy"
+      - name: economy
+        display-name: economy
         required: false
         auto-completion:
-          - "vault"
+          - vault
 
 number-sell-multiplication:
   enable: true
@@ -128,8 +126,7 @@ number-sell-multiplication:
       multiplication: 1000000000000000000000000000000000000000000
 
 expiration:
-  sell:
-    # Le default permission doit être la valeur la plus petite
+  sell: # Le default permission doit être la valeur la plus petite
     default-expiration: 172800
     permission:
       enable: false
@@ -140,7 +137,7 @@ expiration:
           expiration: 7200
         - permission: zauctionhouse.expiration.legend
           expiration: 259200
-
+  
   bid:
     default-expiration: 172800
     permission:
@@ -152,7 +149,7 @@ expiration:
           expiration: 7200
         - permission: zauctionhouse.expiration.legend
           expiration: 259200
-
+  
   rent:
     default-expiration: 172800
     permission:
@@ -164,12 +161,12 @@ expiration:
           expiration: 7200
         - permission: zauctionhouse.expiration.legend
           expiration: 259200
-
+  
   expire:
     default-expiration: 604800
     permission:
       enable: false
-
+  
   purchase:
     default-expiration: 604800
     permission:
@@ -178,43 +175,47 @@ expiration:
 item-lore:
   listed-auction-item:
     - ""
-    - "<white>⌂ <#e6fff3>sᴇʟʟᴇʀ<#8c8c8c>: <#92bed8>%seller%"
-    - "<white>☆ <#e6fff3>ᴘʀɪᴄᴇ<#8c8c8c>: <#ffacd5>%price%"
-    - "<white>⌚ <#e6fff3>ᴇxᴘɪʀᴇ<#8c8c8c>: <#969696>%time-remaining%"
+    - "<white>⌂ #92ffffSeller#8c8c8c: #2CCED2%seller%"
+    - "<white>☆ #92ffffPrice#8c8c8c: #2CCED2%price%"
+    - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
     - ""
     - "%status%"
+
   expired-item:
     - ""
-    - " <white>⌚ <#e6fff3>ᴇxᴘɪʀᴇ<#8c8c8c>: <#969696>%time-remaining%"
+    - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
     - ""
-    - "<#8c8c8c>• #92bed8ᴄʟɪᴄᴋ <#e6fff3>ᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
+    - "#8c8c8c• #2CCED2Click to retrieve this item"
+
   purchased-item:
     - ""
-    - " <white>⌚ <#e6fff3>ᴇxᴘɪʀᴇ<#8c8c8c>: <#969696>%time-remaining%"
+    - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
     - ""
-    - "<#8c8c8c>• #92bed8ᴄʟɪᴄᴋ <#e6fff3>ᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
+    - "#8c8c8c• #2CCED2Click to retrieve this item"
+
   owned-item:
     - ""
-    - " <white>⌚ <#e6fff3>ᴇxᴘɪʀᴇ<#8c8c8c>: <#969696>%time-remaining%"
+    - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
     - ""
-    - "<#8c8c8c>• #92bed8ᴄʟɪᴄᴋ <#e6fff3>ᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
+    - "#8c8c8c• #2CCED2Click to retrieve this item"
+
   status:
-    seller: "<#8c8c8c>• <#92bed8>ᴄʟɪᴄᴋ <<#e6fff3>>ᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
-    buyer: "<#8c8c8c>• <#92bed8>ᴄʟɪᴄᴋ <<#e6fff3>>ᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"
+    seller: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
+    buyer: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"
 
-time:
-  # ---- Unités (singulier / pluriel) ----
-  second: "second"
-  seconds: "seconds"
 
-  minute: "minute"
-  minutes: "minutes"
-
-  hour: "hour"
-  hours: "hours"
-
-  day: "day"
-  days: "days"
+time: # ---- Unités (singulier / pluriel) ----
+  second: second
+  seconds: seconds
+  
+  minute: minute
+  minutes: minutes
+  
+  hour: hour
+  hours: hours
+  
+  day: day
+  days: days
 
   # ---- Formats de temps ----
   # %02d = valeur numérique (jours / heures / minutes / secondes)
@@ -222,44 +223,43 @@ time:
   # Exemple : "1 day", "2 days", "01ᴅ 02ʜ 30ᴍ", etc.
 
   # Format utilisé pour les durées >= 1 jour
-  time-day: "%02dᴅ %02dʜ %02dᴍ"
-
+  time-day: '%02dᴅ %02dʜ %02dᴍ'
+  
   # Format utilisé pour les durées >= 1 heure, mais < 1 jour
-  time-hour: "%02dʜ %02dᴍ %02ds"
-
+  time-hour: '%02dʜ %02dᴍ %02ds'
+  
   # Format utilisé pour les durées >= 1 minute, mais < 1 heure
-  time-minute: "%02dᴍ %02ds"
-
+  time-minute: '%02dᴍ %02ds'
+  
   # Format utilisé pour les durées < 1 minute
-  time-second: "%02ds"
+  time-second: '%02ds'
 
 action:
-
-  purchase:
-    # On donne l'item après l'avoir acheté
+  
+  purchase: # On donne l'item après l'avoir acheté
     give-item: false
-
-  remove-listed-item:
-    # On donne l'item après avoir retiré l'item de la vente
+  
+  remove-listed-item: # On donne l'item après avoir retiré l'item de la vente
     give-item: false
-
+    
     # On ouvre l'inventaire après l'avoir retiré
     open-inventory: true
 
+    # Permet d'ouvrir l'inventaire de confirmation
+    open-confirm-inventory: true
+  
   remove-expired-item:
-
+    
     # On ouvre l'inventaire après l'avoir retiré
     open-inventory: true
-
+  
   remove-purchased-item:
-
+    
     # On ouvre l'inventaire après l'avoir retiré
     open-inventory: true
-
+  
   remove-owned-item:
-
+    
     # On ouvre l'inventaire après l'avoir retiré
     open-inventory: true
 
-# Format utilisé pour les dates d'expiration affichées
-date-format: "dd/MM/yyyy HH:mm:ss"

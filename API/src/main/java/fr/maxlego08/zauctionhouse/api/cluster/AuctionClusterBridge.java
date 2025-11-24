@@ -1,6 +1,6 @@
 package fr.maxlego08.zauctionhouse.api.cluster;
 
-import fr.maxlego08.zauctionhouse.api.items.Item;
+import fr.maxlego08.zauctionhouse.api.item.Item;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;

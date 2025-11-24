@@ -4,7 +4,7 @@ import fr.maxlego08.menu.api.utils.LoreType;
 import fr.maxlego08.menu.api.utils.Placeholders;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
-import fr.maxlego08.zauctionhouse.api.items.AuctionItem;
+import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 

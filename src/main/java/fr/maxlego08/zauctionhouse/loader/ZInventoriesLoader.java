@@ -9,6 +9,7 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.InventoriesLoader;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
+import fr.maxlego08.zauctionhouse.buttons.ShowButton;
 import fr.maxlego08.zauctionhouse.buttons.confirm.ConfirmRemoveListedButton;
 import fr.maxlego08.zauctionhouse.buttons.inventory.ExpiredInventoryButton;
 import fr.maxlego08.zauctionhouse.buttons.inventory.OwnedInventoryButton;
@@ -17,7 +18,6 @@ import fr.maxlego08.zauctionhouse.buttons.list.ExpiredItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.list.ListedItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.list.OwnedItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.list.PurchasedItemsButton;
-import fr.maxlego08.zauctionhouse.buttons.ShowButton;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -125,7 +125,10 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
     }
 
     private void createPatternFiles() {
-
+        copyFiles("patterns",
+                "decoration",
+                "pagination"
+        );
     }
 
     private void createInventoriesFile() {

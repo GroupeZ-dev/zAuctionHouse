@@ -22,6 +22,7 @@ import fr.maxlego08.zauctionhouse.loader.MessageLoader;
 import fr.maxlego08.zauctionhouse.loader.ZInventoriesLoader;
 import fr.maxlego08.zauctionhouse.placeholder.DistantPlaceholder;
 import fr.maxlego08.zauctionhouse.placeholder.LocalPlaceholder;
+import fr.maxlego08.zauctionhouse.placeholder.placeholders.GlobalPlaceholders;
 import fr.maxlego08.zauctionhouse.placeholder.placeholders.PlayerPlaceholders;
 import fr.maxlego08.zauctionhouse.storage.ZStorageManager;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -115,6 +116,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         distantPlaceholder.register();
 
         this.registerPlaceholder(PlayerPlaceholders.class);
+        this.registerPlaceholder(GlobalPlaceholders.class);
     }
 
     @Override

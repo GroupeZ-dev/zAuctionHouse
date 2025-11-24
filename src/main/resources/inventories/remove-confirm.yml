@@ -1,32 +1,30 @@
-name: '&8Remove'
+name: "#0c1719Do you really want to do that?"
 size: 27
 items:
-  
+
   remove:
     type: ZAUCTIONHOUSE_CONFIRM_REMOVE_LISTED
     item:
       material: GREEN_STAINED_GLASS_PANE
-      name: ''
+      name: "#2CCED2<bold>ʀᴇᴍᴏᴠᴇ"
       lore:
-        - "         #2bba43ʀᴇᴍᴏᴠᴇ"
-        - "          #8c8c8c&m      "
+        - "#92ffffRemove this item."
         - ""
-        - " #8c8c8c• #92bed8ᴄʟɪᴄᴋ #e6fff3ᴛᴏ ʀᴇᴍᴏᴠᴇ #8c8c8c• "
+        - "#8c8c8c• #2CCED2Click to remove"
     slots:
       - 0-2
       - 9-11
       - 18-20
-  
+
   deny:
     type: BACK
     item:
       material: RED_STAINED_GLASS_PANE
-      name: ""
+      name: "#2CCED2<bold>ʙᴀᴄᴋ"
       lore:
-        - "          #c42323ʙᴀᴄᴋ"
-        - "          #8c8c8c&m      "
+        - "#92ffffGo back."
         - ""
-        - " #8c8c8c• #92bed8ᴄʟɪᴄᴋ #e6fff3ᴛᴏ ɢᴏ ʙᴀᴄᴋ #8c8c8c• "
+        - "#8c8c8c• #2CCED2Click to go back"
     slots:
       - 6-8
       - 15-17
@@ -35,7 +33,7 @@ items:
   decoration:
     item:
       material: GRAY_STAINED_GLASS_PANE
-      name: '&e'
+      name: "#2CCED2"
     slots:
       - 3-5
       - 12

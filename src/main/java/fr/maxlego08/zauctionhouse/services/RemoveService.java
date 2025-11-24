@@ -4,8 +4,8 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cluster.LockToken;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionPreRemoveExpiredItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionPreRemoveListedItemEvent;
-import fr.maxlego08.zauctionhouse.api.items.Item;
-import fr.maxlego08.zauctionhouse.api.items.ItemStatus;
+import fr.maxlego08.zauctionhouse.api.item.Item;
+import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
 import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
 import org.bukkit.entity.Player;
 

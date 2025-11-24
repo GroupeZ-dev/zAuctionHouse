@@ -19,8 +19,8 @@ public record ItemLoreConfiguration(
                 config.getStringList("item-lore.purchased-item"),
                 config.getStringList("item-lore.expired-item"),
                 config.getStringList("item-lore.owned-item"),
-                config.getString("item-lore.seller.status", "<#8c8c8c>• <#92bed8>ᴄʟɪᴄᴋ <#e6fff3>ᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"),
-                config.getString("item-lore.buyer.status", "<#8c8c8c>• <#92bed8>ᴄʟɪᴄᴋ <#e6fff3>ᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ")
+                config.getString("item-lore.status.seller", "<#8c8c8c>• <#92bed8>ᴄʟɪᴄᴋ <#e6fff3>ᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"),
+                config.getString("item-lore.status.buyer", "<#8c8c8c>• <#92bed8>ᴄʟɪᴄᴋ <#e6fff3>ᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ")
         );
     }
 }

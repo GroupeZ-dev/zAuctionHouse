@@ -1,14 +1,17 @@
-name: '&8My items &8(&f%page%&8/&f%max-page%&8)'
+name: '#0c1719Owned items (%page%/%max-page%)'
 size: 54
+
+patterns:
+  - 'zauctionhouse-decoration'
 
 items:
   items:
     type: ZAUCTIONHOUSE_OWNED_ITEMS
     slots:
-      - 10-16
-      - 19-25
-      - 28-34
-      - 37-43
+      - 9-17
+      - 18-26
+      - 27-35
+      - 36-44
     else:
       slots:
         - 22

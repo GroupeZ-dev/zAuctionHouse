@@ -1,7 +1,7 @@
 package fr.maxlego08.zauctionhouse.api.event.events.remove;
 
 import fr.maxlego08.zauctionhouse.api.event.AuctionEvent;
-import fr.maxlego08.zauctionhouse.api.items.Item;
+import fr.maxlego08.zauctionhouse.api.item.Item;
 import org.bukkit.entity.Player;
 
 public abstract class RemoveEvent extends AuctionEvent {

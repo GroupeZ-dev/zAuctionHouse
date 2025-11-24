@@ -3,7 +3,7 @@ package fr.maxlego08.zauctionhouse.buttons;
 import fr.maxlego08.menu.api.button.Button;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
-import fr.maxlego08.zauctionhouse.api.items.Item;
+import fr.maxlego08.zauctionhouse.api.item.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;

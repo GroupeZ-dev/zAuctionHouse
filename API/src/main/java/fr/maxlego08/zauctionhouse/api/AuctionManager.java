@@ -1,8 +1,8 @@
 package fr.maxlego08.zauctionhouse.api;
 
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
-import fr.maxlego08.zauctionhouse.api.items.Item;
-import fr.maxlego08.zauctionhouse.api.items.StorageType;
+import fr.maxlego08.zauctionhouse.api.item.Item;
+import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;

@@ -3,7 +3,7 @@ package fr.maxlego08.zauctionhouse.storage;
 import fr.maxlego08.zauctionhouse.api.AuctionManager;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.economy.EconomyManager;
-import fr.maxlego08.zauctionhouse.api.items.ItemStatus;
+import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
 import fr.maxlego08.zauctionhouse.api.storage.dto.AuctionItemDTO;
 import fr.maxlego08.zauctionhouse.api.utils.Base64ItemStack;

@@ -37,12 +37,15 @@ public class ListedItemsButton extends PaginateButton {
                 if (item.getSellerUniqueId().equals(player.getUniqueId())) {
 
                     // Remove item
-                    var cache = manager.getCache(player);
-                    cache.set(PlayerCacheKey.ITEM_SHOW, item);
-                    cache.set(PlayerCacheKey.CURRENT_PAGE, this.plugin.getInventoriesLoader().getInventoryManager().getPage(player));
+                    if (this.plugin.getConfiguration().getActions().openConfirmRemoveListedItem()) {
+                        var cache = manager.getCache(player);
+                        cache.set(PlayerCacheKey.ITEM_SHOW, item);
+                        cache.set(PlayerCacheKey.CURRENT_PAGE, this.plugin.getInventoriesLoader().getInventoryManager().getPage(player));
 
-                    this.plugin.getInventoriesLoader().openInventory(player, Inventories.REMOVE_CONFIRM);
-                    // manager.getRemoveService().removeListedItem(player, item);
+                        this.plugin.getInventoriesLoader().openInventory(player, Inventories.REMOVE_CONFIRM);
+                    } else {
+                        manager.getRemoveService().removeListedItem(player, item);
+                    }
                 } else {
 
                     // Purchase items

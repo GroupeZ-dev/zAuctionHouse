@@ -1,9 +1,9 @@
 package fr.maxlego08.zauctionhouse.api.storage;
 
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
-import fr.maxlego08.zauctionhouse.api.items.AuctionItem;
-import fr.maxlego08.zauctionhouse.api.items.Item;
-import fr.maxlego08.zauctionhouse.api.items.StorageType;
+import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
+import fr.maxlego08.zauctionhouse.api.item.Item;
+import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
