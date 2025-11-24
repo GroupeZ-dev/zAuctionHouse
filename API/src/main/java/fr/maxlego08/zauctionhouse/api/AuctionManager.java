@@ -47,7 +47,9 @@ public interface AuctionManager {
 
     PlayerCache getCache(Player player);
 
-    void clearPlayersCache(PlayerCacheKey key);
+    void clearPlayersCache(PlayerCacheKey... keys);
+
+    void clearPlayerCache(Player player, PlayerCacheKey... keys);
 
     void removeCache(Player player);
 

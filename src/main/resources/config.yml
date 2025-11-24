@@ -261,3 +261,5 @@ action:
     # On ouvre l'inventaire après l'avoir retiré
     open-inventory: true
 
+# Format utilisé pour les dates d'expiration affichées
+date-format: "dd/MM/yyyy HH:mm:ss"

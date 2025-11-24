@@ -1,4 +1,4 @@
-package fr.maxlego08.zauctionhouse.buttons;
+package fr.maxlego08.zauctionhouse.buttons.confirm;
 
 import fr.maxlego08.menu.api.button.Button;
 import fr.maxlego08.menu.api.engine.InventoryEngine;

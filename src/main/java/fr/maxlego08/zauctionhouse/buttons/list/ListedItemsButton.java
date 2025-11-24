@@ -1,4 +1,4 @@
-package fr.maxlego08.zauctionhouse.buttons;
+package fr.maxlego08.zauctionhouse.buttons.list;
 
 import fr.maxlego08.menu.api.button.PaginateButton;
 import fr.maxlego08.menu.api.engine.InventoryEngine;

@@ -5,10 +5,10 @@ items:
     type: ZAUCTIONHOUSE_LISTED_ITEMS
     is-permanent: true
     slots:
-      - 10-16
-      - 19-25
-      - 28-34
-      - 37-43
+      - 9-17
+      - 18-26
+      - 27-35
+      - 36-44
     else:
       slots:
         - 22
@@ -17,6 +17,7 @@ items:
         name: '&cNo items found'
 
   decoration:
+    is-permanent: true
     slots:
       - '0-8'
       - '47'
@@ -28,7 +29,7 @@ items:
   expired-items:
     type: INVENTORY
     plugin: zAuctionHouse
-    inventory: expired
+    inventory: expired-items
     slot: 45
     is-permanent: true
     item:
@@ -42,7 +43,7 @@ items:
   purchased-items:
     type: INVENTORY
     plugin: zAuctionHouse
-    inventory: purchased
+    inventory: purchased-items
     slot: 46
     is-permanent: true
     item:
@@ -56,7 +57,7 @@ items:
   owned-items:
     type: INVENTORY
     plugin: zAuctionHouse
-    inventory: items
+    inventory: owned-items
     slot: 53
     is-permanent: true
     item:

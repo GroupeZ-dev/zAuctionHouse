@@ -9,3 +9,5 @@ folia-supported: true
 depend:
   - zMenu
   - PlaceholderAPI
+libraries:
+  - org.mariadb.jdbc:mariadb-java-client:3.5.6

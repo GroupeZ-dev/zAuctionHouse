@@ -9,11 +9,14 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.InventoriesLoader;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
-import fr.maxlego08.zauctionhouse.buttons.ConfirmRemoveListedButton;
-import fr.maxlego08.zauctionhouse.buttons.ExpiredItemsButton;
-import fr.maxlego08.zauctionhouse.buttons.ListedItemsButton;
-import fr.maxlego08.zauctionhouse.buttons.OwnedItemsButton;
-import fr.maxlego08.zauctionhouse.buttons.PurchasedItemsButton;
+import fr.maxlego08.zauctionhouse.buttons.confirm.ConfirmRemoveListedButton;
+import fr.maxlego08.zauctionhouse.buttons.inventory.ExpiredInventoryButton;
+import fr.maxlego08.zauctionhouse.buttons.inventory.OwnedInventoryButton;
+import fr.maxlego08.zauctionhouse.buttons.inventory.PurchasedInventoryButton;
+import fr.maxlego08.zauctionhouse.buttons.list.ExpiredItemsButton;
+import fr.maxlego08.zauctionhouse.buttons.list.ListedItemsButton;
+import fr.maxlego08.zauctionhouse.buttons.list.OwnedItemsButton;
+import fr.maxlego08.zauctionhouse.buttons.list.PurchasedItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.ShowButton;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import org.bukkit.entity.Player;
@@ -96,8 +99,13 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new NoneLoader(this.plugin, ExpiredItemsButton.class, "ZAUCTIONHOUSE_EXPIRED_ITEMS"));
         this.buttonManager.register(new NoneLoader(this.plugin, OwnedItemsButton.class, "ZAUCTIONHOUSE_OWNED_ITEMS"));
         this.buttonManager.register(new NoneLoader(this.plugin, PurchasedItemsButton.class, "ZAUCTIONHOUSE_PURCHASED_ITEMS"));
+
         this.buttonManager.register(new NoneLoader(this.plugin, ShowButton.class, "ZAUCTIONHOUSE_SHOW"));
         this.buttonManager.register(new NoneLoader(this.plugin, ConfirmRemoveListedButton.class, "ZAUCTIONHOUSE_CONFIRM_REMOVE_LISTED"));
+
+        this.buttonManager.register(new NoneLoader(this.plugin, ExpiredInventoryButton.class, "ZAUCTIONHOUSE_EXPIRED_INVENTORY"));
+        this.buttonManager.register(new NoneLoader(this.plugin, OwnedInventoryButton.class, "ZAUCTIONHOUSE_OWNED_INVENTORY"));
+        this.buttonManager.register(new NoneLoader(this.plugin, PurchasedInventoryButton.class, "ZAUCTIONHOUSE_PURCHASED_INVENTORY"));
     }
 
     @Override
@@ -123,9 +131,9 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
     private void createInventoriesFile() {
         copyFiles("inventories",
                 "auction",
-                "expired",
-                "items",
-                "purchased",
+                "expired-items",
+                "owned-items",
+                "purchased-items",
                 "remove-confirm"
         );
     }

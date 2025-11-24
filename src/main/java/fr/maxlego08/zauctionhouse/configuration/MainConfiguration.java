@@ -13,6 +13,7 @@ import fr.maxlego08.zauctionhouse.api.configuration.records.TimeConfiguration;
 import fr.maxlego08.zauctionhouse.api.messages.MessageColor;
 import fr.maxlego08.zauctionhouse.utils.YamlLoader;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,6 +25,7 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     private final List<MessageColor> messageColors = new ArrayList<>();
 
     private boolean enableDebug;
+    private SimpleDateFormat dateFormat;
 
     private NumberMultiplicationConfiguration numberMultiplicationConfiguration;
     private ExpirationConfiguration sellExpiration;
@@ -53,6 +55,7 @@ public class MainConfiguration extends YamlLoader implements Configuration {
         this.itemLoreConfiguration = ItemLoreConfiguration.of(plugin, config);
         this.timeConfiguration = TimeConfiguration.of(plugin, config);
         this.actionConfiguration = ActionConfiguration.of(plugin, config);
+        this.dateFormat = new SimpleDateFormat(config.getString("date-format", "dd/MM/yyyy HH:mm:ss"));
     }
 
     @Override
@@ -108,6 +111,11 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     @Override
     public ActionConfiguration getActions() {
         return this.actionConfiguration;
+    }
+
+    @Override
+    public SimpleDateFormat getDateFormat() {
+        return this.dateFormat;
     }
 
     @Override

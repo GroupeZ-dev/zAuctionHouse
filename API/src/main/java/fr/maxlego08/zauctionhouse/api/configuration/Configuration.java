@@ -8,6 +8,7 @@ import fr.maxlego08.zauctionhouse.api.configuration.records.NumberMultiplication
 import fr.maxlego08.zauctionhouse.api.configuration.records.TimeConfiguration;
 import fr.maxlego08.zauctionhouse.api.messages.MessageColor;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
@@ -46,6 +47,8 @@ public interface Configuration extends ConfigurationFile {
     TimeConfiguration getTime();
 
     ActionConfiguration getActions();
+
+    SimpleDateFormat getDateFormat();
 
     <T extends Enum<T>> CommandConfiguration<T> loadCommandConfiguration(String path, Class<T> enumClass);
 }

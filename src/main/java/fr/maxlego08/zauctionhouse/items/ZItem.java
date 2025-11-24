@@ -99,7 +99,7 @@ public abstract class ZItem implements Item {
 
     @Override
     public String getFormattedExpireDate() {
-        return "";
+        return this.plugin.getConfiguration().getDateFormat().format(this.expiredAt);
     }
 
     @Override

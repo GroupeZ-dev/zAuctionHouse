@@ -14,6 +14,8 @@ public interface PlayerCache {
 
     void remove(PlayerCacheKey key);
 
+    void remove(PlayerCacheKey... keys);
+
     <T> T getOrCompute(PlayerCacheKey key, Supplier<T> supplier);
 
 }

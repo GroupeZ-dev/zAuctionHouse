@@ -112,24 +112,24 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     @Override
     public void addItem(StorageType storageType, Item item) {
         getItems(storageType).add(item);
-        clearPlayersCache(storageType.getPlayerCacheKey());
     }
 
     @Override
     public void removeItem(StorageType storageType, Item item) {
         getItems(storageType).remove(item);
-        clearPlayersCache(storageType.getPlayerCacheKey());
     }
 
     @Override
     public void removeItem(StorageType storageType, int itemId) {
         getItems(storageType).removeIf(item -> item.getId() == itemId);
-        clearPlayersCache(storageType.getPlayerCacheKey());
     }
 
     @Override
     public List<Item> getItemsListedForSale(Player player) {
-        return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_LISTED, () -> getItems(StorageType.LISTED));
+        return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_LISTED, () -> getItems(StorageType.LISTED,
+                item -> true, // ToDo
+                Comparator.comparing(Item::getExpiredAt)
+        ));
     }
 
     @Override
@@ -150,7 +150,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public List<Item> getPurchasedItems(Player player) {
-        return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_PURCHASED, () -> getItems(StorageType.LISTED,
+        return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_PURCHASED, () -> getItems(StorageType.PURCHASED,
                 item -> item.getBuyerUniqueId().equals(player.getUniqueId()),
                 Comparator.comparing(Item::getExpiredAt)
         ));
@@ -162,8 +162,13 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     @Override
-    public void clearPlayersCache(PlayerCacheKey key) {
-        this.caches.forEach((player, cache) -> cache.remove(key));
+    public void clearPlayersCache(PlayerCacheKey... keys) {
+        this.caches.forEach((player, cache) -> cache.remove(keys));
+    }
+
+    @Override
+    public void clearPlayerCache(Player player, PlayerCacheKey... keys) {
+        getCache(player).remove(keys);
     }
 
     @Override
@@ -179,6 +184,9 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
         item.setStatus(ItemStatus.REMOVED);
         removeItem(StorageType.LISTED, item);
+
+        clearPlayersCache(PlayerCacheKey.ITEMS_LISTED); // Suppression du cache global
+        clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED); // Suppression du cache du joueur
 
         if (configuration.getActions().giveItemAfterRemovingListedItem() && item.canReceiveItem(player)) {
 
@@ -216,6 +224,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var storageManager = this.plugin.getStorageManager();
 
         removeItem(StorageType.EXPIRED, item);
+        clearPlayerCache(player, PlayerCacheKey.ITEMS_EXPIRED);
 
         storageManager.updateItem(item, StorageType.DELETED);
         giveItem(player, item);

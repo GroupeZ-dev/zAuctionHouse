@@ -1,4 +1,4 @@
-package fr.maxlego08.zauctionhouse.buttons;
+package fr.maxlego08.zauctionhouse.buttons.list;
 
 import fr.maxlego08.menu.api.button.PaginateButton;
 import fr.maxlego08.menu.api.engine.InventoryEngine;
@@ -6,11 +6,11 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-public class ExpiredItemsButton extends PaginateButton {
+public class OwnedItemsButton extends PaginateButton {
 
     private final AuctionPlugin plugin;
 
-    public ExpiredItemsButton(Plugin plugin) {
+    public OwnedItemsButton(Plugin plugin) {
         this.plugin = (AuctionPlugin) plugin;
     }
 
@@ -18,18 +18,18 @@ public class ExpiredItemsButton extends PaginateButton {
     public void onRender(Player player, InventoryEngine inventoryEngine) {
 
         var manager = this.plugin.getAuctionManager();
-        var items = manager.getExpiredItems(player);
+        var items = manager.getPlayerOwnedItems(player);
 
 
         paginate(items, inventoryEngine, (slot, item) -> {
             inventoryEngine.addItem(slot, item.buildItemStack(player)).setClick(event -> {
-                manager.getRemoveService().removeExpiredItem(player, item);
+                // ToDo
             });
         });
     }
 
     @Override
     public int getPaginationSize(Player player) {
-        return this.plugin.getAuctionManager().getExpiredItems(player).size();
+        return this.plugin.getAuctionManager().getPlayerOwnedItems(player).size();
     }
 }

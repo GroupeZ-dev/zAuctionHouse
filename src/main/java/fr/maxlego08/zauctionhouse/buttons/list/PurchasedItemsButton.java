@@ -1,4 +1,4 @@
-package fr.maxlego08.zauctionhouse.buttons;
+package fr.maxlego08.zauctionhouse.buttons.list;
 
 import fr.maxlego08.menu.api.button.PaginateButton;
 import fr.maxlego08.menu.api.engine.InventoryEngine;
@@ -6,11 +6,11 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-public class OwnedItemsButton extends PaginateButton {
+public class PurchasedItemsButton extends PaginateButton {
 
     private final AuctionPlugin plugin;
 
-    public OwnedItemsButton(Plugin plugin) {
+    public PurchasedItemsButton(Plugin plugin) {
         this.plugin = (AuctionPlugin) plugin;
     }
 
@@ -18,7 +18,7 @@ public class OwnedItemsButton extends PaginateButton {
     public void onRender(Player player, InventoryEngine inventoryEngine) {
 
         var manager = this.plugin.getAuctionManager();
-        var items = manager.getPlayerOwnedItems(player);
+        var items = manager.getPurchasedItems(player);
 
 
         paginate(items, inventoryEngine, (slot, item) -> {
@@ -30,6 +30,6 @@ public class OwnedItemsButton extends PaginateButton {
 
     @Override
     public int getPaginationSize(Player player) {
-        return this.plugin.getAuctionManager().getPlayerOwnedItems(player).size();
+        return this.plugin.getAuctionManager().getPurchasedItems(player).size();
     }
 }

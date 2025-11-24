@@ -21,10 +21,9 @@ public class ZPlayerCache implements PlayerCache {
         this.cache.put(key, value);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T> T get(PlayerCacheKey key) {
-        return (T) this.cache.get(key);
+        return get(key, key.getFallback());
     }
 
     @SuppressWarnings("unchecked")
@@ -41,6 +40,13 @@ public class ZPlayerCache implements PlayerCache {
     @Override
     public void remove(PlayerCacheKey key) {
         this.cache.remove(key);
+    }
+
+    @Override
+    public void remove(PlayerCacheKey... keys) {
+        for (PlayerCacheKey key : keys) {
+            this.cache.remove(key);
+        }
     }
 
     private boolean isValidType(Type expected, Object value) {

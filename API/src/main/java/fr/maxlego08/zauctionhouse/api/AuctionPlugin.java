@@ -4,6 +4,7 @@ import com.tcoded.folialib.impl.PlatformScheduler;
 import fr.maxlego08.zauctionhouse.api.cluster.AuctionClusterBridge;
 import fr.maxlego08.zauctionhouse.api.configuration.Configuration;
 import fr.maxlego08.zauctionhouse.api.economy.EconomyManager;
+import fr.maxlego08.zauctionhouse.api.placeholders.Placeholder;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
 import org.bukkit.plugin.Plugin;
 
@@ -28,6 +29,8 @@ public interface AuctionPlugin extends Plugin {
     ExecutorService getExecutorService();
 
     AuctionClusterBridge getAuctionClusterBridge();
+
+    Placeholder getPlaceholder();
 
     void setAuctionClusterBridge(AuctionClusterBridge auctionClusterBridge);
 

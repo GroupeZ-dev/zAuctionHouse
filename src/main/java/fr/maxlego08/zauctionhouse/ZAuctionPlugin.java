@@ -9,6 +9,8 @@ import fr.maxlego08.zauctionhouse.api.cluster.AuctionClusterBridge;
 import fr.maxlego08.zauctionhouse.api.configuration.Configuration;
 import fr.maxlego08.zauctionhouse.api.configuration.ConfigurationFile;
 import fr.maxlego08.zauctionhouse.api.economy.EconomyManager;
+import fr.maxlego08.zauctionhouse.api.placeholders.Placeholder;
+import fr.maxlego08.zauctionhouse.api.placeholders.PlaceholderRegister;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
 import fr.maxlego08.zauctionhouse.cluster.LocalAuctionClusterBridge;
 import fr.maxlego08.zauctionhouse.command.CommandManager;
@@ -18,6 +20,9 @@ import fr.maxlego08.zauctionhouse.economy.ZEconomyManager;
 import fr.maxlego08.zauctionhouse.listeners.PlayerListener;
 import fr.maxlego08.zauctionhouse.loader.MessageLoader;
 import fr.maxlego08.zauctionhouse.loader.ZInventoriesLoader;
+import fr.maxlego08.zauctionhouse.placeholder.DistantPlaceholder;
+import fr.maxlego08.zauctionhouse.placeholder.LocalPlaceholder;
+import fr.maxlego08.zauctionhouse.placeholder.placeholders.PlayerPlaceholders;
 import fr.maxlego08.zauctionhouse.storage.ZStorageManager;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -48,6 +53,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     private final AuctionManager auctionManager = new ZAuctionManager(this);
     private final EconomyManager economyManager = new ZEconomyManager(this);
     private final ExecutorService asyncExecutor = Executors.newFixedThreadPool(4);
+    private final Placeholder placeholder = new LocalPlaceholder(this);
     private InventoriesLoader inventoriesLoader;
     private boolean isEnabled = false;
     private PlatformScheduler platformScheduler;
@@ -77,6 +83,8 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
 
         this.storageManager.loadItems();
 
+        this.registerPlaceholders();
+
         isEnabled = true;
         this.getLogger().info("zAuctionHouse has just been loaded successfully!");
     }
@@ -100,6 +108,13 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         this.configuration.load(); // Load config.yml
         this.messageLoader.load(); // Load messages.yml
         this.economyManager.loadEconomies(); // Load economies.yml
+    }
+
+    private void registerPlaceholders() {
+        DistantPlaceholder distantPlaceholder = new DistantPlaceholder(this, this.placeholder);
+        distantPlaceholder.register();
+
+        this.registerPlaceholder(PlayerPlaceholders.class);
     }
 
     @Override
@@ -149,6 +164,11 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     @Override
     public void setAuctionClusterBridge(AuctionClusterBridge auctionClusterBridge) {
         this.auctionClusterBridge = auctionClusterBridge;
+    }
+
+    @Override
+    public Placeholder getPlaceholder() {
+        return this.placeholder;
     }
 
     private void addListener(Listener listener) {
@@ -263,5 +283,16 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
 
         if (saveOrUpdate) this.saveOrUpdateConfiguration(finalPath, toPath, false);
         else this.saveResource(finalPath, toPath, false);
+    }
+
+    private <T extends PlaceholderRegister> T registerPlaceholder(Class<T> placeholderClass) {
+        try {
+            T placeholderRegister = placeholderClass.getConstructor().newInstance();
+            placeholderRegister.register(this.placeholder, this);
+            return placeholderRegister;
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+        return null;
     }
 }
