@@ -36,6 +36,8 @@ public enum Message {
     ITEM_REMOVE_EXPIRED("#e6fff3You just removed #8ee6e3x%amount% &7<lang:%item-translation-key%> #e6fff3from the expired items."),
     ITEM_REMOVE_PURCHASED("#e6fff3You just removed #8ee6e3x%amount% &7<lang:%item-translation-key%> #e6fff3from the purchased items."),
     ITEM_REMOVE_OWNED("#e6fff3You just removed #8ee6e3x%amount% &7<lang:%item-translation-key%> #e6fff3from your items."),
+
+
     ;
 
     private AuctionPlugin plugin;

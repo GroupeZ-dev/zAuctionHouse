@@ -9,6 +9,7 @@ import fr.maxlego08.zauctionhouse.api.configuration.records.ActionConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ExpirationConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ItemLoreConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.NumberMultiplicationConfiguration;
+import fr.maxlego08.zauctionhouse.api.configuration.records.SortConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.TimeConfiguration;
 import fr.maxlego08.zauctionhouse.api.messages.MessageColor;
 import fr.maxlego08.zauctionhouse.utils.YamlLoader;
@@ -36,6 +37,7 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     private ItemLoreConfiguration itemLoreConfiguration;
     private TimeConfiguration timeConfiguration;
     private ActionConfiguration actionConfiguration;
+    private SortConfiguration sortConfiguration;
 
     public MainConfiguration(AuctionPlugin plugin) {
         this.plugin = plugin;
@@ -55,6 +57,7 @@ public class MainConfiguration extends YamlLoader implements Configuration {
         this.itemLoreConfiguration = ItemLoreConfiguration.of(plugin, config);
         this.timeConfiguration = TimeConfiguration.of(plugin, config);
         this.actionConfiguration = ActionConfiguration.of(plugin, config);
+        this.sortConfiguration = SortConfiguration.of(plugin, config);
         this.dateFormat = new SimpleDateFormat(config.getString("date-format", "dd/MM/yyyy HH:mm:ss"));
     }
 
@@ -116,6 +119,11 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     @Override
     public SimpleDateFormat getDateFormat() {
         return this.dateFormat;
+    }
+
+    @Override
+    public SortConfiguration getSort() {
+        return this.sortConfiguration;
     }
 
     @Override

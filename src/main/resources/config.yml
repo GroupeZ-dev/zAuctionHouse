@@ -263,3 +263,13 @@ action:
     # On ouvre l'inventaire après l'avoir retiré
     open-inventory: true
 
+sort-items:
+
+  default-sort: DECREASING_DATE
+
+  translations:
+    ASCENDING_PRICE: "ᴀsᴄᴇɴᴅɪɴɢ ᴘʀɪᴄᴇ"
+    ASCENDING_DATE: "ᴀsᴄᴇɴᴅɪɴɢ ᴅᴀᴛᴇ"
+    DECREASING_DATE: "ᴅᴇᴄʀᴇᴀsɪɴɢ ᴅᴀᴛᴇ"
+    DECREASING_PRICE: "ᴅᴇᴄʀᴇᴀsɪɴɢ ᴘʀɪᴄᴇ"
+
