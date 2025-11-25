@@ -3,6 +3,7 @@ package fr.maxlego08.zauctionhouse.api;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
+import fr.maxlego08.zauctionhouse.api.services.AuctionExpireService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
@@ -24,6 +25,8 @@ public interface AuctionManager {
     AuctionSellService getSellService();
 
     AuctionRemoveService getRemoveService();
+
+    AuctionExpireService getExpireService();
 
     List<Item> getItems(StorageType storageType);
 

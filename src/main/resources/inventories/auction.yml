@@ -28,7 +28,7 @@ items:
       lore:
         - "#92ffffYou have #2CCED2%expired-items% #92ffffexpired item%s%."
         - ""
-        - "#8c8c8c• #2CCED2Click to open"
+        - "#8c8c8c• #2CCED2Click #92ffffto open"
     else:
       item:
         url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjdhYWRmZjlkZGM1NDZmZGNlYzZlZDU5MTljYzM5ZGZhOGQwYzA3ZmY0YmM2MTNhMTlmMmU2ZDdmMjU5MyJ9fX0="
@@ -45,7 +45,7 @@ items:
       lore:
         - "#92ffffYou have #2CCED2%purchased-items% #92ffffbought item%s%."
         - ""
-        - "#8c8c8c• #2CCED2Click to open"
+        - "#8c8c8c• #2CCED2Click #92ffffto open"
     else:
       item:
         url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjM3Y2FlNWM1MWViMTU1OGVhODI4ZjU4ZTBkZmY4ZTZiN2IwYjFhMTgzZDczN2VlY2Y3MTQ2NjE3NjEifX19"
@@ -62,7 +62,7 @@ items:
       lore:
         - "#92ffffYou have #2CCED2%owned-items% #92ffffitem%s% on sale."
         - ""
-        - "#8c8c8c• #2CCED2Click to open"
+        - "#8c8c8c• #2CCED2Click #92ffffto open"
     else:
       item:
         url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjU4MDdjYzRjM2I2OTU4YWVhNjE1NmU4NDUxOGQ5MWE0OWM1ZjMyOTcxZTZlYjI2OWEyM2EyNWEyNzE0NSJ9fX0="
@@ -80,7 +80,7 @@ items:
       lore:
         - "#92ffffGo to the previous page."
         - ""
-        - "#8c8c8c• #2CCED2Click to open"
+        - "#8c8c8c• #2CCED2Click #92ffffto open"
     else:
       item:
         material: LIGHT_BLUE_STAINED_GLASS_PANE
@@ -96,7 +96,7 @@ items:
       lore:
         - "#92ffffGo to the next page."
         - ""
-        - "#8c8c8c• #2CCED2Click to open"
+        - "#8c8c8c• #2CCED2Click #92ffffto open"
     else:
       item:
         material: LIGHT_BLUE_STAINED_GLASS_PANE
@@ -118,38 +118,22 @@ items:
         - "#92ffffNumber of items#8c8c8c: #2CCED2%zauctionhouse_counts%"
         - "#92ffffSort type#8c8c8c: #2CCED2%zauctionhouse_sorting%"
         - ""
-        - "#8c8c8c• #2CCED2Click to refresh the items"
+        - "#8c8c8c• #2CCED2Click #92ffffto refresh the items"
 
   change-sort:
-    # type: ZAUCTIONHOUSE_CHANGE_SORTING
-    is-permanent: true
-    sorting:
-      - sorting: DECREASING_DATE
-        display: "Decreasing date"
-      - sorting: DECREASING_PRICE
-        display: "Decreasing price"
-      - sorting: ASCENDING_DATE
-        display: "Ascending date"
-      - sorting: ASCENDING_PRICE
-        display: "Ascending price"
-      - sorting: ALPHABETICAL_NAME
-        display: "Alphabetical name"
-      - sorting: REVERSE_ALPHABETICAL_NAME
-        display: "Reverse alphabetical name"
-      - sorting: SELLER_NAME_ALPHABETICAL
-        display: "Seller name alphabetical"
-      - sorting: SELLER_NAME_REVERSE_ALPHABETICAL
-        display: "Seller name reverse alphabetical"
-      - sorting: MATERIAL_TYPE_ALPHABETICAL
-        display: "Material type alphabetical"
-      - sorting: MATERIAL_TYPE_REVERSE_ALPHABETICAL
-        display: "Material type reverse alphabetical"
-      - sorting: ITEM_STACK_SIZE_ASCENDING
-        display: "Item stack size ascending"
-      - sorting: ITEM_STACK_SIZE_DESCENDING
-        display: "Item stack size descending"
-    enableText: ' #F27438➜ %sorting%'
-    disableText: ' #76CDCD➜ %sorting%'
+    type: ZAUCTIONHOUSE_CHANGE_SORT
+    sorts:
+      - DECREASING_DATE
+      - DECREASING_PRICE
+      - ASCENDING_DATE
+      - ASCENDING_PRICE
+    enable-text: ' #F27438➜ %sorting%'
+    disable-text: ' #76CDCD➜ %sorting%'
+    loading-item:
+      material: HOPPER
+      name: "#2CCED2<bold>sᴏʀᴛ ᴛʏᴘᴇ"
+      lore:
+        - "#8c8c8c• #ff3535Loading, please wait"
     slot: 52
     item:
       material: HOPPER
@@ -160,13 +144,5 @@ items:
         - "%DECREASING_PRICE%"
         - "%ASCENDING_DATE%"
         - "%ASCENDING_PRICE%"
-        - "%ALPHABETICAL_NAME%"
-        - "%REVERSE_ALPHABETICAL_NAME%"
-        - "%SELLER_NAME_ALPHABETICAL%"
-        - "%SELLER_NAME_REVERSE_ALPHABETICAL%"
-        - "%MATERIAL_TYPE_ALPHABETICAL%"
-        - "%MATERIAL_TYPE_REVERSE_ALPHABETICAL%"
-        - "%ITEM_STACK_SIZE_ASCENDING%"
-        - "%ITEM_STACK_SIZE_DESCENDING%"
         - ""
-        - "#8c8c8c• #2CCED2Click to change the sort type"
+        - "#8c8c8c• #2CCED2Click #92ffffto change the sort type"

@@ -1,6 +1,7 @@
 package fr.maxlego08.zauctionhouse.services;
 
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
+import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.cluster.LockToken;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionPreRemoveExpiredItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionPreRemoveListedItemEvent;
@@ -31,6 +32,7 @@ public class RemoveService implements AuctionRemoveService {
         var event = new AuctionPreRemoveListedItemEvent(item, player);
         if (!event.callEvent()) return;
 
+        var auctionManager = this.plugin.getAuctionManager();
         var inventoryManager = this.plugin.getInventoriesLoader().getInventoryManager();
         var clusterBridge = this.plugin.getAuctionClusterBridge();
         var logger = this.plugin.getLogger();
@@ -38,6 +40,7 @@ public class RemoveService implements AuctionRemoveService {
         // 1. Vérifier si l'item est expiré
         if (item.isExpired()) {
             logger.info("Item expired");
+            auctionManager.getCache(player).remove(PlayerCacheKey.ITEMS_LISTED);
             inventoryManager.updateInventory(player);
             return;
         }
@@ -71,7 +74,7 @@ public class RemoveService implements AuctionRemoveService {
         }).thenCompose(v -> {
 
             // 4. On supprime l'item en local
-            this.plugin.getAuctionManager().removeListedItem(player, item);
+            auctionManager.removeListedItem(player, item);
 
             return clusterBridge.unlockItem(item, LockToken.of(item));
         }).exceptionally(e -> {
@@ -86,6 +89,7 @@ public class RemoveService implements AuctionRemoveService {
         var event = new AuctionPreRemoveExpiredItemEvent(item, player);
         if (!event.callEvent()) return;
 
+        var auctionManager = this.plugin.getAuctionManager();
         var inventoryManager = this.plugin.getInventoriesLoader().getInventoryManager();
         var clusterBridge = this.plugin.getAuctionClusterBridge();
         var logger = this.plugin.getLogger();
@@ -93,6 +97,7 @@ public class RemoveService implements AuctionRemoveService {
         // 1. Vérifier si l'item est expiré
         if (item.isExpired()) {
             logger.info("Item expired");
+            auctionManager.getCache(player).remove(PlayerCacheKey.ITEMS_EXPIRED);
             inventoryManager.updateInventory(player);
             return;
         }

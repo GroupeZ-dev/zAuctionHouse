@@ -9,6 +9,7 @@ import fr.maxlego08.zauctionhouse.api.cluster.AuctionClusterBridge;
 import fr.maxlego08.zauctionhouse.api.configuration.Configuration;
 import fr.maxlego08.zauctionhouse.api.configuration.ConfigurationFile;
 import fr.maxlego08.zauctionhouse.api.economy.EconomyManager;
+import fr.maxlego08.zauctionhouse.api.hooks.permission.OfflinePermission;
 import fr.maxlego08.zauctionhouse.api.placeholders.Placeholder;
 import fr.maxlego08.zauctionhouse.api.placeholders.PlaceholderRegister;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
@@ -17,6 +18,7 @@ import fr.maxlego08.zauctionhouse.command.CommandManager;
 import fr.maxlego08.zauctionhouse.command.commands.CommandAuction;
 import fr.maxlego08.zauctionhouse.configuration.MainConfiguration;
 import fr.maxlego08.zauctionhouse.economy.ZEconomyManager;
+import fr.maxlego08.zauctionhouse.hooks.permissions.EmptyOfflinePermission;
 import fr.maxlego08.zauctionhouse.listeners.PlayerListener;
 import fr.maxlego08.zauctionhouse.loader.MessageLoader;
 import fr.maxlego08.zauctionhouse.loader.ZInventoriesLoader;
@@ -59,6 +61,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     private boolean isEnabled = false;
     private PlatformScheduler platformScheduler;
     private AuctionClusterBridge auctionClusterBridge = new LocalAuctionClusterBridge();
+    private OfflinePermission offlinePermission = new EmptyOfflinePermission();
 
     @Override
     public void onEnable() {
@@ -166,6 +169,16 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     @Override
     public void setAuctionClusterBridge(AuctionClusterBridge auctionClusterBridge) {
         this.auctionClusterBridge = auctionClusterBridge;
+    }
+
+    @Override
+    public OfflinePermission getOfflinePermission() {
+        return this.offlinePermission;
+    }
+
+    @Override
+    public void setOfflinePermission(OfflinePermission offlinePermission) {
+        this.offlinePermission = offlinePermission;
     }
 
     @Override

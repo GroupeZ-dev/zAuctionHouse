@@ -10,7 +10,7 @@ items:
       lore:
         - "#92ffffRemove this item."
         - ""
-        - "#8c8c8c• #2CCED2Click to remove"
+        - "#8c8c8c• #2CCED2Click #92ffffto remove"
     slots:
       - 0-2
       - 9-11
@@ -24,7 +24,7 @@ items:
       lore:
         - "#92ffffGo back."
         - ""
-        - "#8c8c8c• #2CCED2Click to go back"
+        - "#8c8c8c• #2CCED2Click #92ffffto go back"
     slots:
       - 6-8
       - 15-17

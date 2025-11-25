@@ -7,14 +7,16 @@ import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveExpiredItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveListedItemEvent;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
-import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
+import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
+import fr.maxlego08.zauctionhouse.api.services.AuctionExpireService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
+import fr.maxlego08.zauctionhouse.services.ExpireService;
 import fr.maxlego08.zauctionhouse.services.PurchaseService;
 import fr.maxlego08.zauctionhouse.services.RemoveService;
 import fr.maxlego08.zauctionhouse.services.SellService;
@@ -36,6 +38,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     private final AuctionPurchaseService auctionPurchaseService;
     private final AuctionSellService auctionSellService;
     private final AuctionRemoveService auctionRemoveService;
+    private final AuctionExpireService auctionExpireService;
 
     private final Map<Player, PlayerCache> caches = new HashMap<>();
     private final Map<StorageType, List<Item>> storageItems = new HashMap<>();
@@ -45,6 +48,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         this.auctionPurchaseService = new PurchaseService(plugin);
         this.auctionSellService = new SellService(plugin, this);
         this.auctionRemoveService = new RemoveService(plugin);
+        this.auctionExpireService = new ExpireService(plugin, this);
 
         for (StorageType value : StorageType.values()) {
             this.storageItems.put(value, new ArrayList<>());
@@ -78,7 +82,12 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public AuctionRemoveService getRemoveService() {
-        return auctionRemoveService;
+        return this.auctionRemoveService;
+    }
+
+    @Override
+    public AuctionExpireService getExpireService() {
+        return this.auctionExpireService;
     }
 
     @Override
@@ -89,7 +98,17 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     @Override
     public List<Item> getItems(StorageType storageType, Predicate<Item> predicate) {
         List<Item> items = new ArrayList<>();
-        for (Item item : getItems(storageType)) {
+
+        var iterator = getItems(storageType).iterator();
+        while (iterator.hasNext()) {
+
+            var item = iterator.next();
+            if (item.isExpired()) {
+                this.auctionExpireService.processExpiredItem(item, storageType);
+                iterator.remove();
+                continue;
+            }
+
             if (predicate.test(item)) {
                 items.add(item);
             }
@@ -126,9 +145,11 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public List<Item> getItemsListedForSale(Player player) {
-        return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_LISTED, () -> getItems(StorageType.LISTED,
+        var cache = getCache(player);
+        var sort = cache.get(PlayerCacheKey.ITEM_SORT, this.plugin.getConfiguration().getSort().defaultSort());
+        return cache.getOrCompute(PlayerCacheKey.ITEMS_LISTED, () -> getItems(StorageType.LISTED,
                 item -> true, // ToDo
-                Comparator.comparing(Item::getExpiredAt)
+                sort.getComparator()
         ));
     }
 

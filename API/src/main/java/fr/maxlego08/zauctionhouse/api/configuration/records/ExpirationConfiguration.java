@@ -2,6 +2,9 @@ package fr.maxlego08.zauctionhouse.api.configuration.records;
 
 import fr.maxlego08.menu.api.utils.TypedMapAccessor;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
+import fr.maxlego08.zauctionhouse.api.hooks.permission.OfflinePermission;
+import fr.maxlego08.zauctionhouse.api.hooks.permission.OfflinePermissionResult;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
@@ -35,7 +38,19 @@ public record ExpirationConfiguration(long defaultExpiration, boolean enablePerm
             for (Map.Entry<String, Long> entry : this.expirations.entrySet()) {
                 if (player.hasPermission(entry.getKey())) {
                     expiration = Math.max(expiration, entry.getValue());
-                    break;
+                }
+            }
+        }
+        return expiration;
+    }
+
+    public long getExpiration(OfflinePermission offlinePermission, OfflinePlayer offlinePlayer) {
+        long expiration = this.defaultExpiration;
+        if (this.enablePermission) {
+            var results = offlinePermission.hasPermissions(offlinePlayer, this.expirations.keySet());
+            for (OfflinePermissionResult result : results) {
+                if (result.result()) {
+                    expiration = Math.max(expiration, this.expirations.get(result.permission()));
                 }
             }
         }

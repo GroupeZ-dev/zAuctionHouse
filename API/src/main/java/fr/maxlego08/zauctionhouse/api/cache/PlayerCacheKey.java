@@ -2,6 +2,7 @@ package fr.maxlego08.zauctionhouse.api.cache;
 
 import com.google.common.reflect.TypeToken;
 import fr.maxlego08.zauctionhouse.api.item.Item;
+import fr.maxlego08.zauctionhouse.api.item.SortItem;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,7 +15,9 @@ public enum PlayerCacheKey {
     ITEMS_PURCHASED(new TypeToken<List<Item>>() {}, Collections::emptyList),
     ITEMS_OWNED(new TypeToken<List<Item>>() {}, Collections::emptyList),
     ITEM_SHOW(new TypeToken<Item>() {}, () -> null),
-    CURRENT_PAGE(new TypeToken<Integer>() {}, () -> 1);
+    CURRENT_PAGE(new TypeToken<Integer>() {}, () -> 1),
+    ITEM_SORT(new TypeToken<SortItem>() {}, () -> SortItem.DECREASING_DATE),
+    ITEM_SORT_LOADING(new TypeToken<Boolean>() {}, () -> false);
 
     private final TypeToken<?> type;
     private final Supplier<?> fallback;
