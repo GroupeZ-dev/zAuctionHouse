@@ -9,6 +9,7 @@ import org.bukkit.OfflinePlayer;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 public class LuckPermsOfflinePermission implements OfflinePermission {
 
@@ -19,14 +20,15 @@ public class LuckPermsOfflinePermission implements OfflinePermission {
     }
 
     @Override
-    public List<OfflinePermissionResult> hasPermissions(OfflinePlayer offlinePlayer, Set<String> permissions) {
-        User user = this.luckPerms.getUserManager().loadUser(offlinePlayer.getUniqueId()).join();
-        if (user == null) {
-            return permissions.stream().map(permission -> new OfflinePermissionResult(permission, false)).toList();
-        }
+    public CompletableFuture<List<OfflinePermissionResult>> hasPermissions(OfflinePlayer offlinePlayer, Set<String> permissions) {
+        return this.luckPerms.getUserManager().loadUser(offlinePlayer.getUniqueId()).thenApply(user -> {
+            if (user == null) {
+                return permissions.stream().map(permission -> new OfflinePermissionResult(permission, false)).toList();
+            }
 
-        var permissionData = user.getCachedData().getPermissionData(this.luckPerms.getContextManager().getStaticQueryOptions());
+            var permissionData = user.getCachedData().getPermissionData(this.luckPerms.getContextManager().getStaticQueryOptions());
 
-        return permissions.stream().map(permission -> new OfflinePermissionResult(permission, permissionData.checkPermission(permission).asBoolean())).toList();
+            return permissions.stream().map(permission -> new OfflinePermissionResult(permission, permissionData.checkPermission(permission).asBoolean())).toList();
+        });
     }
 }

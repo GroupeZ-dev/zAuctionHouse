@@ -10,6 +10,8 @@ import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.services.AuctionExpireService;
 
 import java.util.Date;
+import java.util.function.Consumer;
+import java.util.logging.Level;
 
 public class ExpireService implements AuctionExpireService {
 
@@ -43,15 +45,27 @@ public class ExpireService implements AuctionExpireService {
 
             item.setStatus(ItemStatus.REMOVED);
             
-            var expiration = offlineSeller.isOnline() ?
-                    configuration.getExpireExpiration().getExpiration(offlineSeller.getPlayer())
-                    : configuration.getExpireExpiration().getExpiration(this.plugin.getOfflinePermission(), offlineSeller);
+            Consumer<Long> applyExpiration = expiration -> this.plugin.getScheduler().runNextTick(w -> {
+                long expiredAt = expiration > 0 ? System.currentTimeMillis() + (expiration * 1000) : 0;
+                item.setExpiredAt(new Date(expiredAt));
 
-            long expiredAt = expiration > 0 ? System.currentTimeMillis() + (expiration * 1000) : 0;
-            item.setExpiredAt(new Date(expiredAt));
+                this.auctionManager.addItem(StorageType.EXPIRED, item);
+                storageManager.updateItem(item, StorageType.EXPIRED);
+            });
 
-            this.auctionManager.addItem(StorageType.EXPIRED, item);
-            storageManager.updateItem(item, StorageType.EXPIRED);
+            if (offlineSeller.isOnline()) {
+                var expiration = configuration.getExpireExpiration().getExpiration(offlineSeller.getPlayer());
+                applyExpiration.accept(expiration);
+            } else {
+                configuration.getExpireExpiration().getExpiration(this.plugin.getOfflinePermission(), offlineSeller)
+                        .whenComplete((expiration, throwable) -> {
+                            long safeExpiration = expiration != null ? expiration : configuration.getExpireExpiration().defaultExpiration();
+                            if (throwable != null) {
+                                this.plugin.getLogger().log(Level.WARNING, "Cannot compute expiration for offline player " + offlineSeller.getName(), throwable);
+                            }
+                            applyExpiration.accept(safeExpiration);
+                        });
+            }
 
         } else {
 

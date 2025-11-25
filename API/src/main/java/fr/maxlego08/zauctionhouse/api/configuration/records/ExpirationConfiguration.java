@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public record ExpirationConfiguration(long defaultExpiration, boolean enablePermission, Map<String, Long> expirations) {
 
@@ -44,16 +45,24 @@ public record ExpirationConfiguration(long defaultExpiration, boolean enablePerm
         return expiration;
     }
 
-    public long getExpiration(OfflinePermission offlinePermission, OfflinePlayer offlinePlayer) {
+    public CompletableFuture<Long> getExpiration(OfflinePermission offlinePermission, OfflinePlayer offlinePlayer) {
         long expiration = this.defaultExpiration;
         if (this.enablePermission) {
-            var results = offlinePermission.hasPermissions(offlinePlayer, this.expirations.keySet());
-            for (OfflinePermissionResult result : results) {
-                if (result.result()) {
-                    expiration = Math.max(expiration, this.expirations.get(result.permission()));
-                }
-            }
+            return offlinePermission.hasPermissions(offlinePlayer, this.expirations.keySet())
+                    .handle((results, throwable) -> {
+                        if (throwable != null || results == null) {
+                            return expiration;
+                        }
+
+                        long newExpiration = expiration;
+                        for (OfflinePermissionResult result : results) {
+                            if (result.result()) {
+                                newExpiration = Math.max(newExpiration, this.expirations.get(result.permission()));
+                            }
+                        }
+                        return newExpiration;
+                    });
         }
-        return expiration;
+        return CompletableFuture.completedFuture(expiration);
     }
 }
