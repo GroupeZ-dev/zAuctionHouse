@@ -59,7 +59,11 @@ public interface AuctionManager {
 
     void removeListedItem(Player player, Item item);
 
+    void removeOwnedItem(Player player, Item item);
+
     void removeExpiredItem(Player player, Item item);
+
+    void removePurchasedItem(Player player, Item item);
 
     void purchaseItem(Player player, Item item);
 

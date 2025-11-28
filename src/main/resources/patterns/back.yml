@@ -1,0 +1,14 @@
+name: "zauctionhouse-back"
+size: 54
+items:
+  previous:
+    type: BACK
+    is-permanent: true
+    slot: 49
+    item:
+      material: BARRIER
+      name: "#2CCED2<bold>ʙᴀᴄᴋ"
+      lore:
+        - "#92ffffGo to the previous inventory."
+        - ""
+        - "#8c8c8c• #2CCED2Click #92ffffto open"

@@ -7,6 +7,10 @@ public interface AuctionRemoveService {
 
     void removeListedItem(Player player, Item item);
 
+    void removeOwnedItem(Player player, Item item);
+
     void removeExpiredItem(Player player, Item item);
+
+    void removePurchasedItem(Player player, Item item);
 
 }

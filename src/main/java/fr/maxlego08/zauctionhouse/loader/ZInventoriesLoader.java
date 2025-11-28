@@ -132,7 +132,8 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
     private void createPatternFiles() {
         copyFiles("patterns",
                 "decoration",
-                "pagination"
+                "pagination",
+                "back"
         );
     }
 

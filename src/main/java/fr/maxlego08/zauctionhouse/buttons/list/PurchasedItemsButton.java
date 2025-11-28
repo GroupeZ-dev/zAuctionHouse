@@ -19,11 +19,11 @@ public class PurchasedItemsButton extends PaginateButton {
 
         var manager = this.plugin.getAuctionManager();
         var items = manager.getPurchasedItems(player);
-
+        var line = this.plugin.getConfiguration().getItemLore().purchasedLore();
 
         paginate(items, inventoryEngine, (slot, item) -> {
-            inventoryEngine.addItem(slot, item.buildItemStack(player)).setClick(event -> {
-                // ToDo
+            inventoryEngine.addItem(slot, item.buildItemStack(player, line)).setClick(event -> {
+                manager.getRemoveService().removePurchasedItem(player, item);
             });
         });
     }

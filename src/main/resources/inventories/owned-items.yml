@@ -3,6 +3,8 @@ size: 54
 
 patterns:
   - 'zauctionhouse-decoration'
+  - 'zauctionhouse-pagination'
+  - 'zauctionhouse-back'
 
 items:
   items:

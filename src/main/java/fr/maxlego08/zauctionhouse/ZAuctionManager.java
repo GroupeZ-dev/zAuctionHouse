@@ -6,6 +6,7 @@ import fr.maxlego08.zauctionhouse.api.cache.PlayerCache;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveExpiredItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveListedItemEvent;
+import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemovePurchasedItemEvent;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
@@ -147,34 +148,23 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     public List<Item> getItemsListedForSale(Player player) {
         var cache = getCache(player);
         var sort = cache.get(PlayerCacheKey.ITEM_SORT, this.plugin.getConfiguration().getSort().defaultSort());
-        return cache.getOrCompute(PlayerCacheKey.ITEMS_LISTED, () -> getItems(StorageType.LISTED,
-                item -> true, // ToDo
-                sort.getComparator()
-        ));
+        return cache.getOrCompute(PlayerCacheKey.ITEMS_LISTED, () -> getItems(StorageType.LISTED, item -> true, // ToDo
+                sort.getComparator()));
     }
 
     @Override
     public List<Item> getExpiredItems(Player player) {
-        return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_EXPIRED, () -> getItems(StorageType.EXPIRED,
-                item -> item.getSellerUniqueId().equals(player.getUniqueId()),
-                Comparator.comparing(Item::getExpiredAt)
-        ));
+        return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_EXPIRED, () -> getItems(StorageType.EXPIRED, item -> item.getSellerUniqueId().equals(player.getUniqueId()), Comparator.comparing(Item::getExpiredAt)));
     }
 
     @Override
     public List<Item> getPlayerOwnedItems(Player player) {
-        return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_OWNED, () -> getItems(StorageType.LISTED,
-                item -> item.getSellerUniqueId().equals(player.getUniqueId()),
-                Comparator.comparing(Item::getExpiredAt)
-        ));
+        return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_OWNED, () -> getItems(StorageType.LISTED, item -> item.getSellerUniqueId().equals(player.getUniqueId()), Comparator.comparing(Item::getExpiredAt)));
     }
 
     @Override
     public List<Item> getPurchasedItems(Player player) {
-        return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_PURCHASED, () -> getItems(StorageType.PURCHASED,
-                item -> item.getBuyerUniqueId().equals(player.getUniqueId()),
-                Comparator.comparing(Item::getExpiredAt)
-        ));
+        return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_PURCHASED, () -> getItems(StorageType.PURCHASED, item -> item.getBuyerUniqueId().equals(player.getUniqueId()), Comparator.comparing(Item::getExpiredAt)));
     }
 
     @Override
@@ -239,6 +229,36 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     @Override
+    public void removeOwnedItem(Player player, Item item) {
+
+        var configuration = this.plugin.getConfiguration();
+        var storageManager = this.plugin.getStorageManager();
+
+        item.setStatus(ItemStatus.DELETED);
+        removeItem(StorageType.LISTED, item);
+
+        clearPlayersCache(PlayerCacheKey.ITEMS_LISTED); // Suppression du cache global
+        clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED, PlayerCacheKey.ITEMS_EXPIRED); // Suppression du cache du joueur
+
+        storageManager.updateItem(item, StorageType.DELETED);
+        giveItem(player, item);
+
+        message(this.plugin, player, Message.ITEM_REMOVE_LISTED, "%amount%", item.getAmount(), "%item-translation-key%", item.getTranslationKey());
+
+        if (configuration.getActions().listed().openInventory()) {
+            this.plugin.getInventoriesLoader().getInventoryManager().updateInventory(player);
+        } else {
+            player.closeInventory();
+        }
+
+        var event = new AuctionRemoveListedItemEvent(item, player);
+        event.callEvent();
+
+        // ToDo Logs
+
+    }
+
+    @Override
     public void removeExpiredItem(Player player, Item item) {
 
         var configuration = this.plugin.getConfiguration();
@@ -265,6 +285,33 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     @Override
+    public void removePurchasedItem(Player player, Item item) {
+
+        var configuration = this.plugin.getConfiguration();
+        var storageManager = this.plugin.getStorageManager();
+
+        removeItem(StorageType.PURCHASED, item);
+        clearPlayerCache(player, PlayerCacheKey.ITEMS_PURCHASED);
+
+        storageManager.updateItem(item, StorageType.DELETED);
+        giveItem(player, item);
+
+        message(this.plugin, player, Message.ITEM_REMOVE_PURCHASED, "%amount%", item.getAmount(), "%item-translation-key%", item.getTranslationKey());
+
+        if (configuration.getActions().purchased().openInventory()) {
+            this.plugin.getInventoriesLoader().getInventoryManager().updateInventory(player);
+        } else {
+            player.closeInventory();
+        }
+
+        var event = new AuctionRemovePurchasedItemEvent(item, player);
+        event.callEvent();
+
+        // ToDo Logs
+
+    }
+
+    @Override
     public void purchaseItem(Player player, Item item) {
         if (item instanceof AuctionItem auctionItem) {
             purchaseAuctionItem(player, auctionItem);
@@ -281,36 +328,16 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var configuration = this.plugin.getConfiguration();
 
         // On retire l'argent
-        auctionEconomy.withdraw(player, price, args(auctionEconomy.getWithdrawReason(),
-                "%amount%", itemStack.getAmount(),
-                "%seller%", auctionItem.getSellerName(),
-                "%item%", itemStack.getType().name()
-        ));
+        auctionEconomy.withdraw(player, price, args(auctionEconomy.getWithdrawReason(), "%amount%", itemStack.getAmount(), "%seller%", auctionItem.getSellerName(), "%item%", itemStack.getType().name()));
 
         // On donne l'argent
-        auctionEconomy.deposit(seller, price, args(auctionEconomy.getDepositReason(),
-                "%amount%", itemStack.getAmount(),
-                "%buyer%", player.getName(),
-                "%item%", itemStack.getType().name()
-        ));
+        auctionEconomy.deposit(seller, price, args(auctionEconomy.getDepositReason(), "%amount%", itemStack.getAmount(), "%buyer%", player.getName(), "%item%", itemStack.getType().name()));
 
         if (seller.isOnline()) {
-            message(this.plugin, seller.getPlayer(), Message.ITEM_SOLD,
-                    "%amount%", itemStack.getAmount(),
-                    "%price%", auctionItem.getFormattedPrice(),
-                    "%item-translation-key%", auctionItem.getTranslationKey(),
-                    "%seller%", auctionItem.getSellerName(),
-                    "%buyer%", player.getName()
-            );
+            message(this.plugin, seller.getPlayer(), Message.ITEM_SOLD, "%amount%", itemStack.getAmount(), "%price%", auctionItem.getFormattedPrice(), "%item-translation-key%", auctionItem.getTranslationKey(), "%seller%", auctionItem.getSellerName(), "%buyer%", player.getName());
         }
 
-        message(player, Message.ITEM_BOUGHT,
-                "%amount%", itemStack.getAmount(),
-                "%price%", auctionItem.getFormattedPrice(),
-                "%item-translation-key%", auctionItem.getTranslationKey(),
-                "%seller%", auctionItem.getSellerName(),
-                "%buyer%", player.getName()
-        );
+        message(player, Message.ITEM_BOUGHT, "%amount%", itemStack.getAmount(), "%price%", auctionItem.getFormattedPrice(), "%item-translation-key%", auctionItem.getTranslationKey(), "%seller%", auctionItem.getSellerName(), "%buyer%", player.getName());
 
         auctionItem.setBuyer(player);
         auctionItem.setStatus(ItemStatus.PURCHASED);
