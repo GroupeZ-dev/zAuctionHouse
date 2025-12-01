@@ -6,6 +6,8 @@ import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
+import fr.maxlego08.zauctionhouse.api.log.LogContentType;
+import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
 import fr.maxlego08.zauctionhouse.api.utils.AuctionItemType;
@@ -91,8 +93,9 @@ public class SellService extends ZUtils implements AuctionSellService {
 
         this.manager.updateListedItems(auctionItem, true, player);
 
-        var economyManager = this.plugin.getEconomyManager();
         message(this.plugin, player, Message.ITEM_SOLD, "%price%", auctionItem.getFormattedPrice(), "%amount%", clonedItemStack.getAmount(), "%item-translation-key%", auctionItem.getTranslationKey());
+
+        this.plugin.getStorageManager().log(LogType.SALE, LogContentType.ITEM, auctionItem.getId(), player, null, clonedItemStack, price, auctionEconomy.getName(), "added_auction_item_to_listed");
 
         this.plugin.getAuctionClusterBridge().notifyItemSold(auctionItem).thenAccept(v -> {
             this.plugin.getLogger().info("Cluster notify item sold");

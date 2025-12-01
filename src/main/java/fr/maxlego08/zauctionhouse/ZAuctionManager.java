@@ -440,7 +440,6 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var itemStack = item instanceof AuctionItem auctionItem ? auctionItem.getItemStack() : null;
         var economyName = economy == null ? null : economy.getName();
 
-        storageManager.log(logType, LogContentType.ITEM, item.getId(), player, targetUniqueId, itemStack, item.getPrice(),
-                economyName, additionalData);
+        storageManager.log(logType, LogContentType.ITEM, item.getId(), player, targetUniqueId, itemStack, item.getPrice(), economyName, additionalData);
     }
 }

@@ -23,13 +23,13 @@ public class LogRepository extends Repository {
         insertSchema(schema -> {
             schema.string("log_type", logType.name());
             schema.string("content_type", contentType.name());
-            schema.integer("content_id", contentId);
+            schema.object("content_id", contentId);
             schema.uuid("player_unique_id", playerUniqueId);
-            schema.uuid("target_unique_id", targetUniqueId);
-            schema.string("itemstack", itemStack == null ? null : Base64ItemStack.encode(itemStack));
+            if (targetUniqueId != null) schema.uuid("target_unique_id", targetUniqueId);
+            if (itemStack != null) schema.string("itemstack", Base64ItemStack.encode(itemStack));
             schema.decimal("price", price == null ? BigDecimal.ZERO : price);
-            schema.string("economy_name", economyName);
-            schema.string("additional_data", additionalData);
+            if (economyName != null) schema.string("economy_name", economyName);
+            if (additionalData != null) schema.string("additional_data", additionalData);
         });
     }
 }
