@@ -15,12 +15,15 @@ import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.storage.Repository;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
 import fr.maxlego08.zauctionhouse.api.storage.dto.PlayerDTO;
+import fr.maxlego08.zauctionhouse.api.log.LogContentType;
+import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.storage.migrations.CreateAuctionItemMigration;
 import fr.maxlego08.zauctionhouse.storage.migrations.CreateLogsMigration;
 import fr.maxlego08.zauctionhouse.storage.migrations.CreatePlayerMigration;
 import fr.maxlego08.zauctionhouse.storage.migrations.CreateTransactionsMigration;
 import fr.maxlego08.zauctionhouse.storage.repository.Repositories;
 import fr.maxlego08.zauctionhouse.storage.repository.repositeries.AuctionItemRepository;
+import fr.maxlego08.zauctionhouse.storage.repository.repositeries.LogRepository;
 import fr.maxlego08.zauctionhouse.storage.repository.repositeries.PlayerRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -28,6 +31,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -69,6 +73,7 @@ public class ZStorageManager implements StorageManager {
         this.repositories = new Repositories(plugin, this.databaseConnection);
         this.repositories.register(PlayerRepository.class);
         this.repositories.register(AuctionItemRepository.class);
+        this.repositories.register(LogRepository.class);
 
         MigrationManager.execute(this.databaseConnection, JULogger.from(this.plugin.getLogger()));
 
@@ -132,5 +137,12 @@ public class ZStorageManager implements StorageManager {
         if (item instanceof AuctionItem){
             async(() -> with(AuctionItemRepository.class).updateItem(item, storageType));
         } else this.plugin.getLogger().severe("Not implemented (updateItem)");
+    }
+
+    @Override
+    public void log(LogType logType, LogContentType contentType, int contentId, Player player, UUID targetUniqueId, ItemStack itemStack,
+                    BigDecimal price, String economyName, String additionalData) {
+        async(() -> with(LogRepository.class).createLog(logType, contentType, contentId, player.getUniqueId(), targetUniqueId,
+                itemStack, price, economyName, additionalData));
     }
 }

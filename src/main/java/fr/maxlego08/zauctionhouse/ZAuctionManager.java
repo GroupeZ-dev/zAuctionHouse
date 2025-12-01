@@ -13,6 +13,8 @@ import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
+import fr.maxlego08.zauctionhouse.api.log.LogContentType;
+import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionExpireService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
@@ -33,6 +35,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 public class ZAuctionManager extends ZUtils implements AuctionManager {
@@ -227,8 +230,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var event = new AuctionRemoveListedItemEvent(item, player);
         event.callEvent();
 
-
-        // ToDo Logs
+        logItemAction(LogType.REMOVE_LISTED, item, player, null, "removed_from_listed");
     }
 
     @Override
@@ -257,7 +259,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var event = new AuctionRemoveListedItemEvent(item, player);
         event.callEvent();
 
-        // ToDo Logs
+        logItemAction(LogType.REMOVE_OWNED, item, player, null, "removed_owned_item");
     }
 
     @Override
@@ -283,7 +285,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var event = new AuctionRemoveExpiredItemEvent(item, player);
         event.callEvent();
 
-        // ToDo Logs
+        logItemAction(LogType.REMOVE_EXPIRED, item, player, null, "removed_expired_item");
     }
 
     @Override
@@ -309,7 +311,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var event = new AuctionRemovePurchasedItemEvent(item, player);
         event.callEvent();
 
-        // ToDo Logs
+        logItemAction(LogType.REMOVE_PURCHASED, item, player, item.getSellerUniqueId(), "removed_purchased_item");
 
     }
 
@@ -375,8 +377,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             player.closeInventory();
         }
 
-
-        // ToDo Logs
+        logItemAction(LogType.PURCHASE, auctionItem, player, auctionItem.getSellerUniqueId(), "purchase_item");
     }
 
     @Override
@@ -431,5 +432,15 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             List<Item> items = this.caches.get(player).get(PlayerCacheKey.ITEMS_LISTED);
             items.remove(item);
         }
+    }
+
+    private void logItemAction(LogType logType, Item item, Player player, UUID targetUniqueId, String additionalData) {
+        var storageManager = this.plugin.getStorageManager();
+        var economy = item.getAuctionEconomy();
+        var itemStack = item instanceof AuctionItem auctionItem ? auctionItem.getItemStack() : null;
+        var economyName = economy == null ? null : economy.getName();
+
+        storageManager.log(logType, LogContentType.ITEM, item.getId(), player, targetUniqueId, itemStack, item.getPrice(),
+                economyName, additionalData);
     }
 }
