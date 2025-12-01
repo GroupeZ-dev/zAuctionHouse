@@ -26,9 +26,16 @@ public enum Message {
     COMMAND_DESCRIPTION_AUCTION_RENT("Add an item for rent"),
     COMMAND_DESCRIPTION_AUCTION_BID("Add an item to the auction"),
     COMMAND_DESCRIPTION_AUCTION_RELOAD("Reload configurations files"),
+    COMMAND_DESCRIPTION_AUCTION_ADMIN("Open administrative tools for auctions"),
 
     SELL_ERROR_AIR("<error>Are you stupid ? You can’t sell air !"),
     SELL_ERROR_ECONOMY("<error>Unable to find the economy <white>%name%<error>."),
+
+    ADMIN_TARGET_REQUIRED("<error>You must specify a valid target player."),
+    ADMIN_TARGET_NOT_FOUND("<error>Unable to find the player <white>%target%<error>."),
+    ADMIN_OPEN_INVENTORY("<success>Opening %type% items for <white>%target%<success>."),
+    ADMIN_ITEM_REMOVED("<success>You removed <white>%item%<success> from <white>%target%<success>."),
+    ADMIN_ITEM_ADDED("<success>You added <white>%item%<success> to <white>%target%<success> in <white>%type%<success>."),
 
     RELOAD_SUCCESS("<success>You just reloaded the plugin !"),
 

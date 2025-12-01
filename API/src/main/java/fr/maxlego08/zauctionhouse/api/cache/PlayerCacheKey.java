@@ -14,6 +14,8 @@ public enum PlayerCacheKey {
     ITEMS_EXPIRED(new TypeToken<List<Item>>() {}, Collections::emptyList),
     ITEMS_PURCHASED(new TypeToken<List<Item>>() {}, Collections::emptyList),
     ITEMS_OWNED(new TypeToken<List<Item>>() {}, Collections::emptyList),
+    ADMIN_TARGET(new TypeToken<java.util.UUID>() {}, () -> null),
+    ADMIN_TARGET_NAME(new TypeToken<String>() {}, () -> ""),
     ITEM_SHOW(new TypeToken<Item>() {}, () -> null),
     CURRENT_PAGE(new TypeToken<Integer>() {}, () -> 1),
     ITEM_SORT(new TypeToken<SortItem>() {}, () -> SortItem.DECREASING_DATE),

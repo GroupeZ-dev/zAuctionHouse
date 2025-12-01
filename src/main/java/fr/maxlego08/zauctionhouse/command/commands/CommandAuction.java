@@ -17,6 +17,7 @@ public class CommandAuction extends VCommand {
 
         this.addSubCommand(new CommandAuctionSell(plugin));
         this.addSubCommand(new CommandAuctionReload(plugin));
+        this.addSubCommand(new CommandAuctionAdmin(plugin));
     }
 
     @Override

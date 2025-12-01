@@ -163,13 +163,28 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     @Override
+    public List<Item> getExpiredItems(UUID uniqueId) {
+        return getItems(StorageType.EXPIRED, item -> item.getSellerUniqueId().equals(uniqueId), Comparator.comparing(Item::getExpiredAt));
+    }
+
+    @Override
     public List<Item> getPlayerOwnedItems(Player player) {
         return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_OWNED, () -> getItems(StorageType.LISTED, item -> item.getSellerUniqueId().equals(player.getUniqueId()), Comparator.comparing(Item::getExpiredAt)));
     }
 
     @Override
+    public List<Item> getPlayerOwnedItems(UUID uniqueId) {
+        return getItems(StorageType.LISTED, item -> item.getSellerUniqueId().equals(uniqueId), Comparator.comparing(Item::getExpiredAt));
+    }
+
+    @Override
     public List<Item> getPurchasedItems(Player player) {
         return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_PURCHASED, () -> getItems(StorageType.PURCHASED, item -> item.getBuyerUniqueId().equals(player.getUniqueId()), Comparator.comparing(Item::getExpiredAt)));
+    }
+
+    @Override
+    public List<Item> getPurchasedItems(UUID uniqueId) {
+        return getItems(StorageType.PURCHASED, item -> item.getBuyerUniqueId() != null && item.getBuyerUniqueId().equals(uniqueId), Comparator.comparing(Item::getExpiredAt));
     }
 
     @Override
@@ -316,6 +331,20 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     @Override
+    public void adminRemoveItem(Player admin, UUID targetUniqueId, Item item, StorageType storageType) {
+
+        removeItem(storageType, item);
+
+        this.plugin.getStorageManager().updateItem(item, StorageType.DELETED);
+        clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_EXPIRED, PlayerCacheKey.ITEMS_PURCHASED, PlayerCacheKey.ITEMS_OWNED);
+
+        giveItem(admin, item);
+
+        var targetName = item.getSellerUniqueId().equals(targetUniqueId) ? item.getSellerName() : item.getBuyerName();
+        message(this.plugin, admin, Message.ADMIN_ITEM_REMOVED, "%item%", item.getTranslationKey(), "%target%", targetName == null ? "unknown" : targetName);
+    }
+
+    @Override
     public void purchaseItem(Player player, Item item) {
         if (item instanceof AuctionItem auctionItem) {
             purchaseAuctionItem(player, auctionItem);
@@ -385,7 +414,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         this.message(this.plugin, player, message, args);
     }
 
-    private void giveItem(Player player, Item item) {
+    public void giveItem(Player player, Item item) {
         if (item instanceof AuctionItem auctionItem) {
 
             var itemStack = auctionItem.getItemStack();

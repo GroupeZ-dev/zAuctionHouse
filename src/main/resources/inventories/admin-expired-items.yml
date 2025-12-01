@@ -1,0 +1,22 @@
+name: '#0c1719Admin expired items (%page%/%max-page%)'
+size: 54
+
+patterns:
+  - 'zauctionhouse-decoration'
+  - 'zauctionhouse-pagination'
+  - 'zauctionhouse-back'
+
+items:
+  items:
+    type: ZAUCTIONHOUSE_ADMIN_EXPIRED_ITEMS
+    slots:
+      - 9-17
+      - 18-26
+      - 27-35
+      - 36-44
+    else:
+      slots:
+        - 22
+      item:
+        material: BARRIER
+        name: '&c&nNo Items Found'
