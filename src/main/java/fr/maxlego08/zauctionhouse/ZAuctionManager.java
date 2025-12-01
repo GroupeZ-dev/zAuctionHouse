@@ -198,7 +198,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         item.setStatus(ItemStatus.REMOVED);
         removeItem(StorageType.LISTED, item);
 
-        clearPlayersCache(PlayerCacheKey.ITEMS_LISTED); // Suppression du cache global
+        this.updateListedItems(item, false, player);
         clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED, PlayerCacheKey.ITEMS_EXPIRED); // Suppression du cache du joueur
 
         if (configuration.getActions().listed().giveItem() && item.canReceiveItem(player)) {
@@ -227,7 +227,6 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var event = new AuctionRemoveListedItemEvent(item, player);
         event.callEvent();
 
-        this.updateListedItems(item, false);
 
         // ToDo Logs
     }
@@ -241,7 +240,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         item.setStatus(ItemStatus.DELETED);
         removeItem(StorageType.LISTED, item);
 
-        clearPlayersCache(PlayerCacheKey.ITEMS_LISTED); // Suppression du cache global
+        this.updateListedItems(item, false, player);
         clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED, PlayerCacheKey.ITEMS_EXPIRED); // Suppression du cache du joueur
 
         storageManager.updateItem(item, StorageType.DELETED);
@@ -258,10 +257,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var event = new AuctionRemoveListedItemEvent(item, player);
         event.callEvent();
 
-        this.updateListedItems(item, false);
-
         // ToDo Logs
-
     }
 
     @Override
@@ -348,7 +344,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         auctionItem.setBuyer(player);
         auctionItem.setStatus(ItemStatus.PURCHASED);
 
-        clearPlayersCache(PlayerCacheKey.ITEMS_LISTED);
+        this.updateListedItems(auctionItem, false, player);
         clearPlayerCache(player, PlayerCacheKey.ITEMS_PURCHASED);
         if (seller.isOnline()) {
             clearPlayerCache(seller.getPlayer(), PlayerCacheKey.ITEMS_OWNED);
@@ -379,7 +375,6 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             player.closeInventory();
         }
 
-        this.updateListedItems(auctionItem, false);
 
         // ToDo Logs
     }
@@ -399,12 +394,17 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     @Override
-    public void updateListedItems(Item item, boolean added) {
+    public void updateListedItems(Item item, boolean added, Player ignoredPlayer) {
 
-        if (!this.plugin.getConfiguration().getActions().updateInventoryOnAction()) return;
+        if (!this.plugin.getConfiguration().getActions().updateInventoryOnAction()) {
+            clearPlayersCache(PlayerCacheKey.ITEMS_LISTED); // Suppression du cache global
+            return;
+        }
 
         this.plugin.getScheduler().runAsync(w -> {
             for (Player onlinePlayer : this.plugin.getServer().getOnlinePlayers()) {
+
+                if (onlinePlayer == ignoredPlayer) continue;
 
                 var openInventory = onlinePlayer.getOpenInventory().getTopInventory().getHolder();
                 if (openInventory instanceof InventoryEngine inventoryEngine) {
@@ -413,6 +413,10 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
                     var listedItemsButton = buttons.getFirst();
                     listedItemsButton.updateInventory(onlinePlayer, inventoryEngine, item, added, this);
+                }
+
+                if (this.caches.containsKey(onlinePlayer)) {
+                    this.caches.get(onlinePlayer).remove(PlayerCacheKey.ITEMS_LISTED);
                 }
             }
         });

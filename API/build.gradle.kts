@@ -9,7 +9,7 @@ rootProject.extra.properties["sha"]?.let { sha ->
 dependencies {
     implementation("fr.maxlego08.sarah:sarah:1.20")
     implementation("com.tcoded:FoliaLib:0.5.1")
-    implementation("fr.traqueur.currencies:currenciesapi:1.0.10")
+    implementation("fr.traqueur.currencies:currenciesapi:1.0.11")
 }
 
 tasks {

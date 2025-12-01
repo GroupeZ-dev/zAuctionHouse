@@ -128,41 +128,83 @@ public class ListedItemsButton extends PaginateButton {
 
     public void updateInventory(Player player, InventoryEngine inventoryEngine, Item item, boolean added, AuctionManager manager) {
 
-        var page = inventoryEngine.getPage();
+        int page = inventoryEngine.getPage();
         var items = manager.getItemsListedForSale(player);
 
         var slots = new ArrayList<>(getSlots());
         if (slots.isEmpty() || slots.size() == 1) return;
 
-        var itemIndex = items.indexOf(item);
-
-        if (itemIndex == -1) return;
+        int itemIndex = items.indexOf(item);
+        if (itemIndex == -1) {
+            return;
+        }
 
         int itemsPerPage = slots.size();
         int startIndex = (page - 1) * itemsPerPage;
         int endIndex = startIndex + itemsPerPage;
 
-        if (itemIndex >= endIndex) return;
-
-        if (!added) {
-            items.remove(itemIndex);
+        if (itemIndex < startIndex || itemIndex >= endIndex) {
+            return;
         }
-
-        int newItemSlot = slots.get(itemIndex);
 
         var spigotInventory = inventoryEngine.getSpigotInventory();
         var inventoryItems = inventoryEngine.getItems();
 
-        for (int i = slots.size() - 1; i >= newItemSlot; i--) {
+        if (!added) {
 
-            if (!inventoryItems.containsKey(i)) continue;
+            Item itemToAddAtEnd = null;
+            if (endIndex < items.size()) {
+                itemToAddAtEnd = items.get(endIndex);
+            }
 
-            var itemButton = inventoryItems.get(i);
-            inventoryItems.put(i + 1, itemButton);
-            spigotInventory.setItem(i + 1, itemButton.getDisplayItem());
+            items.remove(itemIndex);
+
+            int removedGuiIndex = itemIndex - startIndex;
+            int removedSlot = slots.get(removedGuiIndex);
+
+            inventoryItems.remove(removedSlot);
+            spigotInventory.setItem(removedSlot, null);
+
+            for (int guiIndex = removedGuiIndex + 1; guiIndex < slots.size(); guiIndex++) {
+
+                int fromSlot = slots.get(guiIndex);
+                int toSlot = slots.get(guiIndex - 1);
+
+                var button = inventoryItems.remove(fromSlot);
+                if (button != null) {
+                    inventoryItems.put(toSlot, button);
+                    spigotInventory.setItem(toSlot, button.getDisplayItem());
+                    spigotInventory.setItem(fromSlot, null);
+                }
+            }
+
+            if (itemToAddAtEnd != null) {
+                int lastSlot = slots.getLast();
+                var lastItemStack = itemToAddAtEnd.buildItemStack(player);
+                inventoryEngine.addItem(lastSlot, lastItemStack)
+                        .setClick(createClick(player, inventoryEngine, lastSlot, itemToAddAtEnd, lastItemStack));
+            }
+
+            return;
+        }
+
+        int insertGuiIndex = itemIndex - startIndex;
+        int newItemSlot = slots.get(insertGuiIndex);
+
+        for (int guiIndex = slots.size() - 1; guiIndex > insertGuiIndex; guiIndex--) {
+
+            int fromSlot = slots.get(guiIndex - 1);
+            int toSlot = slots.get(guiIndex);
+
+            var button = inventoryItems.get(fromSlot);
+            if (button != null) {
+                inventoryItems.put(toSlot, button);
+                spigotInventory.setItem(toSlot, button.getDisplayItem());
+            }
         }
 
         var itemStack = item.buildItemStack(player);
         inventoryEngine.addItem(newItemSlot, itemStack).setClick(createClick(player, inventoryEngine, newItemSlot, item, itemStack));
     }
+
 }
