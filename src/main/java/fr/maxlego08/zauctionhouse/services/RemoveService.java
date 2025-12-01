@@ -27,7 +27,6 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
 
         var auctionManager = this.plugin.getAuctionManager();
         var inventoryManager = this.plugin.getInventoriesLoader().getInventoryManager();
-        var clusterBridge = this.plugin.getAuctionClusterBridge();
         var logger = this.plugin.getLogger();
 
         // 1. Vérifier si l'item est expiré
@@ -47,33 +46,7 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
         item.setStatus(ItemStatus.IS_BEING_REMOVED);
 
         // 2. Vérifier si l'item est lock
-        clusterBridge.checkAvailability(item).thenCompose(available -> {
-
-            if (!available) {
-                logger.info("Item is not available");
-                inventoryManager.updateInventory(player);
-                return failedFuture(new IllegalStateException("Item introuvable"));
-            }
-
-            return clusterBridge.lockItem(item, player.getUniqueId());
-
-        }).thenCompose(token -> {
-
-            // 3. On va supprimer l'item coté REDIS
-
-            logger.info("Token: " + token);
-            return clusterBridge.removeItem(item);
-
-        }).thenCompose(v -> {
-
-            // 4. On supprime l'item en local
-            auctionManager.removeListedItem(player, item);
-
-            return clusterBridge.unlockItem(item, LockToken.of(item));
-        }).exceptionally(e -> {
-            e.printStackTrace();
-            return null;
-        });
+        executeRemoval(player, item, () -> inventoryManager.updateInventory(player), () -> auctionManager.removeListedItem(player, item));
     }
 
     @Override
@@ -85,7 +58,6 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
 
         var auctionManager = this.plugin.getAuctionManager();
         var inventoryManager = this.plugin.getInventoriesLoader().getInventoryManager();
-        var clusterBridge = this.plugin.getAuctionClusterBridge();
         var logger = this.plugin.getLogger();
 
         // 1. Vérifier si l'item est expiré
@@ -105,33 +77,7 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
         item.setStatus(ItemStatus.IS_BEING_REMOVED);
 
         // 2. Vérifier si l'item est lock
-        clusterBridge.checkAvailability(item).thenCompose(available -> {
-
-            if (!available) {
-                logger.info("Item is not available");
-                inventoryManager.updateInventory(player);
-                return failedFuture(new IllegalStateException("Item introuvable"));
-            }
-
-            return clusterBridge.lockItem(item, player.getUniqueId());
-
-        }).thenCompose(token -> {
-
-            // 3. On va supprimer l'item coté REDIS
-
-            logger.info("Token: " + token);
-            return clusterBridge.removeItem(item);
-
-        }).thenCompose(v -> {
-
-            // 4. On supprime l'item en local
-            auctionManager.removeOwnedItem(player, item);
-
-            return clusterBridge.unlockItem(item, LockToken.of(item));
-        }).exceptionally(e -> {
-            e.printStackTrace();
-            return null;
-        });
+        executeRemoval(player, item, () -> inventoryManager.updateInventory(player), () -> auctionManager.removeOwnedItem(player, item));
 
     }
 
@@ -143,7 +89,6 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
 
         var auctionManager = this.plugin.getAuctionManager();
         var inventoryManager = this.plugin.getInventoriesLoader().getInventoryManager();
-        var clusterBridge = this.plugin.getAuctionClusterBridge();
         var logger = this.plugin.getLogger();
 
         // 1. Vérifier si l'item est expiré
@@ -163,33 +108,7 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
         item.setStatus(ItemStatus.DELETED);
 
         // 2. Vérifier si l'item est lock
-        clusterBridge.checkAvailability(item).thenCompose(available -> {
-
-            if (!available) {
-                logger.info("Item is not available");
-                inventoryManager.updateInventory(player);
-                return failedFuture(new IllegalStateException("Item introuvable"));
-            }
-
-            return clusterBridge.lockItem(item, player.getUniqueId());
-
-        }).thenCompose(token -> {
-
-            // 3. On va supprimer l'item coté REDIS
-
-            logger.info("Token: " + token);
-            return clusterBridge.removeItem(item);
-
-        }).thenCompose(v -> {
-
-            // 4. On supprime l'item en local
-            this.plugin.getAuctionManager().removeExpiredItem(player, item);
-
-            return clusterBridge.unlockItem(item, LockToken.of(item));
-        }).exceptionally(e -> {
-            e.printStackTrace();
-            return null;
-        });
+        executeRemoval(player, item, () -> inventoryManager.updateInventory(player), () -> this.plugin.getAuctionManager().removeExpiredItem(player, item));
     }
 
     @Override
@@ -200,7 +119,6 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
 
         var auctionManager = this.plugin.getAuctionManager();
         var inventoryManager = this.plugin.getInventoriesLoader().getInventoryManager();
-        var clusterBridge = this.plugin.getAuctionClusterBridge();
         var logger = this.plugin.getLogger();
 
         // 1. Vérifier si l'item est expiré
@@ -220,11 +138,20 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
         item.setStatus(ItemStatus.DELETED);
 
         // 2. Vérifier si l'item est lock
+        executeRemoval(player, item, () -> inventoryManager.updateInventory(player), () -> this.plugin.getAuctionManager().removePurchasedItem(player, item));
+
+    }
+
+    private void executeRemoval(Player player, Item item, Runnable onUnavailable, Runnable onLocalRemoval) {
+
+        var clusterBridge = this.plugin.getAuctionClusterBridge();
+        var logger = this.plugin.getLogger();
+
         clusterBridge.checkAvailability(item).thenCompose(available -> {
 
             if (!available) {
                 logger.info("Item is not available");
-                inventoryManager.updateInventory(player);
+                onUnavailable.run();
                 return failedFuture(new IllegalStateException("Item introuvable"));
             }
 
@@ -240,13 +167,12 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
         }).thenCompose(v -> {
 
             // 4. On supprime l'item en local
-            this.plugin.getAuctionManager().removePurchasedItem(player, item);
+            onLocalRemoval.run();
 
             return clusterBridge.unlockItem(item, LockToken.of(item));
         }).exceptionally(e -> {
             e.printStackTrace();
             return null;
         });
-
     }
 }
