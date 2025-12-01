@@ -49,7 +49,7 @@ public class SellService extends ZUtils implements AuctionSellService {
         this.manager.clearPlayersCache(PlayerCacheKey.ITEMS_LISTED); // Suppression du cache global
         this.manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED); // Suppression du cache du joueur
 
-        this.manager.updateListedItems(auctionItem, true);
+        this.manager.updateListedItems(auctionItem, true, player);
 
         this.plugin.getAuctionClusterBridge().notifyItemSold(auctionItem).thenAccept(v -> {
             this.plugin.getLogger().info("Cluster notify item sold");

@@ -181,8 +181,7 @@ public class ListedItemsButton extends PaginateButton {
             if (itemToAddAtEnd != null) {
                 int lastSlot = slots.getLast();
                 var lastItemStack = itemToAddAtEnd.buildItemStack(player);
-                inventoryEngine.addItem(lastSlot, lastItemStack)
-                        .setClick(createClick(player, inventoryEngine, lastSlot, itemToAddAtEnd, lastItemStack));
+                inventoryEngine.addItem(lastSlot, lastItemStack).setClick(createClick(player, inventoryEngine, lastSlot, itemToAddAtEnd, lastItemStack));
             }
 
             return;
