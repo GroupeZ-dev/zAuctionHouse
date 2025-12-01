@@ -49,6 +49,12 @@ public interface AuctionManager {
 
     List<Item> getPurchasedItems(Player player);
 
+    List<Item> getExpiredItems(java.util.UUID uniqueId);
+
+    List<Item> getPlayerOwnedItems(java.util.UUID uniqueId);
+
+    List<Item> getPurchasedItems(java.util.UUID uniqueId);
+
     PlayerCache getCache(Player player);
 
     void clearPlayersCache(PlayerCacheKey... keys);
@@ -64,6 +70,8 @@ public interface AuctionManager {
     void removeExpiredItem(Player player, Item item);
 
     void removePurchasedItem(Player player, Item item);
+
+    void adminRemoveItem(Player admin, java.util.UUID targetUniqueId, Item item, StorageType storageType);
 
     void purchaseItem(Player player, Item item);
 

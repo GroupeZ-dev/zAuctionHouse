@@ -5,6 +5,7 @@ import fr.maxlego08.zauctionhouse.api.AuctionManager;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCache;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
+import fr.maxlego08.zauctionhouse.api.cluster.LockToken;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveExpiredItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveListedItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemovePurchasedItemEvent;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.concurrent.CompletableFuture;
 
 public class ZAuctionManager extends ZUtils implements AuctionManager {
 
@@ -163,13 +165,28 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     @Override
+    public List<Item> getExpiredItems(UUID uniqueId) {
+        return getItems(StorageType.EXPIRED, item -> item.getSellerUniqueId().equals(uniqueId), Comparator.comparing(Item::getExpiredAt));
+    }
+
+    @Override
     public List<Item> getPlayerOwnedItems(Player player) {
         return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_OWNED, () -> getItems(StorageType.LISTED, item -> item.getSellerUniqueId().equals(player.getUniqueId()), Comparator.comparing(Item::getExpiredAt)));
     }
 
     @Override
+    public List<Item> getPlayerOwnedItems(UUID uniqueId) {
+        return getItems(StorageType.LISTED, item -> item.getSellerUniqueId().equals(uniqueId), Comparator.comparing(Item::getExpiredAt));
+    }
+
+    @Override
     public List<Item> getPurchasedItems(Player player) {
         return getCache(player).getOrCompute(PlayerCacheKey.ITEMS_PURCHASED, () -> getItems(StorageType.PURCHASED, item -> item.getBuyerUniqueId().equals(player.getUniqueId()), Comparator.comparing(Item::getExpiredAt)));
+    }
+
+    @Override
+    public List<Item> getPurchasedItems(UUID uniqueId) {
+        return getItems(StorageType.PURCHASED, item -> item.getBuyerUniqueId() != null && item.getBuyerUniqueId().equals(uniqueId), Comparator.comparing(Item::getExpiredAt));
     }
 
     @Override
@@ -316,6 +333,45 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     @Override
+    public void adminRemoveItem(Player admin, UUID targetUniqueId, Item item, StorageType storageType) {
+
+        var clusterBridge = this.plugin.getAuctionClusterBridge();
+        var inventoryManager = this.plugin.getInventoriesLoader().getInventoryManager();
+
+        clusterBridge.checkAvailability(item).thenCompose(available -> {
+
+            if (!available) {
+                this.plugin.getLogger().info("Item is not available");
+                inventoryManager.updateInventory(admin);
+                return failedFuture(new IllegalStateException("Item introuvable"));
+            }
+
+            return clusterBridge.lockItem(item, admin.getUniqueId());
+
+        }).thenCompose(lockToken -> clusterBridge.removeItem(item).thenApply(v -> lockToken)).thenAccept(lockToken -> {
+
+            removeItem(storageType, item);
+
+            this.plugin.getStorageManager().updateItem(item, StorageType.DELETED);
+            clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_EXPIRED, PlayerCacheKey.ITEMS_PURCHASED, PlayerCacheKey.ITEMS_OWNED);
+
+            giveItem(admin, item);
+
+            var targetName = item.getSellerUniqueId().equals(targetUniqueId) ? item.getSellerName() : item.getBuyerName();
+            message(this.plugin, admin, Message.ADMIN_ITEM_REMOVED, "%item%", item.getTranslationKey(), "%target%", targetName == null ? "unknown" : targetName);
+
+            inventoryManager.updateInventory(admin);
+
+            clusterBridge.unlockItem(item, lockToken);
+
+        }).exceptionally(e -> {
+            e.printStackTrace();
+            inventoryManager.updateInventory(admin);
+            return null;
+        });
+    }
+
+    @Override
     public void purchaseItem(Player player, Item item) {
         if (item instanceof AuctionItem auctionItem) {
             purchaseAuctionItem(player, auctionItem);
@@ -385,7 +441,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         this.message(this.plugin, player, message, args);
     }
 
-    private void giveItem(Player player, Item item) {
+    public void giveItem(Player player, Item item) {
         if (item instanceof AuctionItem auctionItem) {
 
             var itemStack = auctionItem.getItemStack();
@@ -432,6 +488,12 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             List<Item> items = this.caches.get(player).get(PlayerCacheKey.ITEMS_LISTED);
             items.remove(item);
         }
+    }
+
+    private <T> CompletableFuture<T> failedFuture(Throwable ex) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        future.completeExceptionally(ex);
+        return future;
     }
 
     private void logItemAction(LogType logType, Item item, Player player, UUID targetUniqueId, String additionalData) {

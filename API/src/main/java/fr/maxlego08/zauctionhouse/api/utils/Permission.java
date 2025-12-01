@@ -7,7 +7,10 @@ public enum Permission {
     ZAUCTIONHOUSE_SELL,
     ZAUCTIONHOUSE_BID,
     ZAUCTIONHOUSE_RENT,
-    ZAUCTIONHOUSE_ADMIN_REMOVE_INVENTORY("Allows access to the inventory to remove an item from the sale");
+    ZAUCTIONHOUSE_ADMIN_REMOVE_INVENTORY("Allows access to the inventory to remove an item from the sale"),
+
+    ZAUCTIONHOUSE_ADMIN,
+    ZAUCTIONHOUSE_ADMIN_ITEMS;
 
     private final String description;
     private final String[] args;

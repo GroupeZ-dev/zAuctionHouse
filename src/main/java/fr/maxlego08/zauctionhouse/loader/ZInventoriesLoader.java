@@ -10,6 +10,9 @@ import fr.maxlego08.zauctionhouse.api.InventoriesLoader;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.buttons.ShowButton;
+import fr.maxlego08.zauctionhouse.buttons.admin.AdminExpiredItemsButton;
+import fr.maxlego08.zauctionhouse.buttons.admin.AdminOwnedItemsButton;
+import fr.maxlego08.zauctionhouse.buttons.admin.AdminPurchasedItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.confirm.ConfirmPurchaseButton;
 import fr.maxlego08.zauctionhouse.buttons.confirm.ConfirmRemoveListedButton;
 import fr.maxlego08.zauctionhouse.buttons.inventory.ExpiredInventoryButton;
@@ -102,6 +105,10 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new NoneLoader(this.plugin, OwnedItemsButton.class, "ZAUCTIONHOUSE_OWNED_ITEMS"));
         this.buttonManager.register(new NoneLoader(this.plugin, PurchasedItemsButton.class, "ZAUCTIONHOUSE_PURCHASED_ITEMS"));
 
+        this.buttonManager.register(new NoneLoader(this.plugin, AdminOwnedItemsButton.class, "ZAUCTIONHOUSE_ADMIN_OWNED_ITEMS"));
+        this.buttonManager.register(new NoneLoader(this.plugin, AdminExpiredItemsButton.class, "ZAUCTIONHOUSE_ADMIN_EXPIRED_ITEMS"));
+        this.buttonManager.register(new NoneLoader(this.plugin, AdminPurchasedItemsButton.class, "ZAUCTIONHOUSE_ADMIN_PURCHASED_ITEMS"));
+
         this.buttonManager.register(new NoneLoader(this.plugin, ShowButton.class, "ZAUCTIONHOUSE_SHOW"));
         this.buttonManager.register(new NoneLoader(this.plugin, ConfirmRemoveListedButton.class, "ZAUCTIONHOUSE_CONFIRM_REMOVE_LISTED"));
         this.buttonManager.register(new NoneLoader(this.plugin, ConfirmPurchaseButton.class, "ZAUCTIONHOUSE_CONFIRM_PURCHASE"));
@@ -143,6 +150,9 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
                 "expired-items",
                 "owned-items",
                 "purchased-items",
+                "admin-owned-items",
+                "admin-expired-items",
+                "admin-purchased-items",
                 "remove-confirm",
                 "purchase-confirm"
         );
