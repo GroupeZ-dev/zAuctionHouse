@@ -17,6 +17,7 @@ public class CommandAuctionAdminOpen extends VCommand {
 
     public CommandAuctionAdminOpen(AuctionPlugin plugin) {
         super(plugin);
+        this.addSubCommand("open");
         this.setPermission(Permission.ZAUCTIONHOUSE_ADMIN_ITEMS);
         this.setDescription(Message.ADMIN_OPEN_INVENTORY);
         this.addRequireArg("player", (sender, args) -> Bukkit.getOnlinePlayers().stream().map(Player::getName).toList());

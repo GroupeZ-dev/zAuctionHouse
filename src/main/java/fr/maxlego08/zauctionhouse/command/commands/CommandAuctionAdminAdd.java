@@ -22,6 +22,7 @@ public class CommandAuctionAdminAdd extends VCommand {
 
     public CommandAuctionAdminAdd(AuctionPlugin plugin) {
         super(plugin);
+        this.addSubCommand("add");
         this.setPermission(Permission.ZAUCTIONHOUSE_ADMIN_ITEMS);
         this.setDescription(Message.ADMIN_ITEM_ADDED);
         this.addRequireArg("player", (sender, args) -> Bukkit.getOnlinePlayers().stream().map(Player::getName).toList());
