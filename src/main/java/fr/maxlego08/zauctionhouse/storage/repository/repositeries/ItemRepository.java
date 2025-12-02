@@ -31,7 +31,7 @@ public class ItemRepository extends Repository {
             schema.string("economy_name", auctionEconomy.getName());
             schema.decimal("price", price);
             schema.object("expired_at", expiredAtDate);
-            schema.object("storage_type", StorageType.LISTED);
+            schema.object("storage_type", StorageType.LISTED.name());
             schema.string("server_name", serverName);
         });
     }

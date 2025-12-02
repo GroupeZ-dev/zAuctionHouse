@@ -15,7 +15,7 @@ public class CreateItemMigration extends Migration {
             table.decimal("price", 65, 2);
             table.string("economy_name", 255);
             table.string("storage_type", 32);
-            table.string("server_name", 255).defaultValue("skyblock");
+            table.string("server_name", 255);
             table.timestamp("expired_at");
             table.timestamps();
         });

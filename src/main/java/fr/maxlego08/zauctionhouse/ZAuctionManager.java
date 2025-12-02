@@ -475,7 +475,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             return;
         }
 
-        if (!added) removeFromCache(ignoredPlayer, item);
+        if (!added && ignoredPlayer != null) removeFromCache(ignoredPlayer, item);
 
         this.plugin.getScheduler().runAsync(w -> {
             for (Player onlinePlayer : this.plugin.getServer().getOnlinePlayers()) {
