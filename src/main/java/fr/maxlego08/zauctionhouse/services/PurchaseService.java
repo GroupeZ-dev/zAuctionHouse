@@ -71,7 +71,7 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
 
             if (hasMoney) {
                 auctionManager.purchaseItem(player, item);
-                return clusterBridge.purchaseItem(player, item).thenCompose(v -> clusterBridge.unlockItem(item, token));
+                return clusterBridge.notifyItemBought(player, item).thenCompose(v -> clusterBridge.unlockItem(item, token));
             }
 
             return clusterBridge.unlockItem(item, token);

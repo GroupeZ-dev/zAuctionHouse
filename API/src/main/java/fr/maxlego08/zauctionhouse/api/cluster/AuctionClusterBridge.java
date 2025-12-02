@@ -14,11 +14,9 @@ public interface AuctionClusterBridge {
 
     CompletableFuture<Void> unlockItem(Item item, LockToken lockToken);
 
-    CompletableFuture<Void> notifyItemBought(Item item);
+    CompletableFuture<Void> notifyItemBought(Player player, Item item);
 
     CompletableFuture<Void> notifyItemSold(Item item);
 
     CompletableFuture<Void> removeItem(Item item);
-
-    CompletableFuture<Void> purchaseItem(Player player, Item item);
 }
