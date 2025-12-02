@@ -97,7 +97,7 @@ public class SellService extends ZUtils implements AuctionSellService {
 
         this.plugin.getStorageManager().log(LogType.SALE, LogContentType.ITEM, auctionItem.getId(), player, null, clonedItemStack, price, auctionEconomy.getName(), "added_auction_item_to_listed");
 
-        this.plugin.getAuctionClusterBridge().notifyItemSold(auctionItem).thenAccept(v -> {
+        this.plugin.getAuctionClusterBridge().notifyItemListed(auctionItem).thenAccept(v -> {
             this.plugin.getLogger().info("Cluster notify item sold");
         }).exceptionally(throwable -> {
             this.plugin.getLogger().severe("Unable to notify item sold");

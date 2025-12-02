@@ -31,7 +31,7 @@ public class LocalAuctionClusterBridge implements AuctionClusterBridge {
     }
 
     @Override
-    public CompletableFuture<Void> notifyItemSold(Item item) {
+    public CompletableFuture<Void> notifyItemListed(Item item) {
         return CompletableFuture.completedFuture(null);
     }
 
