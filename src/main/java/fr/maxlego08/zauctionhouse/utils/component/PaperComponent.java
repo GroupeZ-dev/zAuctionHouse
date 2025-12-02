@@ -144,4 +144,14 @@ public class PaperComponent implements ComponentMessage {
 
         return Objects.requireNonNull(meta.lore()).stream().map(PlainTextComponentSerializer.plainText()::serialize).toList();
     }
+
+    @Override
+    public boolean hasDisplayName(ItemStack itemStack) {
+        return itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName();
+    }
+
+    @Override
+    public String getItemStackDisplayName(ItemStack itemStack) {
+        return MiniMessage.miniMessage().serialize(Objects.requireNonNull(itemStack.getItemMeta().displayName()));
+    }
 }

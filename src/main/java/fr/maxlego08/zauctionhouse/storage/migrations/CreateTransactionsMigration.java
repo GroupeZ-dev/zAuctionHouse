@@ -9,6 +9,7 @@ public class CreateTransactionsMigration extends Migration {
     public void up() {
         create(Tables.TRANSACTIONS, table -> {
             table.autoIncrement("id");
+            table.integer("item_id").foreignKey(Tables.ITEMS, "id", true);
             table.string("player_unique_id", 36).foreignKey(Tables.PLAYERS, "unique_id", true);
             table.string("economy_name", 255);
             table.decimal("before", 65, 2);

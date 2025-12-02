@@ -57,5 +57,9 @@ public interface ComponentMessage {
     String getItemStackName(ItemStack itemStack);
 
     List<String> getItemStackLore(ItemStack itemStack);
+
+    boolean hasDisplayName(ItemStack itemStack);
+
+    String getItemStackDisplayName(ItemStack itemStack);
 }
 

@@ -66,4 +66,6 @@ public interface Item {
     void setBuyer(Player player);
 
     void setBuyer(UUID buyerUniqueId, String buyerName);
+
+    String getItemDisplay();
 }

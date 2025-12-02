@@ -1,6 +1,6 @@
 package fr.maxlego08.zauctionhouse.api.economy;
 
-import fr.maxlego08.zauctionhouse.api.utils.AuctionItemType;
+import fr.maxlego08.zauctionhouse.api.item.ItemType;
 
 import java.text.DecimalFormat;
 import java.util.Collection;
@@ -19,7 +19,7 @@ public interface EconomyManager {
 
     void loadEconomies();
 
-    AuctionEconomy getDefaultEconomy(AuctionItemType auctionItemType);
+    AuctionEconomy getDefaultEconomy(ItemType itemType);
 
     DecimalFormat getPriceDecimalFormat();
 

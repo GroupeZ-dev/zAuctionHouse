@@ -3,7 +3,7 @@ package fr.maxlego08.zauctionhouse.economy;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.economy.PriceFormat;
-import fr.maxlego08.zauctionhouse.api.utils.AuctionItemType;
+import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.traqueur.currencies.CurrencyProvider;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.Nullable;
@@ -24,11 +24,11 @@ public class ZAuctionEconomy implements AuctionEconomy {
     private final String depositReason;
     private final String withdrawReason;
     private final PriceFormat priceFormat;
-    private final EnumMap<AuctionItemType, BigDecimal> minPrices;
-    private final EnumMap<AuctionItemType, BigDecimal> maxPrices;
+    private final EnumMap<ItemType, BigDecimal> minPrices;
+    private final EnumMap<ItemType, BigDecimal> maxPrices;
     private final boolean autoClaim;
 
-    public ZAuctionEconomy(AuctionPlugin plugin, CurrencyProvider currencyProvider, String name, String displayName, String format, String symbol, String permission, String depositReason, String withdrawReason, PriceFormat priceFormat, EnumMap<AuctionItemType, BigDecimal> minPrices, EnumMap<AuctionItemType, BigDecimal> maxPrices, boolean autoClaim) {
+    public ZAuctionEconomy(AuctionPlugin plugin, CurrencyProvider currencyProvider, String name, String displayName, String format, String symbol, String permission, String depositReason, String withdrawReason, PriceFormat priceFormat, EnumMap<ItemType, BigDecimal> minPrices, EnumMap<ItemType, BigDecimal> maxPrices, boolean autoClaim) {
         this.plugin = plugin;
         this.currencyProvider = currencyProvider;
         this.name = name;
@@ -119,12 +119,12 @@ public class ZAuctionEconomy implements AuctionEconomy {
     }
 
     @Override
-    public BigDecimal getMaxPrice(AuctionItemType auctionItemType) {
-        return this.maxPrices.get(auctionItemType);
+    public BigDecimal getMaxPrice(ItemType itemType) {
+        return this.maxPrices.get(itemType);
     }
 
     @Override
-    public BigDecimal getMinPrice(AuctionItemType auctionItemType) {
-        return this.minPrices.get(auctionItemType);
+    public BigDecimal getMinPrice(ItemType itemType) {
+        return this.minPrices.get(itemType);
     }
 }

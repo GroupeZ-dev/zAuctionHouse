@@ -3,10 +3,12 @@ package fr.maxlego08.zauctionhouse.api.configuration;
 import fr.maxlego08.zauctionhouse.api.configuration.commands.CommandConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ActionConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ExpirationConfiguration;
+import fr.maxlego08.zauctionhouse.api.configuration.records.ItemDisplayConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ItemLoreConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.NumberMultiplicationConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.PermissionConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.SortConfiguration;
+import fr.maxlego08.zauctionhouse.api.configuration.records.SpecialItemsConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.TimeConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.WorldConfiguration;
 import fr.maxlego08.zauctionhouse.api.messages.MessageColor;
@@ -60,6 +62,10 @@ public interface Configuration extends ConfigurationFile {
     PermissionConfiguration getPermission();
 
     WorldConfiguration getWorld();
+
+    SpecialItemsConfiguration getSpecialItems();
+
+    ItemDisplayConfiguration getItemDisplay();
 
     <T extends Enum<T>> CommandConfiguration<T> loadCommandConfiguration(String path, Class<T> enumClass);
 }

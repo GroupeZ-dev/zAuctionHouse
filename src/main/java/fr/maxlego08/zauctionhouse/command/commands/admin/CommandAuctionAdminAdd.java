@@ -6,7 +6,7 @@ import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
-import fr.maxlego08.zauctionhouse.api.utils.AuctionItemType;
+import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.utils.Permission;
 import fr.maxlego08.zauctionhouse.command.VCommand;
 import fr.maxlego08.zauctionhouse.utils.commands.CommandType;
@@ -16,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class CommandAuctionAdminAdd extends VCommand {
@@ -65,7 +66,7 @@ public class CommandAuctionAdminAdd extends VCommand {
         }
 
         BigDecimal price = number;
-        AuctionEconomy economy = plugin.getEconomyManager().getDefaultEconomy(AuctionItemType.SELL);
+        AuctionEconomy economy = plugin.getEconomyManager().getDefaultEconomy(ItemType.AUCTION);
         ItemStack cloned = inHand.clone();
 
         removeItemInHand(admin, cloned.getAmount());
@@ -83,36 +84,36 @@ public class CommandAuctionAdminAdd extends VCommand {
         long expiredAt = plugin.getConfiguration().getSellExpiration().getExpiration(target);
         expiredAt = expiredAt > 0 ? System.currentTimeMillis() + (expiredAt * 1000) : 0;
 
-        this.plugin.getStorageManager().createAuctionItem(target, price, expiredAt, cloned, economy)
+        this.plugin.getStorageManager().createAuctionItem(target, price, expiredAt, List.of(cloned), economy)
                 .thenAccept(item -> {
                     this.auctionManager.addItem(StorageType.LISTED, item);
                     this.auctionManager.clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_OWNED);
                     this.auctionManager.updateListedItems(item, true, target);
-                    this.auctionManager.message(admin, Message.ADMIN_ITEM_ADDED, "%item%", item.getTranslationKey(), "%target%", target.getName(), "%type%", "listed");
+                    this.auctionManager.message(admin, Message.ADMIN_ITEM_ADDED, "%items%", item.getItemDisplay(), "%target%", target.getName(), "%type%", "listed");
                 });
     }
 
     private void addExpired(Player target, ItemStack cloned, BigDecimal price, AuctionEconomy economy, Player admin) {
-        this.plugin.getStorageManager().createAuctionItem(target, price, System.currentTimeMillis(), cloned, economy)
+        this.plugin.getStorageManager().createAuctionItem(target, price, System.currentTimeMillis(), List.of(cloned), economy)
                 .thenAccept(item -> {
                     item.setStatus(ItemStatus.REMOVED);
                     item.setExpiredAt(new Date());
                     this.auctionManager.addItem(StorageType.EXPIRED, item);
                     this.plugin.getStorageManager().updateItem(item, StorageType.EXPIRED);
                     this.auctionManager.clearPlayersCache(PlayerCacheKey.ITEMS_EXPIRED, PlayerCacheKey.ITEMS_OWNED);
-                    this.auctionManager.message(admin, Message.ADMIN_ITEM_ADDED, "%item%", item.getTranslationKey(), "%target%", target.getName(), "%type%", "expired");
+                    this.auctionManager.message(admin, Message.ADMIN_ITEM_ADDED, "%items%", item.getItemDisplay(), "%target%", target.getName(), "%type%", "expired");
                 });
     }
 
     private void addPurchased(Player target, ItemStack cloned, BigDecimal price, AuctionEconomy economy, Player admin) {
-        this.plugin.getStorageManager().createAuctionItem(admin, price, System.currentTimeMillis(), cloned, economy)
+        this.plugin.getStorageManager().createAuctionItem(admin, price, System.currentTimeMillis(), List.of(cloned), economy)
                 .thenAccept(item -> {
                     item.setBuyer(target);
                     item.setStatus(ItemStatus.PURCHASED);
                     this.auctionManager.addItem(StorageType.PURCHASED, item);
                     this.plugin.getStorageManager().updateItem(item, StorageType.PURCHASED);
                     this.auctionManager.clearPlayerCache(target, PlayerCacheKey.ITEMS_PURCHASED);
-                    this.auctionManager.message(admin, Message.ADMIN_ITEM_ADDED, "%item%", item.getTranslationKey(), "%target%", target.getName(), "%type%", "purchased");
+                    this.auctionManager.message(admin, Message.ADMIN_ITEM_ADDED, "%items%", item.getItemDisplay(), "%target%", target.getName(), "%type%", "purchased");
                 });
     }
 }

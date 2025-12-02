@@ -4,6 +4,7 @@ public interface Tables {
 
     String PLAYERS = "%prefix%players";
 
+    String ITEMS = "%prefix%items";
     String AUCTION_ITEMS = "%prefix%auction_items";
     String BID_ITEMS = "%prefix%bid_items";
     String RENT_ITEMS = "%prefix%rend_items";

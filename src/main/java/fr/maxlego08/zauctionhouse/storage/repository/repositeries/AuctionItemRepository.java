@@ -3,8 +3,6 @@ package fr.maxlego08.zauctionhouse.storage.repository.repositeries;
 import fr.maxlego08.sarah.DatabaseConnection;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
-import fr.maxlego08.zauctionhouse.api.item.Item;
-import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.storage.Repository;
 import fr.maxlego08.zauctionhouse.api.storage.Tables;
@@ -24,35 +22,17 @@ public class AuctionItemRepository extends Repository {
         super(plugin, connection, Tables.AUCTION_ITEMS);
     }
 
-    public AuctionItem create(Player seller, BigDecimal price, long expiredAt, ItemStack clonedItemStack, AuctionEconomy auctionEconomy) {
-        var expiredAtDate = new Date(expiredAt);
-        var serverName = this.plugin.getConfiguration().getServerName();
-        var auctionId = insertSchema(schema -> {
-            schema.uuid("seller_unique_id", seller.getUniqueId());
-            schema.string("itemstack", Base64ItemStack.encode(clonedItemStack));
-            schema.string("economy_name", auctionEconomy.getName());
-            schema.decimal("price", price);
-            schema.object("expired_at", expiredAtDate);
-            schema.object("storage_type", StorageType.LISTED);
-            schema.string("server_name", serverName);
-        });
-        return new ZAuctionItem(this.plugin, auctionId, serverName, seller.getUniqueId(), seller.getName(), price, auctionEconomy, new Date(), expiredAtDate, clonedItemStack);
+    public AuctionItem create(Player seller, int itemId, BigDecimal price, long expiredAt, List<ItemStack> itemStacks, AuctionEconomy auctionEconomy) {
+        for (ItemStack itemStack : itemStacks) {
+            insertSchema(schema -> {
+                schema.object("item_id", itemId);
+                schema.string("itemstack", Base64ItemStack.encode(itemStack));
+            });
+        }
+        return new ZAuctionItem(this.plugin, itemId, this.plugin.getConfiguration().getServerName(), seller.getUniqueId(), seller.getName(), price, auctionEconomy, new Date(), new Date(expiredAt), itemStacks);
     }
 
     public List<AuctionItemDTO> select() {
-        return select(AuctionItemDTO.class, schema -> schema.where("storage_type", "!=", StorageType.DELETED.name()));
-    }
-
-    public void updateItem(Item item, StorageType storageType) {
-        this.update(schema -> {
-            schema.where("id", item.getId());
-            schema.string("storage_type", storageType.name());
-            if (storageType != StorageType.DELETED) {
-                schema.object("expired_at", item.getExpiredAt());
-            }
-            if (storageType == StorageType.PURCHASED) {
-                schema.uuid("buyer_unique_id", item.getBuyerUniqueId());
-            }
-        });
+        return selectAll(AuctionItemDTO.class);
     }
 }

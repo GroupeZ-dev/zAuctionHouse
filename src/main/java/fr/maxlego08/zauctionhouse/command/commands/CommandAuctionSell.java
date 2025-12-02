@@ -5,7 +5,7 @@ import fr.maxlego08.zauctionhouse.api.configuration.commands.arguments.CommandSe
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.event.events.sell.AuctionPreSellEvent;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
-import fr.maxlego08.zauctionhouse.api.utils.AuctionItemType;
+import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.utils.Permission;
 import fr.maxlego08.zauctionhouse.command.VCommandArgument;
 import fr.maxlego08.zauctionhouse.utils.commands.CommandType;
@@ -48,7 +48,7 @@ public class CommandAuctionSell extends VCommandArgument<CommandSellArguments> {
         var economyManager = plugin.getEconomyManager();
         var configuration = plugin.getConfiguration();
 
-        String economyName = argAsString(CommandSellArguments.ECONOMY, economyManager.getDefaultEconomy(AuctionItemType.SELL).getName());
+        String economyName = argAsString(CommandSellArguments.ECONOMY, economyManager.getDefaultEconomy(ItemType.AUCTION).getName());
         Optional<AuctionEconomy> optional = economyManager.getEconomy(economyName);
         if (optional.isEmpty()) {
             message(plugin, this.sender, Message.SELL_ERROR_ECONOMY, "%name%", economyName);

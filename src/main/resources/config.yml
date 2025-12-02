@@ -129,7 +129,7 @@ number-sell-multiplication:
       multiplication: 1000000000000000000000000000000000000000000
 
 expiration:
-  sell: # Le default permission doit être la valeur la plus petite
+  auction: # Le default permission doit être la valeur la plus petite
     default-expiration: 172800
     permission:
       enable: false
@@ -177,7 +177,7 @@ expiration:
 
 # Permission pour le nombre maximum d'item qu'un joueur peut vendre
 permissions:
-  sell:
+  auction:
     - permission: zauctionhouse.max.5
       limit: 5
     - permission: zauctionhouse.max.10
@@ -201,7 +201,7 @@ permissions:
 
 # Liste des mondes bannis
 banned-worlds:
-  sell:
+  auction:
     - "world_the_end"
   rent:
     - "world_the_end"
@@ -215,6 +215,15 @@ item-lore:
     - "<white>☆ #92ffffPrice#8c8c8c: #2CCED2%price%"
     - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
     - ""
+    - "%status%"
+
+  multiple-listed-auction-item:
+    - ""
+    - "<white>⌂ #92ffffSeller#8c8c8c: #2CCED2%seller%"
+    - "<white>☆ #92ffffPrice#8c8c8c: #2CCED2%price%"
+    - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
+    - ""
+    - " <white>» #cfcfcfʟᴇғᴛ ᴄʟɪᴄᴋ ᴛᴏ sᴇᴇ ᴛʜᴇ ᴄᴏɴᴛᴇɴᴛ"
     - "%status%"
 
   expired-item:
@@ -239,6 +248,17 @@ item-lore:
     seller: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
     buyer: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"
 
+# Permet de définir l'item qui sera affiché si pour un item en vente il y a plusieurs items
+special-items:
+  auction-item:
+    material: CHEST
+    name: "&cChest Content"
+
+item-display:
+  lang: "#8ee6e3x%amount% &7<lang:%item-translation-key%>"
+  item-name: "#8ee6e3x%amount% &7%item-name%"
+  and: " and "
+  between: ", "
 
 time: # ---- Unités (singulier / pluriel) ----
   second: second
@@ -327,4 +347,3 @@ sort-items:
     ASCENDING_DATE: "ᴀsᴄᴇɴᴅɪɴɢ ᴅᴀᴛᴇ"
     DECREASING_DATE: "ᴅᴇᴄʀᴇᴀsɪɴɢ ᴅᴀᴛᴇ"
     DECREASING_PRICE: "ᴅᴇᴄʀᴇᴀsɪɴɢ ᴘʀɪᴄᴇ"
-

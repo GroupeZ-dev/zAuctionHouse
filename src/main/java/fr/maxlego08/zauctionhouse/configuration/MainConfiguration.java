@@ -7,10 +7,12 @@ import fr.maxlego08.zauctionhouse.api.configuration.commands.CommandArgumentConf
 import fr.maxlego08.zauctionhouse.api.configuration.commands.CommandConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ActionConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ExpirationConfiguration;
+import fr.maxlego08.zauctionhouse.api.configuration.records.ItemDisplayConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ItemLoreConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.NumberMultiplicationConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.PermissionConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.SortConfiguration;
+import fr.maxlego08.zauctionhouse.api.configuration.records.SpecialItemsConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.TimeConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.WorldConfiguration;
 import fr.maxlego08.zauctionhouse.api.messages.MessageColor;
@@ -43,6 +45,8 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     private SortConfiguration sortConfiguration;
     private PermissionConfiguration permissionConfiguration;
     private WorldConfiguration worldConfiguration;
+    private SpecialItemsConfiguration specialItemsConfiguration;
+    private ItemDisplayConfiguration itemDisplayConfiguration;
 
     public MainConfiguration(AuctionPlugin plugin) {
         this.plugin = plugin;
@@ -54,7 +58,7 @@ public class MainConfiguration extends YamlLoader implements Configuration {
         super.loadYamlConfirmation(this.plugin, config);
 
         this.numberMultiplicationConfiguration = NumberMultiplicationConfiguration.of(this.plugin, config);
-        this.sellExpiration = ExpirationConfiguration.of(plugin, config, "expiration.sell.");
+        this.sellExpiration = ExpirationConfiguration.of(plugin, config, "expiration.auction.");
         this.rentExpiration = ExpirationConfiguration.of(plugin, config, "expiration.rent.");
         this.bidExpiration = ExpirationConfiguration.of(plugin, config, "expiration.bid.");
         this.purchaseExpiration = ExpirationConfiguration.of(plugin, config, "expiration.purchase.");
@@ -65,6 +69,8 @@ public class MainConfiguration extends YamlLoader implements Configuration {
         this.sortConfiguration = SortConfiguration.of(plugin, config);
         this.permissionConfiguration = PermissionConfiguration.of(plugin, config);
         this.worldConfiguration = WorldConfiguration.of(plugin, config);
+        this.specialItemsConfiguration = SpecialItemsConfiguration.of(plugin, config);
+        this.itemDisplayConfiguration = ItemDisplayConfiguration.of(plugin, config);
         this.dateFormat = new SimpleDateFormat(config.getString("date-format", "dd/MM/yyyy HH:mm:ss"));
     }
 
@@ -146,6 +152,16 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     @Override
     public WorldConfiguration getWorld() {
         return this.worldConfiguration;
+    }
+
+    @Override
+    public SpecialItemsConfiguration getSpecialItems() {
+        return this.specialItemsConfiguration;
+    }
+
+    @Override
+    public ItemDisplayConfiguration getItemDisplay() {
+        return this.itemDisplayConfiguration;
     }
 
     @Override

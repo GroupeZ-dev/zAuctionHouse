@@ -1,6 +1,6 @@
 package fr.maxlego08.zauctionhouse.api.economy;
 
-import fr.maxlego08.zauctionhouse.api.utils.AuctionItemType;
+import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.Nullable;
 
@@ -122,16 +122,16 @@ public interface AuctionEconomy {
     /**
      * Retrieves the maximum price allowed for the specified auction item type.
      *
-     * @param auctionItemType the auction item type to retrieve the maximum price for
+     * @param itemType the auction item type to retrieve the maximum price for
      * @return the maximum price allowed for the specified auction item type
      */
-    BigDecimal getMaxPrice(AuctionItemType auctionItemType);
+    BigDecimal getMaxPrice(ItemType itemType);
 
     /**
      * Retrieves the minimum price allowed for the specified auction item type.
      *
-     * @param auctionItemType the auction item type to retrieve the minimum price for
+     * @param itemType the auction item type to retrieve the minimum price for
      * @return the minimum price allowed for the specified auction item type
      */
-    BigDecimal getMinPrice(AuctionItemType auctionItemType);
+    BigDecimal getMinPrice(ItemType itemType);
 }

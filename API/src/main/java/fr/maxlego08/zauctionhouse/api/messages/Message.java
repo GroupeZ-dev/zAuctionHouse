@@ -34,26 +34,27 @@ public enum Message {
     ADMIN_TARGET_REQUIRED("<error>You must specify a valid target player."),
     ADMIN_TARGET_NOT_FOUND("<error>Unable to find the player <white>%target%<error>."),
     ADMIN_OPEN_INVENTORY("<success>Opening %type% items for <white>%target%<success>."),
-    ADMIN_ITEM_REMOVED("<success>You removed <white>%item%<success> from <white>%target%<success>."),
-    ADMIN_ITEM_ADDED("<success>You added <white>%item%<success> to <white>%target%<success> in <white>%type%<success>."),
+    ADMIN_ITEM_REMOVED("<success>You removed <white>%items%<success> from <white>%target%<success>."),
+    ADMIN_ITEM_ADDED("<success>You added <white>%items%<success> to <white>%target%<success> in <white>%type%<success>."),
 
     RELOAD_SUCCESS("<success>You just reloaded the plugin !"),
 
-    ITEM_REMOVE_LISTED("#e6fff3You just removed #8ee6e3x%amount% &7<lang:%item-translation-key%> #e6fff3from the listed items."),
-    ITEM_REMOVE_EXPIRED("#e6fff3You just removed #8ee6e3x%amount% &7<lang:%item-translation-key%> #e6fff3from the expired items."),
-    ITEM_REMOVE_PURCHASED("#e6fff3You just removed #8ee6e3x%amount% &7<lang:%item-translation-key%> #e6fff3from the purchased items."),
-    ITEM_REMOVE_OWNED("#e6fff3You just removed #8ee6e3x%amount% &7<lang:%item-translation-key%> #e6fff3from your items."),
+    ITEM_REMOVE_LISTED("#e6fff3You just removed %items% #e6fff3from the listed items."),
+    ITEM_REMOVE_EXPIRED("#e6fff3You just removed %items% #e6fff3from the expired items."),
+    ITEM_REMOVE_PURCHASED("#e6fff3You just removed %items% #e6fff3from the purchased items."),
+    ITEM_REMOVE_OWNED("#e6fff3You just removed %items% #e6fff3from your items."),
 
-    ITEM_SOLD("#e6fff3You just sold #8ee6e3x%amount% &7<lang:%item-translation-key%> #e6fff3for #92bed8%price%#e6fff3."),
+    ITEM_SOLD("#e6fff3You just sold %items% #e6fff3for #92bed8%price%#e6fff3."),
+
+    ITEM_BOUGHT_SELLER("#ffacd5%buyer% #e6fff3just bought %items% #e6fff3for #92bed8%price%#e6fff3."),
+    ITEM_BOUGHT_BUYER("#e6fff3You have just bought %items% #e6fff3for #92bed8%price%#e6fff3."),
 
     NOT_ENOUGH_MONEY("<error>You don’t have enough money to buy this."),
     NOT_ENOUGH_SPACE("<error>You don't have enough space in your inventory to buy this item."),
 
-    ITEM_BOUGHT_SELLER("#ffacd5%buyer% #e6fff3just bought #8ee6e3x%amount% &7<lang:%item-translation-key%> #e6fff3for #92bed8%price%#e6fff3."),
-    ITEM_BOUGHT_BUYER("#e6fff3You have just bought #8ee6e3x%amount% &7<lang:%item-translation-key%> #e6fff3for #92bed8%price%#e6fff3."),
-
     PRICE_TOO_HIGH("<error>You cannot sell for more than <white>%max-price%<error>."),
     PRICE_TOO_LOW("<error>You cannot sell for less than <white>%min-price%<error>."),
+
     LISTED_ITEMS_LIMIT("<error>You cannot sell more than <white>%max-items%<error> items<error>. &8(&7Did you set the zauctionhouse.<number in config.yml> ?&8)"),
     WORLD_BANNED("<error>You cannot sell items in this world."),
 

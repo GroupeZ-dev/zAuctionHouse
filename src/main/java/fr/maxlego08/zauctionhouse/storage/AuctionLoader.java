@@ -6,10 +6,13 @@ import fr.maxlego08.zauctionhouse.api.economy.EconomyManager;
 import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
 import fr.maxlego08.zauctionhouse.api.storage.dto.AuctionItemDTO;
+import fr.maxlego08.zauctionhouse.api.storage.dto.ItemDTO;
 import fr.maxlego08.zauctionhouse.api.utils.Base64ItemStack;
 import fr.maxlego08.zauctionhouse.items.ZAuctionItem;
 import fr.maxlego08.zauctionhouse.storage.repository.repositeries.AuctionItemRepository;
+import fr.maxlego08.zauctionhouse.storage.repository.repositeries.ItemRepository;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -45,20 +48,20 @@ public class AuctionLoader {
     }
 
     private void loadAuctionItems() {
+
+        var items = this.storageManager.with(ItemRepository.class).select();
         var auctionItems = this.storageManager.with(AuctionItemRepository.class).select();
 
         int amount = 0;
 
-        for (AuctionItemDTO dto : auctionItems) {
+        for (ItemDTO dto : items) {
 
             var sellerName = getPlayerName(dto.seller_unique_id());
 
-            String buyerName = null; // ToDo
+            String buyerName = null;
             if (dto.buyer_unique_id() != null) {
                 buyerName = getPlayerName(dto.buyer_unique_id());
             }
-
-            var itemStack = Base64ItemStack.decode(dto.itemstack());
 
             var economy = economyManager.getEconomy(dto.economy_name());
             if (economy.isEmpty()) {
@@ -66,19 +69,35 @@ public class AuctionLoader {
                 continue;
             }
 
-            var auctionItem = new ZAuctionItem(plugin, dto.id(), dto.server_name(), dto.seller_unique_id(), sellerName, dto.price(), economy.get(), dto.created_at(), dto.expired_at(), itemStack);
-            auctionItem.setStatus(switch (dto.storage_type()) {
-                case LISTED -> ItemStatus.AVAILABLE;
-                case PURCHASED -> ItemStatus.PURCHASED;
-                case EXPIRED -> ItemStatus.REMOVED;
-                case DELETED -> ItemStatus.DELETED;
-            });
+            switch (dto.item_type()) {
+                case AUCTION -> {
 
-            if (buyerName != null) {
-                auctionItem.setBuyer(dto.buyer_unique_id(), buyerName);
+                    var currentAuctionItems = getAuctionItems(auctionItems, dto.id());
+
+                    var itemStacks = currentAuctionItems.stream().map(e -> Base64ItemStack.decode(e.itemstack())).toList();
+
+                    var auctionItem = new ZAuctionItem(plugin, dto.id(), dto.server_name(), dto.seller_unique_id(), sellerName, dto.price(), economy.get(), dto.created_at(), dto.expired_at(), itemStacks);
+                    auctionItem.setStatus(switch (dto.storage_type()) {
+                        case LISTED -> ItemStatus.AVAILABLE;
+                        case PURCHASED -> ItemStatus.PURCHASED;
+                        case EXPIRED -> ItemStatus.REMOVED;
+                        case DELETED -> ItemStatus.DELETED;
+                    });
+
+                    if (buyerName != null) {
+                        auctionItem.setBuyer(dto.buyer_unique_id(), buyerName);
+                    }
+
+                    auctionManager.addItem(dto.storage_type(), auctionItem);
+                }
+                case BID -> {
+                    this.plugin.getLogger().severe("Bid items not implemented");
+                }
+                case RENT -> {
+                    this.plugin.getLogger().severe("Rent items not implemented");
+                }
             }
 
-            auctionManager.addItem(dto.storage_type(), auctionItem);
             amount++;
         }
 
@@ -91,5 +110,9 @@ public class AuctionLoader {
             throw new IllegalStateException("Unknown player with UUID " + uniqueId);
         }
         return playerName;
+    }
+
+    private List<AuctionItemDTO> getAuctionItems(List<AuctionItemDTO> auctionItemDTOS, int itemId) {
+        return auctionItemDTOS.stream().filter(e -> e.item_id() == itemId).toList();
     }
 }

@@ -7,7 +7,7 @@ import fr.maxlego08.zauctionhouse.api.economy.EconomyManager;
 import fr.maxlego08.zauctionhouse.api.economy.NumberFormatReduction;
 import fr.maxlego08.zauctionhouse.api.economy.PriceFormat;
 import fr.maxlego08.zauctionhouse.api.event.events.AuctionLoadEconomyEvent;
-import fr.maxlego08.zauctionhouse.api.utils.AuctionItemType;
+import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.traqueur.currencies.Currencies;
 import fr.traqueur.currencies.CurrencyProvider;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -32,7 +32,7 @@ public class ZEconomyManager implements EconomyManager {
 
     private final AuctionPlugin plugin;
     private final Set<AuctionEconomy> economies = new HashSet<>();
-    private final Map<AuctionItemType, AuctionEconomy> defaultEconomies = new HashMap<>();
+    private final Map<ItemType, AuctionEconomy> defaultEconomies = new HashMap<>();
     private final List<NumberFormatReduction> priceReductions = new ArrayList<>();
     private DecimalFormat priceDecimalFormat;
 
@@ -115,7 +115,7 @@ public class ZEconomyManager implements EconomyManager {
 
     private void loadDefaultEconomies(FileConfiguration configuration) {
         this.defaultEconomies.clear();
-        for (AuctionItemType value : AuctionItemType.values()) {
+        for (ItemType value : ItemType.values()) {
             var economyName = configuration.getString("default-economy." + value.name().toLowerCase(), null);
             if (economyName == null) {
                 this.plugin.getLogger().severe("Default economy for " + value.name() + " is not set, skip it...");
@@ -131,8 +131,8 @@ public class ZEconomyManager implements EconomyManager {
     }
 
     @Override
-    public AuctionEconomy getDefaultEconomy(AuctionItemType auctionItemType) {
-        return this.defaultEconomies.get(auctionItemType);
+    public AuctionEconomy getDefaultEconomy(ItemType itemType) {
+        return this.defaultEconomies.get(itemType);
     }
 
     @Override
@@ -335,11 +335,11 @@ public class ZEconomyManager implements EconomyManager {
             return;
         }
 
-        EnumMap<AuctionItemType, BigDecimal> maxPrices = new EnumMap<>(AuctionItemType.class);
+        EnumMap<ItemType, BigDecimal> maxPrices = new EnumMap<>(ItemType.class);
         if (accessor.contains("max-prices")) {
             maxPrices = loadPrices(accessor.getObject("max-prices"), "max-prices for economy '" + name + "'");
         }
-        EnumMap<AuctionItemType, BigDecimal> minPrices = new EnumMap<>(AuctionItemType.class);
+        EnumMap<ItemType, BigDecimal> minPrices = new EnumMap<>(ItemType.class);
         if (accessor.contains("min-prices")) {
             minPrices = loadPrices(accessor.getObject("min-prices"), "min-prices for economy '" + name + "'");
         }
@@ -377,19 +377,19 @@ public class ZEconomyManager implements EconomyManager {
         }
     }
 
-    private EnumMap<AuctionItemType, BigDecimal> loadPrices(Object object, String name) {
+    private EnumMap<ItemType, BigDecimal> loadPrices(Object object, String name) {
 
-        EnumMap<AuctionItemType, BigDecimal> values = new EnumMap<>(AuctionItemType.class);
+        EnumMap<ItemType, BigDecimal> values = new EnumMap<>(ItemType.class);
 
         if (object instanceof Number number) {
-            for (AuctionItemType value : AuctionItemType.values()) {
+            for (ItemType value : ItemType.values()) {
                 values.put(value, toBigDecimal(number));
             }
         } else if (object instanceof Map<?, ?> map) {
             map.forEach((key, value) -> {
                 if (key instanceof String string && value instanceof Number number) {
-                    AuctionItemType auctionItemType = AuctionItemType.valueOf(string.toUpperCase());
-                    values.put(auctionItemType, toBigDecimal(number));
+                    ItemType itemType = ItemType.valueOf(string.toUpperCase());
+                    values.put(itemType, toBigDecimal(number));
                 } else {
                     this.plugin.getLogger().severe("Impossible to find the price format for " + name + " (map)");
                 }

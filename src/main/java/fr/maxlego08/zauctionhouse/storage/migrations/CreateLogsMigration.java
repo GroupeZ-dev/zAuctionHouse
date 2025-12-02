@@ -9,9 +9,8 @@ public class CreateLogsMigration extends Migration {
     public void up() {
         create(Tables.LOGS, table -> {
             table.autoIncrement("id");
+            table.integer("item_id").foreignKey(Tables.ITEMS, "id", true);
             table.string("log_type", 255);
-            table.string("content_type", 255);
-            table.integer("content_id");
             table.string("player_unique_id", 36).foreignKey(Tables.PLAYERS, "unique_id", true);
             table.string("target_unique_id", 36).nullable().foreignKey(Tables.PLAYERS, "unique_id", true);
             table.longText("itemstack").nullable();

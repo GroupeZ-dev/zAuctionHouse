@@ -11,7 +11,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
-import java.util.Locale;
 
 public class SpigotComponent implements ComponentMessage {
 
@@ -53,5 +52,15 @@ public class SpigotComponent implements ComponentMessage {
         if (lore == null || lore.isEmpty()) return List.of();
 
         return lore.stream().map(ChatColor::stripColor).toList();
+    }
+
+    @Override
+    public boolean hasDisplayName(ItemStack itemStack) {
+        return itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName();
+    }
+
+    @Override
+    public String getItemStackDisplayName(ItemStack itemStack) {
+        return itemStack.getItemMeta().getDisplayName().replace("§", "&");
     }
 }

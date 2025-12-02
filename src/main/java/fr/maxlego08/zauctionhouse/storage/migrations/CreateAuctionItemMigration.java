@@ -9,14 +9,8 @@ public class CreateAuctionItemMigration extends Migration {
     public void up() {
         create(Tables.AUCTION_ITEMS, table -> {
             table.autoIncrement("id");
-            table.string("seller_unique_id", 36).foreignKey(Tables.PLAYERS, "unique_id", true);
-            table.string("buyer_unique_id", 36).nullable().foreignKey(Tables.PLAYERS, "unique_id", true);
+            table.integer("item_id").foreignKey(Tables.ITEMS, "id", true);
             table.longText("itemstack");
-            table.decimal("price", 65, 2);
-            table.string("economy_name", 255);
-            table.string("storage_type", 32);
-            table.string("server_name", 255).defaultValue("skyblock");
-            table.timestamp("expired_at");
             table.timestamps();
         });
     }
