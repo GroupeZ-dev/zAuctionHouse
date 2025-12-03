@@ -401,12 +401,12 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
         var auctionEconomy = auctionItem.getAuctionEconomy();
         var price = auctionItem.getPrice();
-        var itemStack = auctionItem.getItemStacks();
         var seller = auctionItem.getSeller();
         var storageManager = this.plugin.getStorageManager();
         var configuration = this.plugin.getConfiguration();
 
         String items = auctionItem.getItemsAsString();
+        var itemsDisplay = auctionItem.getItemDisplay();
 
         // On retire l'argent
         auctionEconomy.withdraw(player, price, args(auctionEconomy.getWithdrawReason(), "%seller%", auctionItem.getSellerName(), "%items%", items));
@@ -415,10 +415,10 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         auctionEconomy.deposit(seller, price, args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items));
 
         if (seller.isOnline()) {
-            message(this.plugin, seller.getPlayer(), Message.ITEM_BOUGHT_SELLER, "%items%", auctionItem.getItemDisplay(), "%price%", auctionItem.getFormattedPrice(), "%seller%", auctionItem.getSellerName(), "%buyer%", player.getName());
+            message(this.plugin, seller.getPlayer(), Message.ITEM_BOUGHT_SELLER, "%items%", itemsDisplay, "%price%", auctionItem.getFormattedPrice(), "%seller%", auctionItem.getSellerName(), "%buyer%", player.getName());
         }
 
-        message(player, Message.ITEM_BOUGHT_BUYER, "%items%", auctionItem.getItemDisplay(), "%price%", auctionItem.getFormattedPrice(), "%seller%", auctionItem.getSellerName(), "%buyer%", player.getName());
+        message(player, Message.ITEM_BOUGHT_BUYER, "%items%", itemsDisplay, "%price%", auctionItem.getFormattedPrice(), "%seller%", auctionItem.getSellerName(), "%buyer%", player.getName());
 
         auctionItem.setBuyer(player);
         auctionItem.setStatus(ItemStatus.PURCHASED);
