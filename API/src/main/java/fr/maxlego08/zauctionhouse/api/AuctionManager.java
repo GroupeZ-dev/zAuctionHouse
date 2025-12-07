@@ -76,7 +76,7 @@ public interface AuctionManager {
 
     void adminRemoveItem(Player admin, java.util.UUID targetUniqueId, Item item, StorageType storageType);
 
-    void purchaseItem(Player player, Item item);
+    CompletableFuture<Void> purchaseItem(Player player, Item item);
 
     void message(Player player, Message message, Object... args);
 

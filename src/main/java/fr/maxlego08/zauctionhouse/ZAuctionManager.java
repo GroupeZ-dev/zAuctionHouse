@@ -391,13 +391,14 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     @Override
-    public void purchaseItem(Player player, Item item) {
+    public CompletableFuture<Void> purchaseItem(Player player, Item item) {
         if (item instanceof AuctionItem auctionItem) {
-            purchaseAuctionItem(player, auctionItem);
+            return purchaseAuctionItem(player, auctionItem);
         }
+        return CompletableFuture.completedFuture(null);
     }
 
-    private void purchaseAuctionItem(Player player, AuctionItem auctionItem) {
+    private CompletableFuture<Void> purchaseAuctionItem(Player player, AuctionItem auctionItem) {
 
         var auctionEconomy = auctionItem.getAuctionEconomy();
         var price = auctionItem.getPrice();
@@ -433,9 +434,11 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
         var purchasedConfiguration = configuration.getActions().purchased();
 
+        CompletableFuture<Void> updateFuture;
+
         if (purchasedConfiguration.giveItem()) {
 
-            storageManager.updateItem(auctionItem, StorageType.DELETED);
+            updateFuture = storageManager.updateItem(auctionItem, StorageType.DELETED);
             giveItem(player, auctionItem);
 
         } else {
@@ -445,7 +448,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             auctionItem.setExpiredAt(new Date(expiredAt));
 
             addItem(StorageType.PURCHASED, auctionItem);
-            storageManager.updateItem(auctionItem, StorageType.PURCHASED);
+            updateFuture = storageManager.updateItem(auctionItem, StorageType.PURCHASED);
         }
 
         if (purchasedConfiguration.openInventory()) {
@@ -455,6 +458,8 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         }
 
         logItemAction(LogType.PURCHASE, auctionItem, player, auctionItem.getSellerUniqueId(), "purchase_item");
+
+        return updateFuture;
     }
 
     @Override

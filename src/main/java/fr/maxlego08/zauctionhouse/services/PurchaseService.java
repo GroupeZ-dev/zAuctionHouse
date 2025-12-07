@@ -10,6 +10,9 @@ import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
 import org.bukkit.entity.Player;
 
+import java.util.AbstractMap;
+import java.util.concurrent.CompletableFuture;
+
 public class PurchaseService extends AuctionService implements AuctionPurchaseService {
 
     private final AuctionPlugin plugin;
@@ -19,10 +22,10 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
     }
 
     @Override
-    public void purchaseItem(Player player, Item item) {
+    public CompletableFuture<Void> purchaseItem(Player player, Item item) {
 
         var event = new AuctionPrePurchaseItemEvent(item, player);
-        if (!event.callEvent()) return;
+        if (!event.callEvent()) return CompletableFuture.completedFuture(null);
 
         var auctionManager = this.plugin.getAuctionManager();
         var inventoryManager = this.plugin.getInventoriesLoader().getInventoryManager();
@@ -33,7 +36,7 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
         var configuration = this.plugin.getConfiguration().getActions().purchased();
         if (configuration.giveItem() && configuration.freeSpace() && !item.canReceiveItem(player)){
             message(this.plugin, player, Message.NOT_ENOUGH_SPACE);
-            return;
+            return CompletableFuture.completedFuture(null);
         }
 
         // 1. Vérifier si l'item est expiré
@@ -41,19 +44,19 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
             logger.info("Item expired");
             auctionManager.getCache(player).remove(PlayerCacheKey.ITEMS_LISTED);
             auctionManager.openMainAuction(player);
-            return;
+            return CompletableFuture.completedFuture(null);
         }
 
         if (item.getStatus() != ItemStatus.AVAILABLE) {
             logger.info("Item not available");
             auctionManager.openMainAuction(player);
-            return;
+            return CompletableFuture.completedFuture(null);
         }
 
         item.setStatus(ItemStatus.IS_BEING_REMOVED);
 
         // 2. Vérifier si l'item est lock
-        clusterBridge.checkAvailability(item).thenCompose(available -> {
+        return clusterBridge.checkAvailability(item).thenCompose(available -> {
 
             if (!available) {
                 logger.info("Item is not available");
@@ -63,21 +66,22 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
 
             return clusterBridge.lockItem(item, player.getUniqueId());
 
-        }).thenCompose(token -> {
-            return auctionEconomy.has(player, item.getPrice());
-        }).thenCompose(hasMoney -> {
+        }).thenCompose(token -> auctionEconomy.has(player, item.getPrice())
+                .thenApply(hasMoney -> new AbstractMap.SimpleEntry<>(token, hasMoney)))
+                .thenCompose(entry -> {
 
-            var token = LockToken.of(item);
+                    var token = entry.getKey();
 
-            if (hasMoney) {
-                auctionManager.purchaseItem(player, item);
-                return clusterBridge.notifyItemBought(player, item).thenCompose(v -> clusterBridge.unlockItem(item, token));
-            }
+                    if (entry.getValue()) {
+                        return auctionManager.purchaseItem(player, item)
+                                .thenCompose(v -> clusterBridge.notifyItemBought(player, item))
+                                .thenCompose(v -> clusterBridge.unlockItem(item, token));
+                    }
 
-            return clusterBridge.unlockItem(item, token);
-        }).exceptionally(e -> {
-            e.printStackTrace();
-            return null;
-        });
+                    return clusterBridge.unlockItem(item, token);
+                }).exceptionally(e -> {
+                    e.printStackTrace();
+                    return null;
+                });
     }
 }
