@@ -11,6 +11,7 @@ inventory-not-found: "<error>Impossible to find the inventory <white>%inventory-
 
 command-description-auction: "Open auction house"
 command-description-auction-sell: "Add an item to the sale"
+command-description-auction-sell-inventory: "Sell multiple items from an inventory"
 command-description-auction-rent: "Add an item for rent"
 command-description-auction-bid: "Add an item to the auction"
 command-description-auction-reload: "Reload configurations files"
@@ -18,6 +19,14 @@ command-description-auction-admin: "Open administrative tools for auctions"
 
 sell-error-air: "<error>Are you stupid ? You can’t sell air !"
 sell-error-economy: "<error>Unable to find the economy <white>%name%<error>."
+sell-inventory-title: "&0Sell your items"
+sell-inventory-confirm-name: "&b&lCONFIRM"
+sell-inventory-confirm-lore: "&bSell the selected items for &f%price%"
+sell-inventory-confirm-economy: "&7Economy: &b%economy%"
+sell-inventory-cancel-name: "&c&lCANCEL"
+sell-inventory-cancel-lore: "&bReturn the items to your inventory."
+sell-inventory-empty: "<error>You must place items in the inventory before confirming."
+sell-inventory-cancelled: "<error>You cancelled the sale, your items have been returned."
 
 admin-target-required: "<error>You must specify a valid target player."
 admin-target-not-found: "<error>Unable to find the player <white>%target%<error>."

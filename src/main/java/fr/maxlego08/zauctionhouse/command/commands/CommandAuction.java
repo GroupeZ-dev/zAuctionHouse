@@ -16,6 +16,7 @@ public class CommandAuction extends VCommand {
         this.setPermission(Permission.ZAUCTIONHOUSE_USE);
         this.setDescription(Message.COMMAND_DESCRIPTION_AUCTION);
 
+        this.addSubCommand(new CommandAuctionSellInventory(plugin));
         this.addSubCommand(new CommandAuctionSell(plugin));
         this.addSubCommand(new CommandAuctionReload(plugin));
         this.addSubCommand(new CommandAuctionAdmin(plugin));

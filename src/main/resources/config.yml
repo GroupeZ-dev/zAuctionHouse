@@ -96,6 +96,25 @@ commands: # Commande principale, /zauctionhouse
         auto-completion:
           - vault
 
+  sell-inventory:
+    aliases:
+      - sellinventory
+      - si
+      - sellinv
+    arguments:
+      - name: price
+        display-name: price
+        required: true
+        auto-completion:
+          - 1000
+          - 10000
+          - 25000
+      - name: economy
+        display-name: economy
+        required: false
+        auto-completion:
+          - vault
+
 number-sell-multiplication:
   enable: true
   formats:

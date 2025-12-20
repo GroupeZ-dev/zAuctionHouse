@@ -23,6 +23,7 @@ import fr.maxlego08.zauctionhouse.economy.ZEconomyManager;
 import fr.maxlego08.zauctionhouse.hooks.permissions.EmptyOfflinePermission;
 import fr.maxlego08.zauctionhouse.hooks.permissions.LuckPermsOfflinePermission;
 import fr.maxlego08.zauctionhouse.listeners.PlayerListener;
+import fr.maxlego08.zauctionhouse.listeners.SellInventoryListener;
 import fr.maxlego08.zauctionhouse.loader.MessageLoader;
 import fr.maxlego08.zauctionhouse.loader.ZInventoriesLoader;
 import fr.maxlego08.zauctionhouse.placeholder.DistantPlaceholder;
@@ -89,6 +90,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         this.loadFiles();
 
         this.addListener(new PlayerListener(this));
+        this.addListener(new SellInventoryListener(this));
 
         this.commandManager.registerCommand(this, "zauctionhouse", new CommandAuction(this), getConfig().getStringList("commands.main-command.aliases"));
 
