@@ -33,7 +33,7 @@ public class MessageLoader implements ConfigurationFile {
     public void load() {
 
         File file = new File(this.plugin.getDataFolder(), "messages.yml");
-        this.plugin.saveFile("messages/messages.yml", "messages.yml", false);
+        this.plugin.saveFile("messages.yml", true);
 
         this.loadMessages(YamlConfiguration.loadConfiguration(file));
 

@@ -1,0 +1,50 @@
+prefix: "<primary>zAuctionHouse <secondary>• "
+
+command-syntax-error: "<error>You must execute the command like this<gray>: <success>%syntax%"
+command-no-permission: "<error>You do not have permission to run this command."
+command-no-console: "<error>Only one player can execute this command."
+command-no-arg: "<error>Impossible to find the command with its arguments."
+command-restricted: "<error>You cannot use this command here."
+command-syntax-help: "<white>%syntax% <dark_gray>» <gray>%description%"
+
+inventory-not-found: "<error>Impossible to find the inventory <white>%inventory-name%<error>."
+
+command-description-auction: "Open auction house"
+command-description-auction-sell: "Add an item to the sale"
+command-description-auction-rent: "Add an item for rent"
+command-description-auction-bid: "Add an item to the auction"
+command-description-auction-reload: "Reload configurations files"
+command-description-auction-admin: "Open administrative tools for auctions"
+
+sell-error-air: "<error>Are you stupid ? You can’t sell air !"
+sell-error-economy: "<error>Unable to find the economy <white>%name%<error>."
+
+admin-target-required: "<error>You must specify a valid target player."
+admin-target-not-found: "<error>Unable to find the player <white>%target%<error>."
+admin-open-inventory: "<success>Opening %type% items for <white>%target%<success>."
+admin-item-removed: "<success>You removed <white>%items%<success> from <white>%target%<success>."
+admin-item-added: "<success>You added <white>%items%<success> to <white>%target%<success> in <white>%type%<success>."
+
+reload-success: "<success>You just reloaded the plugin !"
+
+item-remove-listed: "#e6fff3You just removed %items% #e6fff3from the listed items."
+item-remove-expired: "#e6fff3You just removed %items% #e6fff3from the expired items."
+item-remove-purchased: "#e6fff3You just removed %items% #e6fff3from the purchased items."
+item-remove-owned: "#e6fff3You just removed %items% #e6fff3from your items."
+
+item-sold: "#e6fff3You just sold %items% #e6fff3for #92bed8%price%#e6fff3."
+
+item-bought-seller: "#ffacd5%buyer% #e6fff3just bought %items% #e6fff3for #92bed8%price%#e6fff3."
+item-bought-buyer: "#e6fff3You have just bought %items% #e6fff3for #92bed8%price%#e6fff3."
+
+not-enough-money: "<error>You don’t have enough money to buy this."
+not-enough-space: "<error>You don't have enough space in your inventory to buy this item."
+
+price-too-high: "<error>You cannot sell for more than <white>%max-price%<error>."
+price-too-low: "<error>You cannot sell for less than <white>%min-price%<error>."
+
+listed-items-limit: "<error>You cannot sell more than <white>%max-items%<error> items<error>. &8(&7Did you set the zauctionhouse.<number in config.yml> ?&8)"
+world-banned: "<error>You cannot sell items in this world."
+
+item-blacklisted: "<error>You cannot sell blacklisted items."
+item-whitelisted: "<error>You cannot sell an item that is not whitelist."
