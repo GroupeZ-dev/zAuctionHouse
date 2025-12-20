@@ -83,6 +83,15 @@ public class ListedItemsButton extends PaginateButton {
 
             if (item.getSellerUniqueId().equals(player.getUniqueId())) {
 
+                var isMultipleAuctionItem = item instanceof AuctionItem auctionItem && auctionItem.getItemStacks().size() > 1;
+                if (event.getClick() == ClickType.LEFT && isMultipleAuctionItem) {
+                    var cache = manager.getCache(player);
+                    cache.set(PlayerCacheKey.ITEM_SHOW, item);
+                    cache.set(PlayerCacheKey.CURRENT_PAGE, this.plugin.getInventoriesLoader().getInventoryManager().getPage(player));
+                    this.plugin.getInventoriesLoader().openInventory(player, Inventories.AUCTION_ITEM);
+                    return;
+                }
+
                 // Remove item
                 if (this.plugin.getConfiguration().getActions().listed().openConfirmInventory()) {
 
