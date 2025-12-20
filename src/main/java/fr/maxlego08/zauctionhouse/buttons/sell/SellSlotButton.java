@@ -1,14 +1,14 @@
-package fr.maxlego08.zauctionhouse.buttons;
+package fr.maxlego08.zauctionhouse.buttons.sell;
 
+import fr.maxlego08.menu.api.button.Button;
 import fr.maxlego08.menu.api.engine.InventoryEngine;
 import fr.maxlego08.menu.api.utils.Placeholders;
-import fr.maxlego08.zauctionhouse.api.buttons.SellSlotButton;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-public class ZSellSlotButton extends SellSlotButton {
+public class SellSlotButton extends Button {
 
     @Override
     public void onInventoryOpen(Player player, InventoryEngine inventory, Placeholders placeholders) {
@@ -30,6 +30,7 @@ public class ZSellSlotButton extends SellSlotButton {
     public void onInventoryClose(Player player, InventoryEngine inventory) {
         super.onInventoryClose(player, inventory);
         Inventory spigotInventory = inventory.getSpigotInventory();
+
         this.slots.forEach(slot -> {
             ItemStack itemStack = spigotInventory.getItem(slot);
             if (itemStack != null) {

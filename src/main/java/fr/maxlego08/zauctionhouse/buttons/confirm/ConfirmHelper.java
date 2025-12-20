@@ -33,11 +33,12 @@ public abstract class ConfirmHelper extends Button {
         Item item = cache.get(PlayerCacheKey.ITEM_SHOW);
         if (item == null) return;
 
-        if (item.getStatus() != this.next) {
+        // Si lors de la fermeture, le status est similaire à celui de l'ouverture, alors l'état n'a pas changé, et donc on doit mettre le prochain état de l'item.
+        if (item.getStatus() == this.previous) {
             item.setStatus(this.next);
             this.plugin.getAuctionClusterBridge().notifyItemStatusChange(item, this.previous, this.next);
-        }
 
+        }
         manager.clearPlayersCache(PlayerCacheKey.ITEMS_LISTED);
         manager.updateListedItems(item, true, player);
     }

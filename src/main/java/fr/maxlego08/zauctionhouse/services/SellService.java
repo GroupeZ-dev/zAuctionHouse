@@ -23,6 +23,7 @@ public class SellService extends ZUtils implements AuctionSellService {
 
     private final AuctionPlugin plugin;
     private final AuctionManager manager;
+
     public SellService(AuctionPlugin plugin, AuctionManager manager) {
         this.plugin = plugin;
         this.manager = manager;
@@ -34,7 +35,7 @@ public class SellService extends ZUtils implements AuctionSellService {
         var clonedItemStack = itemStack.clone();
         clonedItemStack.setAmount(amount);
 
-        if (!this.validateSell(player, price, auctionEconomy, List.of(clonedItemStack))) return;
+        if (this.invalidateItems(player, price, auctionEconomy, List.of(clonedItemStack))) return;
 
         removeItemInHand(player, amount);
 
@@ -58,7 +59,7 @@ public class SellService extends ZUtils implements AuctionSellService {
             return;
         }
 
-        if (!this.validateSell(player, price, auctionEconomy, sellableItems)) {
+        if (this.invalidateItems(player, price, auctionEconomy, sellableItems)) {
             sellableItems.forEach(itemStack -> player.getInventory().addItem(itemStack));
             return;
         }
@@ -86,7 +87,19 @@ public class SellService extends ZUtils implements AuctionSellService {
         this.plugin.getInventoriesLoader().openInventory(player, Inventories.SELL_INVENTORY);
     }
 
-    private boolean validateSell(Player player, BigDecimal price, AuctionEconomy auctionEconomy, List<ItemStack> itemStacks) {
+    /**
+     * Check if the player is allowed to sell items.
+     * This method checks if the price is valid, if the player has reached the maximum
+     * number of items for sale, if the world is banned, if the items are blacklisted
+     * or whitelisted.
+     *
+     * @param player         the player who wants to sell items
+     * @param price          the price of the items
+     * @param auctionEconomy the economy of the items
+     * @param itemStacks     the items the player wants to sell
+     * @return true if the player is not allowed to sell items, false otherwise
+     */
+    private boolean invalidateItems(Player player, BigDecimal price, AuctionEconomy auctionEconomy, List<ItemStack> itemStacks) {
 
         var economyManager = this.plugin.getEconomyManager();
         var configuration = this.plugin.getConfiguration();
@@ -96,46 +109,54 @@ public class SellService extends ZUtils implements AuctionSellService {
 
         if (price.compareTo(maxPrice) > 0) {
             message(plugin, player, Message.PRICE_TOO_HIGH, "%max-price%", economyManager.format(auctionEconomy, maxPrice));
-            return false;
+            return true;
         }
 
         if (price.compareTo(minPrice) < 0) {
             message(plugin, player, Message.PRICE_TOO_LOW, "%min-price%", economyManager.format(auctionEconomy, minPrice));
-            return false;
+            return true;
         }
 
         long listedItems = manager.getItemsListedForSale(player).size();
         long maxSellPermission = configuration.getPermission().getLimit(ItemType.AUCTION, player);
         if (listedItems >= maxSellPermission) {
             message(plugin, player, Message.LISTED_ITEMS_LIMIT, "%max-items%", String.valueOf(maxSellPermission));
-            return false;
+            return true;
         }
 
         if (configuration.getWorld().isWorldBanned(ItemType.AUCTION, player.getWorld().getName())) {
             message(plugin, player, Message.WORLD_BANNED);
-            return false;
+            return true;
         }
 
         for (ItemStack itemStack : itemStacks) {
 
             if (itemStack.getType().isAir()) {
                 message(plugin, player, Message.SELL_ERROR_AIR);
-                return false;
+                return true;
             }
 
             if (ruleManager.isBlacklistEnabled() && ruleManager.isBlacklisted(itemStack)) {
                 message(plugin, player, Message.ITEM_BLACKLISTED);
-                return false;
+                return true;
             }
 
             if (ruleManager.isWhitelistEnabled() && !ruleManager.isWhitelisted(itemStack)) {
                 message(plugin, player, Message.ITEM_WHITELISTED);
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
+    /**
+     * Notify the cluster and the database that an auction item has been sold.
+     * This method is called after an auction item has been successfully sold.
+     *
+     * @param player         the player who sold the auction item
+     * @param auctionItem    the auction item that was sold
+     * @param auctionEconomy the economy of the auction item
+     */
     private void postSell(Player player, AuctionItem auctionItem, AuctionEconomy auctionEconomy) {
 
         this.manager.addItem(StorageType.LISTED, auctionItem);

@@ -1,4 +1,4 @@
-package fr.maxlego08.zauctionhouse.buttons;
+package fr.maxlego08.zauctionhouse.buttons.sell;
 
 import fr.maxlego08.menu.api.MenuItemStack;
 import fr.maxlego08.menu.api.button.Button;
@@ -6,10 +6,9 @@ import fr.maxlego08.menu.api.engine.InventoryEngine;
 import fr.maxlego08.menu.api.utils.Placeholders;
 import fr.maxlego08.zauctionhouse.ZAuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
-import fr.maxlego08.zauctionhouse.api.buttons.SellSlotButton;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
-import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
+import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -23,11 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class ZSellBuyButton extends Button {
+public class SellBuyButton extends Button {
 
     private final ZAuctionPlugin plugin;
 
-    public ZSellBuyButton(Plugin plugin) {
+    public SellBuyButton(Plugin plugin) {
         this.plugin = (ZAuctionPlugin) plugin;
     }
 
@@ -38,14 +37,14 @@ public class ZSellBuyButton extends Button {
         List<ItemStack> itemStacks = new ArrayList<>();
 
         Inventory spigotInventory = inventory.getSpigotInventory();
-        Optional<Button> optional = inventory.getButtons().stream().filter(e -> e instanceof SellSlotButton).findFirst();
+        Optional<SellSlotButton> optional = inventory.getButtons().stream().filter(e -> e instanceof SellSlotButton).map(e -> (SellSlotButton) e).findFirst();
 
         if (optional.isEmpty()) {
             player.sendMessage("§cError with your inventory, impossible to find SellSlotButton");
             return;
         }
 
-        SellSlotButton button = (SellSlotButton) optional.get();
+        SellSlotButton button = optional.get();
 
         for (int slot : button.getSlots()) {
             ItemStack itemStack = spigotInventory.getItem(slot);
@@ -85,8 +84,9 @@ public class ZSellBuyButton extends Button {
         AuctionEconomy auctionEconomy = cache.get(PlayerCacheKey.SELL_ECONOMY, this.plugin.getEconomyManager().getDefaultEconomy(ItemType.AUCTION));
         int amount = cache.get(PlayerCacheKey.SELL_AMOUNT, 1);
 
-        placeholders.register("price", auctionEconomy.format(manager.getPriceFormat(price), amount));
+        placeholders.register("price", plugin.getEconomyManager().format(auctionEconomy, price));
         placeholders.register("economy", auctionEconomy.getName());
+        placeholders.register("amount", String.valueOf(amount));
 
         return menuItemStack.build(player, false, placeholders);
     }

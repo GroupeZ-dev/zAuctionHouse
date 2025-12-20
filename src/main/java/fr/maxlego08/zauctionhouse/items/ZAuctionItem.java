@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -51,7 +52,7 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
     }
 
     private ItemStack getItemStack(Player player) {
-        return this.itemStacks.size() == 1 ? this.itemStacks.getFirst().clone() : this.plugin.getConfiguration().getSpecialItems().auctionItem().build(player);
+        return this.itemStacks.size() == 1 ? this.itemStacks.getFirst().clone() : this.plugin.getConfiguration().getSpecialItems().auctionItem().build(player).clone();
     }
 
     @Override
@@ -77,18 +78,37 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
         var componentHelper = ComponentMessageHelper.componentMessage;
         var configuration = this.plugin.getConfiguration().getItemDisplay();
 
-        int size = this.itemStacks.size();
+        var currentItemStacks = this.itemStacks;
+        if (configuration.mergeSimilar()) {
+            currentItemStacks = new ArrayList<>();
+            for (ItemStack itemStack : this.itemStacks) {
+                boolean canAdd = true;
+                for (ItemStack currentItemStack : currentItemStacks) {
+                    if (currentItemStack.isSimilar(itemStack)) {
+                        currentItemStack.setAmount(currentItemStack.getAmount() + itemStack.getAmount());
+                        canAdd = false;
+                        break;
+                    }
+                }
+
+                if (canAdd) {
+                    currentItemStacks.add(itemStack.clone());
+                }
+            }
+        }
+
+        int size = currentItemStacks.size();
 
         for (int i = 0; i < size; i++) {
 
-            var itemStack = this.itemStacks.get(i);
+            var itemStack = currentItemStacks.get(i);
             if (componentHelper.hasDisplayName(itemStack)) {
                 builder.append(configuration.itemNameDisplay().replace("%item-name%", componentHelper.getItemStackDisplayName(itemStack)).replace("%amount%", String.valueOf(itemStack.getAmount())));
             } else {
                 builder.append(configuration.langDisplay().replace("%item-translation-key%", itemStack.translationKey()).replace("%amount%", String.valueOf(itemStack.getAmount())));
             }
 
-            if (size > 1) {
+            if (size > 1 && i < size - 1) {
                 builder.append(i == size - 2 ? configuration.and() : configuration.between());
             }
         }

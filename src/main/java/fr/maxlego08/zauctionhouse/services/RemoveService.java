@@ -91,7 +91,7 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
         }
 
         if (item.getStatus() != ItemStatus.REMOVED) {
-            logger.info("Item not available (Remove Expired)");
+            logger.info("Item not available (Remove Expired), Current status: " + item.getStatus());
             manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_EXPIRED);
             manager.updateInventory(player);
             return CompletableFuture.completedFuture(null);

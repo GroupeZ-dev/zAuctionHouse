@@ -72,7 +72,7 @@ public interface StorageManager {
      * @param storageType storage bucket where the item currently resides
      * @return future completing when the update is persisted
      */
-    java.util.concurrent.CompletableFuture<Void> updateItem(Item item, StorageType storageType);
+    CompletableFuture<Void> updateItem(Item item, StorageType storageType);
 
     /**
      * Records an audit log entry describing an action performed on an item.

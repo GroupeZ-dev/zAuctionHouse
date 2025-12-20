@@ -7,7 +7,8 @@ public record ItemDisplayConfiguration(
         String langDisplay,
         String itemNameDisplay,
         String and,
-        String between
+        String between,
+        boolean mergeSimilar
 ) {
 
 
@@ -27,8 +28,9 @@ public record ItemDisplayConfiguration(
 
         var and = configuration.getString("item-display.and", "and");
         var between = configuration.getString("item-display.between", ",");
+        var merge = configuration.getBoolean("item-display.merge-similar-items", true);
 
-        return new ItemDisplayConfiguration(langDisplay, itemNameDisplay, and, between);
+        return new ItemDisplayConfiguration(langDisplay, itemNameDisplay, and, between, merge);
     }
 
 }

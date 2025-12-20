@@ -279,11 +279,14 @@ special-items:
     material: CHEST
     name: "&cChest Content"
 
+# Permet de gérer l'affichage des items dans le tchat
 item-display:
   lang: "#8ee6e3x%amount% &7<lang:%item-translation-key%>"
   item-name: "#8ee6e3x%amount% &7%item-name%"
-  and: " and "
-  between: ", "
+  and: " &fand "
+  between: "&f, "
+  # Permet de merge les items qui sont similaires, cela va augmenter le nombre dans la variable %amount%
+  merge-similar-items: true
 
 time: # ---- Unités (singulier / pluriel) ----
   second: second

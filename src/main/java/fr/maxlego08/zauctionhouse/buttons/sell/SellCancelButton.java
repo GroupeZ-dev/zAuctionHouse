@@ -1,4 +1,4 @@
-package fr.maxlego08.zauctionhouse.buttons;
+package fr.maxlego08.zauctionhouse.buttons.sell;
 
 import fr.maxlego08.menu.api.button.Button;
 import fr.maxlego08.menu.api.engine.InventoryEngine;
@@ -9,11 +9,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.plugin.Plugin;
 
-public class ZSellCancelButton extends Button {
+public class SellCancelButton extends Button {
 
     private final AuctionPlugin plugin;
 
-    public ZSellCancelButton(Plugin plugin) {
+    public SellCancelButton(Plugin plugin) {
         this.plugin = (AuctionPlugin) plugin;
     }
 

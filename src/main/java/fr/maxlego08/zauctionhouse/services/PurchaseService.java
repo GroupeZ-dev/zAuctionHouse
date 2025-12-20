@@ -53,7 +53,7 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
             return CompletableFuture.completedFuture(null);
         }
 
-        item.setStatus(ItemStatus.IS_BEING_REMOVED);
+        item.setStatus(ItemStatus.IS_BEING_PURCHASED);
 
         // 2. Vérifier si l'item est lock
         return clusterBridge.checkAvailability(item).thenCompose(available -> {
