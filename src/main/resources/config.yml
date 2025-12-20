@@ -337,6 +337,13 @@ action:
     # Envoie un message si le joueur n'a pas assez d'argent
     money-message: true
 
+    money-sound:
+      enable: true
+      category: MASTER
+      sound: minecraft:entity.villager.no
+      volume: 1
+      pitch: 1
+
   owned-item:
 
     # On ouvre l'inventaire après l'avoir retiré de l'inventaire de mes items

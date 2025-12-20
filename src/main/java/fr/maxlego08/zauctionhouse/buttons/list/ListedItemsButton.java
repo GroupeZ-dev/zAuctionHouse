@@ -146,6 +146,8 @@ public class ListedItemsButton extends PaginateButton {
                     manager.message(player, Message.NOT_ENOUGH_MONEY);
                 }
 
+                actionConfiguration.noMoneySound().play(player);
+
                 if (actionConfiguration.noMoney().enable()) {
                     var spigotInventory = inventoryEngine.getSpigotInventory();
                     spigotInventory.setItem(slot, actionConfiguration.noMoney().menuItemStack().build(player));

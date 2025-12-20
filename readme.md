@@ -8,3 +8,7 @@ A full overhaul of the plugin is therefore necessary.
 In a few months, you’ll be able to discover a plugin that’s even more complete, more efficient,
 more beautiful, fresher, more radiant, basically everything you could possibly want!
 It’s going to be amazing… or there will be bugs everywhere. Your call. 😄
+
+# ToDo
+
+- [ ] Retrailler le système de mise à jour de fichier YAML pour éviter d'ajouter n'importe comment les nouvelles clés, et garder une cohérence dans le fichier

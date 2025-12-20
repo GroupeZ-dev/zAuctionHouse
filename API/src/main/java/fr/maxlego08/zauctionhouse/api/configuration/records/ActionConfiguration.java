@@ -45,6 +45,7 @@ public record ActionConfiguration(
                                          boolean openInventory,
                                          PurchaseNoMoneyConfiguration noMoney,
                                          boolean sendNoMoneyMessage,
+                                         SoundConfiguration noMoneySound,
                                          boolean freeSpace
     ) {
         public static PurchasedConfiguration of(AuctionPlugin plugin, FileConfiguration configuration) {
@@ -53,6 +54,7 @@ public record ActionConfiguration(
                     configuration.getBoolean("action.purchased-item.open-inventory"),
                     PurchaseNoMoneyConfiguration.of(plugin, configuration),
                     configuration.getBoolean("action.purchased-item.money-message"),
+                    SoundConfiguration.of(plugin, configuration, "action.purchased-item.money-sound."),
                     configuration.getBoolean("action.purchased-item.player-inventory-must-have-free-space")
             );
         }

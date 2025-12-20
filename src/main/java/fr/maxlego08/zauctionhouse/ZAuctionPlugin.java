@@ -113,6 +113,11 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
 
     @Override
     public void reload() {
+
+        if (!new File(getDataFolder(), "config.yml").exists()) {
+            this.saveFile("config.yml", true);
+        }
+
         this.reloadConfig();
         this.loadFiles();
         this.inventoriesLoader.reload();
