@@ -8,6 +8,7 @@ import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
+import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.utils.Permission;
 import org.bukkit.entity.Player;
@@ -100,7 +101,10 @@ public class ListedItemsButton extends PaginateButton {
             } else {
 
                 // Purchase items
-                processPurchase(player, inventoryEngine, slot, item, itemStack);
+                var isMultipleAuctionItem = item instanceof AuctionItem auctionItem && auctionItem.getItemStacks().size() > 1;
+                var inventories = event.getClick() == ClickType.LEFT && isMultipleAuctionItem ? Inventories.AUCTION_ITEM : Inventories.PURCHASE_CONFIRM;
+
+                processPurchase(player, inventoryEngine, slot, item, itemStack, inventories);
             }
         };
     }
@@ -120,7 +124,7 @@ public class ListedItemsButton extends PaginateButton {
      * @param item            the item to purchase
      * @param itemStack       the item stack of the item
      */
-    private void processPurchase(Player player, InventoryEngine inventoryEngine, int slot, Item item, ItemStack itemStack) {
+    private void processPurchase(Player player, InventoryEngine inventoryEngine, int slot, Item item, ItemStack itemStack, Inventories inventories) {
 
         var configuration = this.plugin.getConfiguration();
         var actionConfiguration = configuration.getActions().purchased();
@@ -171,7 +175,7 @@ public class ListedItemsButton extends PaginateButton {
             this.plugin.getAuctionClusterBridge().notifyItemStatusChange(item, ItemStatus.AVAILABLE, ItemStatus.IS_PURCHASE_CONFIRM);
             manager.updateListedItems(item, false, player);
 
-            this.plugin.getInventoriesLoader().openInventory(player, Inventories.PURCHASE_CONFIRM);
+            this.plugin.getInventoriesLoader().openInventory(player, inventories);
         });
     }
 

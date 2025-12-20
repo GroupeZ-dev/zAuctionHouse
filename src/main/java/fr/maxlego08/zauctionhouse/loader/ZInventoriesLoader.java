@@ -9,6 +9,7 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.InventoriesLoader;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
+import fr.maxlego08.zauctionhouse.buttons.AuctionItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.ShowButton;
 import fr.maxlego08.zauctionhouse.buttons.sell.SellBuyButton;
 import fr.maxlego08.zauctionhouse.buttons.sell.SellCancelButton;
@@ -107,6 +108,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new NoneLoader(this.plugin, ExpiredItemsButton.class, "ZAUCTIONHOUSE_EXPIRED_ITEMS"));
         this.buttonManager.register(new NoneLoader(this.plugin, OwnedItemsButton.class, "ZAUCTIONHOUSE_OWNED_ITEMS"));
         this.buttonManager.register(new NoneLoader(this.plugin, PurchasedItemsButton.class, "ZAUCTIONHOUSE_PURCHASED_ITEMS"));
+        this.buttonManager.register(new NoneLoader(this.plugin, AuctionItemsButton.class, "ZAUCTIONHOUSE_AUCTION_ITEMS"));
 
         this.buttonManager.register(new NoneLoader(this.plugin, AdminOwnedItemsButton.class, "ZAUCTIONHOUSE_ADMIN_OWNED_ITEMS"));
         this.buttonManager.register(new NoneLoader(this.plugin, AdminExpiredItemsButton.class, "ZAUCTIONHOUSE_ADMIN_EXPIRED_ITEMS"));
@@ -161,6 +163,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
                 "admin-purchased-items",
                 "remove-confirm",
                 "purchase-confirm",
+                "auction-item",
                 "sell-inventory"
         );
     }

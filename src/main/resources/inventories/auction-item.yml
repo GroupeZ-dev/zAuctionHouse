@@ -1,0 +1,49 @@
+name: "#0c1719Items contained in the auction"
+size: 54
+items:
+
+  auction-items:
+    type: ZAUCTIONHOUSE_AUCTION_ITEMS
+    slots:
+      - 10-16
+      - 19-25
+      - 28-34
+
+  confirm:
+    type: ZAUCTIONHOUSE_CONFIRM_PURCHASE
+    item:
+      material: GREEN_STAINED_GLASS_PANE
+      name: "#2CCED2<bold>ᴘᴜʀᴄʜᴀsᴇ"
+      lore:
+        - "#92ffffPurchase these items."
+        - ""
+        - "#8c8c8c• #2CCED2Click #92ffffto purchase"
+    slots:
+      - 36-38
+      - 45-47
+
+  deny:
+    type: BACK
+    item:
+      material: RED_STAINED_GLASS_PANE
+      name: "#2CCED2<bold>ʙᴀᴄᴋ"
+      lore:
+        - "#92ffffGo back."
+        - ""
+        - "#8c8c8c• #2CCED2Click #92ffffto go back"
+    slots:
+      - 42-44
+      - 51-53
+
+  decoration:
+    item:
+      material: GRAY_STAINED_GLASS_PANE
+      name: "#2CCED2"
+    slots:
+      - 0-8
+      - 9
+      - 17-18
+      - 26-27
+      - 35
+      - 39-41
+      - 48-50
