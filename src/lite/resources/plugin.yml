@@ -1,0 +1,13 @@
+name: zAuctionHouse
+version: ${version}-LITE
+main: fr.maxlego08.zauctionhouse.ZAuctionPlugin
+api-version: '1.21'
+authors: [ Maxlego08 ]
+description: Buy, resell, rent, bid your items! (LITE)
+website: https://groupez.dev/
+folia-supported: true
+depend:
+  - zMenu
+  - PlaceholderAPI
+libraries:
+  - org.mariadb.jdbc:mariadb-java-client:3.5.6

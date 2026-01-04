@@ -1,3 +1,6 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.invoke
 
 plugins {
@@ -41,6 +44,7 @@ allprojects {
     }
 
     java {
+        toolchain.languageVersion.set(JavaLanguageVersion.of(17))
         withSourcesJar()
         withJavadocJar()
     }
@@ -83,7 +87,125 @@ dependencies {
     api(projects.hooks)
 }
 
+val shadowPresent = plugins.hasPlugin("com.gradleup.shadow")
+
+sourceSets {
+    val main by getting
+
+    val lite by creating {
+        java.srcDir("src/lite/java")
+        resources.srcDir("src/lite/resources")
+        compileClasspath += main.output + configurations.getByName("compileClasspath")
+        runtimeClasspath += output + compileClasspath + main.output
+    }
+
+    val full by creating {
+        java.srcDir("src/full/java")
+        resources.srcDir("src/full/resources")
+        compileClasspath += main.output + configurations.getByName("compileClasspath")
+        runtimeClasspath += output + compileClasspath + main.output
+    }
+}
+
+configurations {
+    val implementation by getting
+    val compileOnly by getting
+    val runtimeOnly by getting
+
+    named("liteImplementation") { extendsFrom(implementation) }
+    named("liteCompileOnly") { extendsFrom(compileOnly) }
+    named("liteRuntimeOnly") { extendsFrom(runtimeOnly) }
+
+    named("fullImplementation") { extendsFrom(implementation) }
+    named("fullCompileOnly") { extendsFrom(compileOnly) }
+    named("fullRuntimeOnly") { extendsFrom(runtimeOnly) }
+}
+
+fun ShadowJar.configureVariant(variant: SourceSet, classifier: String) {
+    val runtimeClasspath = project.configurations.getByName("${variant.name}RuntimeClasspath")
+
+    archiveBaseName.set("zAuctionHouse")
+    archiveClassifier.set(classifier)
+    archiveAppendix.set("")
+
+    from(variant.output)
+    configurations.set(listOf(runtimeClasspath))
+
+    relocate("fr.maxlego08.sarah", "fr.maxlego08.zauctionhouse.libs.sarah")
+    relocate("com.tcoded.folialib", "fr.maxlego08.zauctionhouse.libs.folialib")
+    relocate("fr.traqueur.currencies", "fr.maxlego08.zauctionhouse.libs.currencies")
+
+    val baseClassifier = rootProject.extra.properties["classifier"] as String?
+    rootProject.extra.properties["sha"]?.let { sha ->
+        archiveClassifier.set(listOfNotNull(baseClassifier, classifier.takeIf { it.isNotBlank() }, sha.toString()).joinToString("-"))
+    } ?: run {
+        archiveClassifier.set(listOfNotNull(baseClassifier, classifier.takeIf { it.isNotBlank() }).joinToString("-"))
+    }
+    destinationDirectory.set(rootProject.extra["targetFolder"] as File)
+}
+
+fun Jar.configureVariant(variant: SourceSet, classifier: String) {
+    archiveBaseName.set("zAuctionHouse")
+    archiveClassifier.set(listOfNotNull(rootProject.extra.properties["classifier"] as String?, classifier.takeIf { it.isNotBlank() }).joinToString("-"))
+    archiveAppendix.set("")
+
+    from(variant.output)
+    destinationDirectory.set(rootProject.extra["targetFolder"] as File)
+}
+
 tasks {
+    compileJava {
+        options.release = 17
+    }
+
+    processResources {
+        from("resources")
+        filesMatching("plugin.yml") {
+            expand("version" to project.version)
+        }
+    }
+
+    val liteProcessResources = named<ProcessResources>("processLiteResources") {
+        filesMatching("plugin.yml") {
+            expand("version" to project.version)
+        }
+    }
+
+    val fullProcessResources = named<ProcessResources>("processFullResources") {
+        filesMatching("plugin.yml") {
+            expand("version" to project.version)
+        }
+    }
+    val liteJarTask = if (shadowPresent) {
+        register<ShadowJar>("shadowJarLite") {
+            dependsOn(liteProcessResources)
+            configureVariant(sourceSets.getByName("lite"), "lite")
+            from(sourceSets.main.get().output)
+            from(sourceSets.getByName("lite").output)
+        }
+    } else {
+        register<Jar>("jarLite") {
+            dependsOn(liteProcessResources)
+            configureVariant(sourceSets.getByName("lite"), "lite")
+            from(sourceSets.main.get().output)
+        }
+    }
+
+    val fullJarTask = if (shadowPresent) {
+        register<ShadowJar>("shadowJarFull") {
+            dependsOn(fullProcessResources)
+            configureVariant(sourceSets.getByName("full"), "full")
+            from(sourceSets.main.get().output)
+            from(sourceSets.getByName("full").output)
+        }
+    } else {
+        register<Jar>("jarFull") {
+            dependsOn(fullProcessResources)
+            configureVariant(sourceSets.getByName("full"), "full")
+            from(sourceSets.main.get().output)
+        }
+    }
+
     shadowJar {
 
         relocate("fr.maxlego08.sarah", "fr.maxlego08.zauctionhouse.libs.sarah")
@@ -99,17 +221,6 @@ tasks {
     }
 
     build {
-        dependsOn(shadowJar)
-    }
-
-    compileJava {
-        options.release = 21
-    }
-
-    processResources {
-        from("resources")
-        filesMatching("plugin.yml") {
-            expand("version" to project.version)
-        }
+        dependsOn(if (shadowPresent) listOf(shadowJar, liteJarTask, fullJarTask) else listOf(liteJarTask, fullJarTask))
     }
 }

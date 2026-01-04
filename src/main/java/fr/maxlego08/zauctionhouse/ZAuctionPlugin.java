@@ -15,6 +15,7 @@ import fr.maxlego08.zauctionhouse.api.placeholders.PlaceholderRegister;
 import fr.maxlego08.zauctionhouse.api.rules.ItemRuleManager;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
 import fr.maxlego08.zauctionhouse.api.utils.Plugins;
+import fr.maxlego08.zauctionhouse.build.BuildType;
 import fr.maxlego08.zauctionhouse.cluster.LocalAuctionClusterBridge;
 import fr.maxlego08.zauctionhouse.command.CommandManager;
 import fr.maxlego08.zauctionhouse.command.commands.CommandAuction;
@@ -29,6 +30,7 @@ import fr.maxlego08.zauctionhouse.placeholder.DistantPlaceholder;
 import fr.maxlego08.zauctionhouse.placeholder.LocalPlaceholder;
 import fr.maxlego08.zauctionhouse.placeholder.placeholders.GlobalPlaceholders;
 import fr.maxlego08.zauctionhouse.placeholder.placeholders.PlayerPlaceholders;
+import fr.maxlego08.zauctionhouse.premium.PremiumFeatures;
 import fr.maxlego08.zauctionhouse.rule.ZItemRuleManager;
 import fr.maxlego08.zauctionhouse.storage.ZStorageManager;
 import org.bukkit.Bukkit;
@@ -64,6 +66,8 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     private final ExecutorService asyncExecutor = Executors.newFixedThreadPool(4);
     private final Placeholder placeholder = new LocalPlaceholder(this);
     private final ItemRuleManager itemRuleManager = new ZItemRuleManager(this);
+    private final BuildType buildType = this.instantiate(BuildType.class, "fr.maxlego08.zauctionhouse.build.BuildTypeImpl");
+    private final PremiumFeatures premiumFeatures = this.instantiate(PremiumFeatures.class, "fr.maxlego08.zauctionhouse.premium.PremiumFeaturesImpl");
     private InventoriesLoader inventoriesLoader;
     private boolean isEnabled = false;
     private PlatformScheduler platformScheduler;
@@ -80,6 +84,9 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
 
         FoliaLib foliaLib = new FoliaLib(this);
         this.platformScheduler = foliaLib.getScheduler();
+
+        this.getLogger().info("Premium build: " + this.buildType.isPremium());
+        this.premiumFeatures.register(this);
 
         if (!this.storageManager.onEnable()) return;
 
@@ -213,6 +220,19 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     @Override
     public Placeholder getPlaceholder() {
         return this.placeholder;
+    }
+
+    private <T> T instantiate(Class<T> type, String implClassName) {
+        try {
+            Class<?> clazz = Class.forName(implClassName);
+            Object instance = clazz.getDeclaredConstructor().newInstance();
+            if (!type.isInstance(instance)) {
+                throw new IllegalStateException(implClassName + " does not implement " + type.getSimpleName());
+            }
+            return type.cast(instance);
+        } catch (Exception exception) {
+            throw new IllegalStateException("Unable to instantiate " + implClassName, exception);
+        }
     }
 
     private void addListener(Listener listener) {
