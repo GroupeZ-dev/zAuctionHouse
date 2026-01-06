@@ -9,21 +9,31 @@ import org.bukkit.entity.Player;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LocalAuctionClusterBridge implements AuctionClusterBridge {
 
+    private final ConcurrentHashMap<UUID, UUID> itemLocks = new ConcurrentHashMap<>();
+
     @Override
     public CompletableFuture<Boolean> checkAvailability(Item item) {
-        return CompletableFuture.completedFuture(true);
+        return CompletableFuture.completedFuture(!itemLocks.containsKey(item.getId()));
     }
 
     @Override
     public CompletableFuture<LockToken> lockItem(Item item, UUID buyerId, StorageType storageType) {
+        UUID existingLock = itemLocks.putIfAbsent(item.getId(), buyerId);
+        
+        if (existingLock != null) {
+            return CompletableFuture.failedFuture(new IllegalStateException("Item already locked by another player"));
+        }
+        
         return CompletableFuture.completedFuture(LockToken.of(item));
     }
 
     @Override
     public CompletableFuture<Void> unlockItem(Item item, LockToken lockToken, StorageType storageType) {
+        itemLocks.remove(item.getId());
         return CompletableFuture.completedFuture(null);
     }
 
