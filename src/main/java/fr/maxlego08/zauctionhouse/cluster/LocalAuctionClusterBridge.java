@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class LocalAuctionClusterBridge implements AuctionClusterBridge {
 
-    private final ConcurrentHashMap<UUID, UUID> itemLocks = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, UUID> itemLocks = new ConcurrentHashMap<>();
 
     @Override
     public CompletableFuture<Boolean> checkAvailability(Item item) {
@@ -22,12 +22,12 @@ public class LocalAuctionClusterBridge implements AuctionClusterBridge {
 
     @Override
     public CompletableFuture<LockToken> lockItem(Item item, UUID buyerId, StorageType storageType) {
-        UUID existingLock = itemLocks.putIfAbsent(item.getId(), buyerId);
-        
+        var existingLock = itemLocks.putIfAbsent(item.getId(), buyerId);
+
         if (existingLock != null) {
             return CompletableFuture.failedFuture(new IllegalStateException("Item already locked by another player"));
         }
-        
+
         return CompletableFuture.completedFuture(LockToken.of(item));
     }
 

@@ -8,6 +8,7 @@ import fr.maxlego08.zauctionhouse.api.item.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NonNull;
 
 public class ShowButton extends Button {
 
@@ -18,7 +19,7 @@ public class ShowButton extends Button {
     }
 
     @Override
-    public ItemStack getCustomItemStack(Player player, Placeholders placeholders) {
+    public ItemStack getCustomItemStack(@NonNull Player player, @NonNull Placeholders placeholders) {
         Item item = this.plugin.getAuctionManager().getCache(player).get(PlayerCacheKey.ITEM_SHOW);
         return item.buildItemStack(player);
     }

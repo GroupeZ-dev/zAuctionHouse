@@ -8,6 +8,7 @@ import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
@@ -27,11 +28,11 @@ public class AuctionItemsButton extends PaginateButton {
         if (!(item instanceof AuctionItem auctionItem)) return;
 
         List<ItemStack> items = auctionItem.getItemStacks().stream().map(ItemStack::clone).toList();
-        paginate(items, inventoryEngine, (slot, itemStack) -> inventoryEngine.addItem(slot, itemStack));
+        paginate(items, inventoryEngine, inventoryEngine::addItem);
     }
 
     @Override
-    public int getPaginationSize(Player player) {
+    public int getPaginationSize(@NonNull Player player) {
         var cache = this.plugin.getAuctionManager().getCache(player);
         var item = cache.get(PlayerCacheKey.ITEM_SHOW);
         if (!(item instanceof AuctionItem auctionItem)) return 0;

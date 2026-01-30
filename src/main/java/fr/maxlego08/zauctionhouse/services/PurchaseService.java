@@ -46,15 +46,13 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
             auctionManager.openMainAuction(player);
             return CompletableFuture.completedFuture(null);
         }
-        
-        synchronized(item) {
-            if (item.getStatus() != ItemStatus.IS_PURCHASE_CONFIRM) {
-                logger.info("Item not available");
-                auctionManager.openMainAuction(player);
-                return CompletableFuture.completedFuture(null);
-            }
-            item.setStatus(ItemStatus.IS_BEING_PURCHASED);
+
+        if (item.getStatus() != ItemStatus.IS_PURCHASE_CONFIRM) {
+            logger.info("Item not available");
+            auctionManager.openMainAuction(player);
+            return CompletableFuture.completedFuture(null);
         }
+        item.setStatus(ItemStatus.IS_BEING_PURCHASED);
 
         // 2. Vérifier si l'item est lock
         return clusterBridge.checkAvailability(item).thenCompose(available -> {

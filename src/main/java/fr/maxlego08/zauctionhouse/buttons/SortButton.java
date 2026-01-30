@@ -10,6 +10,7 @@ import fr.maxlego08.zauctionhouse.api.item.SortItem;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class SortButton extends Button {
     }
 
     @Override
-    public ItemStack getCustomItemStack(Player player, Placeholders placeholders) {
+    public ItemStack getCustomItemStack(@NonNull Player player, @NonNull Placeholders placeholders) {
 
         var config = this.plugin.getConfiguration().getSort();
         var cache = this.plugin.getAuctionManager().getCache(player);
@@ -52,7 +53,7 @@ public class SortButton extends Button {
     }
 
     @Override
-    public void onClick(Player player, InventoryClickEvent event, InventoryEngine inventory, int slot, Placeholders placeholders) {
+    public void onClick(@NonNull Player player, @NonNull InventoryClickEvent event, @NonNull InventoryEngine inventory, int slot, @NonNull Placeholders placeholders) {
         super.onClick(player, event, inventory, slot, placeholders);
 
         var config = this.plugin.getConfiguration().getSort();
