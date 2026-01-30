@@ -26,6 +26,7 @@ import fr.maxlego08.zauctionhouse.buttons.list.ExpiredItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.list.ListedItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.list.OwnedItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.list.PurchasedItemsButton;
+import fr.maxlego08.zauctionhouse.loader.buttons.CategoryButtonLoader;
 import fr.maxlego08.zauctionhouse.loader.buttons.SortLoader;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import org.bukkit.entity.Player;
@@ -126,6 +127,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new NoneLoader(this.plugin, PurchasedInventoryButton.class, "ZAUCTIONHOUSE_PURCHASED_INVENTORY"));
 
         this.buttonManager.register(new SortLoader(this.plugin, this.inventoryManager));
+        this.buttonManager.register(new CategoryButtonLoader(this.plugin));
     }
 
     @Override

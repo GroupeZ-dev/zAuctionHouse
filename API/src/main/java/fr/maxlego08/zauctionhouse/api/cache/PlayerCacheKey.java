@@ -1,6 +1,7 @@
 package fr.maxlego08.zauctionhouse.api.cache;
 
 import com.google.common.reflect.TypeToken;
+import fr.maxlego08.zauctionhouse.api.category.Category;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.SortItem;
@@ -26,7 +27,8 @@ public enum PlayerCacheKey {
     SELL_PRICE(new TypeToken<BigDecimal>() {}, () -> BigDecimal.ZERO),
     SELL_ECONOMY(new TypeToken<AuctionEconomy>() {}, () -> null),
     SELL_EXPIRED_AT(new TypeToken<Long>() {}, () -> 0L),
-    SELL_AMOUNT(new TypeToken<Integer>() {}, () -> 1)
+    SELL_AMOUNT(new TypeToken<Integer>() {}, () -> 1),
+    CURRENT_CATEGORY(new TypeToken<Category>() {}, () -> null)
     ;
 
     private final TypeToken<?> type;

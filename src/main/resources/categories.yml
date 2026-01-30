@@ -1,0 +1,175 @@
+# ╔═══════════════════════════════════════════════════════════════╗
+# ║           zAuctionHouseV4 - Categories Configuration          ║
+# ╠═══════════════════════════════════════════════════════════════╣
+# ║  Documentation: https://zauctionhouse.groupez.dev/categories  ║
+# ╚═══════════════════════════════════════════════════════════════╝
+
+# Configuration version (do not modify)
+config-version: 1
+
+# ┌─────────────────────────────────────────────────────────────────┐
+# │                    GLOBAL SETTINGS                              │
+# └─────────────────────────────────────────────────────────────────┘
+
+settings:
+  # Enable or disable the category system
+  # If disabled, all items will be shown together without filtering
+  enabled: true
+
+  # Default category for items that don't match any other category
+  # This category will be used as a fallback
+  default-category: "misc"
+
+# ┌─────────────────────────────────────────────────────────────────┐
+# │                       CATEGORIES                                │
+# └─────────────────────────────────────────────────────────────────┘
+
+# Blocks Category
+blocks:
+  display-name: "&7Blocks"
+  description:
+    - "&7All building blocks"
+  priority: 100
+  icon:
+    material: GRASS_BLOCK
+  rules:
+    # Match all block materials using Bukkit tag
+    - type: tag
+      tags:
+        - BLOCKS
+
+# Weapons Category
+weapons:
+  display-name: "&cWeapons"
+  description:
+    - "&7Combat equipment"
+    - "&7Swords, bows, crossbows..."
+  priority: 10
+  icon:
+    material: DIAMOND_SWORD
+  rules:
+    # Match swords
+    - type: material-suffix
+      suffixes:
+        - "_SWORD"
+    # Match ranged weapons
+    - type: material
+      materials:
+        - BOW
+        - CROSSBOW
+        - TRIDENT
+
+# Armor Category
+armor:
+  display-name: "&bArmor"
+  description:
+    - "&7Protective equipment"
+  priority: 20
+  icon:
+    material: DIAMOND_CHESTPLATE
+  rules:
+    - type: material-suffix
+      suffixes:
+        - "_HELMET"
+        - "_CHESTPLATE"
+        - "_LEGGINGS"
+        - "_BOOTS"
+    - type: material
+      materials:
+        - ELYTRA
+        - SHIELD
+        - TURTLE_HELMET
+
+# Tools Category
+tools:
+  display-name: "&eTools"
+  description:
+    - "&7Mining and farming tools"
+  priority: 30
+  icon:
+    material: DIAMOND_PICKAXE
+  rules:
+    - type: material-suffix
+      suffixes:
+        - "_PICKAXE"
+        - "_AXE"
+        - "_SHOVEL"
+        - "_HOE"
+    - type: material
+      materials:
+        - SHEARS
+        - FLINT_AND_STEEL
+        - FISHING_ROD
+
+# Consumables Category
+consumables:
+  display-name: "&aConsumables"
+  description:
+    - "&7Food and potions"
+  priority: 40
+  icon:
+    material: GOLDEN_APPLE
+  rules:
+    - type: material
+      materials:
+        - POTION
+        - SPLASH_POTION
+        - LINGERING_POTION
+        - GOLDEN_APPLE
+        - ENCHANTED_GOLDEN_APPLE
+        - COOKED_BEEF
+        - COOKED_PORKCHOP
+        - BREAD
+        - CAKE
+        - COOKIE
+        - PUMPKIN_PIE
+
+# Resources Category
+resources:
+  display-name: "&6Resources"
+  description:
+    - "&7Ores and materials"
+  priority: 50
+  icon:
+    material: DIAMOND
+  rules:
+    - type: material
+      materials:
+        - COAL
+        - IRON_INGOT
+        - GOLD_INGOT
+        - DIAMOND
+        - EMERALD
+        - NETHERITE_INGOT
+        - LAPIS_LAZULI
+        - REDSTONE
+        - COPPER_INGOT
+        - AMETHYST_SHARD
+        - RAW_IRON
+        - RAW_GOLD
+        - RAW_COPPER
+
+# Enchanted Books Category
+enchanted-books:
+  display-name: "&dEnchanted Books"
+  description:
+    - "&7Books with enchantments"
+  priority: 15
+  icon:
+    material: ENCHANTED_BOOK
+    glow: true
+  rules:
+    - type: material
+      materials:
+        - ENCHANTED_BOOK
+
+# Miscellaneous Category (Fallback)
+# Items that don't match any other category will go here
+misc:
+  display-name: "&8Miscellaneous"
+  description:
+    - "&7Other items"
+  priority: 999
+  icon:
+    material: CHEST
+  # No rules = fallback category for unmatched items

@@ -6,7 +6,9 @@ import fr.maxlego08.zauctionhouse.api.configuration.Configuration;
 import fr.maxlego08.zauctionhouse.api.economy.EconomyManager;
 import fr.maxlego08.zauctionhouse.api.hooks.permission.OfflinePermission;
 import fr.maxlego08.zauctionhouse.api.placeholders.Placeholder;
+import fr.maxlego08.zauctionhouse.api.category.CategoryManager;
 import fr.maxlego08.zauctionhouse.api.rules.ItemRuleManager;
+import fr.maxlego08.zauctionhouse.api.rules.RuleLoaderRegistry;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
 import org.bukkit.plugin.Plugin;
 
@@ -74,6 +76,16 @@ public interface AuctionPlugin extends Plugin {
      * @return manager responsible for applying rule checks when items are listed or purchased
      */
     ItemRuleManager getItemRuleManager();
+
+    /**
+     * @return manager responsible for category matching and organization
+     */
+    CategoryManager getCategoryManager();
+
+    /**
+     * @return registry for rule loaders, allowing external plugins to register custom rules
+     */
+    RuleLoaderRegistry getRuleLoaderRegistry();
 
     /**
      * Overrides the default cluster bridge at runtime, allowing integrations to swap transport

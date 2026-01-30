@@ -5,6 +5,7 @@ import com.tcoded.folialib.impl.PlatformScheduler;
 import fr.maxlego08.zauctionhouse.api.AuctionManager;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.InventoriesLoader;
+import fr.maxlego08.zauctionhouse.api.category.CategoryManager;
 import fr.maxlego08.zauctionhouse.api.cluster.AuctionClusterBridge;
 import fr.maxlego08.zauctionhouse.api.configuration.Configuration;
 import fr.maxlego08.zauctionhouse.api.configuration.ConfigurationFile;
@@ -13,8 +14,10 @@ import fr.maxlego08.zauctionhouse.api.hooks.permission.OfflinePermission;
 import fr.maxlego08.zauctionhouse.api.placeholders.Placeholder;
 import fr.maxlego08.zauctionhouse.api.placeholders.PlaceholderRegister;
 import fr.maxlego08.zauctionhouse.api.rules.ItemRuleManager;
+import fr.maxlego08.zauctionhouse.api.rules.RuleLoaderRegistry;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
 import fr.maxlego08.zauctionhouse.api.utils.Plugins;
+import fr.maxlego08.zauctionhouse.category.ZCategoryManager;
 import fr.maxlego08.zauctionhouse.cluster.LocalAuctionClusterBridge;
 import fr.maxlego08.zauctionhouse.command.CommandManager;
 import fr.maxlego08.zauctionhouse.command.commands.CommandAuction;
@@ -30,6 +33,7 @@ import fr.maxlego08.zauctionhouse.placeholder.LocalPlaceholder;
 import fr.maxlego08.zauctionhouse.placeholder.placeholders.GlobalPlaceholders;
 import fr.maxlego08.zauctionhouse.placeholder.placeholders.PlayerPlaceholders;
 import fr.maxlego08.zauctionhouse.rule.ZItemRuleManager;
+import fr.maxlego08.zauctionhouse.rule.ZRuleLoaderRegistry;
 import fr.maxlego08.zauctionhouse.storage.ZStorageManager;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -63,7 +67,9 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     private final EconomyManager economyManager = new ZEconomyManager(this);
     private final ExecutorService asyncExecutor = Executors.newFixedThreadPool(4);
     private final Placeholder placeholder = new LocalPlaceholder(this);
-    private final ItemRuleManager itemRuleManager = new ZItemRuleManager(this);
+    private final RuleLoaderRegistry ruleLoaderRegistry = new ZRuleLoaderRegistry();
+    private final ItemRuleManager itemRuleManager = new ZItemRuleManager(this, ruleLoaderRegistry);
+    private final CategoryManager categoryManager = new ZCategoryManager(this, ruleLoaderRegistry);
     private InventoriesLoader inventoriesLoader;
     private boolean isEnabled = false;
     private PlatformScheduler platformScheduler;
@@ -83,7 +89,9 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
 
         if (!this.storageManager.onEnable()) return;
 
-        // On doit créer la class des inventaires avant de charger la configuration, cela permet d'utiliser les interfaces de zmenu partout
+        this.ruleLoaderRegistry.registerDefaultLoaders();
+
+        // On doit créer la classe des inventaires avant de charger la configuration, cela permet d'utiliser les interfaces de zmenu partout.
         this.inventoriesLoader = new ZInventoriesLoader(this);
 
         this.loadFiles();
@@ -128,6 +136,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         this.messageLoader.load(); // Load messages.yml
         this.economyManager.loadEconomies(); // Load economies.yml
         this.itemRuleManager.loadRules(); // Load rules.yml
+        this.categoryManager.loadCategories(); // Load categories.yml
     }
 
     private void registerPlaceholders() {
@@ -198,6 +207,16 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     @Override
     public ItemRuleManager getItemRuleManager() {
         return this.itemRuleManager;
+    }
+
+    @Override
+    public CategoryManager getCategoryManager() {
+        return this.categoryManager;
+    }
+
+    @Override
+    public RuleLoaderRegistry getRuleLoaderRegistry() {
+        return this.ruleLoaderRegistry;
     }
 
     @Override
