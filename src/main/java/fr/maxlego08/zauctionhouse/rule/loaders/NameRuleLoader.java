@@ -31,8 +31,7 @@ public class NameRuleLoader implements RuleLoader {
 
         if ("EQUALS".equalsIgnoreCase(mode)) {
             boolean ignoreCase = RuleConfigHelper.getBoolean(configuration, "ignore-case", true);
-            boolean stripColors = RuleConfigHelper.getBoolean(configuration, "strip-colors", true);
-            return new NameEqualsRule(values, ignoreCase, stripColors);
+            return new NameEqualsRule(values, ignoreCase);
         } else {
             return new NameContainsRule(values);
         }

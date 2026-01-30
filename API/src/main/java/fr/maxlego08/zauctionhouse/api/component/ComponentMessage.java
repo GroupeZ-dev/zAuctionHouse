@@ -56,10 +56,28 @@ public interface ComponentMessage {
      */
     String getItemStackName(ItemStack itemStack);
 
+    /**
+     * Retrieves the lore of a specified ItemStack, which may contain translated text depending on the item.
+     *
+     * @param itemStack the ItemStack for which to retrieve the lore
+     * @return the lore of the ItemStack
+     */
     List<String> getItemStackLore(ItemStack itemStack);
 
+    /**
+     * Checks if the specified ItemStack has a display name.
+     *
+     * @param itemStack the ItemStack to check
+     * @return true if the ItemStack has a display name, false otherwise
+     */
     boolean hasDisplayName(ItemStack itemStack);
 
+    /**
+     * Retrieves the display name of a specified ItemStack, which may be a translated name depending on the item.
+     *
+     * @param itemStack the ItemStack for which to retrieve the display name
+     * @return the display name of the ItemStack, or null if no display name is set
+     */
     String getItemStackDisplayName(ItemStack itemStack);
 }
 

@@ -7,21 +7,6 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.buttons.CategoryButton;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-/**
- * Loader for CategoryButton.
- * Reads the category ID from the inventory configuration.
- * <p>
- * Example usage in inventory YAML:
- * <pre>
- * weapons-category:
- *   type: ZAUCTIONHOUSE_CATEGORY
- *   category: weapons
- *   slot: 10
- *   item:
- *     material: DIAMOND_SWORD
- *     name: "&cWeapons"
- * </pre>
- */
 public class CategoryButtonLoader extends ButtonLoader {
 
     private final AuctionPlugin plugin;

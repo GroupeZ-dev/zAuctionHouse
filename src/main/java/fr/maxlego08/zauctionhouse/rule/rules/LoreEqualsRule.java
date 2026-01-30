@@ -1,16 +1,15 @@
 package fr.maxlego08.zauctionhouse.rule.rules;
 
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
-import org.bukkit.ChatColor;
+import fr.maxlego08.zauctionhouse.utils.component.ComponentMessageHelper;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
 import java.util.Locale;
 
 /**
  * Rule that matches items that have a lore line exactly equal to one of the specified values.
- * Comparison is case-insensitive and strips color codes.
+ * Comparison is case-insensitive. Color codes are automatically stripped using MiniMessage.
  */
 public class LoreEqualsRule implements Rule {
 
@@ -18,7 +17,6 @@ public class LoreEqualsRule implements Rule {
 
     public LoreEqualsRule(List<String> loreLines) {
         this.loreLines = loreLines.stream()
-                .map(ChatColor::stripColor)
                 .map(s -> s.toLowerCase(Locale.ROOT))
                 .toList();
     }
@@ -27,14 +25,11 @@ public class LoreEqualsRule implements Rule {
     public boolean matches(ItemStack itemStack) {
         if (itemStack == null) return false;
 
-        ItemMeta meta = itemStack.getItemMeta();
-        if (meta == null || !meta.hasLore()) return false;
-
-        List<String> lore = meta.getLore();
-        if (lore == null || lore.isEmpty()) return false;
+        List<String> lore = ComponentMessageHelper.componentMessage.getItemStackLore(itemStack);
+        if (lore.isEmpty()) return false;
 
         for (String line : lore) {
-            String cleanLine = ChatColor.stripColor(line).toLowerCase(Locale.ROOT);
+            String cleanLine = line.toLowerCase(Locale.ROOT);
             if (loreLines.contains(cleanLine)) {
                 return true;
             }
