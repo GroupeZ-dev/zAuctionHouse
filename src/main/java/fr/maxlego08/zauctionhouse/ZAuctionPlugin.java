@@ -62,7 +62,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     private final EconomyManager economyManager = new ZEconomyManager(this);
     private final ExecutorService asyncExecutor = Executors.newFixedThreadPool(4);
     private final Placeholder placeholder = new LocalPlaceholder(this);
-    private final ZRuleLoaderRegistry ruleLoaderRegistry = new ZRuleLoaderRegistry();
+    private final ZRuleLoaderRegistry ruleLoaderRegistry = new ZRuleLoaderRegistry(this);
     private final ItemRuleManager itemRuleManager = new ZItemRuleManager(this, ruleLoaderRegistry);
     private final CategoryManager categoryManager = new ZCategoryManager(this, ruleLoaderRegistry);
     private InventoriesLoader inventoriesLoader;

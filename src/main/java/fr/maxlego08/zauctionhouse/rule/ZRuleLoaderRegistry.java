@@ -1,5 +1,6 @@
 package fr.maxlego08.zauctionhouse.rule;
 
+import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
 import fr.maxlego08.zauctionhouse.api.rules.RuleConfigHelper;
 import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoader;
@@ -18,9 +19,12 @@ import java.util.*;
 public class ZRuleLoaderRegistry implements RuleLoaderRegistry {
 
     private final Map<String, RuleLoader> loaders = new HashMap<>();
+    private final AuctionPlugin plugin;
 
-    public ZRuleLoaderRegistry() {
+    public ZRuleLoaderRegistry(AuctionPlugin auctionPlugin) {
+        this.plugin = auctionPlugin;
     }
+
 
     @Override
     public void registerDefaultLoaders() {
@@ -28,7 +32,7 @@ public class ZRuleLoaderRegistry implements RuleLoaderRegistry {
         register(new MaterialSuffixRuleLoader());
         register(new MaterialPrefixRuleLoader());
         register(new MaterialContainsRuleLoader());
-        register(new TagRuleLoader());
+        register(new TagRuleLoader(this.plugin));
         register(new NameRuleLoader());
         register(new LoreRuleLoader());
         register(new CustomModelDataRuleLoader());
@@ -115,6 +119,12 @@ public class ZRuleLoaderRegistry implements RuleLoaderRegistry {
         for (Map<?, ?> config : configurations) {
             Rule rule = loadRule(config);
             if (rule != null) {
+
+                if (!rule.isValid()) {
+                    this.plugin.getLogger().warning("Invalid rule: " + config.get("type"));
+                    continue;
+                }
+
                 rules.add(rule);
             }
         }

@@ -53,4 +53,9 @@ public class OraxenRule implements Rule {
 
         return false;
     }
+
+    @Override
+    public boolean isValid() {
+        return !this.itemIds.isEmpty() || !this.patterns.isEmpty();
+    }
 }

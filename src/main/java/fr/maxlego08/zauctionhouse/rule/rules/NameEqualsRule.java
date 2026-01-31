@@ -32,4 +32,9 @@ public class NameEqualsRule implements Rule {
 
         return this.names.contains(displayName);
     }
+
+    @Override
+    public boolean isValid() {
+        return !this.names.isEmpty();
+    }
 }

@@ -23,4 +23,9 @@ public class ModelDataRule implements Rule {
 
         return this.modelData.contains(context.getCustomModelData());
     }
+
+    @Override
+    public boolean isValid() {
+        return !this.modelData.isEmpty();
+    }
 }

@@ -1,5 +1,6 @@
 package fr.maxlego08.zauctionhouse.rule.loaders;
 
+import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
 import fr.maxlego08.zauctionhouse.api.rules.RuleConfigHelper;
 import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoader;
@@ -13,6 +14,12 @@ import java.util.Map;
  * Matches items by Minecraft material tags (e.g., LOGS, PLANKS, WOOL).
  */
 public class TagRuleLoader implements RuleLoader {
+
+    private final AuctionPlugin auctionPlugin;
+
+    public TagRuleLoader(AuctionPlugin auctionPlugin) {
+        this.auctionPlugin = auctionPlugin;
+    }
 
     @Override
     public String getType() {
@@ -33,9 +40,12 @@ public class TagRuleLoader implements RuleLoader {
                 tags = List.of(tag);
             }
         }
+
+        System.out.printf("tags: " + tags);
+
         if (tags.isEmpty()) {
             return null;
         }
-        return new TagRule(tags);
+        return new TagRule(this.auctionPlugin, tags);
     }
 }

@@ -129,6 +129,9 @@ public class ZCategoryManager implements CategoryManager {
 
         // Load rules
         List<Rule> rules = loadRules(rulesMapList);
+        if (rules.isEmpty()) {
+            this.plugin.getLogger().warning("No rules found for category '" + id + "'");
+        }
 
         return new ZCategory(id, displayName, description, priority, rules, false, icon);
     }

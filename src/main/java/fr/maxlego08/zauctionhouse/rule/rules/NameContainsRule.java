@@ -25,4 +25,9 @@ public class NameContainsRule implements Rule {
         String name = context.getDisplayName().toLowerCase(Locale.ROOT);
         return this.needles.stream().anyMatch(name::contains);
     }
+
+    @Override
+    public boolean isValid() {
+        return !this.needles.isEmpty();
+    }
 }

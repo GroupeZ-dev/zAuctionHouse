@@ -30,4 +30,9 @@ public class LoreEqualsRule implements Rule {
         }
         return false;
     }
+
+    @Override
+    public boolean isValid() {
+        return !this.loreLines.isEmpty();
+    }
 }

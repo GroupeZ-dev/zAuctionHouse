@@ -24,4 +24,9 @@ public class ModelDataRangeRule implements Rule {
         int modelData = context.getCustomModelData();
         return modelData >= this.min && modelData <= this.max;
     }
+
+    @Override
+    public boolean isValid() {
+        return this.min <= this.max;
+    }
 }

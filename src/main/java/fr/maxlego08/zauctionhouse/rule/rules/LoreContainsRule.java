@@ -26,4 +26,9 @@ public class LoreContainsRule implements Rule {
         String joined = context.getLore().stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(Collectors.joining(" "));
         return this.needles.stream().anyMatch(joined::contains);
     }
+
+    @Override
+    public boolean isValid() {
+        return !this.needles.isEmpty();
+    }
 }

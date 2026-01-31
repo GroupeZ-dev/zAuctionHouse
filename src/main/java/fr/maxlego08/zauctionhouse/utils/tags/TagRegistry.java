@@ -1,4 +1,4 @@
-package fr.maxlego08.zauctionhouse.utils;
+package fr.maxlego08.zauctionhouse.utils.tags;
 
 import org.bukkit.Material;
 import org.bukkit.Tag;
@@ -24,6 +24,9 @@ public class TagRegistry {
                 }
             }
         }
+
+        // Custom tags
+        register("blocks", new BlocksTag());
     }
 
     public static void register(String key, Tag<Material> tag) {

@@ -32,6 +32,12 @@ public record Rules(boolean enabled, List<Rule> rules) implements Rule {
         return new Rules(this.enabled, copy);
     }
 
+    @Override
+    public boolean isValid() {
+        if (this.rules.isEmpty()) return false;
+        return this.rules.stream().anyMatch(Rule::isValid);
+    }
+
     public static Rules emptyDisabled() {
         return new Rules(false, List.of());
     }

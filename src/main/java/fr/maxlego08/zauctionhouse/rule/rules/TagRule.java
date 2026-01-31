@@ -1,8 +1,9 @@
 package fr.maxlego08.zauctionhouse.rule.rules;
 
+import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
-import fr.maxlego08.zauctionhouse.utils.TagRegistry;
+import fr.maxlego08.zauctionhouse.utils.tags.TagRegistry;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 
@@ -14,16 +15,18 @@ public class TagRule implements Rule {
 
     private final List<Tag<Material>> tags;
 
-    public TagRule(List<String> tagNames) {
-        this.tags = tagNames.stream().map(TagRule::resolveTag).filter(Objects::nonNull).toList();
+    public TagRule(AuctionPlugin auctionPlugin, List<String> tagNames) {
+        this.tags = tagNames.stream().map(name -> resolveTag(auctionPlugin, name)).filter(Objects::nonNull).toList();
     }
 
-    private static Tag<Material> resolveTag(String name) {
+    private static Tag<Material> resolveTag(AuctionPlugin plugin, String name) {
         if (name == null) return null;
 
         try {
             return TagRegistry.getTag(name.toLowerCase(Locale.ROOT));
-        } catch (Exception ignored) {
+        } catch (Exception exception) {
+            plugin.getLogger().severe("Failed to resolve tag: " + name);
+            exception.printStackTrace();
         }
 
         return null;
@@ -38,5 +41,10 @@ public class TagRule implements Rule {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean isValid() {
+        return !this.tags.isEmpty();
     }
 }
