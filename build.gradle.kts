@@ -70,7 +70,6 @@ allprojects {
         implementation("fr.maxlego08.sarah:sarah:1.21.3")
         implementation("com.tcoded:FoliaLib:0.5.1")
         implementation("fr.traqueur.currencies:currenciesapi:1.0.11")
-        implementation("it.unimi.dsi:fastutil:8.5.14")
     }
 }
 

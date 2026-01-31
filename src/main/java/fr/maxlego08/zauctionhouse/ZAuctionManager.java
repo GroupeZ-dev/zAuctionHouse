@@ -26,9 +26,10 @@ import fr.maxlego08.zauctionhouse.services.ExpireService;
 import fr.maxlego08.zauctionhouse.services.PurchaseService;
 import fr.maxlego08.zauctionhouse.services.RemoveService;
 import fr.maxlego08.zauctionhouse.services.SellService;
+import fr.maxlego08.zauctionhouse.api.utils.IntArrayList;
+import fr.maxlego08.zauctionhouse.api.utils.IntList;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import fr.maxlego08.zauctionhouse.utils.cache.ZPlayerCache;
-import it.unimi.dsi.fastutil.ints.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -45,7 +46,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     private final AuctionExpireService auctionExpireService;
 
     private final Map<Player, PlayerCache> caches = new HashMap<>();
-    private final Map<StorageType, Int2ObjectMap<Item>> storageItemsById = new EnumMap<>(StorageType.class);
+    private final Map<StorageType, Map<Integer, Item>> storageItemsById = new EnumMap<>(StorageType.class);
     private final Map<UUID, IntList> idsListedByOwner = new HashMap<>();
     private final Map<UUID, IntList> idsExpiredByOwner = new HashMap<>();
     private final Map<UUID, IntList> idsPurchasedByBuyer = new HashMap<>();
@@ -58,7 +59,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         this.auctionExpireService = new ExpireService(plugin, this);
 
         for (StorageType value : StorageType.values()) {
-            this.storageItemsById.put(value, new Int2ObjectOpenHashMap<>());
+            this.storageItemsById.put(value, new HashMap<>());
         }
     }
 
@@ -112,7 +113,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public List<Item> getItems(StorageType storageType) {
-        return new ArrayList<>(this.storageItemsById.getOrDefault(storageType, Int2ObjectMaps.emptyMap()).values());
+        return new ArrayList<>(this.storageItemsById.getOrDefault(storageType, Map.of()).values());
     }
 
     @Override
@@ -202,7 +203,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     public List<Item> resolveItems(StorageType storageType, IntList ids) {
         if (ids == null || ids.isEmpty()) return List.of();
 
-        Int2ObjectMap<Item> storage = this.storageItemsById.get(storageType);
+        Map<Integer, Item> storage = this.storageItemsById.get(storageType);
         if (storage == null || storage.isEmpty()) return List.of();
 
         List<Item> resolved = new ArrayList<>(ids.size());
@@ -222,7 +223,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     private IntList getItemIds(StorageType storageType, Predicate<Item> predicate, Comparator<Item> comparator) {
-        Int2ObjectMap<Item> items = this.storageItemsById.get(storageType);
+        Map<Integer, Item> items = this.storageItemsById.get(storageType);
         if (items == null || items.isEmpty()) return new IntArrayList();
 
         List<Item> filtered = new ArrayList<>();

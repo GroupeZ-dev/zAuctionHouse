@@ -1,4 +1,4 @@
-package fr.maxlego08.zauctionhouse.category;
+package fr.maxlego08.zauctionhouse.rule;
 
 import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.utils.component.ComponentMessageHelper;

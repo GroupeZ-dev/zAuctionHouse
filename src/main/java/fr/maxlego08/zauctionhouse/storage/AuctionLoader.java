@@ -44,6 +44,7 @@ public class AuctionLoader {
         var players = this.storageManager.with(PlayerRepository.class).select().stream().collect(Collectors.toMap(PlayerDTO::unique_id, PlayerDTO::name));
         this.plugin.getLogger().info("Loaded " + players.size() + " players successfully");
 
+        var categoryManager = this.plugin.getCategoryManager();
         var items = this.storageManager.with(ItemRepository.class).select();
         var auctionItems = this.storageManager.with(AuctionItemRepository.class).select(getIDS(items, ItemType.AUCTION));
 
@@ -73,6 +74,8 @@ public class AuctionLoader {
                     if (buyerName != null) {
                         auctionItem.setBuyer(dto.buyer_unique_id(), buyerName);
                     }
+
+                    categoryManager.applyCategories(auctionItem);
 
                     auctionManager.addItem(dto.storage_type(), auctionItem);
                 }

@@ -7,7 +7,6 @@ import fr.maxlego08.zauctionhouse.api.rules.ItemRuleManager;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
 import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoaderRegistry;
 import fr.maxlego08.zauctionhouse.api.rules.Rules;
-import fr.maxlego08.zauctionhouse.category.ZItemRuleContext;
 import fr.maxlego08.zauctionhouse.rule.rules.AndRule;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;

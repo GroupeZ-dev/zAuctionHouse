@@ -9,9 +9,6 @@ folia-supported: true
 depend:
   - zMenu
   - PlaceholderAPI
-  - ItemsAdder
-  - Nexo
-  - Oraxen
 softdepend:
   - ItemsAdder
   - Nexo

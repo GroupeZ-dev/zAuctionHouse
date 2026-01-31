@@ -5,8 +5,8 @@ import fr.maxlego08.zauctionhouse.api.category.Category;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.SortItem;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
+import fr.maxlego08.zauctionhouse.api.utils.IntArrayList;
+import fr.maxlego08.zauctionhouse.api.utils.IntList;
 
 import java.math.BigDecimal;
 import java.util.function.Supplier;

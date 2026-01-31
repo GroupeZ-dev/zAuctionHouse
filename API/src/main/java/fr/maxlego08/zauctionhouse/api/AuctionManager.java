@@ -9,7 +9,7 @@ import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCache;
-import it.unimi.dsi.fastutil.ints.IntList;
+import fr.maxlego08.zauctionhouse.api.utils.IntList;
 import org.bukkit.entity.Player;
 
 import java.util.Comparator;

@@ -9,6 +9,7 @@ import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
 import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoaderRegistry;
+import fr.maxlego08.zauctionhouse.rule.ZItemRuleContext;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -227,10 +228,8 @@ public class ZCategoryManager implements CategoryManager {
 
         if (item instanceof AuctionItem auctionItem) {
             for (ItemStack itemStack : auctionItem.getItemStacks()) {
-                Category category = this.getCategoryFor(itemStack);
-                if (category != null) {
-                    categories.add(category);
-                }
+                var itemCategories = this.getCategoriesFor(itemStack);
+                categories.addAll(itemCategories);
             }
         }
 
