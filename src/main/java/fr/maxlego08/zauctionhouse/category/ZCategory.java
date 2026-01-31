@@ -1,7 +1,6 @@
 package fr.maxlego08.zauctionhouse.category;
 
 import fr.maxlego08.zauctionhouse.api.category.Category;
-import fr.maxlego08.zauctionhouse.api.category.CategoryIcon;
 import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
 
@@ -16,32 +15,22 @@ public class ZCategory implements Category {
 
     private final String id;
     private final String displayName;
-    private final List<String> description;
-    private final int priority;
     private final List<Rule> rules;
     private final boolean miscellaneous;
-    private final CategoryIcon icon;
 
     /**
      * Creates a new category.
      *
      * @param id            unique identifier
      * @param displayName   display name for menus
-     * @param description   description lines
-     * @param priority      sorting priority (lower = higher priority)
      * @param rules         matching rules
      * @param miscellaneous whether this is the fallback category
-     * @param icon          icon configuration
      */
-    public ZCategory(String id, String displayName, List<String> description, int priority,
-                     List<Rule> rules, boolean miscellaneous, CategoryIcon icon) {
+    public ZCategory(String id, String displayName, List<Rule> rules, boolean miscellaneous) {
         this.id = Objects.requireNonNull(id, "Category id cannot be null");
         this.displayName = displayName != null ? displayName : id;
-        this.description = description != null ? List.copyOf(description) : List.of();
-        this.priority = priority;
         this.rules = rules != null ? List.copyOf(rules) : List.of();
         this.miscellaneous = miscellaneous;
-        this.icon = icon != null ? icon : CategoryIcon.defaultIcon();
     }
 
     /**
@@ -49,11 +38,10 @@ public class ZCategory implements Category {
      *
      * @param id          unique identifier
      * @param displayName display name
-     * @param icon        icon configuration
      * @return new miscellaneous category
      */
-    public static ZCategory miscellaneous(String id, String displayName, CategoryIcon icon) {
-        return new ZCategory(id, displayName, List.of(), Integer.MAX_VALUE, List.of(), true, icon);
+    public static ZCategory miscellaneous(String id, String displayName) {
+        return new ZCategory(id, displayName, List.of(), true);
     }
 
     @Override
@@ -64,16 +52,6 @@ public class ZCategory implements Category {
     @Override
     public String getDisplayName() {
         return displayName;
-    }
-
-    @Override
-    public List<String> getDescription() {
-        return description;
-    }
-
-    @Override
-    public int getPriority() {
-        return priority;
     }
 
     @Override
@@ -103,11 +81,6 @@ public class ZCategory implements Category {
     }
 
     @Override
-    public CategoryIcon getIcon() {
-        return icon;
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ZCategory that)) return false;
@@ -124,7 +97,6 @@ public class ZCategory implements Category {
         return "ZCategory{" +
                 "id='" + id + '\'' +
                 ", displayName='" + displayName + '\'' +
-                ", priority=" + priority +
                 ", rulesCount=" + rules.size() +
                 ", miscellaneous=" + miscellaneous +
                 '}';

@@ -275,7 +275,8 @@ public class ListedItemsButton extends PaginateButton {
         // Create a new item stack for the inserted item
         var itemStack = item.buildItemStack(player);
         // Add the inserted item to the inventory
-        inventoryEngine.addItem(newItemSlot, itemStack).setClick(createClick(player, inventoryEngine, newItemSlot, item, itemStack));
+        var itemButton = inventoryEngine.addItem(newItemSlot, itemStack);
+        if (itemButton != null) itemButton.setClick(createClick(player, inventoryEngine, newItemSlot, item, itemStack));
     }
 
     /**
@@ -336,7 +337,10 @@ public class ListedItemsButton extends PaginateButton {
         if (itemToAddAtEnd != null) {
             int lastSlot = slots.getLast();
             var lastItemStack = itemToAddAtEnd.buildItemStack(player);
-            inventoryEngine.addItem(lastSlot, lastItemStack).setClick(createClick(player, inventoryEngine, lastSlot, itemToAddAtEnd, lastItemStack));
+            var itemButton = inventoryEngine.addItem(lastSlot, lastItemStack);
+            if (itemButton != null) {
+                itemButton.setClick(createClick(player, inventoryEngine, lastSlot, itemToAddAtEnd, lastItemStack));
+            }
         }
     }
 }

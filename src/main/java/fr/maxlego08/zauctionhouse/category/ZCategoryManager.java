@@ -2,7 +2,6 @@ package fr.maxlego08.zauctionhouse.category;
 
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.category.Category;
-import fr.maxlego08.zauctionhouse.api.category.CategoryIcon;
 import fr.maxlego08.zauctionhouse.api.category.CategoryManager;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
@@ -11,7 +10,6 @@ import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
 import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoaderRegistry;
 import fr.maxlego08.zauctionhouse.rule.ZItemRuleContext;
-import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -29,11 +27,12 @@ public class ZCategoryManager implements CategoryManager {
 
     private final AuctionPlugin plugin;
     private final RuleLoaderRegistry ruleLoaderRegistry;
-    private final Map<String, Category> categories = new HashMap<>();
+    private final Map<String, Category> categories = new LinkedHashMap<>();
     private final Map<String, Long> categoryCountCache = new ConcurrentHashMap<>();
     private List<Category> sortedCategories = List.of();
     private Category miscCategory;
     private boolean enabled = true;
+    private String allCategoryName = "#0c1719Auction House";
 
     public ZCategoryManager(AuctionPlugin plugin, RuleLoaderRegistry ruleLoaderRegistry) {
         this.plugin = plugin;
@@ -69,13 +68,17 @@ public class ZCategoryManager implements CategoryManager {
 
         // Ensure misc category exists
         if (this.miscCategory == null) {
-            this.miscCategory = ZCategory.miscellaneous("misc", "&8Miscellaneous", CategoryIcon.of(Material.CHEST));
+            this.miscCategory = ZCategory.miscellaneous("misc", "&8Miscellaneous");
             this.categories.put("misc", this.miscCategory);
             this.plugin.getLogger().warning("No 'misc' category found, creating default one");
         }
 
-        // Sort categories by priority
-        this.sortedCategories = this.categories.values().stream().sorted(Comparator.comparingInt(Category::getPriority)).toList();
+        // Categories are stored in load order (LinkedHashMap)
+        this.sortedCategories = new ArrayList<>(this.categories.values());
+
+        if (this.isEnabled()) {
+            this.plugin.getAuctionManager().getItems(StorageType.LISTED).forEach(this::applyCategories);
+        }
 
         this.plugin.getLogger().info("Loaded " + this.categories.size() + " categories");
     }
@@ -88,7 +91,8 @@ public class ZCategoryManager implements CategoryManager {
             if (configuration.contains("settings")) {
                 ConfigurationSection settings = configuration.getConfigurationSection("settings");
                 if (settings != null) {
-                    enabled = settings.getBoolean("enabled", true);
+                    this.enabled = settings.getBoolean("enabled", true);
+                    this.allCategoryName = settings.getString("all-category-name", "#0c1719Auction House");
                 }
             }
 
@@ -119,16 +123,11 @@ public class ZCategoryManager implements CategoryManager {
 
     private Category loadCategory(String id, ConfigurationSection section) {
         String displayName = section.getString("display-name", id);
-        List<String> description = section.getStringList("description");
-        int priority = section.getInt("priority", 100);
-
-        // Load icon
-        CategoryIcon icon = loadIcon(section.getConfigurationSection("icon"));
 
         // Check if this is the misc category (no rules defined)
         List<Map<?, ?>> rulesMapList = section.getMapList("rules");
         if (rulesMapList.isEmpty() && id.equalsIgnoreCase("misc")) {
-            return ZCategory.miscellaneous(id, displayName, icon);
+            return ZCategory.miscellaneous(id, displayName);
         }
 
         // Load rules
@@ -137,27 +136,7 @@ public class ZCategoryManager implements CategoryManager {
             this.plugin.getLogger().warning("No rules found for category '" + id + "'");
         }
 
-        return new ZCategory(id, displayName, description, priority, rules, false, icon);
-    }
-
-    private CategoryIcon loadIcon(ConfigurationSection iconSection) {
-        if (iconSection == null) {
-            return CategoryIcon.defaultIcon();
-        }
-
-        String materialName = iconSection.getString("material", "CHEST");
-        Material material;
-        try {
-            material = Material.valueOf(materialName.toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException e) {
-            plugin.getLogger().warning("Invalid material '" + materialName + "' in category icon, using CHEST");
-            material = Material.CHEST;
-        }
-
-        int customModelData = iconSection.getInt("custom-model-data", 0);
-        boolean glow = iconSection.getBoolean("glow", false);
-
-        return CategoryIcon.of(material, customModelData, glow);
+        return new ZCategory(id, displayName, rules, false);
     }
 
     private List<Rule> loadRules(List<Map<?, ?>> rulesMapList) {
@@ -227,7 +206,7 @@ public class ZCategoryManager implements CategoryManager {
     @Override
     public void applyCategories(Item item) {
 
-        if (item == null) return;
+        if (item == null || !isEnabled()) return;
 
         item.getCategories().clear();
 
@@ -240,18 +219,23 @@ public class ZCategoryManager implements CategoryManager {
             }
         }
 
-        plugin.getLogger().info("Categories " + categories);
         item.setCategories(categories);
     }
 
     @Override
     public long getItemCountForCategory(String categoryId) {
+        if (!this.isEnabled()) return 0;
         return this.categoryCountCache.computeIfAbsent(categoryId.toLowerCase(Locale.ROOT), this::computeCategoryCount);
     }
 
     @Override
     public void invalidateCategoryCountCache() {
         this.categoryCountCache.clear();
+    }
+
+    @Override
+    public String getAllCategoryName() {
+        return this.allCategoryName;
     }
 
     private long computeCategoryCount(String categoryId) {

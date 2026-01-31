@@ -2,6 +2,7 @@ package fr.maxlego08.zauctionhouse.placeholder.placeholders;
 
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
+import fr.maxlego08.zauctionhouse.api.category.Category;
 import fr.maxlego08.zauctionhouse.api.placeholders.Placeholder;
 import fr.maxlego08.zauctionhouse.api.placeholders.PlaceholderRegister;
 
@@ -22,5 +23,17 @@ public class PlayerPlaceholders implements PlaceholderRegister {
             var sortConfiguration = configuration.getSort();
             return sortConfiguration.sortItems().get(manager.getCache(player).get(PlayerCacheKey.ITEM_SORT, sortConfiguration.defaultSort()));
         }, "Returns the name of the value used to sort the items for the player");
+
+        placeholder.register("category_name", player -> {
+
+            var cache = manager.getCache(player);
+
+            if (cache.has(PlayerCacheKey.CURRENT_CATEGORY)) {
+                Category category = cache.get(PlayerCacheKey.CURRENT_CATEGORY);
+                return category.getDisplayName();
+            }
+
+            return plugin.getCategoryManager().getAllCategoryName();
+        }, "Returns the name of the current category for the player");
     }
 }

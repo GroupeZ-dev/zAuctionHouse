@@ -1,4 +1,4 @@
-name: "#0c1719Auction House (%page%/%max-page%)"
+name: "%zauctionhouse_category_name% (%page%/%max-page%)"
 size: 54
 
 patterns:
@@ -18,6 +18,18 @@ items:
       item:
         material: BARRIER
         name: '&cNo items found'
+
+  categories:
+    slot: 4
+    type: inventory
+    plugin: "zAuctionHouse"
+    inventory: "categories"
+    item:
+      material: CHEST
+      name: "#2CCED2<bold>ᴄᴀᴛᴇɢᴏʀɪᴇs"
+      lore:
+        - ""
+        - "#8c8c8c• #2CCED2Click #92ffffto open"
 
   expired-items:
     type: ZAUCTIONHOUSE_EXPIRED_INVENTORY

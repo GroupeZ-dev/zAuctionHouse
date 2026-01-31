@@ -41,8 +41,6 @@ public class TagRuleLoader implements RuleLoader {
             }
         }
 
-        System.out.printf("tags: " + tags);
-
         if (tags.isEmpty()) {
             return null;
         }

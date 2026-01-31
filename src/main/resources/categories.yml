@@ -3,37 +3,21 @@ settings:
   # If disabled, all items will be shown together without filtering
   enabled: true
 
-  # Default category for items that don't match any other category
-  # This category will be used as a fallback
-  default-category: "misc"
-
-# ┌─────────────────────────────────────────────────────────────────┐
-# │                       CATEGORIES                                │
-# └─────────────────────────────────────────────────────────────────┘
+  # Name of the "All" category
+  all-category-name: "#0c1719Auction House"
 
 # Blocks Category
 blocks:
-  display-name: "&7Blocks"
-  description:
-    - "&7All building blocks"
-  priority: 100
-  icon:
-    material: GRASS_BLOCK
+  display-name: "#0c1719Blocks"
   rules:
     # Match all block materials using Bukkit tag
     - type: tag
       tags:
-        - BLOCKS
+        - BLOCKS # Custom tags, all minecraft blocks
 
 # Weapons Category
 weapons:
-  display-name: "&cWeapons"
-  description:
-    - "&7Combat equipment"
-    - "&7Swords, bows, crossbows..."
-  priority: 10
-  icon:
-    material: DIAMOND_SWORD
+  display-name: "#0c1719Weapons"
   rules:
     # Match swords
     - type: material-suffix
@@ -48,12 +32,7 @@ weapons:
 
 # Armor Category
 armor:
-  display-name: "&bArmor"
-  description:
-    - "&7Protective equipment"
-  priority: 20
-  icon:
-    material: DIAMOND_CHESTPLATE
+  display-name: "#0c1719Armor"
   rules:
     - type: material-suffix
       suffixes:
@@ -69,12 +48,7 @@ armor:
 
 # Tools Category
 tools:
-  display-name: "&eTools"
-  description:
-    - "&7Mining and farming tools"
-  priority: 30
-  icon:
-    material: DIAMOND_PICKAXE
+  display-name: "#0c1719Tools"
   rules:
     - type: material-suffix
       suffixes:
@@ -90,12 +64,7 @@ tools:
 
 # Consumables Category
 consumables:
-  display-name: "&aConsumables"
-  description:
-    - "&7Food and potions"
-  priority: 40
-  icon:
-    material: GOLDEN_APPLE
+  display-name: "#0c1719Consumables"
   rules:
     - type: material
       materials:
@@ -113,12 +82,7 @@ consumables:
 
 # Resources Category
 resources:
-  display-name: "&6Resources"
-  description:
-    - "&7Ores and materials"
-  priority: 50
-  icon:
-    material: DIAMOND
+  display-name: "#0c1719Resources"
   rules:
     - type: material
       materials:
@@ -138,13 +102,7 @@ resources:
 
 # Enchanted Books Category
 enchanted-books:
-  display-name: "&dEnchanted Books"
-  description:
-    - "&7Books with enchantments"
-  priority: 15
-  icon:
-    material: ENCHANTED_BOOK
-    glow: true
+  display-name: "#0c1719Enchanted Books"
   rules:
     - type: material
       materials:
@@ -153,10 +111,5 @@ enchanted-books:
 # Miscellaneous Category (Fallback)
 # Items that don't match any other category will go here
 misc:
-  display-name: "&8Miscellaneous"
-  description:
-    - "&7Other items"
-  priority: 999
-  icon:
-    material: CHEST
+  display-name: "#0c1719Miscellaneous"
   # No rules = fallback category for unmatched items

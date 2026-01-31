@@ -23,7 +23,7 @@ items:
   blocks:
     type: ZAUCTIONHOUSE_CATEGORY
     category: blocks
-    slot: 10
+    slot: 19
     item:
       material: GRASS_BLOCK
       name: "#7a7a7a<bold>ʙʟᴏᴄᴋs"
@@ -37,7 +37,7 @@ items:
   weapons:
     type: ZAUCTIONHOUSE_CATEGORY
     category: weapons
-    slot: 11
+    slot: 20
     item:
       material: DIAMOND_SWORD
       name: "#ff5555<bold>ᴡᴇᴀᴘᴏɴs"
@@ -52,7 +52,7 @@ items:
   armor:
     type: ZAUCTIONHOUSE_CATEGORY
     category: armor
-    slot: 12
+    slot: 21
     item:
       material: DIAMOND_CHESTPLATE
       name: "#55ffff<bold>ᴀʀᴍᴏʀ"
@@ -66,7 +66,7 @@ items:
   tools:
     type: ZAUCTIONHOUSE_CATEGORY
     category: tools
-    slot: 13
+    slot: 22
     item:
       material: DIAMOND_PICKAXE
       name: "#ffff55<bold>ᴛᴏᴏʟs"
@@ -80,7 +80,7 @@ items:
   consumables:
     type: ZAUCTIONHOUSE_CATEGORY
     category: consumables
-    slot: 14
+    slot: 23
     item:
       material: GOLDEN_APPLE
       name: "#55ff55<bold>ᴄᴏɴsᴜᴍᴀʙʟᴇs"
@@ -94,7 +94,7 @@ items:
   resources:
     type: ZAUCTIONHOUSE_CATEGORY
     category: resources
-    slot: 15
+    slot: 24
     item:
       material: DIAMOND
       name: "#ffaa00<bold>ʀᴇsᴏᴜʀᴄᴇs"
@@ -108,7 +108,7 @@ items:
   enchanted-books:
     type: ZAUCTIONHOUSE_CATEGORY
     category: enchanted-books
-    slot: 16
+    slot: 25
     item:
       material: ENCHANTED_BOOK
       name: "#ff55ff<bold>ᴇɴᴄʜᴀɴᴛᴇᴅ ʙᴏᴏᴋs"
@@ -122,7 +122,7 @@ items:
   misc:
     type: ZAUCTIONHOUSE_CATEGORY
     category: misc
-    slot: 22
+    slot: 31
     item:
       material: CHEST
       name: "#555555<bold>ᴍɪsᴄᴇʟʟᴀɴᴇᴏᴜs"

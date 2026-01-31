@@ -6,6 +6,7 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NonNull;
 
 public class OwnedItemsButton extends PaginateButton {
 
@@ -31,7 +32,7 @@ public class OwnedItemsButton extends PaginateButton {
     }
 
     @Override
-    public int getPaginationSize(Player player) {
+    public int getPaginationSize(@NonNull Player player) {
         return this.plugin.getAuctionManager().getPlayerOwnedItems(player).size();
     }
 }

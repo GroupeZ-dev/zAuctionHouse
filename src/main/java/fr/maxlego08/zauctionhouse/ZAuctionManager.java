@@ -335,9 +335,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var configuration = this.plugin.getConfiguration();
         var storageManager = this.plugin.getStorageManager();
 
-        System.out.println("B " + item.getStatus());
         item.setStatus(ItemStatus.REMOVED);
-        System.out.println("A " + item.getStatus());
         removeItem(StorageType.LISTED, item);
 
         this.updateListedItems(item, false, player);

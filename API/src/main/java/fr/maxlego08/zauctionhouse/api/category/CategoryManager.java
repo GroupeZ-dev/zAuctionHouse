@@ -116,4 +116,12 @@ public interface CategoryManager {
      * </ul>
      */
     void invalidateCategoryCountCache();
+
+    /**
+     * Gets the name of the "All" category.
+     * This is the category that contains all items in the auction house.
+     *
+     * @return the name of the "All" category
+     */
+    String getAllCategoryName();
 }
