@@ -1,5 +1,6 @@
 package fr.maxlego08.zauctionhouse.hooks.oraxen;
 
+import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
 import io.th0rgal.oraxen.api.OraxenItems;
 import org.bukkit.inventory.ItemStack;
@@ -29,7 +30,8 @@ public class OraxenRule implements Rule {
     }
 
     @Override
-    public boolean matches(ItemStack itemStack) {
+    public boolean matches(ItemRuleContext context) {
+        ItemStack itemStack = context.getItemStack();
         if (itemStack == null) return false;
 
         String oraxenId = OraxenItems.getIdByItem(itemStack);

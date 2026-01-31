@@ -16,6 +16,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,12 +39,15 @@ public class ListedItemsButton extends PaginateButton {
 
         paginate(items, inventoryEngine, (slot, item) -> {
             var itemStack = item.buildItemStack(player);
-            inventoryEngine.addItem(slot, itemStack).setClick(createClick(player, inventoryEngine, slot, item, itemStack));
+            var button = inventoryEngine.addItem(slot, itemStack);
+            if (button == null) return;
+
+            button.setClick(createClick(player, inventoryEngine, slot, item, itemStack));
         });
     }
 
     @Override
-    public int getPaginationSize(Player player) {
+    public int getPaginationSize(@NonNull Player player) {
         return this.plugin.getAuctionManager().getItemsListedForSale(player).size();
     }
 

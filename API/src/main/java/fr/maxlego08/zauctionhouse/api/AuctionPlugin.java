@@ -8,7 +8,7 @@ import fr.maxlego08.zauctionhouse.api.hooks.permission.OfflinePermission;
 import fr.maxlego08.zauctionhouse.api.placeholders.Placeholder;
 import fr.maxlego08.zauctionhouse.api.category.CategoryManager;
 import fr.maxlego08.zauctionhouse.api.rules.ItemRuleManager;
-import fr.maxlego08.zauctionhouse.api.rules.RuleLoaderRegistry;
+import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoaderRegistry;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
 import org.bukkit.plugin.Plugin;
 

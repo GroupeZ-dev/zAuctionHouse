@@ -2,8 +2,8 @@ package fr.maxlego08.zauctionhouse.rule.loaders;
 
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
 import fr.maxlego08.zauctionhouse.api.rules.RuleConfigHelper;
-import fr.maxlego08.zauctionhouse.api.rules.RuleLoader;
-import fr.maxlego08.zauctionhouse.api.rules.RuleLoaderRegistry;
+import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoader;
+import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoaderRegistry;
 import fr.maxlego08.zauctionhouse.rule.rules.AndRule;
 
 import java.util.ArrayList;

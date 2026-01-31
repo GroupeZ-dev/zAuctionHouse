@@ -1,0 +1,182 @@
+# ╔═══════════════════════════════════════════════════════════════╗
+# ║                   Categories Menu Template                     ║
+# ╠═══════════════════════════════════════════════════════════════╣
+# ║  This menu displays all available categories for filtering.    ║
+# ║  Players can click on a category to view items in that         ║
+# ║  category.                                                     ║
+# ╚═══════════════════════════════════════════════════════════════╝
+
+name: "#0c1719Categories"
+size: 54
+
+patterns:
+  - 'zauctionhouse-decoration'
+
+items:
+  # ┌─────────────────────────────────────────────────────────────────┐
+  # │                     ALL ITEMS BUTTON                            │
+  # └─────────────────────────────────────────────────────────────────┘
+  all-items:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: all
+    slot: 4
+    item:
+      material: CHEST
+      name: "#2CCED2<bold>ᴀʟʟ ɪᴛᴇᴍs"
+      lore:
+        - "#92ffffView all auction listings"
+        - ""
+        - "#92ffffTotal items#8c8c8c: #2CCED2%zauctionhouse_category_count_all%"
+        - ""
+        - "#8c8c8c• #2CCED2Click #92ffffto browse"
+
+  # ┌─────────────────────────────────────────────────────────────────┐
+  # │                        CATEGORY: BLOCKS                         │
+  # └─────────────────────────────────────────────────────────────────┘
+  blocks:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: blocks
+    slot: 10
+    item:
+      material: GRASS_BLOCK
+      name: "#7a7a7a<bold>ʙʟᴏᴄᴋs"
+      lore:
+        - "#92ffffAll building blocks"
+        - ""
+        - "#92ffffItems#8c8c8c: #2CCED2%zauctionhouse_category_count_blocks%"
+        - ""
+        - "#8c8c8c• #2CCED2Click #92ffffto browse"
+
+  # ┌─────────────────────────────────────────────────────────────────┐
+  # │                       CATEGORY: WEAPONS                         │
+  # └─────────────────────────────────────────────────────────────────┘
+  weapons:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: weapons
+    slot: 11
+    item:
+      material: DIAMOND_SWORD
+      name: "#ff5555<bold>ᴡᴇᴀᴘᴏɴs"
+      lore:
+        - "#92ffffCombat equipment"
+        - "#92ffffSwords, bows, crossbows..."
+        - ""
+        - "#92ffffItems#8c8c8c: #2CCED2%zauctionhouse_category_count_weapons%"
+        - ""
+        - "#8c8c8c• #2CCED2Click #92ffffto browse"
+
+  # ┌─────────────────────────────────────────────────────────────────┐
+  # │                        CATEGORY: ARMOR                          │
+  # └─────────────────────────────────────────────────────────────────┘
+  armor:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: armor
+    slot: 12
+    item:
+      material: DIAMOND_CHESTPLATE
+      name: "#55ffff<bold>ᴀʀᴍᴏʀ"
+      lore:
+        - "#92ffffProtective equipment"
+        - ""
+        - "#92ffffItems#8c8c8c: #2CCED2%zauctionhouse_category_count_armor%"
+        - ""
+        - "#8c8c8c• #2CCED2Click #92ffffto browse"
+
+  # ┌─────────────────────────────────────────────────────────────────┐
+  # │                        CATEGORY: TOOLS                          │
+  # └─────────────────────────────────────────────────────────────────┘
+  tools:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: tools
+    slot: 13
+    item:
+      material: DIAMOND_PICKAXE
+      name: "#ffff55<bold>ᴛᴏᴏʟs"
+      lore:
+        - "#92ffffMining and farming tools"
+        - ""
+        - "#92ffffItems#8c8c8c: #2CCED2%zauctionhouse_category_count_tools%"
+        - ""
+        - "#8c8c8c• #2CCED2Click #92ffffto browse"
+
+  # ┌─────────────────────────────────────────────────────────────────┐
+  # │                     CATEGORY: CONSUMABLES                       │
+  # └─────────────────────────────────────────────────────────────────┘
+  consumables:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: consumables
+    slot: 14
+    item:
+      material: GOLDEN_APPLE
+      name: "#55ff55<bold>ᴄᴏɴsᴜᴍᴀʙʟᴇs"
+      lore:
+        - "#92ffffFood and potions"
+        - ""
+        - "#92ffffItems#8c8c8c: #2CCED2%zauctionhouse_category_count_consumables%"
+        - ""
+        - "#8c8c8c• #2CCED2Click #92ffffto browse"
+
+  # ┌─────────────────────────────────────────────────────────────────┐
+  # │                      CATEGORY: RESOURCES                        │
+  # └─────────────────────────────────────────────────────────────────┘
+  resources:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: resources
+    slot: 15
+    item:
+      material: DIAMOND
+      name: "#ffaa00<bold>ʀᴇsᴏᴜʀᴄᴇs"
+      lore:
+        - "#92ffffOres and materials"
+        - ""
+        - "#92ffffItems#8c8c8c: #2CCED2%zauctionhouse_category_count_resources%"
+        - ""
+        - "#8c8c8c• #2CCED2Click #92ffffto browse"
+
+  # ┌─────────────────────────────────────────────────────────────────┐
+  # │                  CATEGORY: ENCHANTED BOOKS                      │
+  # └─────────────────────────────────────────────────────────────────┘
+  enchanted-books:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: enchanted-books
+    slot: 16
+    item:
+      material: ENCHANTED_BOOK
+      name: "#ff55ff<bold>ᴇɴᴄʜᴀɴᴛᴇᴅ ʙᴏᴏᴋs"
+      lore:
+        - "#92ffffBooks with enchantments"
+        - ""
+        - "#92ffffItems#8c8c8c: #2CCED2%zauctionhouse_category_count_enchanted-books%"
+        - ""
+        - "#8c8c8c• #2CCED2Click #92ffffto browse"
+
+  # ┌─────────────────────────────────────────────────────────────────┐
+  # │                    CATEGORY: MISCELLANEOUS                      │
+  # └─────────────────────────────────────────────────────────────────┘
+  misc:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: misc
+    slot: 22
+    item:
+      material: CHEST
+      name: "#555555<bold>ᴍɪsᴄᴇʟʟᴀɴᴇᴏᴜs"
+      lore:
+        - "#92ffffOther items"
+        - ""
+        - "#92ffffItems#8c8c8c: #2CCED2%zauctionhouse_category_count_misc%"
+        - ""
+        - "#8c8c8c• #2CCED2Click #92ffffto browse"
+
+  # ┌─────────────────────────────────────────────────────────────────┐
+  # │                         BACK BUTTON                             │
+  # └─────────────────────────────────────────────────────────────────┘
+  back:
+    type: BACK
+    slot: 49
+    item:
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjllYTFkODYyNDdmNGFmMzUxZWQxODY2YmNhNmEzMDQwYTA2YzY4MTc3Yzc4ZTQyMzE2YTEwOThlNjBmYjdkMyJ9fX0="
+      name: "#2CCED2<bold>ʙᴀᴄᴋ"
+      lore:
+        - "#92ffffReturn to the auction house"
+        - ""
+        - "#8c8c8c• #2CCED2Click #92ffffto go back"

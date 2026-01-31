@@ -1,7 +1,7 @@
 package fr.maxlego08.zauctionhouse.rule.rules;
 
+import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
@@ -14,12 +14,12 @@ public class AndRule implements Rule {
     }
 
     @Override
-    public boolean matches(ItemStack itemStack) {
-        for (Rule child : children) {
-            if (!child.matches(itemStack)) {
+    public boolean matches(ItemRuleContext context) {
+        for (Rule child : this.children) {
+            if (!child.matches(context)) {
                 return false;
             }
         }
-        return !children.isEmpty();
+        return !this.children.isEmpty();
     }
 }

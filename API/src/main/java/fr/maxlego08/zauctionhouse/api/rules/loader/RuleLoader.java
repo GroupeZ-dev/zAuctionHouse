@@ -1,4 +1,6 @@
-package fr.maxlego08.zauctionhouse.api.rules;
+package fr.maxlego08.zauctionhouse.api.rules.loader;
+
+import fr.maxlego08.zauctionhouse.api.rules.Rule;
 
 import java.util.List;
 import java.util.Map;

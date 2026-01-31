@@ -2,7 +2,7 @@ package fr.maxlego08.zauctionhouse.hooks.itemsadder;
 
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
 import fr.maxlego08.zauctionhouse.api.rules.RuleConfigHelper;
-import fr.maxlego08.zauctionhouse.api.rules.RuleLoader;
+import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoader;
 
 import java.util.List;
 import java.util.Map;

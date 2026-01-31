@@ -1,6 +1,7 @@
 package fr.maxlego08.zauctionhouse.api.item;
 
 import fr.maxlego08.menu.api.utils.Placeholders;
+import fr.maxlego08.zauctionhouse.api.category.Category;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -183,4 +184,39 @@ public interface Item {
      * @return human-friendly display name of the item for menus and messages
      */
     String getItemDisplay();
+
+    /**
+     * @return list of categories this item belongs to
+     */
+    List<Category> getCategories();
+
+    /**
+     * Sets the categories for this item.
+     *
+     * @param categories list of categories
+     */
+    void setCategories(List<Category> categories);
+
+    /**
+     * Checks if the item belongs to a specific category.
+     *
+     * @param category the category to check
+     * @return {@code true} if the item belongs to the category
+     */
+    default boolean hasCategory(Category category) {
+        var categories = getCategories();
+        return categories != null && categories.contains(category);
+    }
+
+    /**
+     * Checks if the item belongs to a category with the specified ID.
+     *
+     * @param categoryId the category ID to check
+     * @return {@code true} if the item belongs to the category
+     */
+    default boolean hasCategory(String categoryId) {
+        var categories = getCategories();
+        if (categories == null) return false;
+        return categories.stream().anyMatch(c -> c.getId().equals(categoryId));
+    }
 }

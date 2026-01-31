@@ -2,8 +2,8 @@ package fr.maxlego08.zauctionhouse.category;
 
 import fr.maxlego08.zauctionhouse.api.category.Category;
 import fr.maxlego08.zauctionhouse.api.category.CategoryIcon;
+import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Objects;
@@ -87,15 +87,15 @@ public class ZCategory implements Category {
     }
 
     @Override
-    public boolean matches(ItemStack itemStack) {
-        if (itemStack == null) return false;
+    public boolean matches(ItemRuleContext context) {
+        if (context == null) return false;
 
         // Miscellaneous category matches everything
         if (miscellaneous) return true;
 
         // Regular category: match if ANY rule matches (OR logic)
         for (Rule rule : rules) {
-            if (rule.matches(itemStack)) {
+            if (rule.matches(context)) {
                 return true;
             }
         }

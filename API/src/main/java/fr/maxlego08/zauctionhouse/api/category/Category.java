@@ -1,7 +1,7 @@
 package fr.maxlego08.zauctionhouse.api.category;
 
+import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
@@ -69,10 +69,10 @@ public interface Category {
      * For regular categories, checks if any rule matches.
      * For the misc category, always returns true.
      *
-     * @param itemStack the item to test
+     * @param context the item context containing pre-computed values
      * @return true if the item belongs to this category
      */
-    boolean matches(ItemStack itemStack);
+    boolean matches(ItemRuleContext context);
 
     /**
      * Gets the icon configuration for this category.

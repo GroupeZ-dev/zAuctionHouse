@@ -1,6 +1,7 @@
 package fr.maxlego08.zauctionhouse.hooks.itemsadder;
 
 import dev.lone.itemsadder.api.CustomStack;
+import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
 import org.bukkit.inventory.ItemStack;
 
@@ -29,7 +30,8 @@ public class ItemsAdderRule implements Rule {
     }
 
     @Override
-    public boolean matches(ItemStack itemStack) {
+    public boolean matches(ItemRuleContext context) {
+        ItemStack itemStack = context.getItemStack();
         if (itemStack == null) return false;
 
         CustomStack customStack = CustomStack.byItemStack(itemStack);

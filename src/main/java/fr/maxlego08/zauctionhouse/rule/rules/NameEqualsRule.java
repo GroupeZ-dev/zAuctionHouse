@@ -1,15 +1,14 @@
 package fr.maxlego08.zauctionhouse.rule.rules;
 
+import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
-import fr.maxlego08.zauctionhouse.utils.component.ComponentMessageHelper;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Locale;
 
 /**
  * Rule that matches items whose display name exactly equals one of the specified values.
- * Supports case-insensitive matching. Color codes are automatically stripped using MiniMessage.
+ * Supports case-insensitive matching. Uses pre-computed display name from context.
  */
 public class NameEqualsRule implements Rule {
 
@@ -19,26 +18,18 @@ public class NameEqualsRule implements Rule {
     public NameEqualsRule(List<String> names, boolean ignoreCase) {
         this.ignoreCase = ignoreCase;
 
-        if (ignoreCase) {
-            this.names = names.stream()
-                    .map(s -> s.toLowerCase(Locale.ROOT))
-                    .toList();
-        } else {
-            this.names = names;
-        }
+        this.names = ignoreCase ? names.stream().map(s -> s.toLowerCase(Locale.ROOT)).toList() : names;
     }
 
     @Override
-    public boolean matches(ItemStack itemStack) {
-        if (itemStack == null) return false;
+    public boolean matches(ItemRuleContext context) {
+        if (!context.hasDisplayName()) return false;
 
-        if (!ComponentMessageHelper.componentMessage.hasDisplayName(itemStack)) return false;
-
-        String displayName = ComponentMessageHelper.componentMessage.getItemStackName(itemStack);
+        String displayName = context.getDisplayName();
         if (ignoreCase) {
             displayName = displayName.toLowerCase(Locale.ROOT);
         }
 
-        return names.contains(displayName);
+        return this.names.contains(displayName);
     }
 }

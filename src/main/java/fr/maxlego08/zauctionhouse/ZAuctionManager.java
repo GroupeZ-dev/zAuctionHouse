@@ -5,6 +5,7 @@ import fr.maxlego08.zauctionhouse.api.AuctionManager;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCache;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
+import fr.maxlego08.zauctionhouse.api.category.Category;
 import fr.maxlego08.zauctionhouse.api.event.AuctionEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveExpiredItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveListedItemEvent;
@@ -137,6 +138,16 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public void addItem(StorageType storageType, Item item) {
+        // Assign categories when adding to LISTED storage
+        if (storageType == StorageType.LISTED && item instanceof AuctionItem auctionItem) {
+            var itemStack = auctionItem.getItemStack();
+            if (itemStack != null) {
+                var categoryManager = this.plugin.getCategoryManager();
+                var categories = categoryManager.getCategoriesFor(itemStack);
+                item.setCategories(categories);
+            }
+        }
+
         var storage = this.storageItemsById.get(storageType);
         storage.put(item.getId(), item);
         this.indexItem(storageType, item);
@@ -162,7 +173,17 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     public List<Item> getItemsListedForSale(Player player) {
         var cache = getCache(player);
         var sort = cache.get(PlayerCacheKey.ITEM_SORT, this.plugin.getConfiguration().getSort().defaultSort());
-        IntList ids = cache.getOrCompute(PlayerCacheKey.ITEMS_LISTED, () -> getItemIds(StorageType.LISTED, item -> item.getStatus() == ItemStatus.AVAILABLE, sort.getComparator()));
+        var category = cache.get(PlayerCacheKey.CURRENT_CATEGORY, (Category) null);
+
+        Predicate<Item> predicate = item -> item.getStatus() == ItemStatus.AVAILABLE;
+
+        // Apply category filter if a category is selected
+        if (category != null) {
+            predicate = predicate.and(item -> item.hasCategory(category));
+        }
+
+        Predicate<Item> finalPredicate = predicate;
+        IntList ids = cache.getOrCompute(PlayerCacheKey.ITEMS_LISTED, () -> getItemIds(StorageType.LISTED, finalPredicate, sort.getComparator()));
         return resolveItems(StorageType.LISTED, ids);
     }
 

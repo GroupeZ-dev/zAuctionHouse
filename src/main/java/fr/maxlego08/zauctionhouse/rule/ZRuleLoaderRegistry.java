@@ -2,8 +2,11 @@ package fr.maxlego08.zauctionhouse.rule;
 
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
 import fr.maxlego08.zauctionhouse.api.rules.RuleConfigHelper;
-import fr.maxlego08.zauctionhouse.api.rules.RuleLoader;
-import fr.maxlego08.zauctionhouse.api.rules.RuleLoaderRegistry;
+import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoader;
+import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoaderRegistry;
+import fr.maxlego08.zauctionhouse.hooks.itemsadder.ItemsAdderRuleLoader;
+import fr.maxlego08.zauctionhouse.hooks.nexo.NexoRuleLoader;
+import fr.maxlego08.zauctionhouse.hooks.oraxen.OraxenRuleLoader;
 import fr.maxlego08.zauctionhouse.rule.loaders.*;
 
 import java.util.*;
@@ -30,6 +33,30 @@ public class ZRuleLoaderRegistry implements RuleLoaderRegistry {
         register(new LoreRuleLoader());
         register(new CustomModelDataRuleLoader());
         register(new AndRuleLoader(this));
+    }
+
+    /**
+     * Registers the ItemsAdder rule loader.
+     * Should only be called if ItemsAdder plugin is present.
+     */
+    public void registerItemsAdderLoader() {
+        register(new ItemsAdderRuleLoader());
+    }
+
+    /**
+     * Registers the Oraxen rule loader.
+     * Should only be called if Oraxen plugin is present.
+     */
+    public void registerOraxenLoader() {
+        register(new OraxenRuleLoader());
+    }
+
+    /**
+     * Registers the Nexo rule loader.
+     * Should only be called if Nexo plugin is present.
+     */
+    public void registerNexoLoader() {
+        register(new NexoRuleLoader());
     }
 
     @Override

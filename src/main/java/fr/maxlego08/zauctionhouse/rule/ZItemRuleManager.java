@@ -1,11 +1,13 @@
 package fr.maxlego08.zauctionhouse.rule;
 
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
+import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.event.events.RuleLoadEvent;
 import fr.maxlego08.zauctionhouse.api.rules.ItemRuleManager;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
-import fr.maxlego08.zauctionhouse.api.rules.RuleLoaderRegistry;
+import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoaderRegistry;
 import fr.maxlego08.zauctionhouse.api.rules.Rules;
+import fr.maxlego08.zauctionhouse.category.ZItemRuleContext;
 import fr.maxlego08.zauctionhouse.rule.rules.AndRule;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -30,22 +32,25 @@ public class ZItemRuleManager implements ItemRuleManager {
 
     @Override
     public boolean isBlacklisted(ItemStack itemStack) {
-        return blacklist.matches(itemStack);
+        ItemRuleContext context = new ZItemRuleContext(itemStack);
+        return blacklist.matches(context);
     }
 
     @Override
     public boolean isWhitelisted(ItemStack itemStack) {
-        return whitelist.matches(itemStack);
+        ItemRuleContext context = new ZItemRuleContext(itemStack);
+        return whitelist.matches(context);
     }
 
     @Override
     public boolean isAllowed(ItemStack itemStack) {
+        ItemRuleContext context = new ZItemRuleContext(itemStack);
 
-        if (whitelist.enabled() && whitelist.matches(itemStack)) {
+        if (whitelist.enabled() && whitelist.matches(context)) {
             return true;
         }
 
-        return !blacklist.enabled() || !blacklist.matches(itemStack);
+        return !blacklist.enabled() || !blacklist.matches(context);
     }
 
     @Override

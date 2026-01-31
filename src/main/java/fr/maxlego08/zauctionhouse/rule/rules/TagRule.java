@@ -1,10 +1,10 @@
 package fr.maxlego08.zauctionhouse.rule.rules;
 
+import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
 import fr.maxlego08.zauctionhouse.utils.TagRegistry;
 import org.bukkit.Material;
 import org.bukkit.Tag;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Locale;
@@ -30,11 +30,9 @@ public class TagRule implements Rule {
     }
 
     @Override
-    public boolean matches(ItemStack itemStack) {
-        if (itemStack == null) return false;
-
-        Material type = itemStack.getType();
-        for (Tag<Material> tag : tags) {
+    public boolean matches(ItemRuleContext context) {
+        Material type = context.getMaterial();
+        for (Tag<Material> tag : this.tags) {
             if (tag.isTagged(type)) {
                 return true;
             }

@@ -4,8 +4,9 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.category.Category;
 import fr.maxlego08.zauctionhouse.api.category.CategoryIcon;
 import fr.maxlego08.zauctionhouse.api.category.CategoryManager;
+import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
-import fr.maxlego08.zauctionhouse.api.rules.RuleLoaderRegistry;
+import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoaderRegistry;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -169,8 +170,9 @@ public class ZCategoryManager implements CategoryManager {
     public Category getCategoryFor(ItemStack itemStack) {
         if (itemStack == null) return miscCategory;
 
+        ItemRuleContext context = new ZItemRuleContext(itemStack);
         for (Category category : sortedCategories) {
-            if (!category.isMiscellaneous() && category.matches(itemStack)) {
+            if (!category.isMiscellaneous() && category.matches(context)) {
                 return category;
             }
         }
@@ -181,7 +183,8 @@ public class ZCategoryManager implements CategoryManager {
     public List<Category> getCategoriesFor(ItemStack itemStack) {
         if (itemStack == null) return List.of(miscCategory);
 
-        List<Category> matching = sortedCategories.stream().filter(c -> !c.isMiscellaneous() && c.matches(itemStack)).toList();
+        ItemRuleContext context = new ZItemRuleContext(itemStack);
+        List<Category> matching = sortedCategories.stream().filter(c -> !c.isMiscellaneous() && c.matches(context)).toList();
 
         if (matching.isEmpty()) {
             return List.of(miscCategory);
@@ -192,7 +195,8 @@ public class ZCategoryManager implements CategoryManager {
     @Override
     public boolean matches(ItemStack itemStack, Category category) {
         if (category == null) return false;
-        return category.matches(itemStack);
+        ItemRuleContext context = new ZItemRuleContext(itemStack);
+        return category.matches(context);
     }
 
     @Override

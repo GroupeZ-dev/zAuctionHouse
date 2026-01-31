@@ -29,6 +29,16 @@ public class CategoryButton extends Button {
     public void onClick(@NonNull Player player, @NonNull InventoryClickEvent event, @NonNull InventoryEngine inventory, int slot, @NonNull Placeholders placeholders) {
         super.onClick(player, event, inventory, slot, placeholders);
 
+        var cache = this.plugin.getAuctionManager().getCache(player);
+
+        // Special case: "all" removes the category filter
+        if (this.categoryId.equalsIgnoreCase("all")) {
+            cache.remove(PlayerCacheKey.CURRENT_CATEGORY);
+            cache.remove(PlayerCacheKey.ITEMS_LISTED);
+            this.plugin.getInventoriesLoader().openInventory(player, Inventories.AUCTION);
+            return;
+        }
+
         var categoryManager = this.plugin.getCategoryManager();
         var optionalCategory = categoryManager.getCategory(this.categoryId);
 
@@ -40,7 +50,6 @@ public class CategoryButton extends Button {
         Category category = optionalCategory.get();
 
         // Store the selected category in the player cache
-        var cache = this.plugin.getAuctionManager().getCache(player);
         cache.set(PlayerCacheKey.CURRENT_CATEGORY, category);
 
         // Clear the cached listed items to force a refresh with the new category filter

@@ -1,13 +1,13 @@
 package fr.maxlego08.zauctionhouse.api.rules;
 
-import org.bukkit.inventory.ItemStack;
-
 public interface Rule {
+
     /**
-     * Checks whether the given item stack matches this rule.
+     * Checks whether the given item context matches this rule.
+     * Uses pre-computed values from the context for efficient matching.
      *
-     * @param itemStack the item stack to test
-     * @return true if the item stack matches this rule, false otherwise
+     * @param context the item context containing pre-computed values
+     * @return true if the item matches this rule, false otherwise
      */
-    boolean matches(ItemStack itemStack);
+    boolean matches(ItemRuleContext context);
 }

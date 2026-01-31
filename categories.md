@@ -1187,8 +1187,9 @@ weapons:
 ### 9.2 Phase 2 : Intégrations (Sprint 2)
 
 - [ ] **Items Custom**
-  - [ ] `ItemsAdderRule`
-  - [ ] `OraxenRule`
+  - [x] `ItemsAdderRule`
+  - [x] `OraxenRule`
+  - [x] `Nexo`
   - [ ] Détection auto plugins présents
 
 - [ ] **GUI Integration**

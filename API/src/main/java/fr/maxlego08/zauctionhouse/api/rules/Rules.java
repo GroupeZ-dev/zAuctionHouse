@@ -1,7 +1,5 @@
 package fr.maxlego08.zauctionhouse.api.rules;
 
-import org.bukkit.inventory.ItemStack;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,11 +11,11 @@ public record Rules(boolean enabled, List<Rule> rules) implements Rule {
     }
 
     @Override
-    public boolean matches(ItemStack itemStack) {
+    public boolean matches(ItemRuleContext context) {
         if (!enabled) return false;
 
         for (Rule rule : rules) {
-            if (rule.matches(itemStack)) {
+            if (rule.matches(context)) {
                 return true;
             }
         }

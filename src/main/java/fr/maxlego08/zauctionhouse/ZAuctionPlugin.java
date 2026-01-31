@@ -14,7 +14,7 @@ import fr.maxlego08.zauctionhouse.api.hooks.permission.OfflinePermission;
 import fr.maxlego08.zauctionhouse.api.placeholders.Placeholder;
 import fr.maxlego08.zauctionhouse.api.placeholders.PlaceholderRegister;
 import fr.maxlego08.zauctionhouse.api.rules.ItemRuleManager;
-import fr.maxlego08.zauctionhouse.api.rules.RuleLoaderRegistry;
+import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoaderRegistry;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
 import fr.maxlego08.zauctionhouse.api.utils.Plugins;
 import fr.maxlego08.zauctionhouse.category.ZCategoryManager;
@@ -42,12 +42,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.Reader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Locale;
@@ -67,7 +62,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     private final EconomyManager economyManager = new ZEconomyManager(this);
     private final ExecutorService asyncExecutor = Executors.newFixedThreadPool(4);
     private final Placeholder placeholder = new LocalPlaceholder(this);
-    private final RuleLoaderRegistry ruleLoaderRegistry = new ZRuleLoaderRegistry();
+    private final ZRuleLoaderRegistry ruleLoaderRegistry = new ZRuleLoaderRegistry();
     private final ItemRuleManager itemRuleManager = new ZItemRuleManager(this, ruleLoaderRegistry);
     private final CategoryManager categoryManager = new ZCategoryManager(this, ruleLoaderRegistry);
     private InventoriesLoader inventoriesLoader;
@@ -90,6 +85,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         if (!this.storageManager.onEnable()) return;
 
         this.ruleLoaderRegistry.registerDefaultLoaders();
+        this.registerCustomItemLoaders();
 
         // On doit créer la classe des inventaires avant de charger la configuration, cela permet d'utiliser les interfaces de zmenu partout.
         this.inventoriesLoader = new ZInventoriesLoader(this);
@@ -152,6 +148,23 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         if (isEnable(Plugins.LUCKPERMS)) {
             this.offlinePermission = new LuckPermsOfflinePermission();
             this.getLogger().info("LuckPerms has been enabled successfully!");
+        }
+    }
+
+    private void registerCustomItemLoaders() {
+        if (isEnable(Plugins.ITEMSADDER)) {
+            this.ruleLoaderRegistry.registerItemsAdderLoader();
+            this.getLogger().info("ItemsAdder rule loader registered.");
+        }
+
+        if (isEnable(Plugins.ORAXEN)) {
+            this.ruleLoaderRegistry.registerOraxenLoader();
+            this.getLogger().info("Oraxen rule loader registered.");
+        }
+
+        if (isEnable(Plugins.NEXO)) {
+            this.ruleLoaderRegistry.registerNexoLoader();
+            this.getLogger().info("Nexo rule loader registered.");
         }
     }
 

@@ -1,12 +1,11 @@
 package fr.maxlego08.zauctionhouse.rule.rules;
 
+import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 /**
  * Rule that matches items whose custom model data falls within a specified range.
- * Useful for matching custom items from resource packs.
+ * Uses pre-computed custom model data from context.
  */
 public class ModelDataRangeRule implements Rule {
 
@@ -19,13 +18,10 @@ public class ModelDataRangeRule implements Rule {
     }
 
     @Override
-    public boolean matches(ItemStack itemStack) {
-        if (itemStack == null) return false;
+    public boolean matches(ItemRuleContext context) {
+        if (!context.hasCustomModelData()) return false;
 
-        ItemMeta meta = itemStack.getItemMeta();
-        if (meta == null || !meta.hasCustomModelData()) return false;
-
-        int modelData = meta.getCustomModelData();
-        return modelData >= min && modelData <= max;
+        int modelData = context.getCustomModelData();
+        return modelData >= this.min && modelData <= this.max;
     }
 }

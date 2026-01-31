@@ -1,13 +1,16 @@
 package fr.maxlego08.zauctionhouse.rule.rules;
 
+import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
-import fr.maxlego08.zauctionhouse.utils.component.ComponentMessageHelper;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
+/**
+ * Rule that matches items whose lore contains one of the specified values.
+ * Uses pre-computed lore from context.
+ */
 public class LoreContainsRule implements Rule {
 
     private final List<String> needles;
@@ -17,14 +20,10 @@ public class LoreContainsRule implements Rule {
     }
 
     @Override
-    public boolean matches(ItemStack itemStack) {
-        if (itemStack == null) return false;
+    public boolean matches(ItemRuleContext context) {
+        if (!context.hasLore()) return false;
 
-        var componentMessage = ComponentMessageHelper.componentMessage;
-        var lore = componentMessage.getItemStackLore(itemStack);
-
-        String joined = lore.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(Collectors.joining(" "));
-
-        return needles.stream().anyMatch(joined::contains);
+        String joined = context.getLore().stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(Collectors.joining(" "));
+        return this.needles.stream().anyMatch(joined::contains);
     }
 }

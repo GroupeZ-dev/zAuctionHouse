@@ -1,6 +1,7 @@
 package fr.maxlego08.zauctionhouse.hooks.nexo;
 
 import com.nexomc.nexo.api.NexoItems;
+import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
 import org.bukkit.inventory.ItemStack;
 
@@ -29,7 +30,8 @@ public class NexoRule implements Rule {
     }
 
     @Override
-    public boolean matches(ItemStack itemStack) {
+    public boolean matches(ItemRuleContext context) {
+        ItemStack itemStack = context.getItemStack();
         if (itemStack == null) return false;
 
         String nexoId = NexoItems.idFromItem(itemStack);
