@@ -18,6 +18,15 @@ date-format: dd/MM/yyyy HH:mm:ss
 # If you need support, make sure to activate this option and check your console logs.
 enable-debug: false
 
+# Enables performance monitoring and logging.
+# When enabled, the plugin will log execution times for heavy operations like:
+# - Item sorting and filtering
+# - Category matching
+# - Database loading
+# - Cache operations
+# Useful for diagnosing performance issues with large auction houses.
+enable-performance-debug: false
+
 #
 # - SQLITE
 # - MARIADB

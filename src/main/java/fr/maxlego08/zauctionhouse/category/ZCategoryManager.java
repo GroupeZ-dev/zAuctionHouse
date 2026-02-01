@@ -10,6 +10,7 @@ import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
 import fr.maxlego08.zauctionhouse.api.rules.Rule;
 import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoaderRegistry;
 import fr.maxlego08.zauctionhouse.rule.ZItemRuleContext;
+import fr.maxlego08.zauctionhouse.utils.PerformanceDebug;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -27,6 +28,7 @@ public class ZCategoryManager implements CategoryManager {
 
     private final AuctionPlugin plugin;
     private final RuleLoaderRegistry ruleLoaderRegistry;
+    private final PerformanceDebug performanceDebug;
     private final Map<String, Category> categories = new LinkedHashMap<>();
     private final Map<String, Long> categoryCountCache = new ConcurrentHashMap<>();
     private List<Category> sortedCategories = List.of();
@@ -37,6 +39,7 @@ public class ZCategoryManager implements CategoryManager {
     public ZCategoryManager(AuctionPlugin plugin, RuleLoaderRegistry ruleLoaderRegistry) {
         this.plugin = plugin;
         this.ruleLoaderRegistry = ruleLoaderRegistry;
+        this.performanceDebug = new PerformanceDebug(plugin);
     }
 
     @Override
@@ -205,8 +208,12 @@ public class ZCategoryManager implements CategoryManager {
 
     @Override
     public void applyCategories(Item item) {
+        long startTime = performanceDebug.start();
 
-        if (item == null || !isEnabled()) return;
+        if (item == null || !isEnabled()) {
+            performanceDebug.end("applyCategories", startTime, "skipped");
+            return;
+        }
 
         item.getCategories().clear();
 
@@ -220,6 +227,7 @@ public class ZCategoryManager implements CategoryManager {
         }
 
         item.setCategories(categories);
+        performanceDebug.end("applyCategories", startTime, "itemId=" + item.getId() + ", categories=" + categories.size());
     }
 
     @Override
@@ -239,13 +247,19 @@ public class ZCategoryManager implements CategoryManager {
     }
 
     private long computeCategoryCount(String categoryId) {
+        long startTime = performanceDebug.start();
+
         var manager = this.plugin.getAuctionManager();
         var items = manager.getItems(StorageType.LISTED);
 
+        long count;
         if (categoryId.equals("all")) {
-            return items.size();
+            count = items.size();
+        } else {
+            count = items.stream().filter(item -> item.hasCategory(categoryId)).count();
         }
 
-        return items.stream().filter(item -> item.hasCategory(categoryId)).count();
+        performanceDebug.end("computeCategoryCount[" + categoryId + "]", startTime, "total=" + items.size() + ", count=" + count);
+        return count;
     }
 }

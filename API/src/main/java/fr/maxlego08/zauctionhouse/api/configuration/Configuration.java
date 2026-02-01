@@ -33,6 +33,14 @@ public interface Configuration extends ConfigurationFile {
      */
     boolean isEnableDebug();
 
+    /**
+     * Checks if performance debug mode is enabled in the plugin configuration.
+     * When enabled, the plugin will log execution times for heavy operations.
+     *
+     * @return true if performance debug is enabled, false otherwise.
+     */
+    boolean isEnablePerformanceDebug();
+
     String getServerName();
 
     List<MessageColor> getMessageColors();

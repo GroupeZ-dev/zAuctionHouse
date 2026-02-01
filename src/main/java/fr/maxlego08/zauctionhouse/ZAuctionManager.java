@@ -29,6 +29,7 @@ import fr.maxlego08.zauctionhouse.services.RemoveService;
 import fr.maxlego08.zauctionhouse.services.SellService;
 import fr.maxlego08.zauctionhouse.api.utils.IntArrayList;
 import fr.maxlego08.zauctionhouse.api.utils.IntList;
+import fr.maxlego08.zauctionhouse.utils.PerformanceDebug;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import fr.maxlego08.zauctionhouse.utils.cache.ZPlayerCache;
 import org.bukkit.entity.Player;
@@ -45,6 +46,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     private final AuctionSellService auctionSellService;
     private final AuctionRemoveService auctionRemoveService;
     private final AuctionExpireService auctionExpireService;
+    private final PerformanceDebug performanceDebug;
 
     private final Map<Player, PlayerCache> caches = new HashMap<>();
     private final Map<StorageType, Map<Integer, Item>> storageItemsById = new EnumMap<>(StorageType.class);
@@ -58,6 +60,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         this.auctionSellService = new SellService(plugin, this);
         this.auctionRemoveService = new RemoveService(plugin);
         this.auctionExpireService = new ExpireService(plugin, this);
+        this.performanceDebug = new PerformanceDebug(plugin);
 
         for (StorageType value : StorageType.values()) {
             this.storageItemsById.put(value, new HashMap<>());
@@ -210,10 +213,18 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public List<Item> resolveItems(StorageType storageType, IntList ids) {
-        if (ids == null || ids.isEmpty()) return List.of();
+        long startTime = performanceDebug.start();
+
+        if (ids == null || ids.isEmpty()) {
+            performanceDebug.end("resolveItems[" + storageType + "]", startTime, "empty ids");
+            return List.of();
+        }
 
         Map<Integer, Item> storage = this.storageItemsById.get(storageType);
-        if (storage == null || storage.isEmpty()) return List.of();
+        if (storage == null || storage.isEmpty()) {
+            performanceDebug.end("resolveItems[" + storageType + "]", startTime, "empty storage");
+            return List.of();
+        }
 
         List<Item> resolved = new ArrayList<>(ids.size());
         for (int id : ids) {
@@ -223,6 +234,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             }
         }
 
+        performanceDebug.end("resolveItems[" + storageType + "]", startTime, "requested=" + ids.size() + ", resolved=" + resolved.size());
         return resolved;
     }
 
@@ -232,8 +244,13 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     private IntList getItemIds(StorageType storageType, Predicate<Item> predicate, Comparator<Item> comparator) {
+        long startTime = performanceDebug.start();
+
         Map<Integer, Item> items = this.storageItemsById.get(storageType);
-        if (items == null || items.isEmpty()) return new IntArrayList();
+        if (items == null || items.isEmpty()) {
+            performanceDebug.end("getItemIds[" + storageType + "]", startTime, "empty");
+            return new IntArrayList();
+        }
 
         List<Item> filtered = new ArrayList<>();
         for (Item item : items.values()) {
@@ -256,6 +273,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             ids.add(item.getId());
         }
 
+        performanceDebug.end("getItemIds[" + storageType + "]", startTime, "total=" + items.size() + ", filtered=" + ids.size() + ", sorted=" + (comparator != null));
         return ids;
     }
 

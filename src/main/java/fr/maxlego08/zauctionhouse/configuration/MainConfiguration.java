@@ -30,6 +30,7 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     private final List<MessageColor> messageColors = new ArrayList<>();
 
     private boolean enableDebug;
+    private boolean enablePerformanceDebug;
     private String serverName;
     private SimpleDateFormat dateFormat;
 
@@ -77,6 +78,11 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     @Override
     public boolean isEnableDebug() {
         return this.enableDebug;
+    }
+
+    @Override
+    public boolean isEnablePerformanceDebug() {
+        return this.enablePerformanceDebug;
     }
 
     @Override
