@@ -30,6 +30,7 @@ public enum Message {
     COMMAND_DESCRIPTION_AUCTION_ADMIN("Open administrative tools for auctions"),
 
     SELL_ERROR_AIR("<error>Are you stupid ? You can’t sell air !"),
+    SELL_ERROR_CHANGE("<error>The item in your hand has changed, sale cancelled."),
     SELL_ERROR_ECONOMY("<error>Unable to find the economy <white>%name%<error>."),
     SELL_INVENTORY_TITLE("&0Sell your items"),
     SELL_INVENTORY_CONFIRM_NAME("&b&lCONFIRM"),

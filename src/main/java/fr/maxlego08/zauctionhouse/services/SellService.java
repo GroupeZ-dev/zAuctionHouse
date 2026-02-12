@@ -1,5 +1,6 @@
 package fr.maxlego08.zauctionhouse.services;
 
+import fr.maxlego08.zauctionhouse.ZAuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.AuctionManager;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
@@ -11,7 +12,6 @@ import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
-import fr.maxlego08.zauctionhouse.ZAuctionPlugin;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -37,6 +37,12 @@ public class SellService extends ZUtils implements AuctionSellService {
         clonedItemStack.setAmount(amount);
 
         if (this.invalidateItems(player, price, auctionEconomy, List.of(clonedItemStack))) return;
+
+        var currentItemInHand = player.getInventory().getItemInMainHand();
+        if (!currentItemInHand.isSimilar(itemStack) || currentItemInHand.getAmount() < amount) {
+            message(this.plugin, player, Message.SELL_ERROR_CHANGE);
+            return;
+        }
 
         removeItemInHand(player, amount);
 
