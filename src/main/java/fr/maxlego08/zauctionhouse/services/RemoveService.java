@@ -2,6 +2,7 @@ package fr.maxlego08.zauctionhouse.services;
 
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
+import fr.maxlego08.zauctionhouse.api.cluster.LockToken;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionPreRemoveExpiredItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionPreRemoveListedItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionPreRemovePurchasedItemEvent;
@@ -12,6 +13,7 @@ import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
 import org.bukkit.entity.Player;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 public class RemoveService extends AuctionService implements AuctionRemoveService {
@@ -134,6 +136,9 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
         var oldStatus = item.getStatus();
         item.setStatus(itemStatus);
 
+        // Store the lock token for cleanup on exception
+        final AtomicReference<LockToken> tokenHolder = new AtomicReference<>(null);
+
         return clusterBridge.notifyItemStatusChange(item, oldStatus, itemStatus).thenCompose(v1 -> clusterBridge.checkAvailability(item).thenCompose(available -> {
 
             if (!available) {
@@ -143,10 +148,40 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
             }
 
             return clusterBridge.lockItem(item, player.getUniqueId(), storageType);
+
         })).thenCompose(token -> {
-            return onLocalRemoval.get().thenCompose(v -> clusterBridge.removeItem(item, storageType).thenCompose(vv -> clusterBridge.unlockItem(item, token, storageType)));
+            // Store token for exception cleanup
+            tokenHolder.set(token);
+
+            // Check if lock was acquired
+            if (LockToken.noop().value().equals(token.value())) {
+                logger.info("Failed to acquire lock on item");
+                onUnavailable.run();
+                return failedFuture(new IllegalStateException("Item déjà en cours de traitement"));
+            }
+
+            return onLocalRemoval.get()
+                    .thenCompose(v -> clusterBridge.removeItem(item, storageType))
+                    .thenCompose(vv -> clusterBridge.unlockItem(item, token, storageType));
+
         }).exceptionally(throwable -> {
+            logger.severe("Error during removal: " + throwable.getMessage());
             throwable.printStackTrace();
+
+            // Ensure lock is released on any exception
+            var token = tokenHolder.get();
+            if (token != null && !LockToken.noop().value().equals(token.value())) {
+                clusterBridge.unlockItem(item, token, storageType)
+                        .exceptionally(unlockError -> {
+                            logger.severe("Failed to unlock item after error: " + unlockError.getMessage());
+                            return null;
+                        });
+            }
+
+            // Restore item status
+            item.setStatus(oldStatus);
+            clusterBridge.notifyItemStatusChange(item, itemStatus, oldStatus);
+
             return null;
         });
     }

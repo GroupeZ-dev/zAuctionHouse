@@ -123,3 +123,4 @@ runs/
 !/libs/*.jar
 .claude
 CLAUDE.md
+build-and-deploy.sh

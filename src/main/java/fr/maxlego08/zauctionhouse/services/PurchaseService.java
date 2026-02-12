@@ -2,6 +2,7 @@ package fr.maxlego08.zauctionhouse.services;
 
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
+import fr.maxlego08.zauctionhouse.api.cluster.LockToken;
 import fr.maxlego08.zauctionhouse.api.event.events.purchase.AuctionPrePurchaseItemEvent;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
@@ -10,8 +11,8 @@ import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
 import org.bukkit.entity.Player;
 
-import java.util.AbstractMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class PurchaseService extends AuctionService implements AuctionPurchaseService {
 
@@ -54,6 +55,9 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
         }
         item.setStatus(ItemStatus.IS_BEING_PURCHASED);
 
+        // Store the lock token for cleanup on exception
+        final AtomicReference<LockToken> tokenHolder = new AtomicReference<>(null);
+
         // 2. Vérifier si l'item est lock
         return clusterBridge.checkAvailability(item).thenCompose(available -> {
 
@@ -65,17 +69,51 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
 
             return clusterBridge.lockItem(item, player.getUniqueId(), StorageType.LISTED);
 
-        }).thenCompose(token -> auctionEconomy.has(player, item.getPrice()).thenApply(hasMoney -> new AbstractMap.SimpleEntry<>(token, hasMoney))).thenCompose(entry -> {
+        }).thenCompose(token -> {
+            // Store token for exception cleanup
+            tokenHolder.set(token);
 
-            var token = entry.getKey();
-
-            if (entry.getValue()) {
-                return auctionManager.purchaseItem(player, item).thenCompose(v -> clusterBridge.notifyItemBought(player, item)).thenCompose(v -> clusterBridge.unlockItem(item, token, StorageType.LISTED));
+            // Check if lock was acquired (noop token means lock failed)
+            if (LockToken.noop().value().equals(token.value())) {
+                logger.info("Failed to acquire lock on item");
+                inventoryManager.updateInventory(player);
+                return failedFuture(new IllegalStateException("Item déjà en cours d'achat"));
             }
 
+            return auctionEconomy.has(player, item.getPrice()).thenApply(hasMoney -> hasMoney);
+
+        }).thenCompose(hasMoney -> {
+
+            var token = tokenHolder.get();
+
+            if (hasMoney) {
+                return auctionManager.purchaseItem(player, item)
+                        .thenCompose(v -> clusterBridge.notifyItemBought(player, item))
+                        .thenCompose(v -> clusterBridge.unlockItem(item, token, StorageType.LISTED));
+            }
+
+            // Insufficient funds - unlock and notify
+            message(this.plugin, player, Message.NOT_ENOUGH_MONEY);
             return clusterBridge.unlockItem(item, token, StorageType.LISTED);
+
         }).exceptionally(e -> {
+            logger.severe("Error during purchase: " + e.getMessage());
             e.printStackTrace();
+
+            // Ensure lock is released on any exception
+            var token = tokenHolder.get();
+            if (token != null && !LockToken.noop().value().equals(token.value())) {
+                clusterBridge.unlockItem(item, token, StorageType.LISTED)
+                        .exceptionally(unlockError -> {
+                            logger.severe("Failed to unlock item after error: " + unlockError.getMessage());
+                            return null;
+                        });
+            }
+
+            // Restore item status
+            item.setStatus(ItemStatus.AVAILABLE);
+            clusterBridge.notifyItemStatusChange(item, ItemStatus.IS_BEING_PURCHASED, ItemStatus.AVAILABLE);
+
             return null;
         });
     }

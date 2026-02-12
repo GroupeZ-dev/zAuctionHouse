@@ -38,6 +38,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 public class ZAuctionManager extends ZUtils implements AuctionManager {
@@ -49,11 +50,11 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     private final AuctionExpireService auctionExpireService;
     private final PerformanceDebug performanceDebug;
 
-    private final Map<Player, PlayerCache> caches = new HashMap<>();
+    private final Map<Player, PlayerCache> caches = new ConcurrentHashMap<>();
     private final Map<StorageType, Map<Integer, Item>> storageItemsById = new EnumMap<>(StorageType.class);
-    private final Map<UUID, IntList> idsListedByOwner = new HashMap<>();
-    private final Map<UUID, IntList> idsExpiredByOwner = new HashMap<>();
-    private final Map<UUID, IntList> idsPurchasedByBuyer = new HashMap<>();
+    private final Map<UUID, IntList> idsListedByOwner = new ConcurrentHashMap<>();
+    private final Map<UUID, IntList> idsExpiredByOwner = new ConcurrentHashMap<>();
+    private final Map<UUID, IntList> idsPurchasedByBuyer = new ConcurrentHashMap<>();
     private final SortedItemsCache sortedItemsCache;
 
     public ZAuctionManager(AuctionPlugin plugin) {
@@ -65,7 +66,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         this.performanceDebug = new PerformanceDebug(plugin);
 
         for (StorageType value : StorageType.values()) {
-            this.storageItemsById.put(value, new HashMap<>());
+            this.storageItemsById.put(value, new ConcurrentHashMap<>());
         }
 
         // Initialize sorted items cache for LISTED items

@@ -16,6 +16,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -74,7 +75,7 @@ public class SellBuyButton extends Button {
     }
 
     @Override
-    public ItemStack getCustomItemStack(Player player, Placeholders placeholders) {
+    public ItemStack getCustomItemStack(@NotNull Player player, boolean useCache, @NotNull Placeholders placeholders) {
         MenuItemStack menuItemStack = this.getItemStack();
 
         var manager = this.plugin.getAuctionManager();
