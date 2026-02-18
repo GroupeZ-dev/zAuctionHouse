@@ -10,14 +10,14 @@ import java.util.UUID;
 
 public abstract class TargetHelper extends Button {
 
-    private final AuctionPlugin plugin;
+    protected final AuctionPlugin plugin;
 
     public TargetHelper(AuctionPlugin plugin) {
         this.plugin = plugin;
     }
 
     protected Optional<UUID> getTargetUniqueId(Player player) {
-        return Optional.ofNullable(this.plugin.getAuctionManager().getCache(player).get(PlayerCacheKey.ADMIN_TARGET));
+        return Optional.ofNullable(this.plugin.getAuctionManager().getCache(player).get(PlayerCacheKey.ADMIN_TARGET_UUID));
     }
 
     protected Optional<String> getTargetName(Player player) {

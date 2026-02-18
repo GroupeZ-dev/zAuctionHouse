@@ -42,6 +42,6 @@ public class AdminPurchasedItemsButton extends PaginateButton {
     }
 
     private Optional<UUID> getTarget(Player player) {
-        return Optional.ofNullable(this.plugin.getAuctionManager().getCache(player).get(PlayerCacheKey.ADMIN_TARGET));
+        return Optional.ofNullable(this.plugin.getAuctionManager().getCache(player).get(PlayerCacheKey.ADMIN_TARGET_UUID));
     }
 }

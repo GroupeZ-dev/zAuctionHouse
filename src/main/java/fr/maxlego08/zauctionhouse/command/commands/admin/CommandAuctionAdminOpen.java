@@ -49,7 +49,7 @@ public class CommandAuctionAdminOpen extends VCommand {
             };
 
             var cache = this.auctionManager.getCache(this.player);
-            cache.set(PlayerCacheKey.ADMIN_TARGET, uuid);
+            cache.set(PlayerCacheKey.ADMIN_TARGET_UUID, uuid);
             cache.set(PlayerCacheKey.ADMIN_TARGET_NAME, targetName);
 
             this.plugin.getScheduler().runNextTick(w -> this.plugin.getInventoriesLoader().openInventory(this.player, inventories));

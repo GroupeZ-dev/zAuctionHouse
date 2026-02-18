@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
@@ -173,6 +174,14 @@ public interface AuctionManager {
     List<Item> getExpiredItems(Player player);
 
     /**
+     * Version of {@link #getExpiredItems(Player)} using a UUID for offline player compatibility.
+     *
+     * @param uniqueId unique identifier of the player
+     * @return expired items awaiting reclamation
+     */
+    List<Item> getExpiredItems(java.util.UUID uniqueId);
+
+    /**
      * Retrieves items currently owned by the player but still within the auction house storage
      * (for example, unsold items or items awaiting delivery).
      *
@@ -189,14 +198,6 @@ public interface AuctionManager {
      * @return purchased items awaiting delivery
      */
     List<Item> getPurchasedItems(Player player);
-
-    /**
-     * Version of {@link #getExpiredItems(Player)} using a UUID for offline player compatibility.
-     *
-     * @param uniqueId unique identifier of the player
-     * @return expired items awaiting reclamation
-     */
-    List<Item> getExpiredItems(java.util.UUID uniqueId);
 
     /**
      * Version of {@link #getPlayerOwnedItems(Player)} using a UUID for offline player support.
