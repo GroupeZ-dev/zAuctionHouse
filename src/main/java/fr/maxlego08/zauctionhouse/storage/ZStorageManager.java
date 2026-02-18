@@ -18,6 +18,7 @@ import fr.maxlego08.zauctionhouse.storage.repository.repositeries.AuctionItemRep
 import fr.maxlego08.zauctionhouse.storage.repository.repositeries.ItemRepository;
 import fr.maxlego08.zauctionhouse.storage.repository.repositeries.LogRepository;
 import fr.maxlego08.zauctionhouse.storage.repository.repositeries.PlayerRepository;
+import fr.maxlego08.zauctionhouse.storage.repository.repositeries.TransactionRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -73,6 +74,7 @@ public class ZStorageManager implements StorageManager {
         this.repositories.register(ItemRepository.class);
         this.repositories.register(AuctionItemRepository.class);
         this.repositories.register(LogRepository.class);
+        this.repositories.register(TransactionRepository.class);
 
         MigrationManager.execute(this.databaseConnection, sarahLogger);
 

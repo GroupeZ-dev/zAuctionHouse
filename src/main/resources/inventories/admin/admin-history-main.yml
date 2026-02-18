@@ -48,7 +48,7 @@ items:
       material: SUNFLOWER
       name: '#2CCED2<bold>ʟᴏɢs'
       lore:
-        - '#92ffffDisplay the logs of %target%'
+        - '#92ffff%target% has #2CCED2%logs% #92fffflog%s%.'
         - ''
         - '#8c8c8c• #2CCED2Click #92ffffto open'
 
@@ -59,6 +59,6 @@ items:
       material: NETHER_STAR
       name: '#2CCED2<bold>ᴛʀᴀɴsᴀᴄᴛɪᴏɴs'
       lore:
-        - '#92ffffDisplay the transactions of %target%'
+        - '#92ffff%target% has #2CCED2%transactions% #92fffftransaction%s%.'
         - ''
         - '#8c8c8c• #2CCED2Click #92ffffto open'

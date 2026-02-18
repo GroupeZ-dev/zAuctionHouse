@@ -1,0 +1,46 @@
+name: '#0c1719Admin transactions (%page%/%max-page%)'
+size: 54
+
+patterns:
+  - 'zauctionhouse-decoration'
+  - 'zauctionhouse-pagination'
+  - 'zauctionhouse-back'
+
+items:
+  items:
+    type: ZAUCTIONHOUSE_ADMIN_TRANSACTIONS
+    slots:
+      - 9-17
+      - 18-26
+      - 27-35
+      - 36-44
+    else:
+      slots:
+        - 22
+      item:
+        material: BARRIER
+        name: '&c&nNo Transactions Found'
+
+  filter-status:
+    type: ZAUCTIONHOUSE_ADMIN_TRANSACTIONS_FILTER_STATUS
+    slot: 47
+    item:
+      material: HOPPER
+      name: '#2CCED2<bold>ғɪʟᴛᴇʀ ʙʏ sᴛᴀᴛᴜs'
+      lore:
+        - '#92ffffCurrent: #2CCED2%current-status%'
+        - ''
+        - '#8c8c8c• #2CCED2Left Click #92ffffto cycle forward'
+        - '#8c8c8c• #2CCED2Right Click #92ffffto cycle backward'
+
+  filter-date:
+    type: ZAUCTIONHOUSE_ADMIN_TRANSACTIONS_FILTER_DATE
+    slot: 51
+    item:
+      material: CLOCK
+      name: '#2CCED2<bold>ғɪʟᴛᴇʀ ʙʏ ᴅᴀᴛᴇ'
+      lore:
+        - '#92ffffCurrent: #2CCED2%current-date%'
+        - ''
+        - '#8c8c8c• #2CCED2Left Click #92ffffto cycle forward'
+        - '#8c8c8c• #2CCED2Right Click #92ffffto cycle backward'

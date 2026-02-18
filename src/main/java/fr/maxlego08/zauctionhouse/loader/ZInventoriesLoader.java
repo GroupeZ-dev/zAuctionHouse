@@ -12,8 +12,14 @@ import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.buttons.AuctionItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.ShowButton;
 import fr.maxlego08.zauctionhouse.buttons.admin.AdminExpiredItemsButton;
+import fr.maxlego08.zauctionhouse.buttons.admin.AdminLogsButton;
 import fr.maxlego08.zauctionhouse.buttons.admin.AdminOwnedItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.admin.AdminPurchasedItemsButton;
+import fr.maxlego08.zauctionhouse.buttons.admin.AdminTransactionsButton;
+import fr.maxlego08.zauctionhouse.buttons.admin.LogDateFilterButton;
+import fr.maxlego08.zauctionhouse.buttons.admin.LogTypeFilterButton;
+import fr.maxlego08.zauctionhouse.buttons.admin.TransactionDateFilterButton;
+import fr.maxlego08.zauctionhouse.buttons.admin.TransactionStatusFilterButton;
 import fr.maxlego08.zauctionhouse.buttons.admin.history.*;
 import fr.maxlego08.zauctionhouse.buttons.confirm.ConfirmPurchaseButton;
 import fr.maxlego08.zauctionhouse.buttons.confirm.ConfirmRemoveListedButton;
@@ -131,6 +137,12 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new NoneLoader(this.plugin, AdminOwnedItemsButton.class, "ZAUCTIONHOUSE_ADMIN_OWNED_ITEMS"));
         this.buttonManager.register(new NoneLoader(this.plugin, AdminExpiredItemsButton.class, "ZAUCTIONHOUSE_ADMIN_EXPIRED_ITEMS"));
         this.buttonManager.register(new NoneLoader(this.plugin, AdminPurchasedItemsButton.class, "ZAUCTIONHOUSE_ADMIN_PURCHASED_ITEMS"));
+        this.buttonManager.register(new NoneLoader(this.plugin, AdminLogsButton.class, "ZAUCTIONHOUSE_ADMIN_LOGS"));
+        this.buttonManager.register(new NoneLoader(this.plugin, AdminTransactionsButton.class, "ZAUCTIONHOUSE_ADMIN_TRANSACTIONS"));
+        this.buttonManager.register(new NoneLoader(this.plugin, LogTypeFilterButton.class, "ZAUCTIONHOUSE_ADMIN_LOGS_FILTER_TYPE"));
+        this.buttonManager.register(new NoneLoader(this.plugin, LogDateFilterButton.class, "ZAUCTIONHOUSE_ADMIN_LOGS_FILTER_DATE"));
+        this.buttonManager.register(new NoneLoader(this.plugin, TransactionStatusFilterButton.class, "ZAUCTIONHOUSE_ADMIN_TRANSACTIONS_FILTER_STATUS"));
+        this.buttonManager.register(new NoneLoader(this.plugin, TransactionDateFilterButton.class, "ZAUCTIONHOUSE_ADMIN_TRANSACTIONS_FILTER_DATE"));
 
         this.buttonManager.register(new NoneLoader(this.plugin, AdminHistoryMainButton.class, "ZAUCTIONHOUSE_ADMIN_HISTORY_MAIN"));
         this.buttonManager.register(new NoneLoader(this.plugin, AdminHistoryMainLogsButton.class, "ZAUCTIONHOUSE_ADMIN_HISTORY_LOGS"));
@@ -166,6 +178,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
     private void createInventoriesFile() {
         copyFiles("inventories", "auction", "expired-items", "owned-items", "purchased-items",//
                 "admin/admin-owned-items", "admin/admin-expired-items", "admin/admin-purchased-items", "admin/admin-history-main", //
+                "admin/admin-logs", "admin/admin-transactions", //
                 "remove-confirm", "purchase-confirm", "auction-item", "sell-inventory", "categories");
     }
 

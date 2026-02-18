@@ -14,6 +14,8 @@ public enum Inventories {
     ADMIN_PURCHASED_ITEMS("admin-purchased-items"),
     ADMIN_OWNED_ITEMS("admin-owned-items"),
     ADMIN_HISTORY_MAIN("admin-history-main"),
+    ADMIN_LOGS("admin-logs"),
+    ADMIN_TRANSACTIONS("admin-transactions"),
 
     ;
 

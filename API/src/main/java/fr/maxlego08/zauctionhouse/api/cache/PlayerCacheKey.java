@@ -3,12 +3,19 @@ package fr.maxlego08.zauctionhouse.api.cache;
 import com.google.common.reflect.TypeToken;
 import fr.maxlego08.zauctionhouse.api.category.Category;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
+import fr.maxlego08.zauctionhouse.api.filter.DateFilter;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.SortItem;
+import fr.maxlego08.zauctionhouse.api.log.LogType;
+import fr.maxlego08.zauctionhouse.api.storage.dto.LogDTO;
+import fr.maxlego08.zauctionhouse.api.storage.dto.TransactionDTO;
+import fr.maxlego08.zauctionhouse.api.transaction.TransactionStatus;
 import fr.maxlego08.zauctionhouse.api.utils.IntArrayList;
 import fr.maxlego08.zauctionhouse.api.utils.IntList;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 public enum PlayerCacheKey {
@@ -28,7 +35,19 @@ public enum PlayerCacheKey {
     SELL_ECONOMY(new TypeToken<AuctionEconomy>() {}, () -> null),
     SELL_EXPIRED_AT(new TypeToken<Long>() {}, () -> 0L),
     SELL_AMOUNT(new TypeToken<Integer>() {}, () -> 1),
-    CURRENT_CATEGORY(new TypeToken<Category>() {}, () -> null)
+    CURRENT_CATEGORY(new TypeToken<Category>() {}, () -> null),
+
+    // Admin Logs
+    ADMIN_LOGS_DATA(new TypeToken<List<LogDTO>>() {}, ArrayList::new),
+    ADMIN_LOGS_LOADING(new TypeToken<Boolean>() {}, () -> false),
+    ADMIN_LOGS_TYPE_FILTER(new TypeToken<LogType>() {}, () -> null),
+    ADMIN_LOGS_DATE_FILTER(new TypeToken<DateFilter>() {}, () -> DateFilter.ALL),
+
+    // Admin Transactions
+    ADMIN_TRANSACTIONS_DATA(new TypeToken<List<TransactionDTO>>() {}, ArrayList::new),
+    ADMIN_TRANSACTIONS_LOADING(new TypeToken<Boolean>() {}, () -> false),
+    ADMIN_TRANSACTIONS_STATUS_FILTER(new TypeToken<TransactionStatus>() {}, () -> null),
+    ADMIN_TRANSACTIONS_DATE_FILTER(new TypeToken<DateFilter>() {}, () -> DateFilter.ALL)
     ;
 
     private final TypeToken<?> type;
