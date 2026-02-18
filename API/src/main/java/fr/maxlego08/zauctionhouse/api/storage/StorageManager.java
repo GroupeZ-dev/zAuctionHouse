@@ -10,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -96,6 +97,15 @@ public interface StorageManager {
      * @return future completing when the update is persisted
      */
     CompletableFuture<Void> updateItem(Item item, StorageType storageType);
+
+    /**
+     * Batch updates multiple items grouped by storage type.
+     * Executes a single SQL query per storage type for efficiency.
+     *
+     * @param itemsByStorageType map of storage type to list of items to update
+     * @return future completing when all updates are persisted
+     */
+    CompletableFuture<Void> updateItems(Map<StorageType, List<Item>> itemsByStorageType);
 
     /**
      * Records an audit log entry describing an action performed on an item.

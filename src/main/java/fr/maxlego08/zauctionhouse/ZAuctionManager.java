@@ -347,15 +347,21 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         }
 
         List<Item> filtered = new ArrayList<>();
+        List<Item> expiredItems = new ArrayList<>();
+
         for (Item item : items.values()) {
             if (item.isExpired()) {
-                this.auctionExpireService.processExpiredItem(item, storageType);
+                expiredItems.add(item);
                 continue;
             }
 
             if (predicate.test(item)) {
                 filtered.add(item);
             }
+        }
+
+        if (!expiredItems.isEmpty()) {
+            this.auctionExpireService.processExpiredItems(expiredItems, storageType);
         }
 
         if (comparator != null && filtered.size() > 1) {
@@ -367,7 +373,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             ids.add(item.getId());
         }
 
-        performanceDebug.end("getItemIds[" + storageType + "]", startTime, "total=" + items.size() + ", filtered=" + ids.size() + ", sorted=" + (comparator != null));
+        performanceDebug.end("getItemIds[" + storageType + "]", startTime, "total=" + items.size() + ", filtered=" + ids.size() + ", expired=" + expiredItems.size() + ", sorted=" + (comparator != null));
         return ids;
     }
 

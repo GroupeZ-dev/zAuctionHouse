@@ -1,6 +1,7 @@
 package fr.maxlego08.zauctionhouse.storage.repository.repositeries;
 
 import fr.maxlego08.sarah.DatabaseConnection;
+import fr.maxlego08.sarah.database.Schema;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.item.Item;
@@ -12,10 +13,8 @@ import fr.maxlego08.zauctionhouse.api.storage.dto.ItemDTO;
 import org.bukkit.entity.Player;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Consumer;
 
 public class ItemRepository extends Repository {
 
@@ -46,7 +45,29 @@ public class ItemRepository extends Repository {
     }
 
     public void updateItem(Item item, StorageType storageType) {
-        this.update(schema -> {
+        this.update(createUpdateSchema(item, storageType));
+    }
+
+    public Optional<ItemDTO> select(int id) {
+        return select(ItemDTO.class, schema -> schema.where("id", id)).stream().findFirst();
+    }
+
+    public void updateItems(Map<StorageType, List<Item>> itemsByStorageType) {
+        for (Map.Entry<StorageType, List<Item>> entry : itemsByStorageType.entrySet()) {
+            StorageType storageType = entry.getKey();
+            List<Item> items = entry.getValue();
+            if (items.isEmpty()) continue;
+
+            List<Schema> schemas = new ArrayList<>(items.size());
+            for (Item item : items) {
+                schemas.add(createUpdateSchema(createUpdateSchema(item, storageType)));
+            }
+            update(schemas);
+        }
+    }
+
+    private Consumer<Schema> createUpdateSchema(Item item, StorageType storageType) {
+        return schema -> {
             schema.where("id", item.getId());
             schema.string("storage_type", storageType.name());
             if (storageType != StorageType.DELETED) {
@@ -55,10 +76,6 @@ public class ItemRepository extends Repository {
             if (storageType == StorageType.PURCHASED) {
                 schema.uuid("buyer_unique_id", item.getBuyerUniqueId());
             }
-        });
-    }
-
-    public Optional<ItemDTO> select(int id) {
-        return select(ItemDTO.class, schema -> schema.where("id", id)).stream().findFirst();
+        };
     }
 }

@@ -6,6 +6,7 @@ import fr.maxlego08.sarah.database.Schema;
 import fr.maxlego08.sarah.logger.JULogger;
 import fr.maxlego08.sarah.logger.Logger;
 import fr.maxlego08.sarah.requests.InsertBatchRequest;
+import fr.maxlego08.sarah.requests.UpdateBatchRequest;
 import fr.maxlego08.sarah.requests.UpsertBatchRequest;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 
@@ -135,7 +136,16 @@ public abstract class Repository {
         upsertBatchRequest.execute(this.connection, this.connection.getDatabaseConfiguration(), this.logger);
     }
 
+    protected void update(List<Schema> schemas) {
+        UpdateBatchRequest updateBatchRequest = new UpdateBatchRequest(schemas);
+        updateBatchRequest.execute(this.connection, this.connection.getDatabaseConfiguration(), this.logger);
+    }
+
     protected Schema createInsertSchema(Consumer<Schema> consumer) {
         return SchemaBuilder.insert(getTableName(), consumer);
+    }
+
+    protected Schema createUpdateSchema(Consumer<Schema> consumer) {
+        return SchemaBuilder.update(getTableName(), consumer);
     }
 }

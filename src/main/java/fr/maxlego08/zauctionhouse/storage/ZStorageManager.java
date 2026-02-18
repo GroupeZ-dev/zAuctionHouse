@@ -25,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -145,6 +146,11 @@ public class ZStorageManager implements StorageManager {
     @Override
     public CompletableFuture<Void> updateItem(Item item, StorageType storageType) {
         return CompletableFuture.runAsync(() -> with(ItemRepository.class).updateItem(item, storageType), this.plugin.getExecutorService());
+    }
+
+    @Override
+    public CompletableFuture<Void> updateItems(Map<StorageType, List<Item>> itemsByStorageType) {
+        return CompletableFuture.runAsync(() -> with(ItemRepository.class).updateItems(itemsByStorageType), this.plugin.getExecutorService());
     }
 
     @Override
