@@ -28,6 +28,15 @@ public enum Message {
     COMMAND_DESCRIPTION_AUCTION_BID("Add an item to the auction"),
     COMMAND_DESCRIPTION_AUCTION_RELOAD("Reload configurations files"),
     COMMAND_DESCRIPTION_AUCTION_ADMIN("Open administrative tools for auctions"),
+    COMMAND_DESCRIPTION_AUCTION_ADMIN_GENERATE("Generate fake items"),
+    COMMAND_DESCRIPTION_AUCTION_ADMIN_OPEN("Open current auction items"),
+    COMMAND_DESCRIPTION_AUCTION_ADMIN_HISTORY("Open player auction history"),
+    COMMAND_DESCRIPTION_AUCTION_ADMIN_ADD("Add an item to the auction"),
+
+    COMMAND_DESCRIPTION_AUCTION_ADMIN_CACHE("Manage player cache"),
+    COMMAND_DESCRIPTION_AUCTION_ADMIN_CACHE_SET("Set a value in player cache"),
+    COMMAND_DESCRIPTION_AUCTION_ADMIN_CACHE_CLEAR("Clear player cache"),
+    COMMAND_DESCRIPTION_AUCTION_ADMIN_CACHE_SHOW("Show player cache"),
 
     SELL_ERROR_AIR("<error>Are you stupid ? You can’t sell air !"),
     SELL_ERROR_CHANGE("<error>The item in your hand has changed, sale cancelled."),
@@ -81,7 +90,6 @@ public enum Message {
     ADMIN_GENERATE_NO_MATERIALS("<error>No valid materials found in categories. Make sure you have categories other than 'misc' configured."),
     ADMIN_GENERATE_INVALID_AMOUNT("<error>Invalid amount. Please specify a number between <white>1<error> and <white>100000<error>."),
 
-    COMMAND_DESCRIPTION_AUCTION_ADMIN_CACHE("Manage player cache"),
     ADMIN_CACHE_SHOW_HEADER("<primary>Cache for <white>%player%<primary>:"),
     ADMIN_CACHE_SHOW_ENTRY("<gray>  %key% <dark_gray>» <white>%value%"),
     ADMIN_CACHE_SHOW_EMPTY("<gray>  No cache entries found."),

@@ -1,3 +1,5 @@
+# You can use your item in Base64 with the command /zmenu save <item name>
+
 # Blacklist - Items matching these rules cannot be sold
 blacklist:
   enabled: true

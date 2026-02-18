@@ -24,7 +24,7 @@ public class CommandAuctionAdminCacheSet extends VCommand {
         super(plugin);
 
         this.setPermission(Permission.ZAUCTIONHOUSE_ADMIN);
-        this.setDescription(Message.COMMAND_DESCRIPTION_AUCTION_ADMIN_CACHE);
+        this.setDescription(Message.COMMAND_DESCRIPTION_AUCTION_ADMIN_CACHE_SET);
         this.setConsoleCanUse(false);
 
         this.addSubCommand("set");
