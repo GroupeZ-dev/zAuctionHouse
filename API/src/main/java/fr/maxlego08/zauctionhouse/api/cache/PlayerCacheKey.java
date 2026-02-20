@@ -51,7 +51,11 @@ public enum PlayerCacheKey {
 
     // Pending Money (Claim)
     PENDING_MONEY_DATA(new TypeToken<java.util.Map<String, java.math.BigDecimal>>() {}, java.util.HashMap::new),
-    PENDING_MONEY_LOADING(new TypeToken<Boolean>() {}, () -> false)
+    PENDING_MONEY_LOADING(new TypeToken<Boolean>() {}, () -> false),
+
+    // Sales History
+    HISTORY_DATA(new TypeToken<List<LogDTO>>() {}, ArrayList::new),
+    HISTORY_LOADING(new TypeToken<Boolean>() {}, () -> false)
     ;
 
     private final TypeToken<?> type;

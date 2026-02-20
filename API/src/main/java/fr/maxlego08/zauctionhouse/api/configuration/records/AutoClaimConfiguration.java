@@ -11,13 +11,15 @@ import org.bukkit.configuration.file.FileConfiguration;
  * @param notifyPlayer    whether to send a message to the player when money is claimed
  * @param notifyPending   whether to notify the player about pending money on join (if not auto-claiming)
  * @param notifyDelayTicks delay in ticks before sending the notification about pending money
+ * @param depositReason   the reason shown in the economy transaction when depositing money
  */
 public record AutoClaimConfiguration(
         boolean enabled,
         long delayTicks,
         boolean notifyPlayer,
         boolean notifyPending,
-        long notifyDelayTicks
+        long notifyDelayTicks,
+        String depositReason
 ) {
 
     public static AutoClaimConfiguration of(AuctionPlugin plugin, FileConfiguration configuration) {
@@ -26,7 +28,8 @@ public record AutoClaimConfiguration(
         boolean notifyPlayer = configuration.getBoolean("auto-claim.notify-player", true);
         boolean notifyPending = configuration.getBoolean("auto-claim.notify-pending", true);
         long notifyDelayTicks = configuration.getLong("auto-claim.notify-delay-ticks", 40);
+        String depositReason = configuration.getString("auto-claim.deposit-reason", "Claimed pending auction money");
 
-        return new AutoClaimConfiguration(enabled, delayTicks, notifyPlayer, notifyPending, notifyDelayTicks);
+        return new AutoClaimConfiguration(enabled, delayTicks, notifyPlayer, notifyPending, notifyDelayTicks, depositReason);
     }
 }

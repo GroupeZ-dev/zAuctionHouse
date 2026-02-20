@@ -21,6 +21,9 @@ public class PlayerListener implements Listener {
 
         // Handle pending money claim on join
         this.plugin.getAuctionManager().getClaimService().handlePlayerJoin(player);
+
+        // Handle sales notification on join
+        this.plugin.getAuctionManager().getHistoryService().handlePlayerJoin(player);
     }
 
     @EventHandler

@@ -17,6 +17,7 @@ public class CreateLogsMigration extends Migration {
             table.decimal("price", 65, 2).defaultValue(0);
             table.string("economy_name", 255).nullable();
             table.longText("additional_data").nullable();
+            table.timestamp("readed_at").nullable();
             table.timestamps();
         });
     }

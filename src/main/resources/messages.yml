@@ -25,6 +25,7 @@ command-description-auction-admin-cache-set: "Set a value in player cache"
 command-description-auction-admin-cache-clear: "Clear player cache"
 command-description-auction-admin-cache-show: "Show player cache"
 command-description-auction-claim: "Claim pending money from sales"
+command-description-auction-history: "View your sales history"
 
 sell-error-air: "<error>Are you stupid ? You can't sell air !"
 sell-error-change: "<error>The item in your hand has changed, sale cancelled."
@@ -95,3 +96,7 @@ claim-no-pending: "<error>You have no pending money to claim."
 claim-success: "<success>You have successfully claimed your pending money!"
 claim-economy-success: "<success>You received <white>%amount%<success> from <white>%economy%<success>."
 claim-pending-notify: "#e6fff3You have pending money to claim! Use <white>/ah claim<#e6fff3> to receive <white>%amount%<#e6fff3>."
+
+sales-notification:
+  - "<click:run_command:/ah history>#e6fff3While you were away, <white>%count%<#e6fff3> of your items were sold for a total of <white>%total%<#e6fff3>!"
+  - "<click:run_command:/ah history>#8c8c8c• #2CCED2Click here<#92ffff> to view your sales history</click>"

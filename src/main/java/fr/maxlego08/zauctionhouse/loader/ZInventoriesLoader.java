@@ -22,6 +22,7 @@ import fr.maxlego08.zauctionhouse.buttons.admin.TransactionDateFilterButton;
 import fr.maxlego08.zauctionhouse.buttons.admin.TransactionStatusFilterButton;
 import fr.maxlego08.zauctionhouse.buttons.admin.history.*;
 import fr.maxlego08.zauctionhouse.buttons.confirm.ConfirmPurchaseButton;
+import fr.maxlego08.zauctionhouse.buttons.history.HistoryItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.confirm.ConfirmRemoveListedButton;
 import fr.maxlego08.zauctionhouse.buttons.inventory.ExpiredInventoryButton;
 import fr.maxlego08.zauctionhouse.buttons.inventory.OwnedInventoryButton;
@@ -132,6 +133,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new NoneLoader(this.plugin, SellSlotButton.class, "ZAUCTIONHOUSE_SELL_SLOT"));
         this.buttonManager.register(new NoneLoader(this.plugin, SellBuyButton.class, "ZAUCTIONHOUSE_SELL_BUY"));
         this.buttonManager.register(new NoneLoader(this.plugin, SellCancelButton.class, "ZAUCTIONHOUSE_SELL_CANCEL"));
+        this.buttonManager.register(new NoneLoader(this.plugin, HistoryItemsButton.class, "ZAUCTIONHOUSE_HISTORY_ITEMS"));
 
         // Admin
         this.buttonManager.register(new NoneLoader(this.plugin, AdminOwnedItemsButton.class, "ZAUCTIONHOUSE_ADMIN_OWNED_ITEMS"));
@@ -176,7 +178,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
     }
 
     private void createInventoriesFile() {
-        copyFiles("inventories", "auction", "expired-items", "owned-items", "purchased-items",//
+        copyFiles("inventories", "auction", "expired-items", "owned-items", "purchased-items", "history",//
                 "admin/admin-owned-items", "admin/admin-expired-items", "admin/admin-purchased-items", "admin/admin-history-main", //
                 "admin/admin-logs", "admin/admin-transactions", //
                 "remove-confirm", "purchase-confirm", "auction-item", "sell-inventory", "categories");

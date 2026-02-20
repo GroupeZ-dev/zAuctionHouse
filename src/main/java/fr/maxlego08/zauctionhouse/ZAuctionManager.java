@@ -19,6 +19,7 @@ import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionClaimService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionExpireService;
+import fr.maxlego08.zauctionhouse.api.services.AuctionHistoryService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
@@ -30,6 +31,7 @@ import fr.maxlego08.zauctionhouse.buttons.list.ListedItemsButton;
 import fr.maxlego08.zauctionhouse.discord.DiscordWebhookService;
 import fr.maxlego08.zauctionhouse.services.ClaimService;
 import fr.maxlego08.zauctionhouse.services.ExpireService;
+import fr.maxlego08.zauctionhouse.services.HistoryService;
 import fr.maxlego08.zauctionhouse.services.PurchaseService;
 import fr.maxlego08.zauctionhouse.services.RemoveService;
 import fr.maxlego08.zauctionhouse.services.SellService;
@@ -54,6 +56,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     private final AuctionRemoveService auctionRemoveService;
     private final AuctionExpireService auctionExpireService;
     private final AuctionClaimService auctionClaimService;
+    private final AuctionHistoryService auctionHistoryService;
     private final PerformanceDebug performanceDebug;
 
     private final Map<Player, PlayerCache> caches = new ConcurrentHashMap<>();
@@ -70,6 +73,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         this.auctionRemoveService = new RemoveService(plugin);
         this.auctionExpireService = new ExpireService(plugin, this);
         this.auctionClaimService = new ClaimService(plugin);
+        this.auctionHistoryService = new HistoryService(plugin);
         this.performanceDebug = new PerformanceDebug(plugin);
 
         for (StorageType value : StorageType.values()) {
@@ -180,6 +184,11 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     @Override
     public AuctionClaimService getClaimService() {
         return this.auctionClaimService;
+    }
+
+    @Override
+    public AuctionHistoryService getHistoryService() {
+        return this.auctionHistoryService;
     }
 
     @Override

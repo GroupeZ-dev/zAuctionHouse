@@ -37,6 +37,7 @@ public class ClaimService extends AuctionService implements AuctionClaimService 
 
             var economyManager = this.plugin.getEconomyManager();
             var transactionIds = transactions.stream().map(TransactionDTO::id).toList();
+            var depositReason = this.plugin.getConfiguration().getAutoClaimConfiguration().depositReason();
 
             BigDecimal totalClaimed = BigDecimal.ZERO;
 
@@ -56,7 +57,7 @@ public class ClaimService extends AuctionService implements AuctionClaimService 
                 BigDecimal economyTotal = economyTransactions.stream().map(TransactionDTO::value).filter(v -> v.compareTo(BigDecimal.ZERO) > 0).reduce(BigDecimal.ZERO, BigDecimal::add);
 
                 if (economyTotal.compareTo(BigDecimal.ZERO) > 0) {
-                    economy.deposit(player, economyTotal, "Claimed pending auction money");
+                    plugin.getScheduler().runAsync(w -> economy.deposit(player, economyTotal, depositReason));
                     totalClaimed = totalClaimed.add(economyTotal);
 
                     message(this.plugin, player, Message.CLAIM_ECONOMY_SUCCESS, "%amount%", economyManager.format(economy, economyTotal), "%economy%", economy.getDisplayName());

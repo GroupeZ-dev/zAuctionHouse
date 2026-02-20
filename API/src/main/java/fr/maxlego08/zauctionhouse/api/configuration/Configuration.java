@@ -4,6 +4,7 @@ import fr.maxlego08.zauctionhouse.api.configuration.commands.CommandConfiguratio
 import fr.maxlego08.zauctionhouse.api.configuration.records.ActionConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.AutoClaimConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ExpirationConfiguration;
+import fr.maxlego08.zauctionhouse.api.configuration.records.SalesNotificationConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ItemDisplayConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ItemLoreConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.NumberMultiplicationConfiguration;
@@ -80,6 +81,8 @@ public interface Configuration extends ConfigurationFile {
     PerformanceDebugConfiguration getPerformanceDebug();
 
     AutoClaimConfiguration getAutoClaimConfiguration();
+
+    SalesNotificationConfiguration getSalesNotificationConfiguration();
 
     <T extends Enum<T>> CommandConfiguration<T> loadCommandConfiguration(String path, Class<T> enumClass);
 }

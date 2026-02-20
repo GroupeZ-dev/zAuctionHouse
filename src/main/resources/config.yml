@@ -298,6 +298,12 @@ item-lore:
     - ""
     - "#8c8c8c• #ff3535Your item is being purchased, you cannot retrieve it."
 
+  history-item:
+    - ""
+    - "<white>⌂ #92ffffBuyer#8c8c8c: #2CCED2%buyer%"
+    - "<white>☆ #92ffffPrice#8c8c8c: #2CCED2%price%"
+    - "<white>⌚ #92ffffDate#8c8c8c: #969696%date%"
+
   status:
     seller: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
     buyer: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"
@@ -420,6 +426,19 @@ auto-claim:
 
   # Delay in ticks before sending the notification about pending money
   notify-delay-ticks: 40
+
+  # The reason shown in the economy transaction when depositing money
+  # This is typically displayed in economy plugins or transaction logs
+  deposit-reason: "Claimed pending auction money"
+
+# Configuration for sales notification on player join
+# Notifies players about items they sold while offline
+sales-notification:
+  # If true, players will be notified about sales made while they were offline
+  enable: true
+
+  # Delay in ticks before sending the notification (20 ticks = 1 second)
+  delay-ticks: 60
 
 sort-items:
 

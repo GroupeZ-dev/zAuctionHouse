@@ -16,6 +16,7 @@ public enum Inventories {
     ADMIN_HISTORY_MAIN("admin-history-main"),
     ADMIN_LOGS("admin-logs"),
     ADMIN_TRANSACTIONS("admin-transactions"),
+    HISTORY("history"),
 
     ;
 

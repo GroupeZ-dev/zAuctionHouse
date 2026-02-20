@@ -9,6 +9,8 @@ import fr.maxlego08.zauctionhouse.api.storage.dto.LogDTO;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -65,5 +67,57 @@ public class LogRepository extends Repository {
         // Sort by created_at descending
         result.sort((a, b) -> b.created_at().compareTo(a.created_at()));
         return result;
+    }
+
+    /**
+     * Selects all unread purchase logs where the player is the seller (target_unique_id).
+     * These are sales made while the player was offline.
+     *
+     * @param sellerUniqueId the seller's UUID
+     * @return list of unread purchase logs
+     */
+    public List<LogDTO> selectUnreadSales(UUID sellerUniqueId) {
+        return select(LogDTO.class, schema -> schema
+                .where("target_unique_id", sellerUniqueId.toString())
+                .where("log_type", LogType.PURCHASE.name())
+                .whereNull("readed_at")
+                .orderByDesc("created_at"));
+    }
+
+    /**
+     * Selects all purchase logs where the player is the seller (target_unique_id).
+     * These are the player's sales history.
+     *
+     * @param sellerUniqueId the seller's UUID
+     * @return list of purchase logs for this seller
+     */
+    public List<LogDTO> selectSalesHistory(UUID sellerUniqueId) {
+        return select(LogDTO.class, schema -> schema
+                .where("target_unique_id", sellerUniqueId.toString())
+                .where("log_type", LogType.PURCHASE.name())
+                .orderByDesc("created_at"));
+    }
+
+    /**
+     * Marks the specified logs as read by setting readed_at to the current timestamp.
+     *
+     * @param logIds the IDs of the logs to mark as read
+     */
+    public void markAsRead(Collection<Integer> logIds) {
+        if (logIds == null || logIds.isEmpty()) return;
+
+        logIds.forEach(logId -> update(schema -> {
+            schema.where("id", logId);
+            schema.object("readed_at", new Date());
+        }));
+    }
+
+    /**
+     * Marks a single log as read.
+     *
+     * @param logId the ID of the log to mark as read
+     */
+    public void markAsRead(int logId) {
+        markAsRead(List.of(logId));
     }
 }

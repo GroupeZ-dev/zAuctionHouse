@@ -38,6 +38,7 @@ public enum Message {
     COMMAND_DESCRIPTION_AUCTION_ADMIN_CACHE_CLEAR("Clear player cache"),
     COMMAND_DESCRIPTION_AUCTION_ADMIN_CACHE_SHOW("Show player cache"),
     COMMAND_DESCRIPTION_AUCTION_CLAIM("Claim pending money from sales"),
+    COMMAND_DESCRIPTION_AUCTION_HISTORY("View your sales history"),
 
     SELL_ERROR_AIR("<error>Are you stupid ? You can’t sell air !"),
     SELL_ERROR_CHANGE("<error>The item in your hand has changed, sale cancelled."),
@@ -106,7 +107,10 @@ public enum Message {
     CLAIM_NO_PENDING("<error>You have no pending money to claim."),
     CLAIM_SUCCESS("<success>You have successfully claimed your pending money!"),
     CLAIM_ECONOMY_SUCCESS("<success>You received <white>%amount%<success> from <white>%economy%<success>."),
-    CLAIM_PENDING_NOTIFY("#e6fff3You have pending money to claim! Use <white>/ah claim<#e6fff3> to receive <white>%amount%<#e6fff3>.");
+    CLAIM_PENDING_NOTIFY("#e6fff3You have pending money to claim! Use <white>/ah claim<#e6fff3> to receive <white>%amount%<#e6fff3>."),
+
+    SALES_NOTIFICATION("<click:run_command:/ah history>#e6fff3While you were away, <white>%count%<#e6fff3> of your items were sold for a total of <white>%total%<#e6fff3>!",
+            "<click:run_command:/ah history>#8c8c8c• #2CCED2Click here<#92ffff> to view your sales history</click>");
 
     private AuctionPlugin plugin;
     private List<AuctionMessage> messages = new ArrayList<>();
