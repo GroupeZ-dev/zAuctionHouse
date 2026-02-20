@@ -29,7 +29,7 @@ public class ItemRepository extends Repository {
     public int create(UUID sellerUniqueId, ItemType itemType, BigDecimal price, long expiredAt, AuctionEconomy auctionEconomy) {
         var expiredAtDate = new Date(expiredAt);
         var serverName = this.plugin.getConfiguration().getServerName();
-        return insertSchema(schema -> {
+        return insertSync(schema -> {
             schema.string("item_type", itemType.name());
             schema.uuid("seller_unique_id", sellerUniqueId);
             schema.string("economy_name", auctionEconomy.getName());

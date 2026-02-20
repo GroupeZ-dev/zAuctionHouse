@@ -2,6 +2,7 @@ package fr.maxlego08.zauctionhouse.storage.repository.repositeries;
 
 import fr.maxlego08.sarah.DatabaseConnection;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
+import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.storage.Repository;
 import fr.maxlego08.zauctionhouse.api.storage.Tables;
 import fr.maxlego08.zauctionhouse.api.storage.dto.TransactionDTO;
@@ -18,8 +19,9 @@ public class TransactionRepository extends Repository {
         super(plugin, connection, Tables.TRANSACTIONS);
     }
 
-    public int create(UUID playerUniqueId, String economyName, BigDecimal moneyBefore, BigDecimal moneyAfter, BigDecimal value, TransactionStatus status) {
-        return insertSchema(schema -> {
+    public void create(Item item, UUID playerUniqueId, String economyName, BigDecimal moneyBefore, BigDecimal moneyAfter, BigDecimal value, TransactionStatus status) {
+        insert(schema -> {
+            schema.object("item_id", item.getId());
             schema.uuid("player_unique_id", playerUniqueId);
             schema.string("economy_name", economyName);
             schema.decimal("before", moneyBefore);

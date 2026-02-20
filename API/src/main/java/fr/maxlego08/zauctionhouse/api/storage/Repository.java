@@ -74,7 +74,7 @@ public abstract class Repository {
         }
     }
 
-    protected int insertSchema(Consumer<Schema> consumer) {
+    protected int insertSync(Consumer<Schema> consumer) {
         try {
             return SchemaBuilder.insert(getTableName(), consumer).execute(this.connection, this.logger);
         } catch (SQLException exception) {

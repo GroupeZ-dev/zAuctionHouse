@@ -21,6 +21,8 @@ import fr.maxlego08.zauctionhouse.api.services.AuctionExpireService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
+import fr.maxlego08.zauctionhouse.api.transaction.TransactionStatus;
+import fr.maxlego08.zauctionhouse.api.utils.Base64ItemStack;
 import fr.maxlego08.zauctionhouse.api.utils.IntArrayList;
 import fr.maxlego08.zauctionhouse.api.utils.IntList;
 import fr.maxlego08.zauctionhouse.buttons.list.ListedItemsButton;
@@ -40,6 +42,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class ZAuctionManager extends ZUtils implements AuctionManager {
 
@@ -632,6 +635,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var storageManager = this.plugin.getStorageManager();
         var configuration = this.plugin.getConfiguration();
         var cache = this.getCache(player);
+        var economyName = auctionEconomy.getName();
 
         String items = auctionItem.getItemsAsString();
         var itemsDisplay = auctionItem.getItemDisplay();
@@ -640,7 +644,24 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         auctionEconomy.withdraw(player, price, args(auctionEconomy.getWithdrawReason(), "%seller%", auctionItem.getSellerName(), "%items%", items));
 
         // On donne l'argent
-        auctionEconomy.deposit(seller, price, args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items));
+        TransactionStatus transactionStatus;
+        if ((!seller.isOnline() && auctionEconomy.mustBeOnline()) || !auctionEconomy.isAutoClaim()) {
+
+            transactionStatus = TransactionStatus.PENDING;
+        } else {
+            
+            transactionStatus = TransactionStatus.RETRIEVED;
+            auctionEconomy.deposit(seller, price, args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items));
+        }
+
+        // Créer les transactions
+        auctionEconomy.get(player).thenAccept(buyerBalance -> {
+            storageManager.createTransaction(auctionItem, player.getUniqueId(), economyName, buyerBalance.add(price), buyerBalance, price.negate(), TransactionStatus.RETRIEVED);
+        });
+
+        auctionEconomy.get(seller).thenAccept(sellerBalance -> {
+            storageManager.createTransaction(auctionItem, seller.getUniqueId(), economyName, sellerBalance.subtract(price), sellerBalance, price, transactionStatus);
+        });
 
         if (seller.isOnline()) {
             message(this.plugin, seller.getPlayer(), Message.ITEM_BOUGHT_SELLER, "%items%", itemsDisplay, "%price%", auctionItem.getFormattedPrice(), "%seller%", auctionItem.getSellerName(), "%buyer%", player.getName());
@@ -763,10 +784,17 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     private void logItemAction(LogType logType, Item item, Player player, UUID targetUniqueId, String additionalData) {
         var storageManager = this.plugin.getStorageManager();
         var economy = item.getAuctionEconomy();
-        var itemStack = item instanceof AuctionItem auctionItem ? auctionItem.getItemStacks() : null;
         var economyName = economy == null ? null : economy.getName();
 
-        storageManager.log(logType, item.getId(), player, targetUniqueId, item.getPrice(), economyName, additionalData);
+        String encodedItemStack = null;
+        if (item instanceof AuctionItem auctionItem) {
+            var itemStacks = auctionItem.getItemStacks();
+            if (itemStacks != null && !itemStacks.isEmpty()) {
+                encodedItemStack = itemStacks.stream().map(Base64ItemStack::encode).collect(Collectors.joining(";"));
+            }
+        }
+
+        storageManager.log(logType, item.getId(), player, targetUniqueId, encodedItemStack, item.getPrice(), economyName, additionalData);
     }
 
     private void callEvent(AuctionEvent auctionEvent) {

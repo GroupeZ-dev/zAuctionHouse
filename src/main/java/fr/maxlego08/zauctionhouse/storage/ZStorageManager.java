@@ -12,13 +12,10 @@ import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.storage.Repository;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
+import fr.maxlego08.zauctionhouse.api.transaction.TransactionStatus;
 import fr.maxlego08.zauctionhouse.storage.migrations.*;
 import fr.maxlego08.zauctionhouse.storage.repository.Repositories;
-import fr.maxlego08.zauctionhouse.storage.repository.repositeries.AuctionItemRepository;
-import fr.maxlego08.zauctionhouse.storage.repository.repositeries.ItemRepository;
-import fr.maxlego08.zauctionhouse.storage.repository.repositeries.LogRepository;
-import fr.maxlego08.zauctionhouse.storage.repository.repositeries.PlayerRepository;
-import fr.maxlego08.zauctionhouse.storage.repository.repositeries.TransactionRepository;
+import fr.maxlego08.zauctionhouse.storage.repository.repositeries.*;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -156,8 +153,13 @@ public class ZStorageManager implements StorageManager {
     }
 
     @Override
-    public void log(LogType logType, int itemId, Player player, UUID targetUniqueId, BigDecimal price, String economyName, String additionalData) {
-        async(() -> with(LogRepository.class).createLog(logType, itemId, player.getUniqueId(), targetUniqueId, price, economyName, additionalData));
+    public void log(LogType logType, int itemId, Player player, UUID targetUniqueId, String itemstack, BigDecimal price, String economyName, String additionalData) {
+        async(() -> with(LogRepository.class).createLog(logType, itemId, player.getUniqueId(), targetUniqueId, itemstack, price, economyName, additionalData));
+    }
+
+    @Override
+    public void createTransaction(Item item, UUID playerUniqueId, String economyName, BigDecimal before, BigDecimal after, BigDecimal value, TransactionStatus status) {
+        async(() -> with(TransactionRepository.class).create(item, playerUniqueId, economyName, before, after, value, status));
     }
 
     @Override

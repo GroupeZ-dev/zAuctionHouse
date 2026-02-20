@@ -119,6 +119,8 @@ public interface AuctionEconomy {
      */
     boolean isAutoClaim();
 
+    boolean mustBeOnline();
+
     /**
      * Retrieves the maximum price allowed for the specified auction item type.
      *

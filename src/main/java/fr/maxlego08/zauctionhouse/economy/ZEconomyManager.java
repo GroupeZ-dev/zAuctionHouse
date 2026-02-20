@@ -17,16 +17,7 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class ZEconomyManager implements EconomyManager {
 
@@ -283,6 +274,7 @@ public class ZEconomyManager implements EconomyManager {
         }
 
         boolean autoClaim = accessor.getBoolean("auto-claim", true);
+        boolean mustBeOnline = accessor.getBoolean("must-be-online", false);
 
         var priceFormatName = accessor.getString("price-format", PriceFormat.PRICE_RAW.name());
         if (priceFormatName == null) {
@@ -344,7 +336,7 @@ public class ZEconomyManager implements EconomyManager {
             minPrices = loadPrices(accessor.getObject("min-prices"), "min-prices for economy '" + name + "'");
         }
 
-        var auctionEconomy = new ZAuctionEconomy(this.plugin, currencyProvider, name, displayName, format, symbol, permission, depositReason, withdrawReason, priceFormat, minPrices, maxPrices, autoClaim);
+        var auctionEconomy = new ZAuctionEconomy(this.plugin, currencyProvider, name, displayName, format, symbol, permission, depositReason, withdrawReason, priceFormat, minPrices, maxPrices, autoClaim, mustBeOnline);
         this.economies.add(auctionEconomy);
         this.plugin.getLogger().info("Economy '" + name + "' loaded successfully!");
     }

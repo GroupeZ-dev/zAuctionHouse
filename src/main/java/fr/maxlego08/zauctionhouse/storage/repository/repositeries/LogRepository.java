@@ -20,12 +20,13 @@ public class LogRepository extends Repository {
         super(plugin, connection, Tables.LOGS);
     }
 
-    public void createLog(LogType logType, int itemId, UUID playerUniqueId, UUID targetUniqueId, BigDecimal price, String economyName, String additionalData) {
-        insertSchema(schema -> {
+    public void createLog(LogType logType, int itemId, UUID playerUniqueId, UUID targetUniqueId, String itemstack, BigDecimal price, String economyName, String additionalData) {
+        insert(schema -> {
             schema.string("log_type", logType.name());
             schema.object("item_id", itemId);
             schema.uuid("player_unique_id", playerUniqueId);
             if (targetUniqueId != null) schema.uuid("target_unique_id", targetUniqueId);
+            if (itemstack != null) schema.string("itemstack", itemstack);
             schema.decimal("price", price == null ? BigDecimal.ZERO : price);
             if (economyName != null) schema.string("economy_name", economyName);
             if (additionalData != null) schema.string("additional_data", additionalData);

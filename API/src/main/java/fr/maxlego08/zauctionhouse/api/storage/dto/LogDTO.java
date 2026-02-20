@@ -7,5 +7,5 @@ import java.util.Date;
 import java.util.UUID;
 
 public record LogDTO(int id, LogType log_type, int item_id, UUID player_unique_id, UUID target_unique_id,
-                     BigDecimal price, String economy_name, String additional_data, Date created_at, Date updated_at) {
+                     String itemstack, BigDecimal price, String economy_name, String additional_data, Date created_at, Date updated_at) {
 }

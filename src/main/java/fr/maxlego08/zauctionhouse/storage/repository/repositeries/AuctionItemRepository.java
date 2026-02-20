@@ -29,7 +29,7 @@ public class AuctionItemRepository extends Repository {
 
     public AuctionItem create(UUID sellerUniqueId, String sellerName, int itemId, BigDecimal price, long expiredAt, List<ItemStack> itemStacks, AuctionEconomy auctionEconomy) {
         for (ItemStack itemStack : itemStacks) {
-            insertSchema(schema -> {
+            insert(schema -> {
                 schema.object("item_id", itemId);
                 schema.string("itemstack", Base64ItemStack.encode(itemStack));
             });

@@ -5,6 +5,7 @@ import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.log.LogType;
+import fr.maxlego08.zauctionhouse.api.transaction.TransactionStatus;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -48,10 +49,10 @@ public interface StorageManager {
     /**
      * Creates and persists a new auction item record.
      *
-     * @param seller        player listing the item
-     * @param price         price of the listing
-     * @param expiredAt     expiration timestamp in milliseconds
-     * @param itemStacks    item stacks being sold
+     * @param seller         player listing the item
+     * @param price          price of the listing
+     * @param expiredAt      expiration timestamp in milliseconds
+     * @param itemStacks     item stacks being sold
      * @param auctionEconomy economy to use for the listing
      * @return future containing the created {@link AuctionItem}
      */
@@ -110,15 +111,27 @@ public interface StorageManager {
     /**
      * Records an audit log entry describing an action performed on an item.
      *
-     * @param logType       type of log entry to create
-     * @param itemId        identifier of the affected item
-     * @param player        actor performing the action
+     * @param logType        type of log entry to create
+     * @param itemId         identifier of the affected item
+     * @param player         actor performing the action
      * @param targetUniqueId secondary player involved, if any
-     * @param price         price related to the action
-     * @param economyName   economy used for the transaction
+     * @param itemstack      Base64-encoded itemstack data
+     * @param price          price related to the action
+     * @param economyName    economy used for the transaction
      * @param additionalData extra serialized data for the log entry
      */
-    void log(LogType logType, int itemId, Player player, UUID targetUniqueId, BigDecimal price, String economyName, String additionalData);
+    void log(LogType logType, int itemId, Player player, UUID targetUniqueId, String itemstack, BigDecimal price, String economyName, String additionalData);
+
+    /**
+     * Creates a transaction record for economy operations.
+     *
+     * @param playerUniqueId player's UUID
+     * @param economyName    economy used for the transaction
+     * @param before         balance before the transaction
+     * @param after          balance after the transaction
+     * @param value          amount changed
+     */
+    void createTransaction(Item item, UUID playerUniqueId, String economyName, BigDecimal before, BigDecimal after, BigDecimal value, TransactionStatus status);
 
     /**
      * Retrieves a single item from storage by its identifier.
@@ -127,6 +140,7 @@ public interface StorageManager {
      * @return future containing the item when found or {@code null} otherwise
      */
     CompletableFuture<Item> selectItem(int id);
+
 
     CompletableFuture<UUID> findUniqueId(String playerName);
 }

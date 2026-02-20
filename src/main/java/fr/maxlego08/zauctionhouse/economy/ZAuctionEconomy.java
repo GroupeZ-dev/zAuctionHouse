@@ -27,8 +27,9 @@ public class ZAuctionEconomy implements AuctionEconomy {
     private final EnumMap<ItemType, BigDecimal> minPrices;
     private final EnumMap<ItemType, BigDecimal> maxPrices;
     private final boolean autoClaim;
+    private final boolean mustBeOnline;
 
-    public ZAuctionEconomy(AuctionPlugin plugin, CurrencyProvider currencyProvider, String name, String displayName, String format, String symbol, String permission, String depositReason, String withdrawReason, PriceFormat priceFormat, EnumMap<ItemType, BigDecimal> minPrices, EnumMap<ItemType, BigDecimal> maxPrices, boolean autoClaim) {
+    public ZAuctionEconomy(AuctionPlugin plugin, CurrencyProvider currencyProvider, String name, String displayName, String format, String symbol, String permission, String depositReason, String withdrawReason, PriceFormat priceFormat, EnumMap<ItemType, BigDecimal> minPrices, EnumMap<ItemType, BigDecimal> maxPrices, boolean autoClaim, boolean mustBeOnline) {
         this.plugin = plugin;
         this.currencyProvider = currencyProvider;
         this.name = name;
@@ -42,6 +43,7 @@ public class ZAuctionEconomy implements AuctionEconomy {
         this.minPrices = minPrices;
         this.maxPrices = maxPrices;
         this.autoClaim = autoClaim;
+        this.mustBeOnline = mustBeOnline;
     }
 
     public AuctionPlugin getPlugin() {
@@ -116,6 +118,11 @@ public class ZAuctionEconomy implements AuctionEconomy {
     @Override
     public boolean isAutoClaim() {
         return this.autoClaim;
+    }
+
+    @Override
+    public boolean mustBeOnline() {
+        return this.mustBeOnline;
     }
 
     @Override

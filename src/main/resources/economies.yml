@@ -7,6 +7,8 @@ economies:
     symbol: "v"
     # If true, money is delivered immediately. When false, players must run a claim command for pending balances.
     auto-claim: true
+    # Allows giving the money to the player only if he is online, otherwise he should recover the pending money.
+    must-be-online: false
     # permission: "zauctionhouse.economy.vault"
     withdraw-reason: "Purchase of %items% (zAuctionHouse)"
     deposit-reason: "Sale of %items% (zAuctionHouse)"
