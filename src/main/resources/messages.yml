@@ -24,6 +24,7 @@ command-description-auction-admin-cache: "Manage player cache"
 command-description-auction-admin-cache-set: "Set a value in player cache"
 command-description-auction-admin-cache-clear: "Clear player cache"
 command-description-auction-admin-cache-show: "Show player cache"
+command-description-auction-claim: "Claim pending money from sales"
 
 sell-error-air: "<error>Are you stupid ? You can't sell air !"
 sell-error-change: "<error>The item in your hand has changed, sale cancelled."
@@ -89,3 +90,8 @@ admin-cache-invalid-key: "<error>Invalid cache key <white>%key%<error>. Use tab 
 admin-cache-invalid-value: "<error>Invalid value <white>%value%<error> for key <white>%key%<error>."
 admin-cache-key-not-settable: "<error>Cache key <white>%key%<error> cannot be set from command."
 admin-cache-player-not-online: "<error>Player <white>%player%<error> is not online."
+
+claim-no-pending: "<error>You have no pending money to claim."
+claim-success: "<success>You have successfully claimed your pending money!"
+claim-economy-success: "<success>You received <white>%amount%<success> from <white>%economy%<success>."
+claim-pending-notify: "#e6fff3You have pending money to claim! Use <white>/ah claim<#e6fff3> to receive <white>%amount%<#e6fff3>."

@@ -47,7 +47,11 @@ public enum PlayerCacheKey {
     ADMIN_TRANSACTIONS_DATA(new TypeToken<List<TransactionDTO>>() {}, ArrayList::new),
     ADMIN_TRANSACTIONS_LOADING(new TypeToken<Boolean>() {}, () -> false),
     ADMIN_TRANSACTIONS_STATUS_FILTER(new TypeToken<TransactionStatus>() {}, () -> null),
-    ADMIN_TRANSACTIONS_DATE_FILTER(new TypeToken<DateFilter>() {}, () -> DateFilter.ALL)
+    ADMIN_TRANSACTIONS_DATE_FILTER(new TypeToken<DateFilter>() {}, () -> DateFilter.ALL),
+
+    // Pending Money (Claim)
+    PENDING_MONEY_DATA(new TypeToken<java.util.Map<String, java.math.BigDecimal>>() {}, java.util.HashMap::new),
+    PENDING_MONEY_LOADING(new TypeToken<Boolean>() {}, () -> false)
     ;
 
     private final TypeToken<?> type;

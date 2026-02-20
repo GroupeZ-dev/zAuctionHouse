@@ -16,7 +16,11 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onConnect(PlayerJoinEvent event) {
-        this.plugin.getStorageManager().upsertPlayer(event.getPlayer());
+        var player = event.getPlayer();
+        this.plugin.getStorageManager().upsertPlayer(player);
+
+        // Handle pending money claim on join
+        this.plugin.getAuctionManager().getClaimService().handlePlayerJoin(player);
     }
 
     @EventHandler

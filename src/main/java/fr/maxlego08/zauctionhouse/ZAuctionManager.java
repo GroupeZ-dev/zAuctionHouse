@@ -17,6 +17,7 @@ import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
+import fr.maxlego08.zauctionhouse.api.services.AuctionClaimService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionExpireService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
@@ -27,6 +28,7 @@ import fr.maxlego08.zauctionhouse.api.utils.IntArrayList;
 import fr.maxlego08.zauctionhouse.api.utils.IntList;
 import fr.maxlego08.zauctionhouse.buttons.list.ListedItemsButton;
 import fr.maxlego08.zauctionhouse.discord.DiscordWebhookService;
+import fr.maxlego08.zauctionhouse.services.ClaimService;
 import fr.maxlego08.zauctionhouse.services.ExpireService;
 import fr.maxlego08.zauctionhouse.services.PurchaseService;
 import fr.maxlego08.zauctionhouse.services.RemoveService;
@@ -51,6 +53,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     private final AuctionSellService auctionSellService;
     private final AuctionRemoveService auctionRemoveService;
     private final AuctionExpireService auctionExpireService;
+    private final AuctionClaimService auctionClaimService;
     private final PerformanceDebug performanceDebug;
 
     private final Map<Player, PlayerCache> caches = new ConcurrentHashMap<>();
@@ -66,6 +69,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         this.auctionSellService = new SellService(plugin, this);
         this.auctionRemoveService = new RemoveService(plugin);
         this.auctionExpireService = new ExpireService(plugin, this);
+        this.auctionClaimService = new ClaimService(plugin);
         this.performanceDebug = new PerformanceDebug(plugin);
 
         for (StorageType value : StorageType.values()) {
@@ -171,6 +175,11 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     @Override
     public AuctionExpireService getExpireService() {
         return this.auctionExpireService;
+    }
+
+    @Override
+    public AuctionClaimService getClaimService() {
+        return this.auctionClaimService;
     }
 
     @Override

@@ -401,6 +401,26 @@ action:
     open-inventory: true
 
 # Système de tri
+# Configuration for automatic money claiming
+# When a player sells an item and the buyer is offline, the money is stored as "pending"
+# This configuration controls how pending money is handled
+auto-claim:
+  # If true, pending money will be automatically given to the player when they join
+  enable: false
+
+  # Delay in ticks before auto-claiming on join (20 ticks = 1 second)
+  # Set to 0 for immediate claim
+  delay-ticks: 20
+
+  # If true, a message will be sent when money is auto-claimed
+  notify-player: true
+
+  # If auto-claim is disabled, this option will notify the player about pending money on join
+  notify-pending: true
+
+  # Delay in ticks before sending the notification about pending money
+  notify-delay-ticks: 40
+
 sort-items:
 
   # Tri par défaut

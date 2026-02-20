@@ -6,6 +6,7 @@ import fr.maxlego08.zauctionhouse.api.configuration.Configuration;
 import fr.maxlego08.zauctionhouse.api.configuration.commands.CommandArgumentConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.commands.CommandConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ActionConfiguration;
+import fr.maxlego08.zauctionhouse.api.configuration.records.AutoClaimConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ExpirationConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ItemDisplayConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ItemLoreConfiguration;
@@ -50,6 +51,7 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     private SpecialItemsConfiguration specialItemsConfiguration;
     private ItemDisplayConfiguration itemDisplayConfiguration;
     private PerformanceDebugConfiguration performanceDebugConfiguration;
+    private AutoClaimConfiguration autoClaimConfiguration;
 
     public MainConfiguration(AuctionPlugin plugin) {
         this.plugin = plugin;
@@ -75,6 +77,7 @@ public class MainConfiguration extends YamlLoader implements Configuration {
         this.specialItemsConfiguration = SpecialItemsConfiguration.of(plugin, config);
         this.itemDisplayConfiguration = ItemDisplayConfiguration.of(plugin, config);
         this.performanceDebugConfiguration = PerformanceDebugConfiguration.of(plugin, config);
+        this.autoClaimConfiguration = AutoClaimConfiguration.of(plugin, config);
         this.dateFormat = new SimpleDateFormat(config.getString("date-format", "dd/MM/yyyy HH:mm:ss"));
     }
 
@@ -176,6 +179,11 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     @Override
     public PerformanceDebugConfiguration getPerformanceDebug() {
         return this.performanceDebugConfiguration;
+    }
+
+    @Override
+    public AutoClaimConfiguration getAutoClaimConfiguration() {
+        return this.autoClaimConfiguration;
     }
 
     @Override

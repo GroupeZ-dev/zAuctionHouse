@@ -37,6 +37,7 @@ public enum Message {
     COMMAND_DESCRIPTION_AUCTION_ADMIN_CACHE_SET("Set a value in player cache"),
     COMMAND_DESCRIPTION_AUCTION_ADMIN_CACHE_CLEAR("Clear player cache"),
     COMMAND_DESCRIPTION_AUCTION_ADMIN_CACHE_SHOW("Show player cache"),
+    COMMAND_DESCRIPTION_AUCTION_CLAIM("Claim pending money from sales"),
 
     SELL_ERROR_AIR("<error>Are you stupid ? You can’t sell air !"),
     SELL_ERROR_CHANGE("<error>The item in your hand has changed, sale cancelled."),
@@ -100,7 +101,12 @@ public enum Message {
     ADMIN_CACHE_INVALID_KEY("<error>Invalid cache key <white>%key%<error>. Use tab completion for valid keys."),
     ADMIN_CACHE_INVALID_VALUE("<error>Invalid value <white>%value%<error> for key <white>%key%<error>."),
     ADMIN_CACHE_KEY_NOT_SETTABLE("<error>Cache key <white>%key%<error> cannot be set from command."),
-    ADMIN_CACHE_PLAYER_NOT_ONLINE("<error>Player <white>%player%<error> is not online.");
+    ADMIN_CACHE_PLAYER_NOT_ONLINE("<error>Player <white>%player%<error> is not online."),
+
+    CLAIM_NO_PENDING("<error>You have no pending money to claim."),
+    CLAIM_SUCCESS("<success>You have successfully claimed your pending money!"),
+    CLAIM_ECONOMY_SUCCESS("<success>You received <white>%amount%<success> from <white>%economy%<success>."),
+    CLAIM_PENDING_NOTIFY("#e6fff3You have pending money to claim! Use <white>/ah claim<#e6fff3> to receive <white>%amount%<#e6fff3>.");
 
     private AuctionPlugin plugin;
     private List<AuctionMessage> messages = new ArrayList<>();

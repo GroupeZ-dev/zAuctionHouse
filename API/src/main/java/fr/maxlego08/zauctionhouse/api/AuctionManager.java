@@ -4,6 +4,7 @@ import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
+import fr.maxlego08.zauctionhouse.api.services.AuctionClaimService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionExpireService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
@@ -69,6 +70,11 @@ public interface AuctionManager {
      * @return service that moves items into expired storage and notifies owners when applicable
      */
     AuctionExpireService getExpireService();
+
+    /**
+     * @return service responsible for claiming pending money from transactions
+     */
+    AuctionClaimService getClaimService();
 
     /**
      * Retrieves every item stored under the given bucket (listed, expired, purchased, etc.).
