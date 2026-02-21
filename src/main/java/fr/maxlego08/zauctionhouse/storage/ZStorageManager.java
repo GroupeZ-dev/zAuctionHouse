@@ -12,22 +12,25 @@ import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.storage.Repository;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
+import fr.maxlego08.zauctionhouse.api.storage.dto.LogDTO;
+import fr.maxlego08.zauctionhouse.api.storage.dto.PlayerDTO;
 import fr.maxlego08.zauctionhouse.api.transaction.TransactionStatus;
 import fr.maxlego08.zauctionhouse.storage.migrations.*;
 import fr.maxlego08.zauctionhouse.storage.repository.Repositories;
 import fr.maxlego08.zauctionhouse.storage.repository.repositeries.*;
+import fr.maxlego08.zauctionhouse.utils.ItemLoaderUtils;
+import fr.maxlego08.zauctionhouse.utils.PerformanceDebug;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
-public class ZStorageManager implements StorageManager {
+public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
 
     private final AuctionPlugin plugin;
     private AuctionLoader auctionLoader;
@@ -183,7 +186,7 @@ public class ZStorageManager implements StorageManager {
                 case AUCTION -> {
 
                     var auctionItems = with(AuctionItemRepository.class).select(List.of(String.valueOf(dto.id())));
-                    var auctionItem = this.auctionLoader.createAuctionItem(dto, sellerName, auctionItems, optionalAuctionEconomy.get());
+                    var auctionItem = createAuctionItem(this.plugin, dto, sellerName, auctionItems, optionalAuctionEconomy.get());
 
                     if (dto.buyer_unique_id() != null) {
                         auctionItem.setBuyer(dto.buyer_unique_id(), with(PlayerRepository.class).select(dto.seller_unique_id()));
@@ -203,5 +206,33 @@ public class ZStorageManager implements StorageManager {
     @Override
     public CompletableFuture<UUID> findUniqueId(String playerName) {
         return CompletableFuture.supplyAsync(() -> this.with(PlayerRepository.class).selectByName(playerName));
+    }
+
+    @Override
+    public String getPlayerName(UUID uuid) {
+        return this.with(PlayerRepository.class).select(uuid);
+    }
+
+    @Override
+    public List<LogDTO> selectSalesHistory(UUID playerUniqueId) {
+        return this.plugin.getStorageManager().with(LogRepository.class).selectSalesHistory(playerUniqueId);
+    }
+
+    @Override
+    public List<Item> selectItems(List<Integer> integers) {
+
+        var items = with(ItemRepository.class).select(integers.stream().map(String::valueOf).toList());
+        var uuids = items.stream().map(e -> List.of(e.seller_unique_id(), e.buyer_unique_id())).flatMap(List::stream).filter(Objects::nonNull).map(UUID::toString).distinct().toList();
+        var playerNames = selectPlayers(uuids);
+
+        var loadItems = new ArrayList<Item>();
+        var performanceDebug = new PerformanceDebug(plugin);
+        createItems(plugin, playerNames, items, performanceDebug, (a, item) -> loadItems.add(item));
+        return loadItems;
+    }
+
+    @Override
+    public Map<UUID, String> selectPlayers(List<String> uuids) {
+        return with(PlayerRepository.class).select(uuids).stream().collect(Collectors.toMap(PlayerDTO::unique_id, PlayerDTO::name));
     }
 }

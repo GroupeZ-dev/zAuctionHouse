@@ -8,13 +8,7 @@ import fr.maxlego08.zauctionhouse.api.storage.Tables;
 import fr.maxlego08.zauctionhouse.api.storage.dto.LogDTO;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class LogRepository extends Repository {
 
@@ -77,11 +71,7 @@ public class LogRepository extends Repository {
      * @return list of unread purchase logs
      */
     public List<LogDTO> selectUnreadSales(UUID sellerUniqueId) {
-        return select(LogDTO.class, schema -> schema
-                .where("target_unique_id", sellerUniqueId.toString())
-                .where("log_type", LogType.PURCHASE.name())
-                .whereNull("readed_at")
-                .orderByDesc("created_at"));
+        return select(LogDTO.class, schema -> schema.where("target_unique_id", sellerUniqueId.toString()).where("log_type", LogType.PURCHASE.name()).whereNull("readed_at").orderByDesc("created_at"));
     }
 
     /**
@@ -92,10 +82,7 @@ public class LogRepository extends Repository {
      * @return list of purchase logs for this seller
      */
     public List<LogDTO> selectSalesHistory(UUID sellerUniqueId) {
-        return select(LogDTO.class, schema -> schema
-                .where("target_unique_id", sellerUniqueId.toString())
-                .where("log_type", LogType.PURCHASE.name())
-                .orderByDesc("created_at"));
+        return select(LogDTO.class, schema -> schema.where("target_unique_id", sellerUniqueId.toString()).where("log_type", LogType.PURCHASE.name()).orderByDesc("created_at"));
     }
 
     /**

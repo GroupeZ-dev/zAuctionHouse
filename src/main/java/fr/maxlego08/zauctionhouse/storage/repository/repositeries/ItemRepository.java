@@ -78,4 +78,8 @@ public class ItemRepository extends Repository {
             }
         };
     }
+
+    public List<ItemDTO> select(List<String> ids) {
+        return select(ItemDTO.class, schema -> schema.whereIn("id", ids));
+    }
 }

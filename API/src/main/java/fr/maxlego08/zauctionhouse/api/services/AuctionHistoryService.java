@@ -1,5 +1,6 @@
 package fr.maxlego08.zauctionhouse.api.services;
 
+import fr.maxlego08.zauctionhouse.api.history.ItemLog;
 import fr.maxlego08.zauctionhouse.api.storage.dto.LogDTO;
 import org.bukkit.entity.Player;
 
@@ -18,7 +19,7 @@ public interface AuctionHistoryService {
      * @param playerUniqueId the player's UUID
      * @return a future containing the list of sales logs
      */
-    CompletableFuture<List<LogDTO>> getSalesHistory(UUID playerUniqueId);
+    CompletableFuture<List<ItemLog>> getSalesHistory(UUID playerUniqueId);
 
     /**
      * Gets unread sales for a player (sales made while they were offline).

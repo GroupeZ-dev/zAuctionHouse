@@ -11,19 +11,11 @@ import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.buttons.AuctionItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.ShowButton;
-import fr.maxlego08.zauctionhouse.buttons.admin.AdminExpiredItemsButton;
-import fr.maxlego08.zauctionhouse.buttons.admin.AdminLogsButton;
-import fr.maxlego08.zauctionhouse.buttons.admin.AdminOwnedItemsButton;
-import fr.maxlego08.zauctionhouse.buttons.admin.AdminPurchasedItemsButton;
-import fr.maxlego08.zauctionhouse.buttons.admin.AdminTransactionsButton;
-import fr.maxlego08.zauctionhouse.buttons.admin.LogDateFilterButton;
-import fr.maxlego08.zauctionhouse.buttons.admin.LogTypeFilterButton;
-import fr.maxlego08.zauctionhouse.buttons.admin.TransactionDateFilterButton;
-import fr.maxlego08.zauctionhouse.buttons.admin.TransactionStatusFilterButton;
+import fr.maxlego08.zauctionhouse.buttons.admin.*;
 import fr.maxlego08.zauctionhouse.buttons.admin.history.*;
 import fr.maxlego08.zauctionhouse.buttons.confirm.ConfirmPurchaseButton;
-import fr.maxlego08.zauctionhouse.buttons.history.HistoryItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.confirm.ConfirmRemoveListedButton;
+import fr.maxlego08.zauctionhouse.buttons.history.HistoryItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.inventory.ExpiredInventoryButton;
 import fr.maxlego08.zauctionhouse.buttons.inventory.OwnedInventoryButton;
 import fr.maxlego08.zauctionhouse.buttons.inventory.PurchasedInventoryButton;
@@ -35,6 +27,7 @@ import fr.maxlego08.zauctionhouse.buttons.sell.SellBuyButton;
 import fr.maxlego08.zauctionhouse.buttons.sell.SellCancelButton;
 import fr.maxlego08.zauctionhouse.buttons.sell.SellSlotButton;
 import fr.maxlego08.zauctionhouse.loader.buttons.CategoryButtonLoader;
+import fr.maxlego08.zauctionhouse.loader.buttons.LoadingSlotLoader;
 import fr.maxlego08.zauctionhouse.loader.buttons.SortLoader;
 import fr.maxlego08.zauctionhouse.utils.PerformanceDebug;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
@@ -133,7 +126,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new NoneLoader(this.plugin, SellSlotButton.class, "ZAUCTIONHOUSE_SELL_SLOT"));
         this.buttonManager.register(new NoneLoader(this.plugin, SellBuyButton.class, "ZAUCTIONHOUSE_SELL_BUY"));
         this.buttonManager.register(new NoneLoader(this.plugin, SellCancelButton.class, "ZAUCTIONHOUSE_SELL_CANCEL"));
-        this.buttonManager.register(new NoneLoader(this.plugin, HistoryItemsButton.class, "ZAUCTIONHOUSE_HISTORY_ITEMS"));
+        this.buttonManager.register(new LoadingSlotLoader(this.plugin, HistoryItemsButton.class, "ZAUCTIONHOUSE_HISTORY_ITEMS"));
 
         // Admin
         this.buttonManager.register(new NoneLoader(this.plugin, AdminOwnedItemsButton.class, "ZAUCTIONHOUSE_ADMIN_OWNED_ITEMS"));

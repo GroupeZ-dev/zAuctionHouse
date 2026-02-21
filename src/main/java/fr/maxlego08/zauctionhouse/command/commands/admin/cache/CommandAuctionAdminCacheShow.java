@@ -46,7 +46,7 @@ public class CommandAuctionAdminCacheShow extends VCommand {
             if (cache.has(key)) {
                 hasEntry = true;
                 String valueStr = formatValue(cache.get(key));
-                message(this.plugin, this.sender, Message.ADMIN_CACHE_SHOW_ENTRY, "%key%", key.name(), "%value%", valueStr);
+                message(this.plugin, this.sender, Message.ADMIN_CACHE_SHOW_ENTRY, "%key%", key.name(), "%value%", valueStr.length() > 75 ? valueStr.substring(0, 75) + "..." : valueStr);
             }
         }
 
@@ -58,9 +58,11 @@ public class CommandAuctionAdminCacheShow extends VCommand {
     }
 
     private String formatValue(Object value) {
-        if (value == null) return "not set";
-        if (value instanceof IntList intList) return "IntList (size=" + intList.size() + ")";
-        if (value instanceof Item item) return item.getItemDisplay();
-        return value.toString();
+        return switch (value) {
+            case null -> "not set";
+            case IntList intList -> "IntList (size=" + intList.size() + ")";
+            case Item item -> item.getItemDisplay();
+            default -> value.toString();
+        };
     }
 }

@@ -9,11 +9,15 @@ patterns:
 items:
   items:
     type: ZAUCTIONHOUSE_HISTORY_ITEMS
+    loading-slot: 22
     slots:
       - 9-17
       - 18-26
       - 27-35
       - 36-44
+    item:
+      material: BARRIER
+      name: "&cLoading..."
     else:
       slots:
         - 22

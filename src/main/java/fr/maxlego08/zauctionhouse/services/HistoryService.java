@@ -2,6 +2,7 @@ package fr.maxlego08.zauctionhouse.services;
 
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
+import fr.maxlego08.zauctionhouse.api.history.ItemLog;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionHistoryService;
@@ -10,6 +11,7 @@ import fr.maxlego08.zauctionhouse.storage.repository.repositeries.LogRepository;
 import org.bukkit.entity.Player;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -23,10 +25,23 @@ public class HistoryService extends AuctionService implements AuctionHistoryServ
     }
 
     @Override
-    public CompletableFuture<List<LogDTO>> getSalesHistory(UUID playerUniqueId) {
+    public CompletableFuture<List<ItemLog>> getSalesHistory(UUID playerUniqueId) {
+
+        var storageManager = this.plugin.getStorageManager();
+        var economyManager = this.plugin.getEconomyManager();
+
         return CompletableFuture.supplyAsync(() -> {
-            var repository = this.plugin.getStorageManager().with(LogRepository.class);
-            return repository.selectSalesHistory(playerUniqueId);
+
+            var logs = storageManager.selectSalesHistory(playerUniqueId);
+            var items = storageManager.selectItems(logs.stream().map(LogDTO::item_id).toList());
+
+            List<ItemLog> itemLogs = new ArrayList<>();
+            logs.forEach(dto -> {
+                var optional = items.stream().filter(e -> e.getId() == dto.item_id()).findFirst();
+                optional.ifPresentOrElse(item -> itemLogs.add(new ItemLog(dto, item)), () -> plugin.getLogger().warning("Item not found for log ID: " + dto.id()));
+            });
+
+            return itemLogs;
         }, this.plugin.getExecutorService());
     }
 
@@ -60,9 +75,7 @@ public class HistoryService extends AuctionService implements AuctionHistoryServ
             }
 
             // Calculate total earned
-            BigDecimal totalEarned = unreadSales.stream()
-                    .map(LogDTO::price)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalEarned = unreadSales.stream().map(LogDTO::price).reduce(BigDecimal.ZERO, BigDecimal::add);
 
             int salesCount = unreadSales.size();
 
@@ -77,9 +90,7 @@ public class HistoryService extends AuctionService implements AuctionHistoryServ
                     // Format the total using the first economy found, or just the number
                     String formattedTotal = formatTotalEarned(unreadSales, totalEarned);
 
-                    message(this.plugin, player, Message.SALES_NOTIFICATION,
-                            "%count%", String.valueOf(salesCount),
-                            "%total%", formattedTotal);
+                    message(this.plugin, player, Message.SALES_NOTIFICATION, "%count%", String.valueOf(salesCount), "%total%", formattedTotal);
                 }
             };
 

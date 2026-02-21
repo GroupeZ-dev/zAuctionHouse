@@ -22,3 +22,4 @@ It’s going to be amazing… or there will be bugs everywhere. Your call. 😄
 - [ ] Système pour afficher le nombre de vente effectué lors de la déconnexion et combien d'argent gagné (inventaire
   histoire de vente hors ligne ?)
 - [ ] Une commande pour ouvrir une certaine page ``/ah page <page>``
+- [ ] Avoir la raison de pourquoi l'item n'est plus en vente (parce que acheté, supprimé, ou expiré)

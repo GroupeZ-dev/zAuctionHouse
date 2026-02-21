@@ -34,6 +34,10 @@ public class PlayerRepository extends Repository {
         return selectAll(PlayerDTO.class);
     }
 
+    public List<PlayerDTO> select(List<String> uuids) {
+        return select(PlayerDTO.class, schema -> schema.whereIn("unique_id", uuids));
+    }
+
     public String select(UUID uniqueId) {
         return select(PlayerDTO.class, schema -> schema.where("unique_id", uniqueId.toString())).stream().findFirst().map(PlayerDTO::name).orElse(null);
     }

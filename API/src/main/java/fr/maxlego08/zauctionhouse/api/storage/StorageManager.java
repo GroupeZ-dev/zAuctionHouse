@@ -5,11 +5,14 @@ import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.log.LogType;
+import fr.maxlego08.zauctionhouse.api.storage.dto.ItemDTO;
+import fr.maxlego08.zauctionhouse.api.storage.dto.LogDTO;
 import fr.maxlego08.zauctionhouse.api.transaction.TransactionStatus;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -143,4 +146,12 @@ public interface StorageManager {
 
 
     CompletableFuture<UUID> findUniqueId(String playerName);
+
+    String getPlayerName(UUID uuid);
+
+    List<LogDTO> selectSalesHistory(UUID playerUniqueId);
+
+    List<Item> selectItems(List<Integer> integers);
+
+    Map<UUID, String> selectPlayers(List<String> uuids);
 }
