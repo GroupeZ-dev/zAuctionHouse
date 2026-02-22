@@ -62,18 +62,24 @@ public enum PlayerCacheKey {
 
     private final TypeToken<?> type;
     private final Supplier<?> fallback;
+    private final Class<?> rawType;
 
     PlayerCacheKey(TypeToken<?> type, Supplier<?> fallback) {
         this.type = type;
         this.fallback = fallback;
+        this.rawType = type.getRawType();
     }
 
     public TypeToken<?> getType() {
-        return type;
+        return this.type;
+    }
+
+    public Class<?> getRawType() {
+        return this.rawType;
     }
 
     @SuppressWarnings("unchecked")
     public <T> T getFallback() {
-        return (T) fallback.get();
+        return (T) this.fallback.get();
     }
 }

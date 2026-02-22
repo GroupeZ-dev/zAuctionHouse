@@ -15,7 +15,7 @@ public class ZPlayerCache implements PlayerCache {
 
     @Override
     public <T> void set(PlayerCacheKey key, T value) {
-        if (!isValidType(key.getType().getType(), value)) {
+        if (value != null && !key.getRawType().isInstance(value)) {
             throw new IllegalArgumentException("Invalid type for key " + key + ": expected " + key.getType().getType());
         }
         this.cache.put(key, value);
@@ -47,21 +47,6 @@ public class ZPlayerCache implements PlayerCache {
         for (PlayerCacheKey key : keys) {
             this.cache.remove(key);
         }
-    }
-
-    private boolean isValidType(Type expected, Object value) {
-        if (value == null) return true;
-
-        if (expected instanceof Class<?>) {
-            return ((Class<?>) expected).isInstance(value);
-        }
-
-        if (expected instanceof ParameterizedType parameterized) {
-            Class<?> raw = (Class<?>) parameterized.getRawType();
-            return raw.isInstance(value);
-        }
-
-        return false;
     }
 
     @Override
