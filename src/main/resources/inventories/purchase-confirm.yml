@@ -2,7 +2,7 @@ name: "#0c1719Do you really want to do that?"
 size: 27
 items:
 
-  remove:
+  confirm:
     type: ZAUCTIONHOUSE_CONFIRM_PURCHASE
     item:
       material: GREEN_STAINED_GLASS_PANE
@@ -32,7 +32,7 @@ items:
 
   decoration:
     item:
-      material: GRAY_STAINED_GLASS_PANE
+      material: LIGHT_BLUE_STAINED_GLASS_PANE
       name: "#2CCED2"
     slots:
       - 3-5

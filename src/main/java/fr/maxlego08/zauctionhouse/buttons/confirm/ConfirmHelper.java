@@ -9,6 +9,7 @@ import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ public abstract class ConfirmHelper extends Button {
     }
 
     @Override
-    public void onInventoryClose(Player player, InventoryEngine inventory) {
+    public void onInventoryClose(@NonNull Player player, @NonNull InventoryEngine inventory) {
         super.onInventoryClose(player, inventory);
 
         var manager = this.plugin.getAuctionManager();
@@ -44,7 +45,7 @@ public abstract class ConfirmHelper extends Button {
     }
 
     @Override
-    public void onBackClick(Player player, InventoryClickEvent event, InventoryEngine inventory, List<Inventory> oldInventories, Inventory toInventory, int slot) {
+    public void onBackClick(@NonNull Player player, @NonNull InventoryClickEvent event, @NonNull InventoryEngine inventory, @NonNull List<Inventory> oldInventories, @NonNull Inventory toInventory, int slot) {
         super.onBackClick(player, event, inventory, oldInventories, toInventory, slot);
 
         var manager = this.plugin.getAuctionManager();

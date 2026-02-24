@@ -1,14 +1,10 @@
 name: "#0c1719Bulk sale"
 size: 54
-items:
 
-  decoration:
-    item:
-      material: GRAY_STAINED_GLASS_PANE
-      name: " "
-    slots:
-      - 0-8
-      - 45-53
+patterns:
+  - 'zauctionhouse-decoration'
+
+items:
 
   sell-slots:
     type: ZAUCTIONHOUSE_SELL_SLOT
@@ -17,7 +13,7 @@ items:
 
   confirm:
     type: ZAUCTIONHOUSE_SELL_BUY
-    slot: 48
+    slot: 50
     item:
       material: GREEN_STAINED_GLASS_PANE
       name: "#00ff00<bold>ᴄᴏɴғɪʀᴍ sᴀʟᴇ"
@@ -30,11 +26,10 @@ items:
 
   cancel:
     type: ZAUCTIONHOUSE_SELL_CANCEL
-    slot: 50
+    slot: 48
     item:
       material: RED_STAINED_GLASS_PANE
       name: "#ff0000<bold>ᴄᴀɴᴄᴇʟ"
       lore:
-        - "#92ffffCancel the sale"
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto cancel the sale"
