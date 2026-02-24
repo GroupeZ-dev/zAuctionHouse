@@ -6,6 +6,7 @@ import fr.maxlego08.menu.api.utils.Placeholders;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.button.LoadingButton;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
+import fr.maxlego08.zauctionhouse.api.history.HistorySortType;
 import fr.maxlego08.zauctionhouse.api.history.ItemLog;
 import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.storage.dto.LogDTO;
@@ -68,7 +69,14 @@ public class HistoryItemsButton extends LoadingButton {
         var dateFormat = configuration.getDateFormat();
         var loreConfig = configuration.getItemLore().historyLore();
 
-        paginate(history, inventoryEngine, (slot, log) -> {
+        // Apply sorting
+        var cache = this.plugin.getAuctionManager().getCache(player);
+        HistorySortType sortType = cache.get(PlayerCacheKey.HISTORY_SORT, HistorySortType.DATE_DESC);
+        List<ItemLog> sortedHistory = history.stream()
+                .sorted(sortType.getComparator())
+                .toList();
+
+        paginate(sortedHistory, inventoryEngine, (slot, log) -> {
             ItemStack displayItem = createDisplayItem(log, dateFormat, loreConfig);
             inventoryEngine.addItem(slot, displayItem);
         });

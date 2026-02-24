@@ -4,6 +4,7 @@ import com.google.common.reflect.TypeToken;
 import fr.maxlego08.zauctionhouse.api.category.Category;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.filter.DateFilter;
+import fr.maxlego08.zauctionhouse.api.history.HistorySortType;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.SortItem;
 import fr.maxlego08.zauctionhouse.api.log.AdminLogItem;
@@ -57,7 +58,8 @@ public enum PlayerCacheKey {
 
     // Sales History
     HISTORY_DATA(new TypeToken<List<LogDTO>>() {}, ArrayList::new),
-    HISTORY_LOADING(new TypeToken<Boolean>() {}, () -> false)
+    HISTORY_LOADING(new TypeToken<Boolean>() {}, () -> false),
+    HISTORY_SORT(new TypeToken<HistorySortType>() {}, () -> HistorySortType.DATE_DESC)
     ;
 
     private final TypeToken<?> type;

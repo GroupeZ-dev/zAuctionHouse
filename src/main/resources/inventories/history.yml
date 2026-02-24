@@ -27,3 +27,37 @@ items:
         lore:
           - ''
           - '&7You have not sold any items yet.'
+
+  sort:
+    type: ZAUCTIONHOUSE_HISTORY_SORT
+    slot: 4
+    enable-text: "#2CCED2> %sorting%"
+    disable-text: "#8c8c8c%sorting%"
+    sorts:
+      - DATE_DESC
+      - DATE_ASC
+      - PRICE_DESC
+      - PRICE_ASC
+      - BUYER_ASC
+      - BUYER_DESC
+    sort-names:
+      DATE_DESC: "Newest First"
+      DATE_ASC: "Oldest First"
+      PRICE_DESC: "Highest Price"
+      PRICE_ASC: "Lowest Price"
+      BUYER_ASC: "Buyer A-Z"
+      BUYER_DESC: "Buyer Z-A"
+    item:
+      material: HOPPER
+      name: "#2CCED2<bold>sᴏʀᴛ"
+      lore:
+        - ""
+        - "%DATE_DESC%"
+        - "%DATE_ASC%"
+        - "%PRICE_DESC%"
+        - "%PRICE_ASC%"
+        - "%BUYER_ASC%"
+        - "%BUYER_DESC%"
+        - ""
+        - "#8c8c8c• #2CCED2ʟᴇғᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ᴄʏᴄʟᴇ ғᴏʀᴡᴀʀᴅ"
+        - "#8c8c8c• #2CCED2ʀɪɢʜᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ᴄʏᴄʟᴇ ʙᴀᴄᴋᴡᴀʀᴅ"
