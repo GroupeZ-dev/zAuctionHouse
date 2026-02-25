@@ -125,9 +125,11 @@ commands: # Commande principale, /zauctionhouse
         auto-completion:
           - vault
 
+  # Command /ah sell-inventory
   sell-inventory:
     aliases:
       - sellinventory
+      - sell-inventory
       - si
       - sellinv
     arguments:
@@ -143,6 +145,42 @@ commands: # Commande principale, /zauctionhouse
         required: false
         auto-completion:
           - vault
+
+  inventories:
+
+    # Command /ah owned
+    - enable: true
+      permission: "zauctionhouse.owned"
+      description: "Open owned items"
+      aliases:
+        - 'owned'
+      inventory: OWNED_ITEMS
+      # enable-page: true
+      # page-name: "page"
+
+    # Command /ah expired
+    - enable: true
+      permission: "zauctionhouse.expired"
+      description: "Open expired items"
+      aliases:
+        - 'expired'
+      inventory: EXPIRED_ITEMS
+
+    # Command /ah purchased
+    - enable: true
+      permission: "zauctionhouse.purchased"
+      description: "Open purchased items"
+      aliases:
+        - 'purchased'
+      inventory: PURCHASED_ITEMS
+
+    # Command /ah history
+    - enable: true
+      permission: "zauctionhouse.history"
+      description: "Open history"
+      aliases:
+        - 'history'
+      inventory: HISTORY
 
 number-sell-multiplication:
   enable: true

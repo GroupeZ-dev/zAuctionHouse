@@ -19,10 +19,11 @@ public class CommandAuction extends VCommand {
         this.addSubCommand(new CommandAuctionSellInventory(plugin));
         this.addSubCommand(new CommandAuctionSell(plugin));
         this.addSubCommand(new CommandAuctionClaim(plugin));
-        this.addSubCommand(new CommandAuctionHistory(plugin));
         this.addSubCommand(new CommandAuctionPage(plugin));
         this.addSubCommand(new CommandAuctionReload(plugin));
         this.addSubCommand(new CommandAuctionAdmin(plugin));
+
+        plugin.getConfiguration().getInventoryCommands().forEach((configuration) -> this.addSubCommand(new CommandAuctionInventories(plugin, configuration)));
     }
 
     @Override

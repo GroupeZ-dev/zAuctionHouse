@@ -5,6 +5,7 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.configuration.Configuration;
 import fr.maxlego08.zauctionhouse.api.configuration.commands.CommandArgumentConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.commands.CommandConfiguration;
+import fr.maxlego08.zauctionhouse.api.configuration.commands.InventoryCommandConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ActionConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.AutoClaimConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ExpirationConfiguration;
@@ -54,6 +55,7 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     private PerformanceDebugConfiguration performanceDebugConfiguration;
     private AutoClaimConfiguration autoClaimConfiguration;
     private SalesNotificationConfiguration salesNotificationConfiguration;
+    private List<InventoryCommandConfiguration> inventoryCommandConfigurations;
 
     public MainConfiguration(AuctionPlugin plugin) {
         this.plugin = plugin;
@@ -81,6 +83,7 @@ public class MainConfiguration extends YamlLoader implements Configuration {
         this.performanceDebugConfiguration = PerformanceDebugConfiguration.of(plugin, config);
         this.autoClaimConfiguration = AutoClaimConfiguration.of(plugin, config);
         this.salesNotificationConfiguration = SalesNotificationConfiguration.of(plugin, config);
+        this.inventoryCommandConfigurations = InventoryCommandConfiguration.of(plugin, config);
         this.dateFormat = new SimpleDateFormat(config.getString("date-format", "dd/MM/yyyy HH:mm:ss"));
     }
 
@@ -192,6 +195,11 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     @Override
     public SalesNotificationConfiguration getSalesNotificationConfiguration() {
         return this.salesNotificationConfiguration;
+    }
+
+    @Override
+    public List<InventoryCommandConfiguration> getInventoryCommands() {
+        return this.inventoryCommandConfigurations;
     }
 
     @Override
