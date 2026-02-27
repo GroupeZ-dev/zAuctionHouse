@@ -86,6 +86,15 @@ public interface Configuration extends ConfigurationFile {
 
     SalesNotificationConfiguration getSalesNotificationConfiguration();
 
+    /**
+     * Checks if the sell inventory is enabled.
+     * When enabled, /ah sell without price argument opens a sell inventory
+     * where players can select items, adjust price and choose economy.
+     *
+     * @return true if sell inventory is enabled, false otherwise
+     */
+    boolean isSellInventoryEnabled();
+
     List<InventoryCommandConfiguration> getInventoryCommands();
 
     <T extends Enum<T>> CommandConfiguration<T> loadCommandConfiguration(String path, Class<T> enumClass);

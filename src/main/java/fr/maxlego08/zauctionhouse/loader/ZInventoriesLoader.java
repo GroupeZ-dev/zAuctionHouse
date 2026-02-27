@@ -23,17 +23,8 @@ import fr.maxlego08.zauctionhouse.buttons.list.ExpiredItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.list.ListedItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.list.OwnedItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.list.PurchasedItemsButton;
-import fr.maxlego08.zauctionhouse.buttons.sell.SellBuyButton;
-import fr.maxlego08.zauctionhouse.buttons.sell.SellCancelButton;
-import fr.maxlego08.zauctionhouse.buttons.sell.SellSlotButton;
-import fr.maxlego08.zauctionhouse.loader.buttons.CategoryButtonLoader;
-import fr.maxlego08.zauctionhouse.loader.buttons.HistorySortLoader;
-import fr.maxlego08.zauctionhouse.loader.buttons.LoadingSlotLoader;
-import fr.maxlego08.zauctionhouse.loader.buttons.LogDateFilterLoader;
-import fr.maxlego08.zauctionhouse.loader.buttons.LogTypeFilterLoader;
-import fr.maxlego08.zauctionhouse.loader.buttons.TransactionDateFilterLoader;
-import fr.maxlego08.zauctionhouse.loader.buttons.TransactionStatusFilterLoader;
-import fr.maxlego08.zauctionhouse.loader.buttons.SortLoader;
+import fr.maxlego08.zauctionhouse.buttons.sell.*;
+import fr.maxlego08.zauctionhouse.loader.buttons.*;
 import fr.maxlego08.zauctionhouse.utils.PerformanceDebug;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import org.bukkit.entity.Player;
@@ -131,7 +122,11 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new NoneLoader(this.plugin, SellSlotButton.class, "ZAUCTIONHOUSE_SELL_SLOT"));
         this.buttonManager.register(new NoneLoader(this.plugin, SellBuyButton.class, "ZAUCTIONHOUSE_SELL_BUY"));
         this.buttonManager.register(new NoneLoader(this.plugin, SellCancelButton.class, "ZAUCTIONHOUSE_SELL_CANCEL"));
+        this.buttonManager.register(new NoneLoader(this.plugin, SellConfirmButton.class, "ZAUCTIONHOUSE_SELL_CONFIRM"));
+        this.buttonManager.register(new NoneLoader(this.plugin, SellEconomyButton.class, "ZAUCTIONHOUSE_SELL_ECONOMY"));
         this.buttonManager.register(new LoadingSlotLoader(this.plugin, HistoryItemsButton.class, "ZAUCTIONHOUSE_HISTORY_ITEMS"));
+        this.buttonManager.register(new SellShowItemLoader(this.plugin));
+        this.buttonManager.register(new SellPriceButtonLoader(this.plugin));
         this.buttonManager.register(new HistorySortLoader(this.plugin));
 
         // Admin
@@ -179,7 +174,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
     private void createInventoriesFile() {
         copyFiles(
                 "inventories", "auction", "expired-items", "owned-items",//
-                "sell-inventory", "categories", "purchased-items", "history", //
+                "sell-inventory", "sell-command-inventory", "categories", "purchased-items", "history", //
 
                 // Admin
                 "admin/admin-owned-items", "admin/admin-expired-items", "admin/admin-purchased-items", //

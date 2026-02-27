@@ -58,6 +58,7 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     private AutoClaimConfiguration autoClaimConfiguration;
     private SalesNotificationConfiguration salesNotificationConfiguration;
     private List<InventoryCommandConfiguration> inventoryCommandConfigurations;
+    private boolean sellInventoryEnabled;
 
     public MainConfiguration(AuctionPlugin plugin) {
         this.plugin = plugin;
@@ -87,6 +88,7 @@ public class MainConfiguration extends YamlLoader implements Configuration {
         this.salesNotificationConfiguration = SalesNotificationConfiguration.of(plugin, config);
         this.inventoryCommandConfigurations = InventoryCommandConfiguration.of(plugin, config);
         this.dateFormat = new SimpleDateFormat(config.getString("date-format", "dd/MM/yyyy HH:mm:ss"));
+        this.sellInventoryEnabled = config.getBoolean("commands.sell.enable-sell-inventory", false);
     }
 
     @Override
@@ -205,6 +207,11 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     }
 
     @Override
+    public boolean isSellInventoryEnabled() {
+        return this.sellInventoryEnabled;
+    }
+
+    @Override
     public <T extends Enum<T>> CommandConfiguration<T> loadCommandConfiguration(String path, Class<T> enumClass) {
         var config = plugin.getConfig();
 
@@ -238,8 +245,9 @@ public class MainConfiguration extends YamlLoader implements Configuration {
 
             var required = accessor.getBoolean("required", false);
             var autoCompletion = accessor.getList("auto-completion").stream().map(String::valueOf).toList();
+            var defaultValue = accessor.getString("default-value", null);
 
-            arguments.add(new CommandArgumentConfiguration<>(enumValue, displayName, required, autoCompletion));
+            arguments.add(new CommandArgumentConfiguration<>(enumValue, displayName, required, autoCompletion, defaultValue));
         }
 
         return new CommandConfiguration<>(aliases, arguments);

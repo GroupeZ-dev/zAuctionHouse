@@ -51,6 +51,9 @@ public enum Message {
     SELL_INVENTORY_CANCEL_LORE("&bReturn the items to your inventory."),
     SELL_INVENTORY_EMPTY("<error>You must place items in the inventory before confirming."),
     SELL_INVENTORY_CANCELLED("<error>You cancelled the sale, your items have been returned."),
+    SELL_ITEMS_CLEARED("<success>Selected items have been cleared."),
+    SELL_ITEM_ADDED("<success>Item added to sale list."),
+    SELL_ITEM_REMOVED("<success>Item removed from sale list."),
 
     ADMIN_TARGET_REQUIRED("<error>You must specify a valid target player."),
     ADMIN_TARGET_NOT_FOUND("<error>Unable to find the player <white>%target%<error>."),

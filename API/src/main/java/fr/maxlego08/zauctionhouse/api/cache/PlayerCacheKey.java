@@ -37,6 +37,7 @@ public enum PlayerCacheKey {
     SELL_ECONOMY(new TypeToken<AuctionEconomy>() {}, () -> null),
     SELL_EXPIRED_AT(new TypeToken<Long>() {}, () -> 0L),
     SELL_AMOUNT(new TypeToken<Integer>() {}, () -> 1),
+    SELL_ITEMS(new TypeToken<List<org.bukkit.inventory.ItemStack>>() {}, ArrayList::new),
     CURRENT_CATEGORY(new TypeToken<Category>() {}, () -> null),
 
     // Admin Logs

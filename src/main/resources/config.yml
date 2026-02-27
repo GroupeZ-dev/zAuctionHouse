@@ -101,6 +101,10 @@ commands: # Commande principale, /zauctionhouse
 
   # Commande de vente /zauctionhouse sell
   sell:
+    # Si activé, /ah sell sans argument ouvre un inventaire de vente où le joueur peut choisir
+    # les items à vendre, ajuster le prix et sélectionner l'économie.
+    # Si désactivé, /ah sell nécessite un prix en argument.
+    enable-sell-inventory: false
     aliases:
       - sell
       - s
@@ -385,6 +389,10 @@ item-lore:
     - ""
     - "#8c8c8c• #2CCED2ʟᴇғᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜᴇ ɪᴛᴇᴍ"
     - "#8c8c8c• #2CCED2ʀɪɢʜᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ sᴇᴇ ᴀʟʟ ɪᴛᴇᴍs"
+
+  sell-inventory-remove-item:
+    - ''
+    - '#8c8c8c• #2CCED2ʟᴇғᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴍᴏᴠᴇ ᴛʜɪs ɪᴛᴇᴍ'
 
   status:
     seller: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"

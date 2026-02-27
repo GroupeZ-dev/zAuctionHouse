@@ -19,16 +19,13 @@ public record ItemLoreConfiguration(
         List<String> historyLore,
         List<String> adminLogLore,
         List<String> adminLogMultipleLore,
+        List<String> sellInventoryRemoveItem,
         Map<LogType, String> logTypeNames,
         String sellerStatus,
         String buyerStatus,
         String rightSellerStatus,
         String rightBuyerStatus
 ) {
-
-    public String getLogTypeName(LogType logType) {
-        return logTypeNames.getOrDefault(logType, logType.name());
-    }
 
     public static ItemLoreConfiguration of(AuctionPlugin plugin, FileConfiguration config) {
         return new ItemLoreConfiguration(
@@ -41,6 +38,7 @@ public record ItemLoreConfiguration(
                 config.getStringList("item-lore.history-item"),
                 config.getStringList("item-lore.admin-log-item"),
                 config.getStringList("item-lore.admin-log-multiple-item"),
+                config.getStringList("item-lore.sell-inventory-remove-item"),
                 loadLogTypeNames(config),
                 config.getString("item-lore.status.seller", "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"),
                 config.getString("item-lore.status.buyer", "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"),
@@ -71,5 +69,9 @@ public record ItemLoreConfiguration(
         }
 
         return names;
+    }
+
+    public String getLogTypeName(LogType logType) {
+        return logTypeNames.getOrDefault(logType, logType.name());
     }
 }

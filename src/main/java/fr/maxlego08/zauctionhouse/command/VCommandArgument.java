@@ -13,6 +13,7 @@ import java.util.function.Function;
 public abstract class VCommandArgument<T extends Enum<T>> extends VCommand {
 
     protected final Map<T, Integer> argumentIndexes = new HashMap<>();
+    protected final Map<T, String> argumentDefaultValues = new HashMap<>();
     protected final Class<T> enumClass;
 
     public VCommandArgument(AuctionPlugin plugin, Class<T> enumClass) {
@@ -38,6 +39,7 @@ public abstract class VCommandArgument<T extends Enum<T>> extends VCommand {
         for (int index = 0; index != arguments.size(); index++) {
             var commandArgumentConfiguration = arguments.get(index);
             this.argumentIndexes.put(commandArgumentConfiguration.name(), index);
+            this.argumentDefaultValues.put(commandArgumentConfiguration.name(), commandArgumentConfiguration.defaultValue());
 
             var autoCompletion = consumer.apply(commandArgumentConfiguration);
             if (commandArgumentConfiguration.required()) {
@@ -49,7 +51,7 @@ public abstract class VCommandArgument<T extends Enum<T>> extends VCommand {
     }
 
     protected String argAsString(T value) {
-        return argAsString(this.argumentIndexes.get(value));
+        return argAsString(value, this.argumentDefaultValues.getOrDefault(value, null));
     }
 
     protected String argAsString(T value, String defaultValue) {
@@ -57,7 +59,12 @@ public abstract class VCommandArgument<T extends Enum<T>> extends VCommand {
     }
 
     protected boolean argAsBoolean(T value) {
-        return argAsBoolean(this.argumentIndexes.get(value));
+        boolean defaultValue = false;
+        try {
+            defaultValue = Boolean.parseBoolean(this.argumentDefaultValues.getOrDefault(value, "false"));
+        } catch (Exception ignored) {
+        }
+        return argAsBoolean(value, defaultValue);
     }
 
     protected boolean argAsBoolean(T value, boolean defaultValue) {
@@ -65,7 +72,12 @@ public abstract class VCommandArgument<T extends Enum<T>> extends VCommand {
     }
 
     protected int argAsInteger(T value) {
-        return argAsInteger(this.argumentIndexes.get(value));
+        int defaultValue = 0;
+        try {
+            defaultValue = Integer.parseInt(this.argumentDefaultValues.getOrDefault(value, "0"));
+        } catch (Exception ignored) {
+        }
+        return argAsInteger(value, defaultValue);
     }
 
     protected int argAsInteger(T value, int defaultValue) {
@@ -73,7 +85,12 @@ public abstract class VCommandArgument<T extends Enum<T>> extends VCommand {
     }
 
     protected double argAsDouble(T value) {
-        return argAsDouble(this.argumentIndexes.get(value));
+        var defaultDouble = 0.0;
+        try {
+            defaultDouble = Double.parseDouble(this.argumentDefaultValues.getOrDefault(value, "0.0"));
+        } catch (Exception ignored) {
+        }
+        return argAsDouble(value, defaultDouble);
     }
 
     protected double argAsDouble(T value, double defaultValue) {
@@ -81,7 +98,12 @@ public abstract class VCommandArgument<T extends Enum<T>> extends VCommand {
     }
 
     protected long argAsLong(T value) {
-        return argAsLong(this.argumentIndexes.get(value));
+        var defaultValue = 0L;
+        try {
+            defaultValue = Long.parseLong(this.argumentDefaultValues.getOrDefault(value, "0"));
+        } catch (Exception ignored) {
+        }
+        return argAsLong(value, defaultValue);
     }
 
     protected long argAsLong(T value, long defaultValue) {

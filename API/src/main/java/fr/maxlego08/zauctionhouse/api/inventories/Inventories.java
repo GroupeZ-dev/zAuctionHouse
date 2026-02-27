@@ -8,6 +8,7 @@ public enum Inventories {
     PURCHASE_INVENTORY_CONFIRM("purchase-inventory-confirm"),
     REMOVE_INVENTORY_CONFIRM("remove-inventory-confirm"),
     SELL_INVENTORY("sell-inventory"),
+    SELL_COMMAND_INVENTORY("sell-command-inventory"),
     EXPIRED_ITEMS("expired-items"),
     PURCHASED_ITEMS("purchased-items"),
     OWNED_ITEMS("owned-items"),

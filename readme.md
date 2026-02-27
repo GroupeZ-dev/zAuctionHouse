@@ -24,6 +24,8 @@ It’s going to be amazing… or there will be bugs everywhere. Your call. 😄
 - [ ] Une commande pour ouvrir une certaine page ``/ah page <page>``
 - [ ] Avoir la raison de pourquoi l'item n'est plus en vente (parce que acheté, supprimé, ou expiré)
 - [ ] Pouvoir définir des custom modals id ou namespace pour les images d'items custom
+- [ ] Pour modifier l'état d'une transactions qui doit être claim
+- [ ] Pouvoir vendre un item à la place d'un joueur
 
 # zAuctionHouse Discord
 
