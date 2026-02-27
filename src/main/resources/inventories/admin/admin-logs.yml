@@ -17,13 +17,13 @@ items:
       - 36-44
     item:
       material: BARRIER
-      name: "&cLoading..."
+      name: "#ff0000Loading..."
     else:
       slots:
         - 22
       item:
         material: BARRIER
-        name: '&c&nNo Sales Found'
+        name: '#ff0000&nNo Sales Found'
         lore:
           - ''
           - '&7You have not sold any items yet.'

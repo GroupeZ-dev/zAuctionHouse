@@ -19,7 +19,7 @@ items:
         - 22
       item:
         material: BARRIER
-        name: '&c&nNo Items Found'
+        name: '#ff0000&nNo Items Found'
 
   back:
     type: BACK

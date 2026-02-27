@@ -17,7 +17,7 @@ items:
         - 22
       item:
         material: BARRIER
-        name: '&cNo items found'
+        name: '#ff0000No items found'
 
   categories:
     slot: 4

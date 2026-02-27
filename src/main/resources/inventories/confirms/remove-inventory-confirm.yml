@@ -11,7 +11,7 @@ items:
       - 9-44
 
   confirm:
-    type: ZAUCTIONHOUSE_CONFIRM_PURCHASE
+    type: ZAUCTIONHOUSE_CONFIRM_REMOVE_LISTED
     item:
       material: GREEN_STAINED_GLASS_PANE
       name: "#2CCED2<bold>ʀᴇᴍᴏᴠᴇ"

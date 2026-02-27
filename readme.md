@@ -26,6 +26,7 @@ It’s going to be amazing… or there will be bugs everywhere. Your call. 😄
 - [ ] Pouvoir définir des custom modals id ou namespace pour les images d'items custom
 - [ ] Pour modifier l'état d'une transactions qui doit être claim
 - [ ] Pouvoir vendre un item à la place d'un joueur
+- [ ] Pouvoir choisir un nom à son "bulk sale"
 
 # zAuctionHouse Discord
 
