@@ -83,28 +83,19 @@ public class SellService extends ZUtils implements AuctionSellService {
     }
 
     @Override
-    public void openSellInventory(Player player, BigDecimal price, long expiredAt, AuctionEconomy auctionEconomy) {
-
-        var cache = this.manager.getCache(player);
-        cache.set(PlayerCacheKey.SELL_PRICE, price);
-        cache.set(PlayerCacheKey.SELL_ECONOMY, auctionEconomy);
-        cache.set(PlayerCacheKey.SELL_EXPIRED_AT, expiredAt);
-        cache.set(PlayerCacheKey.SELL_AMOUNT, 1);
-
-        this.plugin.getInventoriesLoader().openInventory(player, Inventories.SELL_INVENTORY);
-    }
-
-    @Override
-    public void openSellCommandInventory(Player player, BigDecimal price, AuctionEconomy auctionEconomy) {
+    public void openSellCommandInventory(Player player) {
         var cache = this.manager.getCache(player);
         var configuration = this.plugin.getConfiguration();
         var economyManager = this.plugin.getEconomyManager();
 
+        AuctionEconomy defaultEconomy = economyManager.getDefaultEconomy(ItemType.AUCTION);
+        BigDecimal defaultPrice = defaultEconomy.getMinPrice(ItemType.AUCTION);
+
         long expiration = configuration.getSellExpiration().getExpiration(player);
         long expiredAt = expiration > 0 ? System.currentTimeMillis() + (expiration * 1000) : 0;
 
-        cache.set(PlayerCacheKey.SELL_PRICE, price);
-        cache.set(PlayerCacheKey.SELL_ECONOMY, auctionEconomy);
+        cache.set(PlayerCacheKey.SELL_PRICE, defaultPrice);
+        cache.set(PlayerCacheKey.SELL_ECONOMY, defaultEconomy);
         cache.set(PlayerCacheKey.SELL_EXPIRED_AT, expiredAt);
         cache.set(PlayerCacheKey.SELL_AMOUNT, 1);
         cache.remove(PlayerCacheKey.SELL_ITEMS);

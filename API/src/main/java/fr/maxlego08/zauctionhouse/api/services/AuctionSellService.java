@@ -13,7 +13,5 @@ public interface AuctionSellService {
 
     void sellAuctionItems(Player player, BigDecimal price, long expiredAt, List<ItemStack> itemStacks, AuctionEconomy auctionEconomy);
 
-    void openSellInventory(Player player, BigDecimal price, long expiredAt, AuctionEconomy auctionEconomy);
-
-    void openSellCommandInventory(Player player, BigDecimal price, AuctionEconomy auctionEconomy);
+    void openSellCommandInventory(Player player);
 }

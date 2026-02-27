@@ -119,8 +119,6 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new NoneLoader(this.plugin, ShowButton.class, "ZAUCTIONHOUSE_SHOW"));
         this.buttonManager.register(new NoneLoader(this.plugin, ConfirmRemoveListedButton.class, "ZAUCTIONHOUSE_CONFIRM_REMOVE_LISTED"));
         this.buttonManager.register(new NoneLoader(this.plugin, ConfirmPurchaseButton.class, "ZAUCTIONHOUSE_CONFIRM_PURCHASE"));
-        this.buttonManager.register(new NoneLoader(this.plugin, SellSlotButton.class, "ZAUCTIONHOUSE_SELL_SLOT"));
-        this.buttonManager.register(new NoneLoader(this.plugin, SellBuyButton.class, "ZAUCTIONHOUSE_SELL_BUY"));
         this.buttonManager.register(new NoneLoader(this.plugin, SellCancelButton.class, "ZAUCTIONHOUSE_SELL_CANCEL"));
         this.buttonManager.register(new NoneLoader(this.plugin, SellConfirmButton.class, "ZAUCTIONHOUSE_SELL_CONFIRM"));
         this.buttonManager.register(new NoneLoader(this.plugin, SellEconomyButton.class, "ZAUCTIONHOUSE_SELL_ECONOMY"));
@@ -174,7 +172,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
     private void createInventoriesFile() {
         copyFiles(
                 "inventories", "auction", "expired-items", "owned-items",//
-                "sell-inventory", "sell-command-inventory", "categories", "purchased-items", "history", //
+                "sell-command-inventory", "categories", "purchased-items", "history", //
 
                 // Admin
                 "admin/admin-owned-items", "admin/admin-expired-items", "admin/admin-purchased-items", //

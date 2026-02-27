@@ -64,8 +64,7 @@ public class CommandAuctionSell extends VCommandArgument<CommandSellArguments> {
         if (price == null) return CommandType.SYNTAX_ERROR;
 
         if (plugin.getConfiguration().isSellInventoryEnabled()) {
-
-            auctionManager.getSellService().openSellCommandInventory(player, price, auctionEconomy);
+            auctionManager.getSellService().openSellCommandInventory(player);
             return CommandType.SUCCESS;
         }
 
