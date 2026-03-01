@@ -1,4 +1,4 @@
-name: '#0c1719Owned items (%page%/%max-page%)'
+name: '#0c1719Selling items (%page%/%max-page%)'
 size: 54
 
 patterns:
@@ -8,7 +8,7 @@ patterns:
 
 items:
   items:
-    type: ZAUCTIONHOUSE_OWNED_ITEMS
+    type: ZAUCTIONHOUSE_SELLING_ITEMS
     slots:
       - 9-17
       - 18-26

@@ -276,13 +276,13 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     @Override
-    public List<Item> getPlayerOwnedItems(Player player) {
-        IntList ids = getCache(player).getOrCompute(PlayerCacheKey.ITEMS_OWNED, () -> getItemIds(StorageType.LISTED, item -> item.getSellerUniqueId().equals(player.getUniqueId()), Comparator.comparing(Item::getExpiredAt)));
+    public List<Item> getPlayerSellingItems(Player player) {
+        IntList ids = getCache(player).getOrCompute(PlayerCacheKey.ITEMS_SELLING, () -> getItemIds(StorageType.LISTED, item -> item.getSellerUniqueId().equals(player.getUniqueId()), Comparator.comparing(Item::getExpiredAt)));
         return resolveItems(StorageType.LISTED, ids);
     }
 
     @Override
-    public List<Item> getPlayerOwnedItems(UUID uniqueId) {
+    public List<Item> getPlayerSellingItems(UUID uniqueId) {
         return resolveItems(StorageType.LISTED, getItemIds(StorageType.LISTED, item -> item.getSellerUniqueId().equals(uniqueId), Comparator.comparing(Item::getExpiredAt)));
     }
 
@@ -479,7 +479,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         removeItem(StorageType.LISTED, item);
 
         this.updateListedItems(item, false, player);
-        clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED, PlayerCacheKey.ITEMS_EXPIRED); // Suppression du cache du joueur
+        clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED); // Suppression du cache du joueur
 
         CompletableFuture<Void> updateFuture;
 
@@ -514,7 +514,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     @Override
-    public CompletableFuture<Void> removeOwnedItem(Player player, Item item) {
+    public CompletableFuture<Void> removeSellingItem(Player player, Item item) {
 
         var configuration = this.plugin.getConfiguration();
         var storageManager = this.plugin.getStorageManager();
@@ -523,12 +523,12 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         removeItem(StorageType.LISTED, item);
 
         this.updateListedItems(item, false, player);
-        clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED, PlayerCacheKey.ITEMS_EXPIRED); // Suppression du cache du joueur
+        clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED); // Suppression du cache du joueur
 
         var updateFuture = storageManager.updateItem(item, StorageType.DELETED);
         giveItem(player, item);
 
-        message(this.plugin, player, Message.ITEM_REMOVE_OWNED, "%items%", item.getItemDisplay());
+        message(this.plugin, player, Message.ITEM_REMOVE_SELLING, "%items%", item.getItemDisplay());
 
         if (configuration.getActions().listed().openInventory()) {
             this.updateInventory(player);
@@ -538,7 +538,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
         callEvent(new AuctionRemoveListedItemEvent(item, player));
 
-        logItemAction(LogType.REMOVE_OWNED, item, player, null, "removed_owned_item");
+        logItemAction(LogType.REMOVE_SELLING, item, player, null, "removed_selling_item");
 
         return updateFuture;
     }
@@ -619,7 +619,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             removeItem(storageType, item);
 
             this.plugin.getStorageManager().updateItem(item, StorageType.DELETED);
-            clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_EXPIRED, PlayerCacheKey.ITEMS_PURCHASED, PlayerCacheKey.ITEMS_OWNED);
+            clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_EXPIRED, PlayerCacheKey.ITEMS_PURCHASED, PlayerCacheKey.ITEMS_SELLING);
 
             giveItem(admin, item);
 
@@ -693,7 +693,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         this.updateListedItems(auctionItem, false, player);
         clearPlayerCache(player, PlayerCacheKey.ITEMS_PURCHASED);
         if (seller.isOnline()) {
-            clearPlayerCache(seller.getPlayer(), PlayerCacheKey.ITEMS_OWNED);
+            clearPlayerCache(seller.getPlayer(), PlayerCacheKey.ITEMS_SELLING);
         }
 
         removeItem(StorageType.LISTED, auctionItem);

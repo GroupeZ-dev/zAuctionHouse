@@ -1,6 +1,5 @@
 package fr.maxlego08.zauctionhouse.buttons.admin.history;
 
-import fr.maxlego08.menu.api.button.Button;
 import fr.maxlego08.menu.api.engine.InventoryEngine;
 import fr.maxlego08.menu.api.utils.Placeholders;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
@@ -12,9 +11,9 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class AdminHistoryMainOwnedButton extends TargetHelper {
+public class AdminHistoryMainSellingButton extends TargetHelper {
 
-    public AdminHistoryMainOwnedButton(Plugin plugin) {
+    public AdminHistoryMainSellingButton(Plugin plugin) {
         super((AuctionPlugin) plugin);
     }
 
@@ -23,9 +22,9 @@ public class AdminHistoryMainOwnedButton extends TargetHelper {
         getTargetName(player).ifPresent(target -> placeholders.register("target", target));
 
         getTargetUniqueId(player).ifPresent(uuid -> {
-            var list = this.plugin.getAuctionManager().getPlayerOwnedItems(uuid);
+            var list = this.plugin.getAuctionManager().getPlayerSellingItems(uuid);
 
-            placeholders.register("owned-items", String.valueOf(list.size()));
+            placeholders.register("selling-items", String.valueOf(list.size()));
             placeholders.register("s", list.size() > 1 ? "s" : "");
         });
 
@@ -34,6 +33,6 @@ public class AdminHistoryMainOwnedButton extends TargetHelper {
 
     @Override
     public void onClick(@NotNull Player player, @NotNull InventoryClickEvent event, @NotNull InventoryEngine inventory, int slot, @NotNull Placeholders placeholders) {
-        this.plugin.getInventoriesLoader().openInventory(player, Inventories.ADMIN_OWNED_ITEMS);
+        this.plugin.getInventoriesLoader().openInventory(player, Inventories.ADMIN_SELLING_ITEMS);
     }
 }

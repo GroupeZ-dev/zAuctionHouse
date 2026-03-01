@@ -38,14 +38,14 @@ items:
       - SALE
       - PURCHASE
       - REMOVE_LISTED
-      - REMOVE_OWNED
+      - REMOVE_SELLING
       - REMOVE_EXPIRED
       - REMOVE_PURCHASED
     type-names:
       SALE: "Sale"
       PURCHASE: "Purchase"
       REMOVE_LISTED: "Remove Listed"
-      REMOVE_OWNED: "Remove Owned"
+      REMOVE_SELLING: "Remove Owned"
       REMOVE_EXPIRED: "Remove Expired"
       REMOVE_PURCHASED: "Remove Purchased"
     item:
@@ -57,7 +57,7 @@ items:
         - '%SALE%'
         - '%PURCHASE%'
         - '%REMOVE_LISTED%'
-        - '%REMOVE_OWNED%'
+        - '%REMOVE_SELLING%'
         - '%REMOVE_EXPIRED%'
         - '%REMOVE_PURCHASED%'
         - ''

@@ -85,7 +85,7 @@ public class ListedItemsButton extends PaginateButton {
         return event -> {
 
             if (item.getStatus() != ItemStatus.AVAILABLE) {
-                manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED, PlayerCacheKey.ITEMS_LISTED);
+                manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_LISTED);
                 manager.updateInventory(player);
                 return;
             }

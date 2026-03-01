@@ -14,7 +14,7 @@ public record ItemLoreConfiguration(
         List<String> multipleListedAuctionLore,
         List<String> purchasedLore,
         List<String> expiredLore,
-        List<String> ownedLore,
+        List<String> sellingLore,
         List<String> beingPurchasedLore,
         List<String> historyLore,
         List<String> adminLogLore,
@@ -33,7 +33,7 @@ public record ItemLoreConfiguration(
                 config.getStringList("item-lore.multiple-listed-auction-item"),
                 config.getStringList("item-lore.purchased-item"),
                 config.getStringList("item-lore.expired-item"),
-                config.getStringList("item-lore.owned-item"),
+                config.getStringList("item-lore.selling-item"),
                 config.getStringList("item-lore.being-purchased-item"),
                 config.getStringList("item-lore.history-item"),
                 config.getStringList("item-lore.admin-log-item"),
@@ -55,7 +55,7 @@ public record ItemLoreConfiguration(
         names.put(LogType.SALE, "Item Listed");
         names.put(LogType.PURCHASE, "Item Purchased");
         names.put(LogType.REMOVE_LISTED, "Removed from Listing");
-        names.put(LogType.REMOVE_OWNED, "Retrieved Own Item");
+        names.put(LogType.REMOVE_SELLING, "Retrieved Selling Item");
         names.put(LogType.REMOVE_EXPIRED, "Retrieved Expired");
         names.put(LogType.REMOVE_PURCHASED, "Retrieved Purchase");
 

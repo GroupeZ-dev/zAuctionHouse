@@ -132,6 +132,7 @@ public class SellService extends ZUtils implements AuctionSellService {
 
         long listedItems = manager.getItemsListedForSale(player).size();
         long maxSellPermission = configuration.getPermission().getLimit(ItemType.AUCTION, player);
+        System.out.println(listedItems + " - " + maxSellPermission);
         if (listedItems >= maxSellPermission) {
             message(plugin, player, Message.LISTED_ITEMS_LIMIT, "%max-items%", String.valueOf(maxSellPermission));
             return true;
@@ -178,7 +179,7 @@ public class SellService extends ZUtils implements AuctionSellService {
         this.manager.addItem(StorageType.LISTED, auctionItem);
 
         this.manager.clearPlayersCache(PlayerCacheKey.ITEMS_LISTED); // Suppression du cache global
-        this.manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED); // Suppression du cache du joueur
+        this.manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING); // Suppression du cache du joueur
 
         this.manager.updateListedItems(auctionItem, true, player);
 

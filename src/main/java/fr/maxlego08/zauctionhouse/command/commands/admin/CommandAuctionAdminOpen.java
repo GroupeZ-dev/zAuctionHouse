@@ -45,7 +45,7 @@ public class CommandAuctionAdminOpen extends VCommand {
             Inventories inventories = switch (type.toLowerCase(Locale.ENGLISH)) {
                 case "expired" -> Inventories.ADMIN_EXPIRED_ITEMS;
                 case "purchased" -> Inventories.ADMIN_PURCHASED_ITEMS;
-                default -> Inventories.ADMIN_OWNED_ITEMS;
+                default -> Inventories.ADMIN_SELLING_ITEMS;
             };
 
             var cache = this.auctionManager.getCache(this.player);

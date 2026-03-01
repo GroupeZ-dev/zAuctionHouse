@@ -8,7 +8,7 @@ patterns:
 
 items:
   items:
-    type: ZAUCTIONHOUSE_ADMIN_OWNED_ITEMS
+    type: ZAUCTIONHOUSE_ADMIN_SELLING_ITEMS
     slots:
       - 9-17
       - 18-26

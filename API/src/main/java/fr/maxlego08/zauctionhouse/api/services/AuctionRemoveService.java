@@ -9,7 +9,7 @@ public interface AuctionRemoveService {
 
     CompletableFuture<Void> removeListedItem(Player player, Item item);
 
-    CompletableFuture<Void> removeOwnedItem(Player player, Item item);
+    CompletableFuture<Void> removeSellingItem(Player player, Item item);
 
     CompletableFuture<Void> removeExpiredItem(Player player, Item item);
 

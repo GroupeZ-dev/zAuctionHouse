@@ -12,11 +12,11 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
-public class OwnedInventoryButton extends Button {
+public class SellingInventoryButton extends Button {
 
     private final AuctionPlugin plugin;
 
-    public OwnedInventoryButton(Plugin plugin) {
+    public SellingInventoryButton(Plugin plugin) {
         this.plugin = (AuctionPlugin) plugin;
     }
 
@@ -27,22 +27,22 @@ public class OwnedInventoryButton extends Button {
 
     @Override
     public boolean checkPermission(Player player, InventoryEngine inventory, Placeholders placeholders) {
-        var list = this.plugin.getAuctionManager().getPlayerOwnedItems(player);
+        var list = this.plugin.getAuctionManager().getPlayerSellingItems(player);
         return super.checkPermission(player, inventory, placeholders) && !list.isEmpty();
     }
 
     @Override
     public void onClick(@NonNull Player player, @NonNull InventoryClickEvent event, @NonNull InventoryEngine inventory, int slot, @NonNull Placeholders placeholders) {
         super.onClick(player, event, inventory, slot, placeholders);
-        this.plugin.getInventoriesLoader().openInventory(player, Inventories.OWNED_ITEMS);
+        this.plugin.getInventoriesLoader().openInventory(player, Inventories.SELLING_ITEMS);
     }
 
     @Override
     public ItemStack getCustomItemStack(@NonNull Player player, boolean useCache, @NotNull Placeholders placeholders) {
 
-        var list = this.plugin.getAuctionManager().getPlayerOwnedItems(player);
+        var list = this.plugin.getAuctionManager().getPlayerSellingItems(player);
 
-        placeholders.register("owned-items", String.valueOf(list.size()));
+        placeholders.register("selling-items", String.valueOf(list.size()));
         placeholders.register("s", list.size() > 1 ? "s" : "");
         return getItemStack().build(player, false, placeholders);
     }

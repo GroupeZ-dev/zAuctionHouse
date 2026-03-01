@@ -13,8 +13,8 @@ public record ActionConfiguration(
         ListedConfiguration listed,
         // Purchased
         PurchasedConfiguration purchased,
-        // Owned
-        OwnedConfiguration owned,
+        // Selling
+        SellingConfiguration selling,
         // Expired
         ExpiredConfiguration expired) {
 
@@ -25,8 +25,8 @@ public record ActionConfiguration(
                 ListedConfiguration.of(plugin, configuration),
                 // Purchased
                 PurchasedConfiguration.of(plugin, configuration),
-                // Owned
-                OwnedConfiguration.of(plugin, configuration),
+                // Selling
+                SellingConfiguration.of(plugin, configuration),
                 // Expired
                 ExpiredConfiguration.of(plugin, configuration));
     }
@@ -79,9 +79,9 @@ public record ActionConfiguration(
         }
     }
 
-    public record OwnedConfiguration(boolean openInventory) {
-        public static OwnedConfiguration of(AuctionPlugin plugin, FileConfiguration configuration) {
-            return new OwnedConfiguration(configuration.getBoolean("action.owned-item.open-inventory"));
+    public record SellingConfiguration(boolean openInventory) {
+        public static SellingConfiguration of(AuctionPlugin plugin, FileConfiguration configuration) {
+            return new SellingConfiguration(configuration.getBoolean("action.selling-item.open-inventory"));
         }
     }
 

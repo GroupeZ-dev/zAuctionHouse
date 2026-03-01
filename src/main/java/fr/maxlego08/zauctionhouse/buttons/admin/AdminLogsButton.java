@@ -241,7 +241,7 @@ public class AdminLogsButton extends LoadingButton {
             case SALE -> Material.GOLD_INGOT;
             case PURCHASE -> Material.EMERALD;
             case REMOVE_LISTED -> Material.BARRIER;
-            case REMOVE_OWNED -> Material.CHEST;
+            case REMOVE_SELLING -> Material.CHEST;
             case REMOVE_EXPIRED -> Material.CLOCK;
             case REMOVE_PURCHASED -> Material.HOPPER;
         };

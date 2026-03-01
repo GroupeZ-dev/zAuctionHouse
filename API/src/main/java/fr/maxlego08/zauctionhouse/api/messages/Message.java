@@ -62,7 +62,7 @@ public enum Message {
     ITEM_REMOVE_LISTED("#e6fff3You just removed %items% #e6fff3from the listed items."),
     ITEM_REMOVE_EXPIRED("#e6fff3You just removed %items% #e6fff3from the expired items."),
     ITEM_REMOVE_PURCHASED("#e6fff3You just removed %items% #e6fff3from the purchased items."),
-    ITEM_REMOVE_OWNED("#e6fff3You just removed %items% #e6fff3from your items."),
+    ITEM_REMOVE_SELLING("#e6fff3You just removed %items% #e6fff3from your items."),
 
     ITEM_SOLD("#e6fff3You just sold %items% #e6fff3for #92bed8%price%#e6fff3."),
 

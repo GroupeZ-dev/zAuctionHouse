@@ -194,13 +194,12 @@ public interface AuctionManager {
     List<Item> getExpiredItems(java.util.UUID uniqueId);
 
     /**
-     * Retrieves items currently owned by the player but still within the auction house storage
-     * (for example, unsold items or items awaiting delivery).
+     * Retrieves items currently being sold by the player in the auction house.
      *
-     * @param player player owner to search for
-     * @return items belonging to the player across storage types
+     * @param player player seller to search for
+     * @return items being sold by the player
      */
-    List<Item> getPlayerOwnedItems(Player player);
+    List<Item> getPlayerSellingItems(Player player);
 
     /**
      * Retrieves items the player successfully purchased and that are held in storage until
@@ -212,12 +211,12 @@ public interface AuctionManager {
     List<Item> getPurchasedItems(Player player);
 
     /**
-     * Version of {@link #getPlayerOwnedItems(Player)} using a UUID for offline player support.
+     * Version of {@link #getPlayerSellingItems(Player)} using a UUID for offline player support.
      *
      * @param uniqueId unique identifier of the player
-     * @return items belonging to the player across storage types
+     * @return items being sold by the player
      */
-    List<Item> getPlayerOwnedItems(java.util.UUID uniqueId);
+    List<Item> getPlayerSellingItems(java.util.UUID uniqueId);
 
     /**
      * Version of {@link #getPurchasedItems(Player)} using a UUID for offline player support.
@@ -272,14 +271,13 @@ public interface AuctionManager {
     CompletableFuture<Void> removeListedItem(Player player, Item item);
 
     /**
-     * Asynchronously removes an item owned by the player from their storage, for example when they
-     * discard a reclaimed item.
+     * Asynchronously removes an item the player is selling from their active sales.
      *
      * @param player player requesting the removal
-     * @param item   owned item to delete
+     * @param item   selling item to delete
      * @return future completing once the removal has been processed
      */
-    CompletableFuture<Void> removeOwnedItem(Player player, Item item);
+    CompletableFuture<Void> removeSellingItem(Player player, Item item);
 
     /**
      * Asynchronously removes an expired item from the player's expired storage.

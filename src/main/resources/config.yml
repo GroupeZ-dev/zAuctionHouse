@@ -154,13 +154,13 @@ commands: # Commande principale, /zauctionhouse
 
   inventories:
 
-    # Command /ah owned
+    # Command /ah selling
     - enable: true
-      permission: "zauctionhouse.owned"
-      description: "Open owned items"
+      permission: "zauctionhouse.selling"
+      description: "Open selling items"
       aliases:
-        - 'owned'
-      inventory: OWNED_ITEMS
+        - 'selling'
+      inventory: SELLING_ITEMS
       # enable-page: true
       # page-name: "page"
 
@@ -330,7 +330,7 @@ item-lore:
     - ""
     - "#8c8c8c• #2CCED2Click to retrieve this item"
 
-  owned-item:
+  selling-item:
     - ""
     - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
     - ""
@@ -383,7 +383,7 @@ item-lore:
     SALE: "Item Listed"
     PURCHASE: "Item Purchased"
     REMOVE_LISTED: "Removed from Listing"
-    REMOVE_OWNED: "Retrieved Own Item"
+    REMOVE_SELLING: "Retrieved Selling Item"
     REMOVE_EXPIRED: "Retrieved Expired"
     REMOVE_PURCHASED: "Retrieved Purchase"
 
@@ -478,7 +478,7 @@ action:
       volume: 1
       pitch: 1
 
-  owned-item:
+  selling-item:
 
     # On ouvre l'inventaire après l'avoir retiré de l'inventaire de mes items
     open-inventory: true

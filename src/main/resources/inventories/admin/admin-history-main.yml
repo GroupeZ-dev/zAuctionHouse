@@ -30,14 +30,14 @@ items:
         - ''
         - '#8c8c8c• #2CCED2Click #92ffffto open'
 
-  owned:
-    type: ZAUCTIONHOUSE_ADMIN_HISTORY_OWNED
+  selling:
+    type: ZAUCTIONHOUSE_ADMIN_HISTORY_SELLING
     slot: 30
     item:
       url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjU4MDdjYzRjM2I2OTU4YWVhNjE1NmU4NDUxOGQ5MWE0OWM1ZjMyOTcxZTZlYjI2OWEyM2EyNWEyNzE0NSJ9fX0="
       name: '#2CCED2<bold>sᴀʟᴇ ɪᴛᴇᴍs'
       lore:
-        - '#92ffff%target% has #2CCED2%owned-items% #92ffffitem%s% on sale.'
+        - '#92ffff%target% has #2CCED2%selling-items% #92ffffitem%s% on sale.'
         - ''
         - '#8c8c8c• #2CCED2Click #92ffffto open'
 

@@ -8,11 +8,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jspecify.annotations.NonNull;
 
-public class OwnedItemsButton extends PaginateButton {
+public class SellingItemsButton extends PaginateButton {
 
     private final AuctionPlugin plugin;
 
-    public OwnedItemsButton(Plugin plugin) {
+    public SellingItemsButton(Plugin plugin) {
         this.plugin = (AuctionPlugin) plugin;
     }
 
@@ -20,19 +20,19 @@ public class OwnedItemsButton extends PaginateButton {
     public void onRender(Player player, InventoryEngine inventoryEngine) {
 
         var manager = this.plugin.getAuctionManager();
-        var items = manager.getPlayerOwnedItems(player);
-        var line = this.plugin.getConfiguration().getItemLore().ownedLore();
+        var items = manager.getPlayerSellingItems(player);
+        var line = this.plugin.getConfiguration().getItemLore().sellingLore();
         var linePurchased = this.plugin.getConfiguration().getItemLore().beingPurchasedLore();
 
         paginate(items, inventoryEngine, (slot, item) -> {
             inventoryEngine.addItem(slot, item.buildItemStack(player, item.getStatus() == ItemStatus.AVAILABLE ? line : linePurchased)).setClick(event -> {
-                this.plugin.getAuctionManager().getRemoveService().removeOwnedItem(player, item);
+                this.plugin.getAuctionManager().getRemoveService().removeSellingItem(player, item);
             });
         });
     }
 
     @Override
     public int getPaginationSize(@NonNull Player player) {
-        return this.plugin.getAuctionManager().getPlayerOwnedItems(player).size();
+        return this.plugin.getAuctionManager().getPlayerSellingItems(player).size();
     }
 }

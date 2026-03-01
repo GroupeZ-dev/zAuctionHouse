@@ -35,14 +35,14 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
 
         if (item.isExpired()) {
             logger.info("Item expired (Remove Listed)");
-            manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED, PlayerCacheKey.ITEMS_LISTED);
+            manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_LISTED);
             manager.openMainAuction(player);
             return CompletableFuture.completedFuture(null);
         }
 
         if (item.getStatus() != ItemStatus.AVAILABLE && item.getStatus() != ItemStatus.IS_REMOVE_CONFIRM) {
             logger.info("Item not available (Remove Listed)");
-            manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED, PlayerCacheKey.ITEMS_LISTED);
+            manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_LISTED);
             manager.openMainAuction(player);
             return CompletableFuture.completedFuture(null);
         }
@@ -51,7 +51,7 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
     }
 
     @Override
-    public CompletableFuture<Void> removeOwnedItem(Player player, Item item) {
+    public CompletableFuture<Void> removeSellingItem(Player player, Item item) {
 
         var event = new AuctionPreRemoveListedItemEvent(item, player);
         if (!event.callEvent()) return CompletableFuture.completedFuture(null);
@@ -60,20 +60,20 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
         var logger = this.plugin.getLogger();
 
         if (item.isExpired()) {
-            logger.info("Item expired (Remove Owned)");
-            manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED, PlayerCacheKey.ITEMS_LISTED);
+            logger.info("Item expired (Remove Selling)");
+            manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_LISTED);
             manager.updateInventory(player);
             return CompletableFuture.completedFuture(null);
         }
 
         if (item.getStatus() != ItemStatus.AVAILABLE) {
-            logger.info("Item not available (Remove Owned)");
-            manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_OWNED, PlayerCacheKey.ITEMS_LISTED);
+            logger.info("Item not available (Remove Selling)");
+            manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_LISTED);
             manager.updateInventory(player);
             return CompletableFuture.completedFuture(null);
         }
 
-        return executeRemoval(ItemStatus.IS_BEING_REMOVED, player, item, () -> manager.updateInventory(player), () -> manager.removeOwnedItem(player, item), StorageType.LISTED);
+        return executeRemoval(ItemStatus.IS_BEING_REMOVED, player, item, () -> manager.updateInventory(player), () -> manager.removeSellingItem(player, item), StorageType.LISTED);
     }
 
     @Override

@@ -40,7 +40,7 @@ public class ExpireService implements AuctionExpireService {
 
         var offlineSeller = item.getSeller();
         if (offlineSeller.isOnline()) {
-            this.auctionManager.clearPlayerCache(offlineSeller.getPlayer(), PlayerCacheKey.ITEMS_OWNED, PlayerCacheKey.ITEMS_EXPIRED); // Suppression du cache du joueur
+            this.auctionManager.clearPlayerCache(offlineSeller.getPlayer(), PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED); // Suppression du cache du joueur
         }
 
         if (storageType == StorageType.LISTED) {
@@ -98,7 +98,7 @@ public class ExpireService implements AuctionExpireService {
             var offlineSeller = item.getSeller();
             if (offlineSeller.isOnline() && !offlinePlayers.contains(offlineSeller)) {
                 offlinePlayers.add(offlineSeller);
-                this.auctionManager.clearPlayerCache(offlineSeller.getPlayer(), PlayerCacheKey.ITEMS_OWNED, PlayerCacheKey.ITEMS_EXPIRED);
+                this.auctionManager.clearPlayerCache(offlineSeller.getPlayer(), PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED);
             }
         }
 

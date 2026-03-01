@@ -18,7 +18,7 @@ public class PlayerPlaceholders implements PlaceholderRegister {
         var configuration = plugin.getConfiguration();
 
         placeholder.register("expired_items", player -> String.valueOf(manager.getExpiredItems(player).size()), "Returns the number of expired items for a player");
-        placeholder.register("owned_items", player -> String.valueOf(manager.getPlayerOwnedItems(player).size()), "Returns the number of owned items for a player");
+        placeholder.register("selling_items", player -> String.valueOf(manager.getPlayerSellingItems(player).size()), "Returns the number of items being sold by a player");
         placeholder.register("purchased_items", player -> String.valueOf(manager.getPurchasedItems(player).size()), "Returns the number of purchased items for a player");
 
         placeholder.register("sorting_value", player -> manager.getCache(player).get(PlayerCacheKey.ITEM_SORT, plugin.getConfiguration().getSort().defaultSort()).name(), "Returns the value for sorting the items for the player");

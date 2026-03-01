@@ -46,7 +46,7 @@ reload-success: "<success>You just reloaded the plugin !"
 item-remove-listed: "#e6fff3You just removed %items% #e6fff3from the listed items."
 item-remove-expired: "#e6fff3You just removed %items% #e6fff3from the expired items."
 item-remove-purchased: "#e6fff3You just removed %items% #e6fff3from the purchased items."
-item-remove-owned: "#e6fff3You just removed %items% #e6fff3from your items."
+item-remove-selling: "#e6fff3You just removed %items% #e6fff3from your items."
 
 item-sold: "#e6fff3You just sold %items% #e6fff3for #92bed8%price%#e6fff3."
 

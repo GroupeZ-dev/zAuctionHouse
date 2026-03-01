@@ -87,7 +87,7 @@ public class CommandAuctionAdminAdd extends VCommand {
         this.plugin.getStorageManager().createAuctionItem(target, price, expiredAt, List.of(cloned), economy)
                 .thenAccept(item -> {
                     this.auctionManager.addItem(StorageType.LISTED, item);
-                    this.auctionManager.clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_OWNED);
+                    this.auctionManager.clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_SELLING);
                     this.auctionManager.updateListedItems(item, true, target);
                     this.auctionManager.message(admin, Message.ADMIN_ITEM_ADDED, "%items%", item.getItemDisplay(), "%target%", target.getName(), "%type%", "listed");
                 });
@@ -100,7 +100,7 @@ public class CommandAuctionAdminAdd extends VCommand {
                     item.setExpiredAt(new Date());
                     this.auctionManager.addItem(StorageType.EXPIRED, item);
                     this.plugin.getStorageManager().updateItem(item, StorageType.EXPIRED);
-                    this.auctionManager.clearPlayersCache(PlayerCacheKey.ITEMS_EXPIRED, PlayerCacheKey.ITEMS_OWNED);
+                    this.auctionManager.clearPlayersCache(PlayerCacheKey.ITEMS_EXPIRED, PlayerCacheKey.ITEMS_SELLING);
                     this.auctionManager.message(admin, Message.ADMIN_ITEM_ADDED, "%items%", item.getItemDisplay(), "%target%", target.getName(), "%type%", "expired");
                 });
     }

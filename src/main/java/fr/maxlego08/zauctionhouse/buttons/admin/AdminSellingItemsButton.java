@@ -12,11 +12,11 @@ import org.bukkit.plugin.Plugin;
 import java.util.Optional;
 import java.util.UUID;
 
-public class AdminOwnedItemsButton extends PaginateButton {
+public class AdminSellingItemsButton extends PaginateButton {
 
     private final AuctionPlugin plugin;
 
-    public AdminOwnedItemsButton(Plugin plugin) {
+    public AdminSellingItemsButton(Plugin plugin) {
         this.plugin = (AuctionPlugin) plugin;
     }
 
@@ -29,7 +29,7 @@ public class AdminOwnedItemsButton extends PaginateButton {
         }
 
         var manager = this.plugin.getAuctionManager();
-        var items = manager.getPlayerOwnedItems(target.get());
+        var items = manager.getPlayerSellingItems(target.get());
         paginate(items, inventoryEngine, (slot, item) -> inventoryEngine.addItem(slot, item.buildItemStack(player)).setClick(event -> {
             manager.adminRemoveItem(player, target.get(), item, StorageType.LISTED);
             this.plugin.getInventoriesLoader().getInventoryManager().updateInventory(player);
@@ -38,7 +38,7 @@ public class AdminOwnedItemsButton extends PaginateButton {
 
     @Override
     public int getPaginationSize(Player player) {
-        return this.getTarget(player).map(uuid -> this.plugin.getAuctionManager().getPlayerOwnedItems(uuid).size()).orElse(0);
+        return this.getTarget(player).map(uuid -> this.plugin.getAuctionManager().getPlayerSellingItems(uuid).size()).orElse(0);
     }
 
     private Optional<UUID> getTarget(Player player) {
