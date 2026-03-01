@@ -130,9 +130,8 @@ public class SellService extends ZUtils implements AuctionSellService {
             return true;
         }
 
-        long listedItems = manager.getItemsListedForSale(player).size();
+        long listedItems = manager.getPlayerSellingItems(player).size();
         long maxSellPermission = configuration.getPermission().getLimit(ItemType.AUCTION, player);
-        System.out.println(listedItems + " - " + maxSellPermission);
         if (listedItems >= maxSellPermission) {
             message(plugin, player, Message.LISTED_ITEMS_LIMIT, "%max-items%", String.valueOf(maxSellPermission));
             return true;
