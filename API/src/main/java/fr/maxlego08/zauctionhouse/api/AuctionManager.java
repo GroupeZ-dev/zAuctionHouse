@@ -344,4 +344,10 @@ public interface AuctionManager {
      * Should be called after bulk item operations (e.g., loading from database).
      */
     void rebuildSortedItemsCache();
+
+    /**
+     * Updates the economy references for all items in storage after a reload.
+     * If an item's economy is no longer found, a warning will be logged to the console.
+     */
+    void updateItemEconomies();
 }

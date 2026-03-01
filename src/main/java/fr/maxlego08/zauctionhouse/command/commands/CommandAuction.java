@@ -5,6 +5,7 @@ import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.utils.Permission;
 import fr.maxlego08.zauctionhouse.command.VCommand;
 import fr.maxlego08.zauctionhouse.command.commands.admin.CommandAuctionAdmin;
+import fr.maxlego08.zauctionhouse.command.commands.admin.CommandAuctionAdminReload;
 import fr.maxlego08.zauctionhouse.utils.commands.CommandType;
 import org.bukkit.entity.Player;
 
@@ -19,7 +20,6 @@ public class CommandAuction extends VCommand {
         this.addSubCommand(new CommandAuctionSell(plugin));
         this.addSubCommand(new CommandAuctionClaim(plugin));
         this.addSubCommand(new CommandAuctionPage(plugin));
-        this.addSubCommand(new CommandAuctionReload(plugin));
         this.addSubCommand(new CommandAuctionAdmin(plugin));
 
         plugin.getConfiguration().getInventoryCommands().forEach((configuration) -> this.addSubCommand(new CommandAuctionInventories(plugin, configuration)));

@@ -28,6 +28,7 @@ It’s going to be amazing… or there will be bugs everywhere. Your call. 😄
 - [ ] Pouvoir vendre un item à la place d'un joueur
 - [ ] Pouvoir choisir un nom à son "bulk sale"
 - [ ] Ajouter un système qui va vérifier le contenu des inventaires, et vérifier que les boutons sont bien utilisé, par exemple ne pas avoir de bouton de remove confirm purchase dans l'inventaire de confirmation de retirer l'item de la vente
+- [ ] Renommer "owned" en "active_sales", ou un nom plus parlant pour indiquer que se sont les items du joueur qui sont en vente
 
 # zAuctionHouse Discord
 

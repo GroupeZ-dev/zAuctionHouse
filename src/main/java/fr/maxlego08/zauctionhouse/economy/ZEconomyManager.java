@@ -55,6 +55,9 @@ public class ZEconomyManager implements EconomyManager {
     @Override
     public void loadEconomies() {
 
+        // Clear existing economies before reload
+        this.economies.clear();
+
         File file = new File(this.plugin.getDataFolder(), "economies.yml");
         if (!file.exists()) {
             this.plugin.saveFile("economies.yml", false);

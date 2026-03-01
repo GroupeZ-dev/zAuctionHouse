@@ -829,4 +829,33 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             this.plugin.getScheduler().runNextTick(w -> auctionEvent.callEvent());
         }
     }
+
+    @Override
+    public void updateItemEconomies() {
+        var economyManager = this.plugin.getEconomyManager();
+        int updatedCount = 0;
+        int missingCount = 0;
+
+        for (StorageType storageType : StorageType.values()) {
+            Map<Integer, Item> items = this.storageItemsById.get(storageType);
+            if (items == null || items.isEmpty()) continue;
+
+            for (Item item : items.values()) {
+                String economyName = item.getEconomyName();
+                var optionalEconomy = economyManager.getEconomy(economyName);
+
+                if (optionalEconomy.isPresent()) {
+                    item.setAuctionEconomy(optionalEconomy.get());
+                    updatedCount++;
+                } else {
+                    this.plugin.getLogger().warning("Economy '" + economyName + "' not found for item ID " + item.getId() + " in " + storageType.name() + ". The item will keep its old economy reference.");
+                    missingCount++;
+                }
+            }
+        }
+
+        if (updatedCount > 0 || missingCount > 0) {
+            this.plugin.getLogger().info("Economy update completed: " + updatedCount + " items updated, " + missingCount + " items with missing economy.");
+        }
+    }
 }

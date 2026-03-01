@@ -22,7 +22,8 @@ public abstract class ZItem implements Item {
     protected final UUID sellerUniqueId;
     protected final String sellerName;
     protected final BigDecimal price;
-    protected final AuctionEconomy auctionEconomy;
+    protected final String economyName;
+    protected AuctionEconomy auctionEconomy;
     protected final Date createdAt;
     protected final PerformanceDebug performanceDebug;
 
@@ -39,6 +40,7 @@ public abstract class ZItem implements Item {
         this.sellerUniqueId = sellerUniqueId;
         this.sellerName = sellerName;
         this.price = price;
+        this.economyName = auctionEconomy.getName();
         this.auctionEconomy = auctionEconomy;
         this.createdAt = createdAt;
         this.expiredAt = expiredAt;
@@ -73,6 +75,16 @@ public abstract class ZItem implements Item {
     @Override
     public AuctionEconomy getAuctionEconomy() {
         return this.auctionEconomy;
+    }
+
+    @Override
+    public void setAuctionEconomy(AuctionEconomy auctionEconomy) {
+        this.auctionEconomy = auctionEconomy;
+    }
+
+    @Override
+    public String getEconomyName() {
+        return this.economyName;
     }
 
     @Override

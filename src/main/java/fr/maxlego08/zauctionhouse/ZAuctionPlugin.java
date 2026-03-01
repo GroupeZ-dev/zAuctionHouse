@@ -129,6 +129,9 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         this.reloadConfig();
         this.loadFiles();
         this.inventoriesLoader.reload();
+
+        // Update economy references for all items after reload
+        this.auctionManager.updateItemEconomies();
     }
 
     private void loadFiles() {

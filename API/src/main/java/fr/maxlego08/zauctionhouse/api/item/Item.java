@@ -51,6 +51,19 @@ public interface Item {
     AuctionEconomy getAuctionEconomy();
 
     /**
+     * Updates the economy associated with this item. This is used during plugin reload
+     * to refresh economy references when configuration changes.
+     *
+     * @param auctionEconomy new economy to associate with this item
+     */
+    void setAuctionEconomy(AuctionEconomy auctionEconomy);
+
+    /**
+     * @return the name of the economy used for this item (used to resolve the economy after reload)
+     */
+    String getEconomyName();
+
+    /**
      * @return {@link OfflinePlayer} representation of the seller for compatibility with hooks
      */
     OfflinePlayer getSeller();
