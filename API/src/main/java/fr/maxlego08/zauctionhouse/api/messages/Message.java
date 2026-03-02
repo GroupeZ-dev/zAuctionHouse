@@ -118,7 +118,26 @@ public enum Message {
     TAX_CAPITALISM_INFO("<gray>The price includes <white>%tax%<gray> VAT (%percentage%%)."),
     TAX_EXEMPT("<green>You are exempt from taxes."),
     TAX_REDUCED("<green>You benefit from a reduced tax rate (%percentage%%)."),
-    TAX_INSUFFICIENT_FUNDS("<error>You don't have enough money to pay the tax of <white>%tax%<error>.");
+    TAX_INSUFFICIENT_FUNDS("<error>You don't have enough money to pay the tax of <white>%tax%<error>."),
+
+    // Migration messages
+    COMMAND_DESCRIPTION_AUCTION_MIGRATE("Migrate data from another auction plugin"),
+    MIGRATION_NOT_CONFIGURED("<error>Migration for <white>%source%<error> is not configured. Please configure the <white>migration<error> section in config.yml."),
+    MIGRATION_INVALID_SOURCE("<error>Unknown migration source: <white>%source%"),
+    MIGRATION_AVAILABLE_SOURCES("<gray>Available sources: %sources%"),
+    MIGRATION_INFO("<primary>Migration from <white>%source%",
+            "<gray>Details: <white>%details%"),
+    MIGRATION_CONFIRM("<gray>Run <white>/ah admin migrate %source% confirm<gray> to start the migration.",
+            "<error>⚠ WARNING: This will import data into V4. Make sure to backup your data first!"),
+    MIGRATION_STARTED("<success>Migration from <white>%source%<success> started... This may take a while."),
+    MIGRATION_PROGRESS("<gray>[Migration] %progress%"),
+    MIGRATION_SUCCESS("<success>Migration from <white>%source%<success> completed successfully!",
+            "<gray>  Players: <white>%players%",
+            "<gray>  Items: <white>%items%",
+            "<gray>  Transactions: <white>%transactions%",
+            "<gray>  Errors: <white>%errors%",
+            "<gray>  Duration: <white>%duration%ms"),
+    MIGRATION_FAILED("<error>Migration failed: <white>%error%");
 
     private AuctionPlugin plugin;
     private List<AuctionMessage> messages = new ArrayList<>();

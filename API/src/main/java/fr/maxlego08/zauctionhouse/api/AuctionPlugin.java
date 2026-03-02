@@ -5,6 +5,7 @@ import fr.maxlego08.zauctionhouse.api.cluster.AuctionClusterBridge;
 import fr.maxlego08.zauctionhouse.api.configuration.Configuration;
 import fr.maxlego08.zauctionhouse.api.economy.EconomyManager;
 import fr.maxlego08.zauctionhouse.api.hooks.permission.OfflinePermission;
+import fr.maxlego08.zauctionhouse.api.migration.MigrationRegistry;
 import fr.maxlego08.zauctionhouse.api.placeholders.Placeholder;
 import fr.maxlego08.zauctionhouse.api.category.CategoryManager;
 import fr.maxlego08.zauctionhouse.api.rules.ItemRuleManager;
@@ -86,6 +87,11 @@ public interface AuctionPlugin extends Plugin {
      * @return registry for rule loaders, allowing external plugins to register custom rules
      */
     RuleLoaderRegistry getRuleLoaderRegistry();
+
+    /**
+     * @return registry for migration providers, allowing external plugins to register custom migrations
+     */
+    MigrationRegistry getMigrationRegistry();
 
     /**
      * Overrides the default cluster bridge at runtime, allowing integrations to swap transport

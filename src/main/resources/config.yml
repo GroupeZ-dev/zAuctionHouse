@@ -530,3 +530,50 @@ sort-items:
     ASCENDING_DATE: "ᴀsᴄᴇɴᴅɪɴɢ ᴅᴀᴛᴇ"
     DECREASING_DATE: "ᴅᴇᴄʀᴇᴀsɪɴɢ ᴅᴀᴛᴇ"
     DECREASING_PRICE: "ᴅᴇᴄʀᴇᴀsɪɴɢ ᴘʀɪᴄᴇ"
+
+################################################################
+# MIGRATION FROM OTHER PLUGINS
+################################################################
+# This section allows you to migrate data from other auction plugins to zAuctionHouse V4.
+# Configure the appropriate source section, then run:
+#   /ah admin migrate <source> confirm
+#
+# Available sources:
+#   - zauctionhousev3 (aliases: zah, zahv3, v3)
+#
+# IMPORTANT: Backup your data before migrating!
+migration:
+
+  # ============================================================
+  # zAuctionHouse V3 Migration
+  # ============================================================
+  # Command: /ah admin migrate zauctionhousev3 confirm
+  zauctionhouse-v3:
+
+    # Source type: MYSQL, MARIADB, SQLITE, or JSON
+    source-type: SQLITE
+
+    # Table prefix used in V3 (default: zauctionhouse_)
+    table-prefix: "zauctionhouse_"
+
+    # === For SQLITE ===
+    # Path to the V3 SQLite database file
+    sqlite-path: "plugins/zAuctionHousev3/database.db"
+
+    # === For MYSQL/MARIADB ===
+    host: "localhost"
+    port: 3306
+    database: "zauctionhouse"
+    user: "root"
+    password: ""
+
+    # === For JSON ===
+    # Path to the V3 data folder containing JSON files
+    json-folder: "plugins/zAuctionHouseV3"
+
+  # ============================================================
+  # Future migration sources will be added here
+  # ============================================================
+  # axauctions:
+  #   source-type: SQLITE
+  #   sqlite-path: "plugins/AxAuctions/data.db"

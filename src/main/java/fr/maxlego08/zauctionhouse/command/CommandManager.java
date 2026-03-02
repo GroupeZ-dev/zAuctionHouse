@@ -5,12 +5,7 @@ import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import fr.maxlego08.zauctionhouse.utils.commands.CommandType;
 import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandMap;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.PluginCommand;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -46,19 +41,6 @@ public class CommandManager extends ZUtils implements CommandExecutor, TabComple
 
     public CommandManager(AuctionPlugin template) {
         this.plugin = template;
-    }
-
-    /**
-     * Valid commands
-     */
-    public void validCommands() {
-        this.plugin.getLogger().info("Loading " + getUniqueCommand() + " commands");
-        this.commandChecking();
-        try {
-            this.generateMarkdownFile();
-        } catch (IOException exception) {
-            exception.printStackTrace();
-        }
     }
 
     /**
@@ -266,57 +248,4 @@ public class CommandManager extends ZUtils implements CommandExecutor, TabComple
             exception.printStackTrace();
         }
     }
-
-    /**
-     * Generate a Markdown file listing all the commands.
-     * <p>
-     * This method creates a file named {@code commands.md} in the plugin's data folder.
-     * The file contains a Markdown table with the following columns:
-     * <ul>
-     * <li>{@code Command}: The command name.
-     * <li>{@code Aliases}: The aliases of the command.
-     * <li>{@code Permission}: The permission required to execute the command.
-     * <li>{@code Description}: The description of the command.
-     * </ul>
-     *
-     * @throws IOException if the file cannot be written.
-     */
-    public void generateMarkdownFile() throws IOException {
-
-        List<VCommand> commands = new ArrayList<>();
-        this.commands.stream().filter(e -> e.getParent() == null).sorted(Comparator.comparing(VCommand::getFirst)).forEach(command -> {
-            commands.add(command);
-            commands.addAll(this.commands.stream().filter(e -> e.getMainParent() == command).sorted(Comparator.comparing(VCommand::getFirst)).toList());
-        });
-
-        StringBuilder sb = new StringBuilder();
-        // Markdown table header
-        sb.append("| Command | Aliases | Permission | Description |\n");
-        sb.append("|---------|---------|------------|-------------|\n");
-
-        for (VCommand command : commands) {
-            // Gather command data
-            String cmd = command.getSyntax(); // Assuming getSyntax() gives the command
-            List<String> aliasesList = new ArrayList<>(command.getSubCommands());
-            if (!aliasesList.isEmpty()) {
-                aliasesList.removeFirst();  // Remove the first element
-            }
-            String aliases = aliasesList.stream().map(alias -> "/" + alias)  // Add '/' before each alias
-                    .collect(Collectors.joining(", "));
-            String perm = command.getPermission(); // getPermission() for permissions
-            String desc = command.getDescription(); // getDescription() for the description
-
-            // Escape special Markdown characters in descriptions
-            desc = desc == null ? "" : desc.replace("|", "\\|");
-            perm = perm == null ? "" : perm;
-
-            // Add row to the Markdown table
-            sb.append(String.format("| `%s` | %s | %s | %s |\n", cmd, aliases, perm, desc));
-        }
-
-        // Write the StringBuilder content to the file
-        var path = new File(plugin.getDataFolder(), "commands.md").toPath();
-        Files.writeString(path, sb.toString());
-    }
-
 }

@@ -105,3 +105,27 @@ tax-capitalism-info: "<gray>The price includes <white>%tax%<gray> VAT (%percenta
 tax-exempt: "<green>You are exempt from taxes."
 tax-reduced: "<green>You benefit from a reduced tax rate (%percentage%%)."
 tax-insufficient-funds: "<error>You don't have enough money to pay the tax of <white>%tax%<error>."
+
+# Migration messages
+# Usage: /ah admin migrate <source> confirm
+# Available sources: zauctionhousev3
+command-description-auction-migrate: "Migrate data from another auction plugin"
+migration-not-configured: "<error>Migration for <white>%source%<error> is not configured. Please configure the <white>migration<error> section in config.yml."
+migration-invalid-source: "<error>Unknown migration source: <white>%source%"
+migration-available-sources: "<gray>Available sources: %sources%"
+migration-info:
+  - "<primary>Migration from <white>%source%"
+  - "<gray>Details: <white>%details%"
+migration-confirm:
+  - "<gray>Run <white>/ah admin migrate %source% confirm<gray> to start the migration."
+  - "<error>⚠ WARNING: This will import data into V4. Make sure to backup your data first!"
+migration-started: "<success>Migration from <white>%source%<success> started... This may take a while."
+migration-progress: "<gray>[Migration] %progress%"
+migration-success:
+  - "<success>Migration from <white>%source%<success> completed successfully!"
+  - "<gray>  Players: <white>%players%"
+  - "<gray>  Items: <white>%items%"
+  - "<gray>  Transactions: <white>%transactions%"
+  - "<gray>  Errors: <white>%errors%"
+  - "<gray>  Duration: <white>%duration%ms"
+migration-failed: "<error>Migration failed: <white>%error%"

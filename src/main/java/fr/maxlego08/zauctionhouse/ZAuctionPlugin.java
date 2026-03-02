@@ -11,6 +11,7 @@ import fr.maxlego08.zauctionhouse.api.configuration.Configuration;
 import fr.maxlego08.zauctionhouse.api.configuration.ConfigurationFile;
 import fr.maxlego08.zauctionhouse.api.economy.EconomyManager;
 import fr.maxlego08.zauctionhouse.api.hooks.permission.OfflinePermission;
+import fr.maxlego08.zauctionhouse.api.migration.MigrationRegistry;
 import fr.maxlego08.zauctionhouse.api.placeholders.Placeholder;
 import fr.maxlego08.zauctionhouse.api.placeholders.PlaceholderRegister;
 import fr.maxlego08.zauctionhouse.api.rules.ItemRuleManager;
@@ -29,6 +30,8 @@ import fr.maxlego08.zauctionhouse.hooks.permissions.LuckPermsOfflinePermission;
 import fr.maxlego08.zauctionhouse.listeners.PlayerListener;
 import fr.maxlego08.zauctionhouse.loader.MessageLoader;
 import fr.maxlego08.zauctionhouse.loader.ZInventoriesLoader;
+import fr.maxlego08.zauctionhouse.migration.ZMigrationRegistry;
+import fr.maxlego08.zauctionhouse.migration.v3.V3MigrationProvider;
 import fr.maxlego08.zauctionhouse.placeholder.DistantPlaceholder;
 import fr.maxlego08.zauctionhouse.placeholder.LocalPlaceholder;
 import fr.maxlego08.zauctionhouse.placeholder.placeholders.GlobalPlaceholders;
@@ -70,6 +73,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     private final ItemRuleManager itemRuleManager = new ZItemRuleManager(this, ruleLoaderRegistry);
     private final CategoryManager categoryManager = new ZCategoryManager(this, ruleLoaderRegistry);
     private final YamlUpdater yamlUpdater = new YamlUpdater(this);
+    private final MigrationRegistry migrationRegistry = new ZMigrationRegistry(this);
     private InventoriesLoader inventoriesLoader;
     private DiscordWebhookService discordWebhookService;
     private boolean isEnabled = false;
@@ -92,6 +96,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
 
         this.ruleLoaderRegistry.registerDefaultLoaders();
         this.registerCustomItemLoaders();
+        this.registerDefaultMigrationProviders();
 
         // On doit créer la classe des inventaires avant de charger la configuration, cela permet d'utiliser les interfaces de zmenu partout.
         this.inventoriesLoader = new ZInventoriesLoader(this);
@@ -233,6 +238,10 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         }
     }
 
+    private void registerDefaultMigrationProviders() {
+        this.migrationRegistry.register(new V3MigrationProvider());
+    }
+
     @Override
     public PlatformScheduler getScheduler() {
         return this.platformScheduler;
@@ -295,6 +304,11 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     @Override
     public RuleLoaderRegistry getRuleLoaderRegistry() {
         return this.ruleLoaderRegistry;
+    }
+
+    @Override
+    public MigrationRegistry getMigrationRegistry() {
+        return this.migrationRegistry;
     }
 
     @Override
