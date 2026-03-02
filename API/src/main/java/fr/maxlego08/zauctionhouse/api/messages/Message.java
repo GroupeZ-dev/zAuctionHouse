@@ -108,7 +108,15 @@ public enum Message {
     CLAIM_PENDING_NOTIFY("#e6fff3You have pending money to claim! Use <white>/ah claim<#e6fff3> to receive <white>%amount%<#e6fff3>."),
 
     SALES_NOTIFICATION("<click:run_command:/ah history>#e6fff3While you were away, <white>%count%<#e6fff3> of your items were sold for a total of <white>%total%<#e6fff3>!",
-            "<click:run_command:/ah history>#8c8c8c• #2CCED2Click here<#92ffff> to view your sales history</click>");
+            "<click:run_command:/ah history>#8c8c8c• #2CCED2Click here<#92ffff> to view your sales history</click>"),
+
+    // Tax messages
+    TAX_SELL_APPLIED("<gray>A tax of <white>%tax%<gray> (%percentage%%) has been applied to this sale."),
+    TAX_PURCHASE_APPLIED("<gray>A tax of <white>%tax%<gray> (%percentage%%) has been applied to this purchase."),
+    TAX_CAPITALISM_INFO("<gray>The price includes <white>%tax%<gray> VAT (%percentage%%)."),
+    TAX_EXEMPT("<green>You are exempt from taxes."),
+    TAX_REDUCED("<green>You benefit from a reduced tax rate (%percentage%%)."),
+    TAX_INSUFFICIENT_FUNDS("<error>You don't have enough money to pay the tax of <white>%tax%<error>.");
 
     private AuctionPlugin plugin;
     private List<AuctionMessage> messages = new ArrayList<>();

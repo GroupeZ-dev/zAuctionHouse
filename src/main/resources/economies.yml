@@ -19,6 +19,57 @@ economies:
       bid: 500
     max-prices: 10000000000
 
+    # Tax configuration
+    # Types: SELL (seller pays when listing), PURCHASE (tax deducted from seller's earnings),
+    #        BOTH (tax on both operations), CAPITALISM (VAT - buyer pays extra, seller receives full price)
+    tax:
+      enabled: false
+      type: SELL  # SELL, PURCHASE, BOTH, CAPITALISM
+      amount-type: PERCENTAGE  # PERCENTAGE or FIXED
+      amount: 5  # 5% or 5$ depending on amount-type
+
+      # Permission to bypass all taxes
+      bypass-permission: "zauctionhouse.tax.bypass"
+
+      # Tax reductions based on permissions (first matching permission is applied)
+      reductions:
+        - permission: "zauctionhouse.tax.vip"
+          percentage: 50  # 50% reduction
+        - permission: "zauctionhouse.tax.premium"
+          percentage: 25  # 25% reduction
+        - permission: "zauctionhouse.tax.member"
+          percentage: 10  # 10% reduction
+
+      # Item-specific tax rules (optional, disabled by default)
+      # These rules override the default tax configuration for matching items
+      item-rules:
+        enabled: false
+        rules: []
+        # Example rules:
+        # - name: "diamond_tax"
+        #   priority: 100
+        #   type: PURCHASE
+        #   amount-type: PERCENTAGE
+        #   amount: 10
+        #   rule:
+        #     type: material
+        #     materials:
+        #       - DIAMOND
+        #       - DIAMOND_BLOCK
+        #
+        # - name: "rare_items"
+        #   priority: 90
+        #   type: CAPITALISM
+        #   amount-type: PERCENTAGE
+        #   amount: 15
+        #   rule:
+        #     type: and
+        #     rules:
+        #       - type: lore
+        #         mode: CONTAINS
+        #         values:
+        #           - "Rare"
+
 default-economy:
   auction: vault
   rent: vault

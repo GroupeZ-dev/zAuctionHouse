@@ -95,3 +95,11 @@ claim-pending-notify: "#e6fff3You have pending money to claim! Use <white>/ah cl
 sales-notification:
   - "<click:run_command:/ah history>#e6fff3While you were away, <white>%count%<#e6fff3> of your items were sold for a total of <white>%total%<#e6fff3>!"
   - "<click:run_command:/ah history>#8c8c8c• #2CCED2Click here<#92ffff> to view your sales history</click>"
+
+# Tax messages
+tax-sell-applied: "<gray>A tax of <white>%tax%<gray> (%percentage%%) has been applied to this sale."
+tax-purchase-applied: "<gray>A tax of <white>%tax%<gray> (%percentage%%) has been applied to this purchase."
+tax-capitalism-info: "<gray>The price includes <white>%tax%<gray> VAT (%percentage%%)."
+tax-exempt: "<green>You are exempt from taxes."
+tax-reduced: "<green>You benefit from a reduced tax rate (%percentage%%)."
+tax-insufficient-funds: "<error>You don't have enough money to pay the tax of <white>%tax%<error>."

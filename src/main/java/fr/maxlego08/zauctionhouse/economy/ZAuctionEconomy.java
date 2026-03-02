@@ -4,6 +4,8 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.economy.PriceFormat;
 import fr.maxlego08.zauctionhouse.api.item.ItemType;
+import fr.maxlego08.zauctionhouse.api.tax.TaxConfiguration;
+import fr.maxlego08.zauctionhouse.tax.ZTaxConfiguration;
 import fr.traqueur.currencies.CurrencyProvider;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.Nullable;
@@ -28,8 +30,9 @@ public class ZAuctionEconomy implements AuctionEconomy {
     private final EnumMap<ItemType, BigDecimal> maxPrices;
     private final boolean autoClaim;
     private final boolean mustBeOnline;
+    private final TaxConfiguration taxConfiguration;
 
-    public ZAuctionEconomy(AuctionPlugin plugin, CurrencyProvider currencyProvider, String name, String displayName, String format, String symbol, String permission, String depositReason, String withdrawReason, PriceFormat priceFormat, EnumMap<ItemType, BigDecimal> minPrices, EnumMap<ItemType, BigDecimal> maxPrices, boolean autoClaim, boolean mustBeOnline) {
+    public ZAuctionEconomy(AuctionPlugin plugin, CurrencyProvider currencyProvider, String name, String displayName, String format, String symbol, String permission, String depositReason, String withdrawReason, PriceFormat priceFormat, EnumMap<ItemType, BigDecimal> minPrices, EnumMap<ItemType, BigDecimal> maxPrices, boolean autoClaim, boolean mustBeOnline, TaxConfiguration taxConfiguration) {
         this.plugin = plugin;
         this.currencyProvider = currencyProvider;
         this.name = name;
@@ -44,6 +47,7 @@ public class ZAuctionEconomy implements AuctionEconomy {
         this.maxPrices = maxPrices;
         this.autoClaim = autoClaim;
         this.mustBeOnline = mustBeOnline;
+        this.taxConfiguration = taxConfiguration != null ? taxConfiguration : ZTaxConfiguration.disabled();
     }
 
     public AuctionPlugin getPlugin() {
@@ -133,5 +137,10 @@ public class ZAuctionEconomy implements AuctionEconomy {
     @Override
     public BigDecimal getMinPrice(ItemType itemType) {
         return this.minPrices.get(itemType);
+    }
+
+    @Override
+    public TaxConfiguration getTaxConfiguration() {
+        return this.taxConfiguration;
     }
 }

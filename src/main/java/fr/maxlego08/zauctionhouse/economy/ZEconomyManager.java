@@ -8,6 +8,10 @@ import fr.maxlego08.zauctionhouse.api.economy.NumberFormatReduction;
 import fr.maxlego08.zauctionhouse.api.economy.PriceFormat;
 import fr.maxlego08.zauctionhouse.api.event.events.AuctionLoadEconomyEvent;
 import fr.maxlego08.zauctionhouse.api.item.ItemType;
+import fr.maxlego08.zauctionhouse.api.rules.Rule;
+import fr.maxlego08.zauctionhouse.api.tax.*;
+import fr.maxlego08.zauctionhouse.tax.ZItemTaxRule;
+import fr.maxlego08.zauctionhouse.tax.ZTaxConfiguration;
 import fr.traqueur.currencies.Currencies;
 import fr.traqueur.currencies.CurrencyProvider;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -339,7 +343,10 @@ public class ZEconomyManager implements EconomyManager {
             minPrices = loadPrices(accessor.getObject("min-prices"), "min-prices for economy '" + name + "'");
         }
 
-        var auctionEconomy = new ZAuctionEconomy(this.plugin, currencyProvider, name, displayName, format, symbol, permission, depositReason, withdrawReason, priceFormat, minPrices, maxPrices, autoClaim, mustBeOnline);
+        // Load tax configuration
+        TaxConfiguration taxConfiguration = loadTaxConfiguration(name, accessor);
+
+        var auctionEconomy = new ZAuctionEconomy(this.plugin, currencyProvider, name, displayName, format, symbol, permission, depositReason, withdrawReason, priceFormat, minPrices, maxPrices, autoClaim, mustBeOnline, taxConfiguration);
         this.economies.add(auctionEconomy);
         this.plugin.getLogger().info("Economy '" + name + "' loaded successfully!");
     }
@@ -394,5 +401,159 @@ public class ZEconomyManager implements EconomyManager {
         }
 
         return values;
+    }
+
+    /**
+     * Loads the tax configuration from the economy configuration.
+     *
+     * @param economyName the name of the economy (for logging)
+     * @param accessor    the accessor to the economy configuration
+     * @return the loaded tax configuration, or a disabled configuration if not present
+     */
+    private TaxConfiguration loadTaxConfiguration(String economyName, TypedMapAccessor accessor) {
+        if (!accessor.contains("tax")) {
+            return ZTaxConfiguration.disabled();
+        }
+
+        Object taxObject = accessor.getObject("tax");
+        if (!(taxObject instanceof Map<?, ?> taxMap)) {
+            return ZTaxConfiguration.disabled();
+        }
+
+        TypedMapAccessor taxAccessor = new TypedMapAccessor((Map<String, Object>) taxMap);
+
+        boolean enabled = taxAccessor.getBoolean("enabled", false);
+        if (!enabled) {
+            return ZTaxConfiguration.disabled();
+        }
+
+        // Parse tax type
+        String taxTypeName = taxAccessor.getString("type", "SELL");
+        TaxType taxType;
+        try {
+            taxType = TaxType.valueOf(taxTypeName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            this.plugin.getLogger().warning("Invalid tax type '" + taxTypeName + "' for economy '" + economyName + "', defaulting to SELL");
+            taxType = TaxType.SELL;
+        }
+
+        // Parse amount type
+        String amountTypeName = taxAccessor.getString("amount-type", "PERCENTAGE");
+        TaxAmountType amountType;
+        try {
+            amountType = TaxAmountType.valueOf(amountTypeName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            this.plugin.getLogger().warning("Invalid tax amount type '" + amountTypeName + "' for economy '" + economyName + "', defaulting to PERCENTAGE");
+            amountType = TaxAmountType.PERCENTAGE;
+        }
+
+        double amount = taxAccessor.getDouble("amount", 0);
+        String bypassPermission = taxAccessor.getString("bypass-permission", null);
+
+        // Load reductions
+        List<TaxReduction> reductions = new ArrayList<>();
+        if (taxAccessor.contains("reductions")) {
+            Object reductionsObject = taxAccessor.getObject("reductions");
+            if (reductionsObject instanceof List<?> reductionsList) {
+                for (Object reductionObj : reductionsList) {
+                    if (reductionObj instanceof Map<?, ?> reductionMap) {
+                        TypedMapAccessor reductionAccessor = new TypedMapAccessor((Map<String, Object>) reductionMap);
+                        String permission = reductionAccessor.getString("permission", null);
+                        double percentage = reductionAccessor.getDouble("percentage", 0);
+                        if (permission != null && !permission.isEmpty() && percentage > 0) {
+                            reductions.add(new TaxReduction(permission, percentage));
+                        }
+                    }
+                }
+            }
+        }
+
+        // Load item rules
+        boolean itemRulesEnabled = false;
+        List<ItemTaxRule> itemRules = new ArrayList<>();
+
+        if (taxAccessor.contains("item-rules")) {
+            Object itemRulesObject = taxAccessor.getObject("item-rules");
+            if (itemRulesObject instanceof Map<?, ?> itemRulesMap) {
+                TypedMapAccessor itemRulesAccessor = new TypedMapAccessor((Map<String, Object>) itemRulesMap);
+                itemRulesEnabled = itemRulesAccessor.getBoolean("enabled", false);
+
+                if (itemRulesEnabled && itemRulesAccessor.contains("rules")) {
+                    Object rulesObject = itemRulesAccessor.getObject("rules");
+                    if (rulesObject instanceof List<?> rulesList) {
+                        for (Object ruleObj : rulesList) {
+                            if (ruleObj instanceof Map<?, ?> ruleMap) {
+                                ItemTaxRule itemTaxRule = loadItemTaxRule(economyName, (Map<String, Object>) ruleMap);
+                                if (itemTaxRule != null) {
+                                    itemRules.add(itemTaxRule);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        this.plugin.getLogger().info("Tax configuration loaded for economy '" + economyName + "': " +
+                "type=" + taxType + ", amountType=" + amountType + ", amount=" + amount +
+                ", reductions=" + reductions.size() + ", itemRules=" + itemRules.size());
+
+        return new ZTaxConfiguration(enabled, taxType, amountType, amount, bypassPermission, reductions, itemRulesEnabled, itemRules);
+    }
+
+    /**
+     * Loads an item tax rule from a configuration map.
+     *
+     * @param economyName the name of the economy (for logging)
+     * @param ruleMap     the rule configuration map
+     * @return the loaded item tax rule, or null if invalid
+     */
+    private ItemTaxRule loadItemTaxRule(String economyName, Map<String, Object> ruleMap) {
+        TypedMapAccessor ruleAccessor = new TypedMapAccessor(ruleMap);
+
+        String name = ruleAccessor.getString("name", null);
+        if (name == null) {
+            this.plugin.getLogger().warning("Item tax rule for economy '" + economyName + "' has no name, skipping");
+            return null;
+        }
+
+        int priority = ruleAccessor.getInt("priority", 0);
+
+        // Parse tax type
+        String taxTypeName = ruleAccessor.getString("type", "SELL");
+        TaxType taxType;
+        try {
+            taxType = TaxType.valueOf(taxTypeName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            this.plugin.getLogger().warning("Invalid tax type '" + taxTypeName + "' for item rule '" + name + "', defaulting to SELL");
+            taxType = TaxType.SELL;
+        }
+
+        // Parse amount type
+        String amountTypeName = ruleAccessor.getString("amount-type", "PERCENTAGE");
+        TaxAmountType amountType;
+        try {
+            amountType = TaxAmountType.valueOf(amountTypeName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            this.plugin.getLogger().warning("Invalid tax amount type '" + amountTypeName + "' for item rule '" + name + "', defaulting to PERCENTAGE");
+            amountType = TaxAmountType.PERCENTAGE;
+        }
+
+        double amount = ruleAccessor.getDouble("amount", 0);
+
+        // Load the matching rule using the rule loader registry
+        Object ruleObject = ruleAccessor.getObject("rule");
+        if (!(ruleObject instanceof Map<?, ?> matchRuleMap)) {
+            this.plugin.getLogger().warning("Item tax rule '" + name + "' has no valid rule configuration, skipping");
+            return null;
+        }
+
+        Rule matchRule = this.plugin.getRuleLoaderRegistry().loadRule(matchRuleMap);
+        if (matchRule == null) {
+            this.plugin.getLogger().warning("Item tax rule '" + name + "' has an invalid rule configuration, skipping");
+            return null;
+        }
+
+        return new ZItemTaxRule(name, priority, taxType, amountType, amount, matchRule);
     }
 }

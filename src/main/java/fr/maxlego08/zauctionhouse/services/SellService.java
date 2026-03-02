@@ -12,6 +12,8 @@ import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
+import fr.maxlego08.zauctionhouse.api.tax.TaxResult;
+import fr.maxlego08.zauctionhouse.api.tax.TaxType;
 import fr.maxlego08.zauctionhouse.api.utils.Base64ItemStack;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import org.bukkit.entity.Player;
@@ -46,15 +48,25 @@ public class SellService extends ZUtils implements AuctionSellService {
             return;
         }
 
+        // Calculate and apply sell tax
+        TaxResult taxResult = applySellTax(player, price, clonedItemStack, auctionEconomy);
+        if (taxResult == null) {
+            return; // Tax payment failed
+        }
+
         removeItemInHand(player, amount);
 
         var storageManager = this.plugin.getStorageManager();
         storageManager.createAuctionItem(player, price, expiredAt, List.of(clonedItemStack), auctionEconomy) //
-                .thenAccept(auctionItem -> this.postSell(player, auctionItem, auctionEconomy)) //
+                .thenAccept(auctionItem -> this.postSell(player, auctionItem, auctionEconomy, taxResult)) //
                 .exceptionally(throwable -> { //
                     this.plugin.getLogger().severe("Unable to sell item");
                     throwable.printStackTrace();
                     player.getInventory().addItem(clonedItemStack);
+                    // Refund the tax if the sale failed
+                    if (taxResult.hasTax()) {
+                        auctionEconomy.deposit(player, taxResult.taxAmount(), "Refund sell tax (sale failed)");
+                    }
                     return null;
                 });
     }
@@ -73,11 +85,23 @@ public class SellService extends ZUtils implements AuctionSellService {
             return;
         }
 
+        // Calculate and apply sell tax (use first item for item-specific rules)
+        ItemStack representativeItem = sellableItems.getFirst();
+        TaxResult taxResult = applySellTax(player, price, representativeItem, auctionEconomy);
+        if (taxResult == null) {
+            sellableItems.forEach(itemStack -> player.getInventory().addItem(itemStack));
+            return; // Tax payment failed
+        }
+
         var storageManager = this.plugin.getStorageManager();
-        storageManager.createAuctionItem(player, price, expiredAt, sellableItems, auctionEconomy).thenAccept(auctionItem -> this.postSell(player, auctionItem, auctionEconomy)).exceptionally(throwable -> {
+        storageManager.createAuctionItem(player, price, expiredAt, sellableItems, auctionEconomy).thenAccept(auctionItem -> this.postSell(player, auctionItem, auctionEconomy, taxResult)).exceptionally(throwable -> {
             this.plugin.getLogger().severe("Unable to sell item");
             throwable.printStackTrace();
             sellableItems.forEach(itemStack -> player.getInventory().addItem(itemStack));
+            // Refund the tax if the sale failed
+            if (taxResult.hasTax()) {
+                auctionEconomy.deposit(player, taxResult.taxAmount(), "Refund sell tax (sale failed)");
+            }
             return null;
         });
     }
@@ -163,14 +187,69 @@ public class SellService extends ZUtils implements AuctionSellService {
     }
 
     /**
+     * Calculates and applies the sell tax for a listing.
+     *
+     * @param player         the player selling
+     * @param price          the sale price
+     * @param itemStack      the item being sold (for item-specific rules)
+     * @param auctionEconomy the economy used
+     * @return the tax result, or null if the player cannot afford the tax
+     */
+    private TaxResult applySellTax(Player player, BigDecimal price, ItemStack itemStack, AuctionEconomy auctionEconomy) {
+        var taxConfig = auctionEconomy.getTaxConfiguration();
+        var economyManager = this.plugin.getEconomyManager();
+
+        // Check if sell tax applies
+        TaxType taxType = taxConfig.getTaxType();
+        if (!taxConfig.isEnabled() || (taxType != TaxType.SELL && taxType != TaxType.BOTH)) {
+            return TaxResult.disabled(price);
+        }
+
+        TaxResult taxResult = auctionEconomy.calculateSellTax(player, price, itemStack);
+
+        if (taxResult.isBypassed()) {
+            message(this.plugin, player, Message.TAX_EXEMPT);
+            return taxResult;
+        }
+
+        if (!taxResult.hasTax()) {
+            return taxResult;
+        }
+
+        // Check if player has enough money to pay the tax
+        boolean hasEnough = auctionEconomy.has(player, taxResult.taxAmount()).join();
+        if (!hasEnough) {
+            message(this.plugin, player, Message.TAX_INSUFFICIENT_FUNDS,
+                    "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()));
+            return null;
+        }
+
+        // Withdraw the tax
+        auctionEconomy.withdraw(player, taxResult.taxAmount(), "Sell tax (zAuctionHouse)");
+
+        // Send appropriate message
+        if (taxResult.isReduced()) {
+            message(this.plugin, player, Message.TAX_REDUCED,
+                    "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
+        }
+
+        message(this.plugin, player, Message.TAX_SELL_APPLIED,
+                "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()),
+                "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
+
+        return taxResult;
+    }
+
+    /**
      * Notify the cluster and the database that an auction item has been sold.
      * This method is called after an auction item has been successfully sold.
      *
      * @param player         the player who sold the auction item
      * @param auctionItem    the auction item that was sold
      * @param auctionEconomy the economy of the auction item
+     * @param taxResult      the tax result from the sell operation
      */
-    private void postSell(Player player, AuctionItem auctionItem, AuctionEconomy auctionEconomy) {
+    private void postSell(Player player, AuctionItem auctionItem, AuctionEconomy auctionEconomy, TaxResult taxResult) {
 
         // Ajout des catégories de l'item
         this.plugin.getCategoryManager().applyCategories(auctionItem);
@@ -185,7 +264,11 @@ public class SellService extends ZUtils implements AuctionSellService {
         message(this.plugin, player, Message.ITEM_SOLD, "%price%", auctionItem.getFormattedPrice(), "%items%", auctionItem.getItemDisplay());
 
         String encodedItemStack = auctionItem.getItemStacks().stream().map(Base64ItemStack::encode).collect(Collectors.joining(";"));
-        this.plugin.getStorageManager().log(LogType.SALE, auctionItem.getId(), player, null, encodedItemStack, auctionItem.getPrice(), auctionEconomy.getName(), "added_auction_item_to_listed");
+        String additionalData = "added_auction_item_to_listed";
+        if (taxResult.hasTax()) {
+            additionalData += ";sell_tax=" + taxResult.taxAmount();
+        }
+        this.plugin.getStorageManager().log(LogType.SALE, auctionItem.getId(), player, null, encodedItemStack, auctionItem.getPrice(), auctionEconomy.getName(), additionalData);
 
         this.plugin.getAuctionClusterBridge().notifyItemListed(auctionItem).thenAccept(v -> {
             this.plugin.getLogger().info("Cluster notify item sold");

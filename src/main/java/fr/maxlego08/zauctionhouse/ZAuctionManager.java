@@ -23,6 +23,8 @@ import fr.maxlego08.zauctionhouse.api.services.AuctionHistoryService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
+import fr.maxlego08.zauctionhouse.api.tax.TaxResult;
+import fr.maxlego08.zauctionhouse.api.tax.TaxType;
 import fr.maxlego08.zauctionhouse.api.transaction.TransactionStatus;
 import fr.maxlego08.zauctionhouse.api.utils.Base64ItemStack;
 import fr.maxlego08.zauctionhouse.api.utils.IntArrayList;
@@ -42,6 +44,7 @@ import fr.maxlego08.zauctionhouse.utils.cache.ZPlayerCache;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -654,38 +657,95 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var configuration = this.plugin.getConfiguration();
         var cache = this.getCache(player);
         var economyName = auctionEconomy.getName();
+        var economyManager = this.plugin.getEconomyManager();
 
         String items = auctionItem.getItemsAsString();
         var itemsDisplay = auctionItem.getItemDisplay();
 
-        // On retire l'argent
-        auctionEconomy.withdraw(player, price, args(auctionEconomy.getWithdrawReason(), "%seller%", auctionItem.getSellerName(), "%items%", items));
+        // Calculate purchase tax
+        var taxConfig = auctionEconomy.getTaxConfiguration();
+        TaxType taxType = taxConfig.getTaxType();
+        TaxResult taxResult = TaxResult.disabled(price);
 
-        // On donne l'argent
+        // Get representative item for item-specific tax rules
+        var itemStacks = auctionItem.getItemStacks();
+        var representativeItem = itemStacks != null && !itemStacks.isEmpty() ? itemStacks.getFirst() : null;
+
+        if (taxConfig.isEnabled() && (taxType == TaxType.PURCHASE || taxType == TaxType.BOTH || taxType == TaxType.CAPITALISM)) {
+            taxResult = auctionEconomy.calculatePurchaseTax(player, price, representativeItem);
+
+            if (taxResult.isBypassed()) {
+                message(this.plugin, player, Message.TAX_EXEMPT);
+            }
+        }
+
+        // Calculate what buyer pays and seller receives
+        BigDecimal buyerPays;
+        BigDecimal sellerReceives;
+
+        if (taxResult.hasTax()) {
+            if (taxType == TaxType.CAPITALISM) {
+                // VAT: buyer pays price + tax, seller receives full price
+                buyerPays = taxResult.finalPrice(); // This is price + tax for CAPITALISM
+                sellerReceives = price;
+
+                // Send tax info message
+                if (taxResult.isReduced()) {
+                    message(this.plugin, player, Message.TAX_REDUCED,
+                            "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
+                }
+                message(player, Message.TAX_CAPITALISM_INFO,
+                        "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()),
+                        "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
+            } else {
+                // PURCHASE or BOTH: buyer pays full price, seller receives price - tax
+                buyerPays = price;
+                sellerReceives = taxResult.finalPrice(); // This is price - tax for PURCHASE/BOTH
+
+                // Send tax info message
+                if (taxResult.isReduced()) {
+                    message(this.plugin, player, Message.TAX_REDUCED,
+                            "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
+                }
+                message(player, Message.TAX_PURCHASE_APPLIED,
+                        "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()),
+                        "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
+            }
+        } else {
+            buyerPays = price;
+            sellerReceives = price;
+        }
+
+        // On retire l'argent de l'acheteur
+        auctionEconomy.withdraw(player, buyerPays, args(auctionEconomy.getWithdrawReason(), "%seller%", auctionItem.getSellerName(), "%items%", items));
+
+        // On donne l'argent au vendeur
         TransactionStatus transactionStatus;
         if ((!seller.isOnline() && auctionEconomy.mustBeOnline()) || !auctionEconomy.isAutoClaim()) {
 
             transactionStatus = TransactionStatus.PENDING;
         } else {
-            
+
             transactionStatus = TransactionStatus.RETRIEVED;
-            auctionEconomy.deposit(seller, price, args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items));
+            auctionEconomy.deposit(seller, sellerReceives, args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items));
         }
 
         // Créer les transactions
+        final BigDecimal finalBuyerPays = buyerPays;
+        final BigDecimal finalSellerReceives = sellerReceives;
         auctionEconomy.get(player).thenAccept(buyerBalance -> {
-            storageManager.createTransaction(auctionItem, player.getUniqueId(), economyName, buyerBalance.add(price), buyerBalance, price.negate(), TransactionStatus.RETRIEVED);
+            storageManager.createTransaction(auctionItem, player.getUniqueId(), economyName, buyerBalance.add(finalBuyerPays), buyerBalance, finalBuyerPays.negate(), TransactionStatus.RETRIEVED);
         });
 
         auctionEconomy.get(seller).thenAccept(sellerBalance -> {
-            storageManager.createTransaction(auctionItem, seller.getUniqueId(), economyName, sellerBalance.subtract(price), sellerBalance, price, transactionStatus);
+            storageManager.createTransaction(auctionItem, seller.getUniqueId(), economyName, sellerBalance.subtract(finalSellerReceives), sellerBalance, finalSellerReceives, transactionStatus);
         });
 
         if (seller.isOnline()) {
-            message(this.plugin, seller.getPlayer(), Message.ITEM_BOUGHT_SELLER, "%items%", itemsDisplay, "%price%", auctionItem.getFormattedPrice(), "%seller%", auctionItem.getSellerName(), "%buyer%", player.getName());
+            message(this.plugin, seller.getPlayer(), Message.ITEM_BOUGHT_SELLER, "%items%", itemsDisplay, "%price%", economyManager.format(auctionEconomy, sellerReceives), "%seller%", auctionItem.getSellerName(), "%buyer%", player.getName());
         }
 
-        message(player, Message.ITEM_BOUGHT_BUYER, "%items%", itemsDisplay, "%price%", auctionItem.getFormattedPrice(), "%seller%", auctionItem.getSellerName(), "%buyer%", player.getName());
+        message(player, Message.ITEM_BOUGHT_BUYER, "%items%", itemsDisplay, "%price%", economyManager.format(auctionEconomy, buyerPays), "%seller%", auctionItem.getSellerName(), "%buyer%", player.getName());
 
         auctionItem.setBuyer(player);
         auctionItem.setStatus(ItemStatus.PURCHASED);

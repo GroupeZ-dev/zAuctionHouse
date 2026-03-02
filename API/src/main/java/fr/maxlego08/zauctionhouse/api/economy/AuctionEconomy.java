@@ -1,7 +1,11 @@
 package fr.maxlego08.zauctionhouse.api.economy;
 
 import fr.maxlego08.zauctionhouse.api.item.ItemType;
+import fr.maxlego08.zauctionhouse.api.tax.TaxConfiguration;
+import fr.maxlego08.zauctionhouse.api.tax.TaxResult;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
@@ -136,4 +140,35 @@ public interface AuctionEconomy {
      * @return the minimum price allowed for the specified auction item type
      */
     BigDecimal getMinPrice(ItemType itemType);
+
+    /**
+     * Gets the tax configuration for this economy.
+     *
+     * @return the tax configuration
+     */
+    TaxConfiguration getTaxConfiguration();
+
+    /**
+     * Calculates the tax for a sell operation.
+     *
+     * @param player    the player selling the item
+     * @param price     the sale price
+     * @param itemStack the item being sold (for item-specific rules)
+     * @return the tax calculation result
+     */
+    default TaxResult calculateSellTax(Player player, BigDecimal price, ItemStack itemStack) {
+        return getTaxConfiguration().calculateSellTax(player, price, itemStack);
+    }
+
+    /**
+     * Calculates the tax for a purchase operation.
+     *
+     * @param player    the player buying the item
+     * @param price     the purchase price
+     * @param itemStack the item being purchased (for item-specific rules)
+     * @return the tax calculation result
+     */
+    default TaxResult calculatePurchaseTax(Player player, BigDecimal price, ItemStack itemStack) {
+        return getTaxConfiguration().calculatePurchaseTax(player, price, itemStack);
+    }
 }
