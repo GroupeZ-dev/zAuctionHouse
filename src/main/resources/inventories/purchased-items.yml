@@ -15,7 +15,6 @@ items:
       - 18-26
       - 27-35
       - 36-44
-    else:
-      item:
-        material: BARRIER
-        name: '#ff0000&nNo Items Found'
+    item:
+      material: BARRIER
+      name: '#ff0000&nNo items found'

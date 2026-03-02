@@ -13,10 +13,9 @@ items:
       - 18-26
       - 27-35
       - 36-44
-    else:
-      item:
-        material: BARRIER
-        name: '#ff0000No items found'
+    item:
+      material: BARRIER
+      name: '#ff0000&nNo items found'
 
   categories:
     slot: 4
@@ -125,7 +124,6 @@ items:
         - ""
         - "#92ffffUsage#8c8c8c:"
         - "#2CCED2/ah sell #92ffff<price> [<amount>]"
-        - "#2CCED2/ah sellinventory #92ffff<price> <economy>"
         - ""
         - "#92ffffNumber of items#8c8c8c: #2CCED2%zauctionhouse_listed_items%"
         - "#92ffffSort type#8c8c8c: #2CCED2%zauctionhouse_sorting_name%"

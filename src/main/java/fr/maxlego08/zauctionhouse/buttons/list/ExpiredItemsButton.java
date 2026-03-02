@@ -5,14 +5,15 @@ import fr.maxlego08.menu.api.engine.InventoryEngine;
 import fr.maxlego08.menu.api.utils.Placeholders;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 public class ExpiredItemsButton extends PaginateButton {
 
     private final AuctionPlugin plugin;
     private final int emptySlot;
 
-    public ExpiredItemsButton(AuctionPlugin plugin, int emptySlot) {
-        this.plugin = plugin;
+    public ExpiredItemsButton(Plugin plugin, int emptySlot) {
+        this.plugin = (AuctionPlugin) plugin;
         this.emptySlot = emptySlot;
     }
 

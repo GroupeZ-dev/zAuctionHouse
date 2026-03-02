@@ -22,7 +22,7 @@ public class EmptySlotLoader extends ButtonLoader {
     @Nullable
     public Button load(@NonNull YamlConfiguration configuration, @NonNull String path, @NonNull DefaultButtonValue defaultButtonValue) {
         try {
-            int slot = configuration.getInt(path + "empty-slot", 0);
+            int slot = configuration.getInt(path + "empty-slot", 22);
             return this.clazz.getConstructor(Plugin.class, int.class).newInstance(this.plugin, slot);
         } catch (Exception exception) {
             try {
