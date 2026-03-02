@@ -1,17 +1,69 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Bulk Remove Confirmation Inventory
+#
+#   This inventory confirms removal of multiple items from sale (bulk sales).
+#   Shows all items that will be removed and returned to the seller.
+#
+#   FEATURES:
+#   - Preview all items in the bulk sale before removal
+#   - View shulker contents (if applicable)
+#   - Single click to remove all items from sale
+#
+#   ACCESS:
+#   - Automatically opens when a seller clicks their own bulk listing
+#   - Only shown if open-confirm-inventory is true in config.yml
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# Inventory title - question format with plural "items".
 name: "#0c1719Remove these items ?"
+
+# Inventory size - 6 rows to show all items in the bulk sale.
 size: 54
+
+#=============================================================================
+# PATTERNS
+#=============================================================================
+
 patterns:
+  # Decorative glass pane borders.
   - 'zauctionhouse-decoration'
+
+#=============================================================================
+# ITEMS
+#=============================================================================
 
 items:
 
+  #---------------------------------------------------------------------------
+  # BULK ITEM CONTENT DISPLAY
+  #---------------------------------------------------------------------------
+  # Shows all items included in the bulk sale.
+
   item-content:
+    # Button type - displays all items in the sale.
     type: ZAUCTIONHOUSE_ITEM_CONTENT
+
+    # Slots for displaying items (4 rows × 9 columns = 36 slots).
     slots:
       - 9-44
 
+  #---------------------------------------------------------------------------
+  # CONFIRM REMOVE BUTTON
+  #---------------------------------------------------------------------------
+  # Removes all items from sale.
+
   confirm:
     type: ZAUCTIONHOUSE_CONFIRM_REMOVE_LISTED
+
     item:
       material: GREEN_STAINED_GLASS_PANE
       name: "#2CCED2<bold>ʀᴇᴍᴏᴠᴇ"
@@ -19,11 +71,19 @@ items:
         - "#92ffffRemove this item."
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto remove"
+
+    # Bottom-left area (3 slots).
     slots:
       - 46-48
 
+  #---------------------------------------------------------------------------
+  # CANCEL/BACK BUTTON
+  #---------------------------------------------------------------------------
+  # Cancels and returns to the auction house.
+
   deny:
     type: BACK
+
     item:
       material: RED_STAINED_GLASS_PANE
       name: "#2CCED2<bold>ʙᴀᴄᴋ"
@@ -31,13 +91,22 @@ items:
         - "#92ffffGo back."
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto go back"
+
+    # Bottom-right area (3 slots).
     slots:
       - 50-52
 
-  # View shulker content (only visible if item contains shulkers)
+  #---------------------------------------------------------------------------
+  # SHULKER CONTENT BUTTON
+  #---------------------------------------------------------------------------
+  # Opens the shulker content viewer.
+
   shulker:
     type: ZAUCTIONHOUSE_SHULKER_OPEN
+
+    # Center of bottom row.
     slot: 49
+
     item:
       material: SHULKER_BOX
       name: "#2CCED2<bold>ᴠɪᴇᴡ sʜᴜʟᴋᴇʀ ᴄᴏɴᴛᴇɴᴛ"

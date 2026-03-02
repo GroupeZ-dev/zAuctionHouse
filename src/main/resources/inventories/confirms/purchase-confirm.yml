@@ -1,53 +1,130 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Purchase Confirmation Inventory
+#
+#   This inventory asks players to confirm their purchase before completing it.
+#   Shows the item being purchased with confirm/cancel options.
+#
+#   FEATURES:
+#   - Preview the item before buying
+#   - View shulker contents (if applicable)
+#   - Confirm or cancel the purchase
+#
+#   ACCESS:
+#   - Automatically opens when clicking an item to buy in the auction house
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# Inventory title - question format for clarity.
 name: "#0c1719Purchase this item?"
+
+# Inventory size - 3 rows (27 slots) for compact confirmation dialog.
 size: 27
+
+#=============================================================================
+# ITEMS
+#=============================================================================
+
 items:
 
+  #---------------------------------------------------------------------------
+  # CONFIRM BUTTON
+  #---------------------------------------------------------------------------
+  # Completes the purchase and transfers money/item.
+
   confirm:
+    # Button type - handles purchase confirmation.
     type: ZAUCTIONHOUSE_CONFIRM_PURCHASE
+
     item:
+      # Green glass pane for confirm action.
       material: GREEN_STAINED_GLASS_PANE
       name: "#2CCED2<bold>ᴘᴜʀᴄʜᴀsᴇ"
       lore:
         - "#92ffffPurchase this item."
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto purchase"
+
+    # Multiple slots for larger click area.
+    # Left side of the inventory (3×3 grid).
     slots:
-      - 0-2
-      - 9-11
-      - 18-20
+      - 0-2     # Top-left row
+      - 9-11    # Middle-left row
+      - 18-20   # Bottom-left row
+
+  #---------------------------------------------------------------------------
+  # CANCEL/BACK BUTTON
+  #---------------------------------------------------------------------------
+  # Cancels the purchase and returns to the auction house.
 
   deny:
+    # Button type - returns to previous inventory.
     type: BACK
+
     item:
+      # Red glass pane for cancel action.
       material: RED_STAINED_GLASS_PANE
       name: "#2CCED2<bold>ʙᴀᴄᴋ"
       lore:
         - "#92ffffGo back."
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto go back"
+
+    # Right side of the inventory (3×3 grid).
     slots:
-      - 6-8
-      - 15-17
-      - 24-26
+      - 6-8     # Top-right row
+      - 15-17   # Middle-right row
+      - 24-26   # Bottom-right row
+
+  #---------------------------------------------------------------------------
+  # DECORATION
+  #---------------------------------------------------------------------------
+  # Fills the middle column with glass panes.
 
   decoration:
     item:
       material: LIGHT_BLUE_STAINED_GLASS_PANE
       name: "#2CCED2"
+
+    # Middle column and surrounding slots.
     slots:
-      - 3-5
-      - 12
-      - 14
-      - 21-23
+      - 3-5     # Top center
+      - 12      # Middle-left of center
+      - 14      # Middle-right of center
+      - 21-23   # Bottom center
+
+  #---------------------------------------------------------------------------
+  # ITEM PREVIEW
+  #---------------------------------------------------------------------------
+  # Shows the item being purchased in the center.
 
   show:
+    # Button type - displays the auction item.
     type: ZAUCTIONHOUSE_SHOW
+
+    # Center slot.
     slot: 13
 
-  # View shulker content (only visible if item contains shulkers)
+  #---------------------------------------------------------------------------
+  # SHULKER CONTENT BUTTON
+  #---------------------------------------------------------------------------
+  # Opens the shulker content viewer (only shown for shulker items).
+
   shulker:
+    # Button type - opens shulker content preview.
+    # Only visible when the item contains shulker boxes.
     type: ZAUCTIONHOUSE_SHULKER_OPEN
+
+    # Slot position.
     slot: 4
+
     item:
       material: SHULKER_BOX
       name: "#2CCED2<bold>ᴠɪᴇᴡ sʜᴜʟᴋᴇʀ ᴄᴏɴᴛᴇɴᴛ"

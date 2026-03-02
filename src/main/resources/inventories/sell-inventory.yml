@@ -1,16 +1,64 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Sell Inventory
+#
+#   This inventory allows players to list items for sale through a GUI.
+#   Opened via /ah sell (when enable-sell-inventory is true in config.yml).
+#
+#   FEATURES:
+#   - Select items from inventory to sell
+#   - Adjust price with increment/decrement buttons
+#   - Choose economy type (if multiple economies are enabled)
+#   - Confirm or cancel the listing
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# Inventory title.
 name: "#0c1719Sell Item"
+
+# Inventory size - 6 rows.
 size: 54
 
+#=============================================================================
+# PATTERNS
+#=============================================================================
+
 patterns:
+  # Decorative glass pane borders.
   - 'zauctionhouse-decoration'
+
+#=============================================================================
+# ITEMS
+#=============================================================================
 
 items:
 
+  #---------------------------------------------------------------------------
+  # ITEM DISPLAY AREA
+  #---------------------------------------------------------------------------
+  # Shows the item(s) currently selected for sale.
+  # Players can click items in their inventory to add them here.
+
   show-item:
+    # Button type - handles item selection and display.
     type: ZAUCTIONHOUSE_SELL_SHOW_ITEM
+
+    # Slots for displaying selected items.
+    # Covers the entire middle area (36 slots).
     slots:
       - 9-44
+
+    # Slot to show "no item selected" placeholder.
     empty-slot: 22
+
+    # Placeholder item when nothing is selected.
     item:
       material: BARRIER
       name: "#ff0000<bold>No Item Selected"
@@ -19,29 +67,53 @@ items:
         - "#8c8c8cHold an item in your hand"
         - "#8c8c8cor select items from your inventory"
 
+  #---------------------------------------------------------------------------
+  # CANCEL BUTTON
+  #---------------------------------------------------------------------------
+  # Cancels the sale and returns items to the player.
+
   cancel:
+    # Button type - handles cancellation and item return.
     type: ZAUCTIONHOUSE_SELL_CANCEL
+
+    # Slot position - far left of bottom row.
     slot: 45
+
     item:
+      # Red glass pane indicates cancel/danger action.
       material: RED_STAINED_GLASS_PANE
       name: "#ff0000<bold>CANCEL"
       lore:
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto cancel and return items"
 
+  #---------------------------------------------------------------------------
+  # DECREASE PRICE BUTTON
+  #---------------------------------------------------------------------------
+  # Lowers the listing price with different amounts per click type.
+
   private-decrease:
+    # Button type - handles price modification.
     type: ZAUCTIONHOUSE_SELL_PRICE
+
+    # Slot position.
     slot: 48
+
+    # Price change amounts for different click types.
+    # Negative values decrease the price.
     amounts:
-      left-click: -500
-      right-click: -100
-      shift-left-click: -1000
-      shift-right-click: -2500
+      left-click: -500        # Regular click: -500
+      right-click: -100       # Right click: -100
+      shift-left-click: -1000 # Shift + left: -1000
+      shift-right-click: -2500 # Shift + right: -2500
+
     item:
+      # Red minus sign texture.
       url: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTM1ZTRlMjZlYWZjMTFiNTJjMTE2NjhlMWQ2NjM0ZTdkMWQwZDIxYzQxMWNiMDg1ZjkzOTQyNjhlYjRjZGZiYSJ9fX0=
       name: "#ff3333-1,000"
       lore:
         - ""
+        # %price% shows current listing price.
         - "<white>Current price#8c8c8c: #2CCED2%price%"
         - ""
         - "#8c8c8c• #92ffffLeft click#8c8c8c: -500"
@@ -49,28 +121,53 @@ items:
         - "#8c8c8c• #92ffffShift+Left#8c8c8c: -1,000"
         - "#8c8c8c• #92ffffShift+Right#8c8c8c: -2,500"
 
+  #---------------------------------------------------------------------------
+  # ECONOMY SELECTOR
+  #---------------------------------------------------------------------------
+  # Cycles through available economies.
+  # Only useful when multiple economies are enabled.
+
   select-economy:
+    # Button type - handles economy cycling.
     type: ZAUCTIONHOUSE_SELL_ECONOMY
+
+    # Slot position - center of bottom row.
     slot: 49
+
     item:
+      # Gold coin texture.
       url: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGU3NGQ2NDcyZjgxMWVlN2U1ZTgwNWVhOTNkN2I0Yzc2MWM2NmE2NGU1OTM3MDJmYzgwNzNkYjM1N2YwNDY0ZCJ9fX0=
       name: "#ffd700<bold>Economy"
       lore:
         - ""
+        # %economy% shows currently selected economy name.
         - "<white>Current#8c8c8c: #2CCED2%economy%"
         - ""
         - "#8c8c8c• #92ffffLeft click#8c8c8c: Next economy"
         - "#8c8c8c• #92ffffRight click#8c8c8c: Previous economy"
 
+  #---------------------------------------------------------------------------
+  # INCREASE PRICE BUTTON
+  #---------------------------------------------------------------------------
+  # Raises the listing price with different amounts per click type.
+
   price-increase:
+    # Button type - handles price modification.
     type: ZAUCTIONHOUSE_SELL_PRICE
+
+    # Price change amounts for different click types.
+    # Positive values increase the price.
     amounts:
-      left-click: 500
-      right-click: 100
-      shift-left-click: 1000
-      shift-right-click: 2500
+      left-click: 500         # Regular click: +500
+      right-click: 100        # Right click: +100
+      shift-left-click: 1000  # Shift + left: +1000
+      shift-right-click: 2500 # Shift + right: +2500
+
+    # Slot position.
     slot: 50
+
     item:
+      # Green plus sign texture.
       url: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWEyZDg5MWM2YWU5ZjZiYWEwNDBkNzM2YWI4NGQ0ODM0NGJiNmI3MGQ3ZjFhMjgwZGQxMmNiYWM0ZDc3NyJ9fX0=
       name: '#00cc00+1,000'
       lore:
@@ -81,14 +178,25 @@ items:
         - '#8c8c8c• #92ffffShift+Left#8c8c8c: +1,000'
         - '#8c8c8c• #92ffffShift+Right#8c8c8c: +2,500'
 
+  #---------------------------------------------------------------------------
+  # CONFIRM BUTTON
+  #---------------------------------------------------------------------------
+  # Confirms the sale and lists the item(s).
+
   confirm:
+    # Button type - handles sale confirmation.
     type: ZAUCTIONHOUSE_SELL_CONFIRM
+
+    # Slot position - far right of bottom row.
     slot: 53
+
     item:
+      # Green glass pane indicates confirm/safe action.
       material: LIME_STAINED_GLASS_PANE
       name: "#00ff00<bold>CONFIRM SALE"
       lore:
         - ""
+        # Summary of the listing details.
         - "<white>Economy#8c8c8c: #2CCED2%economy%"
         - "<white>Price#8c8c8c: #2CCED2%price%"
         - "<white>Items#8c8c8c: #2CCED2%item_count%"

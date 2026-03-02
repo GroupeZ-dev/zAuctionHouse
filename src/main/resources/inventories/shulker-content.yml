@@ -1,37 +1,106 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Shulker Content Inventory
+#
+#   This inventory displays the contents of shulker boxes being sold.
+#   Allows buyers to preview what's inside before purchasing.
+#
+#   FEATURES:
+#   - Preview all items inside shulker boxes
+#   - Navigate between multiple shulkers (bulk sales)
+#   - View-only mode - items cannot be taken
+#
+#   ACCESS:
+#   - Click "View Shulker Content" button in purchase/remove confirmations
+#   - Only appears when the item being sold contains shulker boxes
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# Inventory title with shulker navigation placeholders.
+# %shulker_current% = currently viewing shulker number (1-based)
+# %shulker_total% = total number of shulkers in the sale
 name: "#0c1719Shulker Content (%shulker_current%/%shulker_total%)"
+
+# Inventory size - 6 rows.
 size: 54
 
+#=============================================================================
+# PATTERNS
+#=============================================================================
+
 patterns:
+  # Decorative glass pane borders.
   - 'zauctionhouse-decoration'
+  # Back button to return to confirmation screen.
   - 'zauctionhouse-back'
 
-items:
-  # Display the shulker box items
-  content:
-    type: ZAUCTIONHOUSE_SHULKER_CONTENT
-    slots:
-      - 10-16
-      - 19-25
-      - 28-34
-      - 37-43
+#=============================================================================
+# ITEMS
+#=============================================================================
 
-  # Show current shulker box
+items:
+
+  #---------------------------------------------------------------------------
+  # SHULKER CONTENT DISPLAY
+  #---------------------------------------------------------------------------
+  # Shows the contents of the currently selected shulker box.
+  # Items are displayed in a 7×4 grid to mimic shulker storage.
+
+  content:
+    # Button type - displays shulker contents.
+    type: ZAUCTIONHOUSE_SHULKER_CONTENT
+
+    # Slots for displaying shulker contents.
+    # 4 rows × 7 columns = 28 slots (shulkers hold 27 items).
+    slots:
+      - 10-16   # Row 2 (center 7 slots)
+      - 19-25   # Row 3 (center 7 slots)
+      - 28-34   # Row 4 (center 7 slots)
+      - 37-43   # Row 5 (center 7 slots)
+
+  #---------------------------------------------------------------------------
+  # SHULKER INFO DISPLAY
+  #---------------------------------------------------------------------------
+  # Shows information about the current shulker being viewed.
+
   shulker-info:
+    # Button type - displays current shulker info.
     type: ZAUCTIONHOUSE_SHULKER_INFO
+
+    # Slot position - center of top row.
     slot: 4
+
     item:
       material: SHULKER_BOX
       name: "#2CCED2<bold>sʜᴜʟᴋᴇʀ ʙᴏx"
       lore:
+        # Shows current position in the shulker list.
         - "#92ffffViewing shulker #2CCED2%shulker_current% #92ffffof #2CCED2%shulker_total%"
         - ""
         - "#8c8c8c• Use navigation buttons to switch"
 
-  # Previous shulker button
+  #---------------------------------------------------------------------------
+  # PREVIOUS SHULKER BUTTON
+  #---------------------------------------------------------------------------
+  # Navigates to the previous shulker in bulk sales.
+
   previous:
+    # Button type - handles shulker navigation.
     type: ZAUCTIONHOUSE_SHULKER_NAVIGATION
+
+    # Direction to navigate.
     direction: previous
+
+    # Slot position - left of center in bottom row.
     slot: 48
+
     item:
       material: ARROW
       name: "#2CCED2<bold>ᴘʀᴇᴠɪᴏᴜs sʜᴜʟᴋᴇʀ"
@@ -40,11 +109,21 @@ items:
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto view previous"
 
-  # Next shulker button
+  #---------------------------------------------------------------------------
+  # NEXT SHULKER BUTTON
+  #---------------------------------------------------------------------------
+  # Navigates to the next shulker in bulk sales.
+
   next:
+    # Button type - handles shulker navigation.
     type: ZAUCTIONHOUSE_SHULKER_NAVIGATION
+
+    # Direction to navigate.
     direction: next
+
+    # Slot position - right of center in bottom row.
     slot: 50
+
     item:
       material: ARROW
       name: "#2CCED2<bold>ɴᴇxᴛ sʜᴜʟᴋᴇʀ"

@@ -1,27 +1,110 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Main Auction Inventory
+#
+#   This is the main auction house inventory that displays all items for sale.
+#   Players access this via /ah or by clicking the auction house NPC.
+#
+#   This inventory shows:
+#   - All items currently listed for sale
+#   - Navigation to categories, expired items, purchased items
+#   - Sorting options
+#   - Pagination for browsing multiple pages
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# Inventory title displayed at the top of the GUI.
+# Supports placeholders and MiniMessage formatting.
+# Available placeholders:
+#   %page%                        - Current page number
+#   %max-page%                    - Total number of pages
+#   %zauctionhouse_category_name% - Current category name
 name: "%zauctionhouse_category_name% (%page%/%max-page%)"
+
+# Inventory size in slots (must be multiple of 9).
+# Options: 9, 18, 27, 36, 45, 54 (1-6 rows)
+# 54 slots (6 rows) is recommended for auction house.
 size: 54
 
+#=============================================================================
+# PATTERNS
+#=============================================================================
+# Patterns are reusable templates that add common elements.
+# They are applied in order; later patterns can override earlier ones.
+
 patterns:
+  # Adds decorative glass pane borders (top and bottom rows)
   - 'zauctionhouse-decoration'
 
+#=============================================================================
+# ITEMS
+#=============================================================================
+# Items define the buttons and displays in this inventory.
+# Each item has a unique key (e.g., 'displayItems', 'categories').
+
 items:
+
+  #---------------------------------------------------------------------------
+  # MAIN AUCTION ITEMS DISPLAY
+  #---------------------------------------------------------------------------
+  # This is the core display showing all items for sale.
+  # Items are paginated and can be filtered by category.
+
   displayItems:
+    # Button type - ZAUCTIONHOUSE_LISTED_ITEMS is a plugin-specific type.
+    # It automatically handles:
+    # - Loading and displaying auction items
+    # - Category filtering
+    # - Sorting
+    # - Click actions (buy/remove)
     type: ZAUCTIONHOUSE_LISTED_ITEMS
+
+    # Slot to display the "empty" item when no items are found.
+    # This slot is used when the auction house has no items.
     empty-slot: 22
+
+    # Slots where auction items are displayed.
+    # These should be the middle rows (leaving top/bottom for UI).
+    # Slot ranges: '9-17' means slots 9 through 17 (9 items per row).
+    # Total: 36 item slots (4 rows × 9 columns)
     slots:
-      - 9-17
-      - 18-26
-      - 27-35
-      - 36-44
+      - 9-17    # Row 2
+      - 18-26   # Row 3
+      - 27-35   # Row 4
+      - 36-44   # Row 5
+
+    # Item shown when no items are listed (empty auction house).
     item:
       material: BARRIER
+      # &n creates underlined text (legacy formatting)
       name: '#ff0000&nNo items found'
 
+  #---------------------------------------------------------------------------
+  # CATEGORIES BUTTON
+  #---------------------------------------------------------------------------
+  # Opens the category selection inventory for filtering items.
+
   categories:
+    # Slot position - center of top row.
     slot: 4
+
+    # Button type - 'inventory' opens another zMenu inventory.
     type: inventory
+
+    # Plugin that owns the target inventory.
     plugin: "zAuctionHouse"
+
+    # Inventory file to open (inventories/categories.yml).
     inventory: "categories"
+
+    # Button appearance
     item:
       material: CHEST
       name: "#2CCED2<bold>ᴄᴀᴛᴇɢᴏʀɪᴇs"
@@ -29,16 +112,32 @@ items:
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto open"
 
+  #---------------------------------------------------------------------------
+  # EXPIRED ITEMS BUTTON
+  #---------------------------------------------------------------------------
+  # Shows the player's items that have expired (not sold in time).
+  # Button changes appearance based on whether items exist.
+
   expired-items:
+    # Button type - opens the expired items inventory if items exist.
     type: ZAUCTIONHOUSE_EXPIRED_INVENTORY
+
+    # Slot position - far left of bottom row.
     slot: 45
+
+    # Item shown when player HAS expired items.
     item:
+      # Custom player head texture (hourglass/clock icon).
       url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjdhYWRmZjlkZGM1NDZmZGNlYzZlZDU5MTljYzM5ZGZhOGQwYzA3ZmY0YmM2MTNhMTlmMmU2ZDdmMjU5MyJ9fX0="
       name: "#2CCED2<bold>ᴇxᴘɪʀᴇᴅ ɪᴛᴇᴍs"
       lore:
+        # %expired-items% = number of expired items
+        # %s% = pluralization suffix ("" for 1, "s" for 2+)
         - "#92ffffYou have #2CCED2%expired-items% #92ffffexpired item%s%."
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto open"
+
+    # Item shown when player has NO expired items.
     else:
       item:
         url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjdhYWRmZjlkZGM1NDZmZGNlYzZlZDU5MTljYzM5ZGZhOGQwYzA3ZmY0YmM2MTNhMTlmMmU2ZDdmMjU5MyJ9fX0="
@@ -46,16 +145,29 @@ items:
         lore:
           - "#ff3535You have no expired items."
 
+  #---------------------------------------------------------------------------
+  # PURCHASED ITEMS BUTTON
+  #---------------------------------------------------------------------------
+  # Shows items the player has bought but not yet retrieved.
+
   purchased-items:
+    # Button type - opens the purchased items inventory if items exist.
     type: ZAUCTIONHOUSE_PURCHASED_INVENTORY
+
+    # Slot position - second from left in bottom row.
     slot: 46
+
+    # Item shown when player HAS purchased items to retrieve.
     item:
+      # Chest icon texture.
       url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjM3Y2FlNWM1MWViMTU1OGVhODI4ZjU4ZTBkZmY4ZTZiN2IwYjFhMTgzZDczN2VlY2Y3MTQ2NjE3NjEifX19"
       name: "#2CCED2<bold>ᴘᴜʀᴄʜᴀsᴇᴅ ɪᴛᴇᴍs"
       lore:
         - "#92ffffYou have #2CCED2%purchased-items% #92ffffbought item%s%."
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto open"
+
+    # Item shown when player has NO purchased items.
     else:
       item:
         url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjM3Y2FlNWM1MWViMTU1OGVhODI4ZjU4ZTBkZmY4ZTZiN2IwYjFhMTgzZDczN2VlY2Y3MTQ2NjE3NjEifX19"
@@ -63,16 +175,29 @@ items:
         lore:
           - "#ff3535You have no purchased items."
 
+  #---------------------------------------------------------------------------
+  # YOUR ITEMS (SELLING) BUTTON
+  #---------------------------------------------------------------------------
+  # Shows items the player currently has listed for sale.
+
   selling-items:
+    # Button type - opens the selling items inventory if items exist.
     type: ZAUCTIONHOUSE_SELLING_INVENTORY
+
+    # Slot position - far right of bottom row.
     slot: 53
+
+    # Item shown when player HAS items listed for sale.
     item:
+      # Player icon texture.
       url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjU4MDdjYzRjM2I2OTU4YWVhNjE1NmU4NDUxOGQ5MWE0OWM1ZjMyOTcxZTZlYjI2OWEyM2EyNWEyNzE0NSJ9fX0="
       name: "#2CCED2<bold>ʏᴏᴜʀ ɪᴛᴇᴍs"
       lore:
         - "#92ffffYou have #2CCED2%selling-items% #92ffffitem%s% on sale."
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto open"
+
+    # Item shown when player has NO items listed.
     else:
       item:
         url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjU4MDdjYzRjM2I2OTU4YWVhNjE1NmU4NDUxOGQ5MWE0OWM1ZjMyOTcxZTZlYjI2OWEyM2EyNWEyNzE0NSJ9fX0="
@@ -80,41 +205,76 @@ items:
         lore:
           - "#ff3535You have no items for sale."
 
+  #---------------------------------------------------------------------------
+  # PREVIOUS PAGE BUTTON
+  #---------------------------------------------------------------------------
+  # Navigates to the previous page of items.
+
   previous:
+    # Permanent items cannot be taken by players.
     is-permanent: true
+
+    # Button type - PREVIOUS is a zMenu built-in type.
     type: PREVIOUS
+
+    # Slot position - left of center in bottom row.
     slot: 48
+
+    # Item shown when there IS a previous page.
     item:
+      # Left arrow texture.
       url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjllYTFkODYyNDdmNGFmMzUxZWQxODY2YmNhNmEzMDQwYTA2YzY4MTc3Yzc4ZTQyMzE2YTEwOThlNjBmYjdkMyJ9fX0="
       name: "#2CCED2<bold>ᴘʀᴇᴠɪᴏᴜs ᴘᴀɢᴇ"
       lore:
         - "#92ffffGo to the previous page."
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto open"
+
+    # Item shown when on first page (no previous).
     else:
       item:
         material: LIGHT_BLUE_STAINED_GLASS_PANE
         name: "<white>"
 
+  #---------------------------------------------------------------------------
+  # NEXT PAGE BUTTON
+  #---------------------------------------------------------------------------
+  # Navigates to the next page of items.
+
   next:
     is-permanent: true
     type: NEXT
     slot: 50
+
+    # Item shown when there IS a next page.
     item:
+      # Right arrow texture.
       url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODI3MWE0NzEwNDQ5NWUzNTdjM2U4ZTgwZjUxMWE5ZjEwMmIwNzAwY2E5Yjg4ZTg4Yjc5NWQzM2ZmMjAxMDVlYiJ9fX0="
       name: "#2CCED2<bold>ɴᴇxᴛ ᴘᴀɢᴇ"
       lore:
         - "#92ffffGo to the next page."
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto open"
+
+    # Item shown when on last page (no next).
     else:
       item:
         material: LIGHT_BLUE_STAINED_GLASS_PANE
         name: "<white>"
 
+  #---------------------------------------------------------------------------
+  # INFORMATION BUTTON
+  #---------------------------------------------------------------------------
+  # Displays auction house information and refreshes the item list.
+
   informations:
+    # Slot position - center of bottom row.
     slot: 49
+
+    # Permanent items cannot be taken.
     is-permanent: true
+
+    # Static item (no special type = normal display item).
     item:
       material: BELL
       name: "#2CCED2<bold>ᴀᴜᴄᴛɪᴏɴ ɪɴғᴏʀᴍᴀᴛɪᴏɴ"
@@ -125,31 +285,53 @@ items:
         - "#92ffffUsage#8c8c8c:"
         - "#2CCED2/ah sell #92ffff<price> [<amount>]"
         - ""
+        # PlaceholderAPI placeholders for dynamic stats.
         - "#92ffffNumber of items#8c8c8c: #2CCED2%zauctionhouse_listed_items%"
         - "#92ffffSort type#8c8c8c: #2CCED2%zauctionhouse_sorting_name%"
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto refresh the items"
 
+  #---------------------------------------------------------------------------
+  # SORT TYPE BUTTON
+  #---------------------------------------------------------------------------
+  # Changes the sort order of displayed items.
+
   change-sort:
+    # Button type - handles sort cycling.
     type: ZAUCTIONHOUSE_CHANGE_SORT
+
+    # Available sort options (cycled in this order).
+    # Options: DECREASING_DATE, DECREASING_PRICE, ASCENDING_DATE, ASCENDING_PRICE
     sorts:
-      - DECREASING_DATE
-      - DECREASING_PRICE
-      - ASCENDING_DATE
-      - ASCENDING_PRICE
+      - DECREASING_DATE   # Newest first (default)
+      - DECREASING_PRICE  # Most expensive first
+      - ASCENDING_DATE    # Oldest first
+      - ASCENDING_PRICE   # Cheapest first
+
+    # Format for currently SELECTED sort option in lore.
+    # %sorting% is replaced with the sort name from config.yml.
     enable-text: ' #F27438➜ %sorting%'
+
+    # Format for NOT selected sort options in lore.
     disable-text: ' #76CDCD➜ %sorting%'
+
+    # Item shown while loading/sorting (prevents spam clicks).
     loading-item:
       material: HOPPER
       name: "#2CCED2<bold>sᴏʀᴛ ᴛʏᴘᴇ"
       lore:
         - "#8c8c8c• #ff3535Loading, please wait"
+
+    # Slot position - right side of bottom row.
     slot: 52
+
+    # Normal sort button display.
     item:
       material: HOPPER
       name: "#2CCED2<bold>sᴏʀᴛ ᴛʏᴘᴇ"
       lore:
         - "#92ffffAvailable sort types:"
+        # Placeholders for each sort option (formatted by enable/disable-text).
         - "%DECREASING_DATE%"
         - "%DECREASING_PRICE%"
         - "%ASCENDING_DATE%"

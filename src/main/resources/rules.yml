@@ -1,156 +1,454 @@
-# You can use your item in Base64 with the command /zmenu save <item name>
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Item Rules Configuration
+#
+#   This file defines which items can or cannot be sold on the auction house.
+#   Use blacklist to block specific items, or whitelist to only allow specific items.
+#
+#   TIP: You can save items in Base64 format using /zmenu save <item name>
+#        Then reference them in your rules for exact item matching.
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
 
-# Blacklist - Items matching these rules cannot be sold
+#=============================================================================
+# RULE TYPES REFERENCE
+#=============================================================================
+#
+# MATERIAL RULES:
+#   type: material
+#   materials:
+#     - DIAMOND
+#     - EMERALD
+#   Description: Matches items by their Minecraft material type.
+#
+# MATERIAL SUFFIX RULES:
+#   type: material-suffix
+#   suffixes:
+#     - "_SWORD"
+#     - "_HELMET"
+#   Description: Matches materials ending with the specified suffix.
+#
+# NAME RULES:
+#   type: name
+#   mode: CONTAINS | EQUALS | STARTS_WITH | ENDS_WITH | REGEX
+#   values:
+#     - "Special"
+#   Description: Matches items by their display name.
+#
+# LORE RULES:
+#   type: lore
+#   mode: CONTAINS | EQUALS | STARTS_WITH | ENDS_WITH | REGEX
+#   values:
+#     - "Soulbound"
+#   Description: Matches items that have specific text in their lore.
+#
+# CUSTOM MODEL DATA RULES:
+#   type: custom-model-data
+#   values:
+#     - 1001
+#     - 1002
+#   Description: Matches items with specific CustomModelData values.
+#
+# TAG RULES:
+#   type: tag
+#   tags:
+#     - BLOCKS
+#     - ITEMS
+#   Description: Matches items using Bukkit/Paper item tags.
+#
+# NBT RULES:
+#   type: nbt
+#   path: "custom.data.key"
+#   value: "expected_value"
+#   Description: Matches items with specific NBT data.
+#
+# COMBINATION RULES:
+#   type: and
+#   rules:
+#     - <rule1>
+#     - <rule2>
+#   Description: ALL rules must match (logical AND).
+#
+#   type: or
+#   rules:
+#     - <rule1>
+#     - <rule2>
+#   Description: ANY rule must match (logical OR).
+#
+#=============================================================================
+# CUSTOM ITEM PLUGIN RULES
+#=============================================================================
+#
+# These rule types integrate with popular custom item plugins.
+# Items are matched by their plugin-specific identifiers.
+# Supports wildcards (*) for pattern matching.
+#
+# ITEMSADDER:
+#   type: itemsadder
+#   items:
+#     - "namespace:item_id"      # Exact match
+#     - "namespace:*"            # All items from namespace
+#
+# ORAXEN:
+#   type: oraxen
+#   items:
+#     - "custom_sword"           # Exact match
+#     - "*_armor"                # Pattern match
+#
+# NEXO:
+#   type: nexo
+#   items:
+#     - "mythic_blade"
+#     - "special_*"
+#
+# MMOITEMS:
+#   type: mmoitems
+#   items:
+#     - "SWORD:CUTLASS"          # TYPE:ID format
+#     - "SWORD:*"                # All items of type SWORD
+#     - "*:LEGENDARY_ITEM"       # Any type with this ID
+#
+# EXECUTABLEITEMS:
+#   type: executableitems
+#   items:
+#     - "custom_wand"
+#
+# ECOITEMS:
+#   type: ecoitems
+#   items:
+#     - "packmaster_tear"
+#
+# CRUCIBLE (MythicCrucible):
+#   type: crucible
+#   items:
+#     - "mythic_blade"
+#
+# SLIMEFUN:
+#   type: slimefun
+#   items:
+#     - "ELECTRIC_MOTOR"
+#
+# HEADDATABASE:
+#   type: headdatabase
+#   items:
+#     - "12345"
+#
+# NOVA:
+#   type: nova
+#   items:
+#     - "machines:electric_furnace"
+#
+# DENIZEN:
+#   type: denizen
+#   items:
+#     - "my_custom_script"
+#
+# ADVANCEDITEMS:
+#   type: advanceditems
+#   items:
+#     - "magic_staff"
+#
+# CUSTOMCRAFTING (WolfyUtilities):
+#   type: customcrafting
+#   items:
+#     - "mynamespace:custom_item"
+#
+# ZHEAD:
+#   type: zhead
+#   items:
+#     - "custom_head_id"
+#
+# MAGICCOSMETICS:
+#   type: magiccosmetics
+#   items:
+#     - "hat_crown"
+#
+# HMCCOSMETICS:
+#   type: hmccosmetics
+#   items:
+#     - "golden_wings"
+#
+# ZITEMS:
+#   type: zitems
+#   items:
+#     - "custom_gem"
+#
+# CRAFTENGINE:
+#   type: craftengine
+#   items:
+#     - "namespace:custom_block"
+#
+# EXECUTABLEBLOCKS:
+#   type: executableblocks
+#   items:
+#     - "magic_chest"
+#
+#=============================================================================
+
+#=============================================================================
+# BLACKLIST CONFIGURATION
+#=============================================================================
+# Items matching ANY rule in this list CANNOT be sold on the auction house.
+# The blacklist is checked BEFORE the whitelist.
+# If an item matches a blacklist rule, it is blocked regardless of whitelist.
+
 blacklist:
+  # Enable or disable the blacklist system
+  # When disabled, no items are blocked (unless whitelist is enabled).
   enabled: true
+
+  # List of rules that define blocked items
+  # An item matching ANY of these rules will be blocked from sale.
   rules:
-    # Block bedrock
+
+    #-------------------------------------------------------------------------
+    # EXAMPLE: Block bedrock (prevents selling admin items)
+    #-------------------------------------------------------------------------
     - type: material
       materials:
         - BEDROCK
 
-    # Block items with "Untradeable" in lore AND specific model data
+    #-------------------------------------------------------------------------
+    # EXAMPLE: Block items with "Untradeable" lore AND specific model data
+    # This demonstrates combining multiple conditions with 'and'.
+    #-------------------------------------------------------------------------
     - type: and
       rules:
+        # Condition 1: Item must have "Untradeable" somewhere in its lore
         - type: lore
           mode: CONTAINS
           values:
             - "Untradeable"
+        # Condition 2: Item must have CustomModelData of 1001
         - type: custom-model-data
           values:
             - 1001
 
-    # ==========================================
-    # Custom Items Plugin Rules (Examples)
-    # ==========================================
-    # Uncomment and modify these examples to use
+    #=========================================================================
+    # CUSTOM ITEM PLUGIN EXAMPLES
+    #=========================================================================
+    # Uncomment and modify these examples to use with your custom item plugins.
+    # Each example shows the plugin name and common configuration patterns.
 
+    #-------------------------------------------------------------------------
     # ItemsAdder - Block specific ItemsAdder items
+    #-------------------------------------------------------------------------
     # - type: itemsadder
     #   items:
-    #     - "namespace:item_id"
-    #     - "namespace:*"  # Wildcard: all items from namespace
+    #     - "namespace:item_id"       # Block specific item
+    #     - "namespace:*"             # Block ALL items from this namespace
+    #     - "mynamespace:rare_*"      # Block items starting with "rare_"
 
+    #-------------------------------------------------------------------------
     # Oraxen - Block specific Oraxen items
+    #-------------------------------------------------------------------------
     # - type: oraxen
     #   items:
-    #     - "custom_sword"
-    #     - "*_armor"  # Wildcard: all items ending with _armor
+    #     - "custom_sword"            # Block specific item
+    #     - "*_armor"                 # Block all items ending with "_armor"
+    #     - "event_*"                 # Block all event items
 
+    #-------------------------------------------------------------------------
     # Nexo - Block specific Nexo items
+    #-------------------------------------------------------------------------
     # - type: nexo
     #   items:
     #     - "mythic_blade"
-    #     - "special_*"  # Wildcard: all items starting with special_
+    #     - "special_*"               # Block all items starting with "special_"
+    #     - "*_soulbound"             # Block all soulbound items
 
-    # MMOItems - Block specific MMOItems (format: TYPE:ID or just ID)
+    #-------------------------------------------------------------------------
+    # MMOItems - Block specific MMOItems (TYPE:ID format)
+    #-------------------------------------------------------------------------
     # - type: mmoitems
     #   items:
-    #     - "SWORD:CUTLASS"
-    #     - "SWORD:*"  # Wildcard: all swords
-    #     - "*:LEGENDARY_ITEM"  # Wildcard: any type with this ID
+    #     - "SWORD:CUTLASS"           # Block specific sword
+    #     - "SWORD:*"                 # Block ALL swords
+    #     - "*:LEGENDARY_ITEM"        # Block item ID regardless of type
+    #     - "TOOL:*"                  # Block all tools
 
+    #-------------------------------------------------------------------------
     # ExecutableItems - Block specific ExecutableItems
+    #-------------------------------------------------------------------------
     # - type: executableitems
     #   items:
     #     - "custom_wand"
-    #     - "voucher_*"  # Wildcard
+    #     - "voucher_*"               # Block all vouchers
+    #     - "admin_*"                 # Block admin items
 
+    #-------------------------------------------------------------------------
     # EcoItems - Block specific EcoItems
+    #-------------------------------------------------------------------------
     # - type: ecoitems
     #   items:
     #     - "packmaster_tear"
-    #     - "charm_*"  # Wildcard
+    #     - "charm_*"                 # Block all charms
 
+    #-------------------------------------------------------------------------
     # MythicCrucible - Block specific Crucible items
+    #-------------------------------------------------------------------------
     # - type: crucible
     #   items:
     #     - "mythic_blade"
-    #     - "dungeon_*"  # Wildcard
+    #     - "dungeon_*"               # Block dungeon loot
 
+    #-------------------------------------------------------------------------
     # Slimefun - Block specific Slimefun items
+    #-------------------------------------------------------------------------
     # - type: slimefun
     #   items:
     #     - "ELECTRIC_MOTOR"
-    #     - "*_INGOT"  # Wildcard: all ingots
+    #     - "*_INGOT"                 # Block all custom ingots
+    #     - "CARGO_*"                 # Block cargo items
 
+    #-------------------------------------------------------------------------
     # HeadDatabase - Block specific HeadDatabase heads
+    #-------------------------------------------------------------------------
     # - type: headdatabase
     #   items:
-    #     - "12345"
-    #     - "123*"  # Wildcard
+    #     - "12345"                   # Block specific head by ID
+    #     - "123*"                    # Block heads with IDs starting with 123
 
+    #-------------------------------------------------------------------------
     # Nova - Block specific Nova items
+    #-------------------------------------------------------------------------
     # - type: nova
     #   items:
     #     - "machines:electric_furnace"
-    #     - "machines:*"  # Wildcard: all items from machines addon
+    #     - "machines:*"              # Block all items from machines addon
+    #     - "*:solar_panel"           # Block solar panels from any addon
 
+    #-------------------------------------------------------------------------
     # Denizen - Block specific Denizen scripted items
+    #-------------------------------------------------------------------------
     # - type: denizen
     #   items:
     #     - "my_custom_script"
-    #     - "*_weapon"  # Wildcard
+    #     - "*_weapon"                # Block weapon scripts
 
+    #-------------------------------------------------------------------------
     # AdvancedItems - Block specific AdvancedItems
+    #-------------------------------------------------------------------------
     # - type: advanceditems
     #   items:
     #     - "magic_staff"
-    #     - "rpg_*"  # Wildcard
+    #     - "rpg_*"                   # Block RPG items
 
+    #-------------------------------------------------------------------------
     # CustomCrafting/WolfyUtilities - Block specific custom items
+    #-------------------------------------------------------------------------
     # - type: customcrafting
     #   items:
     #     - "mynamespace:custom_item"
-    #     - "mynamespace:*"  # Wildcard
+    #     - "mynamespace:*"           # Block all from namespace
 
+    #-------------------------------------------------------------------------
     # zHead - Block specific zHead heads
+    #-------------------------------------------------------------------------
     # - type: zhead
     #   items:
     #     - "custom_head_id"
-    #     - "category_*"  # Wildcard
+    #     - "category_*"              # Block entire category
 
+    #-------------------------------------------------------------------------
     # MagicCosmetics - Block specific MagicCosmetics items
+    #-------------------------------------------------------------------------
     # - type: magiccosmetics
     #   items:
     #     - "hat_crown"
-    #     - "backpack_*"  # Wildcard
+    #     - "backpack_*"              # Block all backpacks
 
+    #-------------------------------------------------------------------------
     # HMCCosmetics - Block specific HMCCosmetics items
+    #-------------------------------------------------------------------------
     # - type: hmccosmetics
     #   items:
     #     - "golden_wings"
-    #     - "aura_*"  # Wildcard
+    #     - "aura_*"                  # Block all auras
 
+    #-------------------------------------------------------------------------
     # zItems - Block specific zItems items
+    #-------------------------------------------------------------------------
     # - type: zitems
     #   items:
     #     - "custom_gem"
-    #     - "upgrade_*"  # Wildcard
+    #     - "upgrade_*"               # Block upgrade items
 
+    #-------------------------------------------------------------------------
     # CraftEngine - Block specific CraftEngine items
+    #-------------------------------------------------------------------------
     # - type: craftengine
     #   items:
     #     - "namespace:custom_block"
-    #     - "namespace:*"  # Wildcard: all items from namespace
+    #     - "namespace:*"             # Block all from namespace
 
+    #-------------------------------------------------------------------------
     # ExecutableBlocks - Block specific ExecutableBlocks
+    #-------------------------------------------------------------------------
     # - type: executableblocks
     #   items:
     #     - "magic_chest"
-    #     - "teleporter_*"  # Wildcard
+    #     - "teleporter_*"            # Block teleporter blocks
 
-# Whitelist - Only items matching these rules can be sold (if enabled)
+#=============================================================================
+# WHITELIST CONFIGURATION
+#=============================================================================
+# When enabled, ONLY items matching a whitelist rule can be sold.
+# All other items are automatically blocked.
+# The whitelist is checked AFTER the blacklist.
+#
+# USE CASES:
+# - Create a specialized auction house (e.g., only enchanted books)
+# - Limit tradeable items for event servers
+# - Restrict economy to specific item types
+
 whitelist:
+  # Enable or disable the whitelist system
+  # When disabled, all items are allowed (unless blocked by blacklist).
+  # When enabled, ONLY items matching whitelist rules can be sold.
   enabled: false
+
+  # List of rules that define allowed items
+  # An item must match AT LEAST ONE rule to be sellable.
   rules:
-    # Allow only Nether Stars with "Voucher" in name
+
+    #-------------------------------------------------------------------------
+    # EXAMPLE: Only allow Nether Stars with "Voucher" in their name
+    # This creates a voucher-only auction house.
+    #-------------------------------------------------------------------------
     - type: and
       rules:
+        # Condition 1: Must be a Nether Star
         - type: material
           materials:
             - NETHER_STAR
+        # Condition 2: Must have "Voucher" in the display name
         - type: name
           mode: CONTAINS
           values:
             - "Voucher"
+
+    #-------------------------------------------------------------------------
+    # Additional whitelist examples (uncomment to use):
+    #-------------------------------------------------------------------------
+
+    # Allow only weapons
+    # - type: material-suffix
+    #   suffixes:
+    #     - "_SWORD"
+    #     - "_AXE"
+
+    # Allow only items with specific lore (e.g., "Tradeable")
+    # - type: lore
+    #   mode: CONTAINS
+    #   values:
+    #     - "Tradeable"
+
+    # Allow specific MMOItems types
+    # - type: mmoitems
+    #   items:
+    #     - "WEAPON:*"
+    #     - "ARMOR:*"

@@ -1,33 +1,104 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Pagination Pattern
+#
+#   This pattern provides previous/next page buttons for paginated inventories.
+#   Used in any inventory that displays multiple pages of items.
+#
+#   HOW IT WORKS:
+#   - The PREVIOUS button appears when there is a previous page
+#   - The NEXT button appears when there is a next page
+#   - When no more pages exist, the button is replaced with a glass pane
+#
+#   USAGE:
+#   Include this pattern in paginated inventory files:
+#     patterns:
+#       - 'zauctionhouse-pagination'
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+# Pattern name - referenced in other inventory files.
 name: "zauctionhouse-pagination"
+
+# Inventory size (must match the inventories using this pattern).
+# Designed for 6-row (54 slot) inventories.
 size: 54
+
+# Pagination button items.
 items:
+
+  #---------------------------------------------------------------------------
+  # PREVIOUS PAGE BUTTON
+  #---------------------------------------------------------------------------
   previous:
+    # Button type - PREVIOUS is a zMenu built-in type.
+    # Automatically handles page navigation and visibility.
     type: PREVIOUS
+
+    # Permanent items cannot be moved by players.
     is-permanent: true
+
+    # Slot position - left side of bottom row.
+    # Slot 48 is 4th from left in the bottom row.
     slot: 48
+
+    # Item shown when there IS a previous page (page > 1)
     item:
+      # Player head with custom texture.
+      # 'url' accepts Base64-encoded texture data.
+      # This creates a left-pointing arrow head.
+      # Get textures from: minecraft-heads.com, freshcoal.com
       url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjllYTFkODYyNDdmNGFmMzUxZWQxODY2YmNhNmEzMDQwYTA2YzY4MTc3Yzc4ZTQyMzE2YTEwOThlNjBmYjdkMyJ9fX0="
+
+      # Display name with MiniMessage formatting.
+      # <bold> makes the text bold.
       name: "#2CCED2<bold>ᴘʀᴇᴠɪᴏᴜs ᴘᴀɢᴇ"
+
+      # Lore lines - additional information shown below the name.
       lore:
         - "#92ffffGo to the previous page."
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto open"
+
+    # Fallback item shown when there is NO previous page (page = 1)
+    # 'else' provides an alternative item when the button's condition is not met.
     else:
       item:
+        # Simple glass pane to maintain layout consistency.
         material: LIGHT_BLUE_STAINED_GLASS_PANE
         name: "<white>"
 
+  #---------------------------------------------------------------------------
+  # NEXT PAGE BUTTON
+  #---------------------------------------------------------------------------
   next:
+    # Button type - NEXT is a zMenu built-in type.
+    # Automatically handles page navigation and visibility.
     type: NEXT
+
+    # Permanent items cannot be moved by players.
     is-permanent: true
+
+    # Slot position - right side of bottom row.
+    # Slot 50 is 6th from left in the bottom row.
     slot: 50
+
+    # Item shown when there IS a next page
     item:
+      # Right-pointing arrow head texture.
       url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODI3MWE0NzEwNDQ5NWUzNTdjM2U4ZTgwZjUxMWE5ZjEwMmIwNzAwY2E5Yjg4ZTg4Yjc5NWQzM2ZmMjAxMDVlYiJ9fX0="
+
       name: "#2CCED2<bold>ɴᴇxᴛ ᴘᴀɢᴇ"
+
       lore:
         - "#92ffffGo to the next page."
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto open"
+
+    # Fallback item shown when there is NO next page (last page)
     else:
       item:
         material: LIGHT_BLUE_STAINED_GLASS_PANE

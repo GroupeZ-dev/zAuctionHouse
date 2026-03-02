@@ -1,23 +1,81 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Admin Transactions Inventory
+#
+#   This inventory displays transaction history for a player.
+#   Transactions are records of completed sales with financial details.
+#
+#   TRANSACTION STATUS:
+#   - PENDING: Money has not yet been claimed by the seller
+#   - RETRIEVED: Money has been claimed/deposited to the seller
+#
+#   FEATURES:
+#   - View all completed transactions
+#   - Filter by transaction status
+#   - Filter by date range
+#   - See buyer/seller information
+#
+#   ACCESS:
+#   - From admin history main menu → Transactions button
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# Inventory title with pagination placeholders.
 name: '#0c1719Admin transactions (%page%/%max-page%)'
+
+# Inventory size - 6 rows.
 size: 54
 
+#=============================================================================
+# PATTERNS
+#=============================================================================
+
 patterns:
+  # Decorative glass pane borders.
   - 'zauctionhouse-decoration'
+  # Previous/next page buttons.
   - 'zauctionhouse-pagination'
+  # Back button to return to admin history main.
   - 'zauctionhouse-back'
 
+#=============================================================================
+# ITEMS
+#=============================================================================
+
 items:
+
+  #---------------------------------------------------------------------------
+  # TRANSACTION ENTRIES DISPLAY
+  #---------------------------------------------------------------------------
+  # Shows all transaction records for the target player.
+
   items:
+    # Button type - displays transaction entries.
     type: ZAUCTIONHOUSE_ADMIN_TRANSACTIONS
+
+    # Slot for loading indicator.
     loading-slot: 22
+
+    # Slots for displaying transactions (4 rows × 9 columns = 36 slots).
     slots:
-      - 9-17
-      - 18-26
-      - 27-35
-      - 36-44
+      - 9-17    # Row 2
+      - 18-26   # Row 3
+      - 27-35   # Row 4
+      - 36-44   # Row 5
+
+    # Item shown while loading.
     item:
       material: BARRIER
       name: "#ff0000Loading..."
+
+    # Item shown when no transactions exist.
     else:
       slots:
         - 22
@@ -28,18 +86,36 @@ items:
           - ''
           - '&7You have not sold any items yet.'
 
+  #---------------------------------------------------------------------------
+  # FILTER BY STATUS BUTTON
+  #---------------------------------------------------------------------------
+  # Cycles through transaction status filters.
+
   filter-status:
+    # Button type - handles status filtering.
     type: ZAUCTIONHOUSE_ADMIN_TRANSACTIONS_FILTER_STATUS
+
     slot: 47
+
+    # Format for currently selected status.
     enable-text: ' #F27438➜ %status%'
+
+    # Format for unselected statuses.
     disable-text: ' #76CDCD➜ %status%'
+
+    # Display name for "all statuses" option.
     all-statuses-name: "All"
+
+    # Available transaction statuses to filter by.
     statuses:
-      - PENDING
-      - RETRIEVED
+      - PENDING    # Money not yet claimed
+      - RETRIEVED  # Money has been claimed
+
+    # Display names for each status.
     status-names:
       PENDING: "Pending"
       RETRIEVED: "Retrieved"
+
     item:
       material: HOPPER
       name: '#2CCED2<bold>ғɪʟᴛᴇʀ ʙʏ sᴛᴀᴛᴜs'
@@ -51,23 +127,39 @@ items:
         - ''
         - '#8c8c8c• #2CCED2Click #92ffffto change the filter status'
 
+  #---------------------------------------------------------------------------
+  # FILTER BY DATE BUTTON
+  #---------------------------------------------------------------------------
+  # Cycles through date range filters.
+
   filter-date:
+    # Button type - handles date filtering.
     type: ZAUCTIONHOUSE_ADMIN_TRANSACTIONS_FILTER_DATE
+
     slot: 51
+
+    # Format for currently selected date range.
     enable-text: ' #F27438➜ %date%'
+
+    # Format for unselected date ranges.
     disable-text: ' #76CDCD➜ %date%'
+
+    # Available date filters.
     filters:
-      - ALL
-      - TODAY
-      - THIS_WEEK
-      - THIS_MONTH
-      - THIS_YEAR
+      - ALL         # All time
+      - TODAY       # Today only
+      - THIS_WEEK   # Last 7 days
+      - THIS_MONTH  # Last 30 days
+      - THIS_YEAR   # Last 365 days
+
+    # Display names for each date filter.
     filter-names:
       ALL: "All Time"
       TODAY: "Today"
       THIS_WEEK: "This Week"
       THIS_MONTH: "This Month"
       THIS_YEAR: "This Year"
+
     item:
       material: CLOCK
       name: '#2CCED2<bold>ғɪʟᴛᴇʀ ʙʏ ᴅᴀᴛᴇ'

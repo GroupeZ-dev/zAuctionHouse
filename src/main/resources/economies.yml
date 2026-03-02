@@ -1,58 +1,188 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Economy Configuration
+#
+#   This file configures economy providers for the auction house.
+#   You can enable multiple economies to allow players to trade with different currencies.
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# ECONOMY PROVIDERS
+#=============================================================================
+# List of enabled economy providers.
+# Each economy allows players to buy and sell items using that currency.
+# You can enable multiple economies for players to choose from.
+#
+# SUPPORTED ECONOMY TYPES:
+#   - VAULT        : Standard Vault economy (works with any Vault-compatible economy plugin)
+#   - PLAYER_POINTS: PlayerPoints plugin currency
+#   - COINS_ENGINE : CoinsEngine plugin currencies
+#   - REDIRECT     : Redirect to another economy by name
+#   - ITEM         : Item-based economy (trade specific items as currency)
+#   - LEVEL        : Experience levels as currency
+#   - EXPERIENCE   : Experience points as currency
+#
+# Each economy can have its own:
+#   - Min/max price limits
+#   - Tax configuration
+#   - Display format
+#   - Auto-claim behavior
+
 economies:
+
+  #---------------------------------------------------------------------------
+  # VAULT ECONOMY
+  #---------------------------------------------------------------------------
+  # Standard economy using Vault API.
+  # Works with: EssentialsX Economy, CMI, DeluxeCoins, and many others.
   - type: VAULT
+
+    # Enable or disable this economy
+    # When disabled, players cannot use this currency.
     is-enable: true
+
+    # Internal identifier for this economy (must be unique).
+    # Used in commands: /ah sell <price> <amount> <economy>
+    # Used in config references and database storage.
+    # IMPORTANT: Do not change after players have listed items with this economy.
     name: vault
+
+    # Display name shown in the GUI and messages.
+    # Supports MiniMessage formatting and colors.
     display-name: "Vault"
+
+    # Price display format in the auction house.
+    # %price% is replaced with the formatted price number.
+    # Examples:
+    #   "%price%$"      → "1,000$"
+    #   "$%price%"      → "$1,000"
+    #   "%price% coins" → "1,000 coins"
     format: "%price%$"
+
+    # Short symbol used in compact displays (tab completion, etc.)
     symbol: "v"
-    # If true, money is delivered immediately. When false, players must run a claim command for pending balances.
+
+    # If true, money from sales is deposited immediately to the seller.
+    # If false, sellers must use /ah claim to receive their pending money.
+    # Recommended: true for simple setups, false if using cross-server economy.
     auto-claim: true
-    # Allows giving the money to the player only if he is online, otherwise he should recover the pending money.
+
+    # If true, money is only deposited when the seller is online.
+    # If false, money is deposited even when the seller is offline.
+    # Useful for economy plugins that don't support offline transactions.
     must-be-online: false
+
+    # Optional permission required to use this economy.
+    # Leave commented out to allow everyone to use it.
     # permission: "zauctionhouse.economy.vault"
+
+    # Reason string for economy withdrawals (shown in economy logs).
+    # Available placeholder: %items% (displays item names)
     withdraw-reason: "Purchase of %items% (zAuctionHouse)"
+
+    # Reason string for economy deposits (shown in economy logs).
     deposit-reason: "Sale of %items% (zAuctionHouse)"
+
+    # Price number formatting mode.
+    # Options:
+    #   - PRICE_WITH_DECIMAL_FORMAT : Uses the 'price-decimal-format' setting below
+    #   - PRICE_WITHOUT_DECIMAL     : No decimal places (whole numbers only)
+    #   - PRICE_WITH_REDUCTION      : Uses the 'price-reductions' settings below
     price-format: PRICE_WITH_DECIMAL_FORMAT
+
+    # Minimum price limits for different sale types.
+    # Players cannot list items for less than these amounts.
+    # Prevents spam listings and protects economy balance.
     min-prices:
-      auction: 10
-      rent: 500
-      bid: 500
-    max-prices: 10000000000
+      auction: 10       # Minimum price for regular auctions
+      rent: 500         # Minimum price for rent listings (future feature)
+      bid: 500          # Minimum starting bid (future feature)
 
-    # Tax configuration
-    # Types: SELL (seller pays when listing), PURCHASE (tax deducted from seller's earnings),
-    #        BOTH (tax on both operations), CAPITALISM (VAT - buyer pays extra, seller receives full price)
+    # Maximum price for any listing.
+    # Players cannot list items for more than this amount.
+    # Prevents economy abuse with unrealistic prices.
+    max-prices: 10000000000  # 10 billion
+
+    #-------------------------------------------------------------------------
+    # TAX CONFIGURATION
+    #-------------------------------------------------------------------------
+    # Tax system for auction transactions.
+    # Useful for removing currency from the economy (sink) or funding server banks.
     tax:
+      # Enable or disable taxes for this economy
       enabled: false
-      type: SELL  # SELL, PURCHASE, BOTH, CAPITALISM
-      amount-type: PERCENTAGE  # PERCENTAGE or FIXED
-      amount: 5  # 5% or 5$ depending on amount-type
 
-      # Permission to bypass all taxes
+      # Tax type determines when and how tax is collected:
+      #
+      # SELL:       Tax is paid by the SELLER when listing an item.
+      #             Example: List 1000$ item with 5% tax → Seller pays 50$ listing fee.
+      #             Buyer pays: 1000$ | Seller receives: 1000$
+      #
+      # PURCHASE:   Tax is deducted from the SELLER's earnings when item sells.
+      #             Example: Item sells for 1000$ with 5% tax → Seller receives 950$.
+      #             Buyer pays: 1000$ | Seller receives: 950$
+      #
+      # BOTH:       Tax is applied at both listing AND sale.
+      #             Example: 5% tax on listing AND sale.
+      #             Listing: Seller pays 50$ | Sale: Seller receives 950$
+      #
+      # CAPITALISM: VAT-style tax where BUYER pays extra, seller receives full price.
+      #             Example: Item listed for 1000$ with 5% VAT → Buyer pays 1050$.
+      #             Buyer pays: 1050$ | Seller receives: 1000$
+      type: SELL
+
+      # Tax calculation method:
+      # - PERCENTAGE : Tax is a percentage of the price (most common)
+      # - FIXED      : Tax is a flat amount regardless of price
+      amount-type: PERCENTAGE
+
+      # Tax amount (percentage or fixed value depending on amount-type)
+      # Example: 5 = 5% tax (if PERCENTAGE) or 5$ tax (if FIXED)
+      amount: 5
+
+      # Permission to completely bypass all taxes
+      # Players with this permission pay no tax on any transaction.
       bypass-permission: "zauctionhouse.tax.bypass"
 
-      # Tax reductions based on permissions (first matching permission is applied)
+      # Permission-based tax reductions.
+      # Players with these permissions get reduced tax rates.
+      # Checked in order - first matching permission is applied.
+      # Reduction is a percentage OFF the normal tax rate.
       reductions:
         - permission: "zauctionhouse.tax.vip"
-          percentage: 50  # 50% reduction
+          percentage: 50  # 50% reduction (5% tax → 2.5% effective)
         - permission: "zauctionhouse.tax.premium"
-          percentage: 25  # 25% reduction
+          percentage: 25  # 25% reduction (5% tax → 3.75% effective)
         - permission: "zauctionhouse.tax.member"
-          percentage: 10  # 10% reduction
+          percentage: 10  # 10% reduction (5% tax → 4.5% effective)
 
-      # Item-specific tax rules (optional, disabled by default)
-      # These rules override the default tax configuration for matching items
+      #-----------------------------------------------------------------------
+      # ITEM-SPECIFIC TAX RULES
+      #-----------------------------------------------------------------------
+      # Override default tax settings for specific items.
+      # Useful for taxing valuable items differently than common items.
       item-rules:
+        # Enable or disable item-specific tax rules
         enabled: false
+
+        # List of tax rules for specific items.
+        # Rules with higher priority are checked first.
+        # First matching rule is applied; if none match, default tax is used.
         rules: []
-        # Example rules:
-        # - name: "diamond_tax"
-        #   priority: 100
-        #   type: PURCHASE
+
+        # EXAMPLE RULES (uncomment and modify to use):
+        #
+        # - name: "diamond_tax"           # Unique rule identifier
+        #   priority: 100                 # Higher = checked first
+        #   type: PURCHASE                # Tax type for this rule
         #   amount-type: PERCENTAGE
-        #   amount: 10
+        #   amount: 10                    # 10% tax on diamonds
         #   rule:
-        #     type: material
+        #     type: material              # Rule type: material, lore, name, etc.
         #     materials:
         #       - DIAMOND
         #       - DIAMOND_BLOCK
@@ -61,34 +191,79 @@ economies:
         #   priority: 90
         #   type: CAPITALISM
         #   amount-type: PERCENTAGE
-        #   amount: 15
+        #   amount: 15                    # 15% VAT on rare items
         #   rule:
-        #     type: and
+        #     type: and                   # Combine multiple conditions
         #     rules:
         #       - type: lore
         #         mode: CONTAINS
         #         values:
         #           - "Rare"
 
-default-economy:
-  auction: vault
-  rent: vault
-  bid: vault
+#=============================================================================
+# DEFAULT ECONOMY
+#=============================================================================
+# Default economy used when players don't specify one.
+# Must match the 'name' field of an enabled economy above.
 
+default-economy:
+  auction: vault   # Default for regular auction listings
+  rent: vault      # Default for rent listings (future feature)
+  bid: vault       # Default for bid listings (future feature)
+
+#=============================================================================
+# PRICE FORMATTING
+#=============================================================================
+
+# Decimal format for displaying prices.
+# Uses Java DecimalFormat patterns.
+# Examples:
+#   "#,###.#"   → "1,234.5"
+#   "#,###.##"  → "1,234.56"
+#   "#,###"     → "1,234" (no decimals)
+# The comma (,) is used as thousands separator.
 price-decimal-format: '#,###.#'
 
+#=============================================================================
+# PRICE REDUCTIONS (Compact Display)
+#=============================================================================
+# Shortens large numbers for cleaner display.
+# Only used when price-format is set to PRICE_WITH_REDUCTION.
+#
+# Format uses printf-style patterns:
+#   "#.#"    → Plain number with 1 decimal
+#   "%.1fK"  → Number with 1 decimal followed by "K"
+#   "%.2fM"  → Number with 2 decimals followed by "M"
+#
+# max-amount: Numbers UP TO this value use this format.
+# display: Optional custom display template. %amount% is the formatted number.
+
 price-reductions:
+  # 0 - 999: Show as-is with 1 decimal
   - format: "#.#"
     max-amount: 1000
+
+  # 1,000 - 999,999: Show as K (thousands)
+  # Example: 1500 → "1.5K"
   - format: "%.1fK"
     max-amount: 1000000
+
+  # 1,000,000 - 999,999,999: Show as M (millions)
+  # Example: 1500000 → "1.5M"
   - format: "%.1fM"
     max-amount: 1000000000
+
+  # 1,000,000,000 - 999,999,999,999: Show as B (billions)
+  # Example: 1500000000 → "1.5B"
   - format: "%.1fB"
     max-amount: 1000000000000
+
+  # 1 trillion+: Show as T (trillions) with custom green color
   - format: "%.2fT"
     max-amount: 1000000000000000
     display: "<green>%amount%"
+
+  # Very large amounts: Show as Q (quadrillions) with custom red color
   - format: "%.2fQ"
     max-amount: 100000000000000000
     display: "<red>%amount%"

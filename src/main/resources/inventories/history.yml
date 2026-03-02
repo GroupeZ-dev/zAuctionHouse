@@ -1,23 +1,79 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Sales History Inventory
+#
+#   This inventory displays the player's sales history - items they have sold.
+#   Shows completed transactions with buyer information and sale prices.
+#
+#   FEATURES:
+#   - View all items you have sold
+#   - See who bought each item and when
+#   - Sort by date, price, or buyer name
+#   - Historical data is kept indefinitely (configurable)
+#
+#   ACCESS:
+#   - /ah history
+#   - Click notification message when logging in after offline sales
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# Inventory title with pagination placeholders.
 name: '#0c1719Sales History (%page%/%max-page%)'
+
+# Inventory size - 6 rows.
 size: 54
 
+#=============================================================================
+# PATTERNS
+#=============================================================================
+
 patterns:
+  # Decorative glass pane borders.
   - 'zauctionhouse-decoration'
+  # Previous/next page buttons.
   - 'zauctionhouse-pagination'
+  # Back button to return to auction house.
   - 'zauctionhouse-back'
 
+#=============================================================================
+# ITEMS
+#=============================================================================
+
 items:
+
+  #---------------------------------------------------------------------------
+  # HISTORY ITEMS DISPLAY
+  #---------------------------------------------------------------------------
+  # Shows all sold items with transaction details.
+  # This is a read-only view - items cannot be retrieved.
+
   items:
+    # Button type - displays historical sales.
     type: ZAUCTIONHOUSE_HISTORY_ITEMS
+
+    # Slot for loading indicator while fetching history.
     loading-slot: 22
+
+    # Slots for displaying history items (4 rows × 9 columns = 36 slots).
     slots:
-      - 9-17
-      - 18-26
-      - 27-35
-      - 36-44
+      - 9-17    # Row 2
+      - 18-26   # Row 3
+      - 27-35   # Row 4
+      - 36-44   # Row 5
+
+    # Item shown while loading history from database.
     item:
       material: BARRIER
       name: "#ff0000Loading..."
+
+    # Item shown when no sales exist.
     else:
       slots:
         - 22
@@ -28,18 +84,34 @@ items:
           - ''
           - '&7You have not sold any items yet.'
 
+  #---------------------------------------------------------------------------
+  # SORT BUTTON
+  #---------------------------------------------------------------------------
+  # Changes the sort order of history entries.
+
   sort:
+    # Button type - handles sort cycling for history.
     type: ZAUCTIONHOUSE_HISTORY_SORT
+
+    # Slot position.
     slot: 51
+
+    # Format for currently selected sort option.
     enable-text: ' #F27438➜ %sorting%'
+
+    # Format for unselected sort options.
     disable-text: ' #76CDCD➜ %sorting%'
+
+    # Available sort options (cycled in this order).
     sorts:
-      - DATE_DESC
-      - DATE_ASC
-      - PRICE_DESC
-      - PRICE_ASC
-      - BUYER_ASC
-      - BUYER_DESC
+      - DATE_DESC    # Newest first (default)
+      - DATE_ASC     # Oldest first
+      - PRICE_DESC   # Highest price first
+      - PRICE_ASC    # Lowest price first
+      - BUYER_ASC    # Buyer name A-Z
+      - BUYER_DESC   # Buyer name Z-A
+
+    # Display names for each sort option.
     sort-names:
       DATE_DESC: "Newest First"
       DATE_ASC: "Oldest First"
@@ -47,11 +119,13 @@ items:
       PRICE_ASC: "Lowest Price"
       BUYER_ASC: "Buyer A-Z"
       BUYER_DESC: "Buyer Z-A"
+
     item:
       material: HOPPER
       name: "#2CCED2<bold>sᴏʀᴛ"
       lore:
         - "#92ffffAvailable sort types:"
+        # Placeholders for each sort option (formatted by enable/disable-text).
         - "%DATE_DESC%"
         - "%DATE_ASC%"
         - "%PRICE_DESC%"

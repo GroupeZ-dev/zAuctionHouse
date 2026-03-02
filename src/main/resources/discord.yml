@@ -1,36 +1,120 @@
-# Discord Webhook Notifications
-# This feature allows you to send notifications to Discord when items are listed or purchased.
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Discord Webhook Configuration
+#
+#   This file configures Discord webhook notifications for auction events.
+#   Send notifications to your Discord server when items are listed or purchased.
+#
+#   HOW TO SET UP:
+#   1. In Discord, go to Server Settings → Integrations → Webhooks
+#   2. Create a new webhook and copy the webhook URL
+#   3. Paste the URL in the 'url' field below
+#   4. Enable the webhook and customize the embed
+#
+#   WEBHOOK URL FORMAT:
+#   https://discord.com/api/webhooks/WEBHOOK_ID/WEBHOOK_TOKEN
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
 
+#=============================================================================
+# GLOBAL SETTINGS
+#=============================================================================
+
+# Enable or disable all Discord webhook notifications.
+# When disabled, no webhooks will be sent regardless of individual webhook settings.
 enabled: false
 
-# Server name used in placeholders
+# Server name used in webhook messages.
+# Displayed in footers and messages to identify which server sent the notification.
+# Useful for multi-server setups sharing a Discord channel.
 server-name: "My Server"
 
-# Image URL pattern for fetching item images (used for dominant color extraction)
-# Placeholders: %item_material% (lowercase), %ITEM_MATERIAL% (uppercase)
-# The dominant color can be used with the %item_dominant_color% placeholder
+#=============================================================================
+# ITEM IMAGE SETTINGS
+#=============================================================================
+
+# URL pattern for fetching item images.
+# Used to display item icons in webhook embeds.
+# The dominant color feature can extract colors from these images.
+#
+# Default uses a public Minecraft item image API.
+# You can host your own images or use a different API.
 item-image-url: "https://img.groupez.dev/minecraft/%item_material%.png"
 
-# Enable dominant color extraction (requires fetching images, may add latency)
+# Enable dominant color extraction from item images.
+# When enabled, the plugin fetches the item image and extracts its primary color.
+# This color can be used in embeds via the %item_dominant_color% placeholder.
+# WARNING: This adds HTTP requests which may increase latency.
+# Recommended: Disable unless you specifically want dynamic embed colors.
 extract-dominant-color: false
 
-# Default color to use if extraction fails
+# Default color for embeds when:
+# - Dominant color extraction is disabled
+# - Color extraction fails (network error, invalid image)
+# Use hex format: "#RRGGBB"
+# Discord's default brand color is #5865F2 (Blurple)
 default-color: "#5865F2"
 
+#=============================================================================
+# WEBHOOK CONFIGURATIONS
+#=============================================================================
+
 webhooks:
+
+  #---------------------------------------------------------------------------
+  # SELL WEBHOOK
+  #---------------------------------------------------------------------------
+  # Sent when a player lists a new item on the auction house.
+
   sell:
+    # Enable or disable this specific webhook.
     enabled: false
+
+    # Discord webhook URL for sell notifications.
+    # Get this from Discord: Server Settings → Integrations → Webhooks
+    # IMPORTANT: Keep this URL private! Anyone with this URL can post to your channel.
     url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
-    # Webhook username (overrides the default webhook name)
+
+    # Custom username for the webhook bot.
+    # This overrides the default name set in Discord webhook settings.
+    # Leave empty to use the Discord default.
     username: "zAuctionHouse"
-    # Webhook avatar URL (overrides the default webhook avatar)
+
+    # Custom avatar URL for the webhook bot.
+    # Must be a valid image URL (PNG, JPG, GIF).
+    # Leave empty to use the Discord default.
     avatar-url: ""
-    # Message content (appears above the embed)
+
+    # Message content that appears ABOVE the embed.
+    # This is plain text, not part of the embed.
+    # Supports Discord mentions: <@USER_ID>, <@&ROLE_ID>, @everyone, @here
+    # Leave empty for no content message.
     content: ""
+
+    # Embed configuration (the rich message box)
     embed:
+      # Embed title - displayed at the top in bold.
+      # Supports placeholders.
       title: "New Item Listed!"
+
+      # Embed description - main text content.
+      # Supports placeholders and Discord markdown.
+      # Use ** for bold, * for italic, ` for code.
       description: "**%seller_name%** has listed an item for sale"
+
+      # Embed sidebar color in hex format.
+      # Use "#RRGGBB" or the placeholder %item_dominant_color% for dynamic colors.
       color: "#00FF00"
+
+      # Embed fields - structured data displayed in columns.
+      # Each field has:
+      #   name: Field title (displayed in bold)
+      #   value: Field content
+      #   inline: true = side by side, false = full width
+      # Maximum 25 fields, field names max 256 chars, values max 1024 chars.
       fields:
         - name: "Item"
           value: "%item_display%"
@@ -44,32 +128,67 @@ webhooks:
         - name: "Economy"
           value: "%economy_display_name%"
           inline: true
+
+      # Footer configuration (small text at the bottom)
       footer:
+        # Footer text (max 2048 characters)
         text: "Server: %server_name%"
+        # Small icon next to footer text (must be valid image URL)
         icon-url: ""
+
+      # Author configuration (displays above title with icon)
       author:
+        # Author name (max 256 characters)
         name: "%seller_name%"
+        # URL when clicking author name (leave empty to disable)
         url: ""
+        # Author icon (typically player head)
+        # mc-heads.net provides Minecraft player avatars by UUID
         icon-url: "https://mc-heads.net/avatar/%seller_uuid%"
+
+      # Thumbnail - small image on the right side of the embed
       thumbnail:
+        # Image URL (item icon using the pattern defined above)
         url: "%item_image_url%"
+
+      # Image - large image at the bottom of the embed
       image:
+        # Leave empty to disable
         url: ""
+
+      # Add timestamp to the embed (shows current time in user's timezone)
       timestamp: true
 
+  #---------------------------------------------------------------------------
+  # PURCHASE WEBHOOK
+  #---------------------------------------------------------------------------
+  # Sent when a player purchases an item from the auction house.
+
   purchase:
+    # Enable or disable this specific webhook.
     enabled: false
+
+    # Discord webhook URL for purchase notifications.
+    # Can be the same or different from the sell webhook.
     url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
-    # Webhook username (overrides the default webhook name)
+
+    # Custom username for the webhook bot.
     username: "zAuctionHouse"
-    # Webhook avatar URL (overrides the default webhook avatar)
+
+    # Custom avatar URL for the webhook bot.
     avatar-url: ""
-    # Message content (appears above the embed)
+
+    # Message content above the embed.
     content: ""
+
+    # Embed configuration
     embed:
       title: "Item Purchased!"
       description: "**%buyer_name%** has purchased an item from **%seller_name%**"
+
+      # Gold color for purchases
       color: "#FFD700"
+
       fields:
         - name: "Item"
           value: "%item_display%"
@@ -83,27 +202,68 @@ webhooks:
         - name: "Seller"
           value: "%seller_name%"
           inline: true
+
       footer:
         text: "Server: %server_name%"
         icon-url: ""
+
+      # Author shows the buyer for purchase notifications
       author:
         name: "%buyer_name%"
         url: ""
         icon-url: "https://mc-heads.net/avatar/%buyer_uuid%"
+
       thumbnail:
         url: "%item_image_url%"
+
       image:
         url: ""
+
       timestamp: true
 
-# Available placeholders:
-# Item: %item_id%, %item_material%, %item_display%, %item_amount%, %item_lore%, %item_enchantments%, %item_custom_model_data%, %item_dominant_color%, %item_image_url%
-# Seller: %seller_name%, %seller_uuid%
-# Buyer: %buyer_name%, %buyer_uuid%
-# Price: %price%, %formatted_price%, %economy_name%, %economy_display_name%
-# Time: %created_at%, %expires_at%, %remaining_time%, %timestamp%
-# Server: %server_name%
-# Categories: %category_names%, %category_count%
+#=============================================================================
+# AVAILABLE PLACEHOLDERS
+#=============================================================================
+# Use these placeholders in any text field above.
+# Placeholders are replaced with actual values when the webhook is sent.
 #
-# Note: %item_dominant_color% extracts the dominant color from the item image (requires extract-dominant-color: true)
-# You can use it for the embed color: color: "%item_dominant_color%"
+# ITEM PLACEHOLDERS:
+#   %item_id%              - Internal item ID
+#   %item_material%        - Material name (lowercase, e.g., "diamond_sword")
+#   %item_display%         - Item display name with formatting
+#   %item_amount%          - Stack size
+#   %item_lore%            - Item lore (may be long, use carefully)
+#   %item_enchantments%    - List of enchantments
+#   %item_custom_model_data% - CustomModelData value (for resource packs)
+#   %item_dominant_color%  - Extracted dominant color (requires extract-dominant-color: true)
+#   %item_image_url%       - Full URL to item image
+#
+# PLAYER PLACEHOLDERS:
+#   %seller_name%          - Seller's username
+#   %seller_uuid%          - Seller's UUID (for avatar URLs)
+#   %buyer_name%           - Buyer's username (purchase webhook only)
+#   %buyer_uuid%           - Buyer's UUID (purchase webhook only)
+#
+# PRICE PLACEHOLDERS:
+#   %price%                - Raw price number
+#   %formatted_price%      - Price with economy formatting (e.g., "1,000$")
+#   %economy_name%         - Economy internal name
+#   %economy_display_name% - Economy display name
+#
+# TIME PLACEHOLDERS:
+#   %created_at%           - When the listing was created
+#   %expires_at%           - When the listing expires
+#   %remaining_time%       - Time until expiration
+#   %timestamp%            - Current timestamp
+#
+# SERVER PLACEHOLDERS:
+#   %server_name%          - Server name (from config above)
+#
+# CATEGORY PLACEHOLDERS:
+#   %category_names%       - Comma-separated list of matching categories
+#   %category_count%       - Number of matching categories
+#
+# TIPS:
+# - Use %item_dominant_color% for the embed color to make each item unique
+# - Keep embed field values short to avoid Discord's character limits
+# - Test your webhook configuration with a private channel first

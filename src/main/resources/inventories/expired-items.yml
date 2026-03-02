@@ -1,20 +1,74 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Expired Items Inventory
+#
+#   This inventory displays items that have expired without being sold.
+#   Players can retrieve these items back to their inventory.
+#
+#   EXPIRATION:
+#   - Items expire after the time set in config.yml (default: 2 days)
+#   - Expired items are moved from active listings to this inventory
+#   - Items here also have an expiration (default: 1 week) before permanent deletion
+#
+#   ACCESS:
+#   - /ah expired
+#   - Click the "Expired Items" button in the main auction house
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# Inventory title with pagination placeholders.
+# %page% = current page, %max-page% = total pages
 name: '#0c1719Expired items (%page%/%max-page%)'
+
+# Inventory size - 6 rows.
 size: 54
 
+#=============================================================================
+# PATTERNS
+#=============================================================================
+
 patterns:
+  # Decorative glass pane borders.
   - 'zauctionhouse-decoration'
+  # Previous/next page buttons.
   - 'zauctionhouse-pagination'
+  # Back button to return to auction house.
   - 'zauctionhouse-back'
 
+#=============================================================================
+# ITEMS
+#=============================================================================
+
 items:
+
+  #---------------------------------------------------------------------------
+  # EXPIRED ITEMS DISPLAY
+  #---------------------------------------------------------------------------
+  # Shows all expired items owned by the viewing player.
+  # Click items to retrieve them.
+
   items:
+    # Button type - displays and handles expired items.
     type: ZAUCTIONHOUSE_EXPIRED_ITEMS
+
+    # Slot for empty state placeholder.
     empty-slot: 22
+
+    # Slots for displaying expired items (4 rows × 9 columns = 36 slots).
     slots:
-      - 9-17
-      - 18-26
-      - 27-35
-      - 36-44
+      - 9-17    # Row 2
+      - 18-26   # Row 3
+      - 27-35   # Row 4
+      - 36-44   # Row 5
+
+    # Placeholder item when no expired items exist.
     item:
       material: BARRIER
       name: '#ff0000&nNo items found'

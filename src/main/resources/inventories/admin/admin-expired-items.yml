@@ -1,19 +1,70 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Admin Expired Items Inventory
+#
+#   This inventory allows admins to view and manage a player's expired items.
+#   Admins can retrieve items on behalf of players who may have lost access.
+#
+#   ADMIN ACTIONS:
+#   - View all expired items for the target player
+#   - Retrieve items to give back to the player
+#   - Useful for recovering items after player complaints
+#
+#   ACCESS:
+#   - From admin history main menu → Expired Items button
+#   - /ah admin open expired <player>
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# Inventory title with pagination placeholders.
 name: '#0c1719Admin expired items (%page%/%max-page%)'
+
+# Inventory size - 6 rows.
 size: 54
 
+#=============================================================================
+# PATTERNS
+#=============================================================================
+
 patterns:
+  # Decorative glass pane borders.
   - 'zauctionhouse-decoration'
+  # Previous/next page buttons.
   - 'zauctionhouse-pagination'
+  # Back button to return to admin history main.
   - 'zauctionhouse-back'
 
+#=============================================================================
+# ITEMS
+#=============================================================================
+
 items:
+
+  #---------------------------------------------------------------------------
+  # EXPIRED ITEMS DISPLAY
+  #---------------------------------------------------------------------------
+  # Shows all expired items for the target player.
+  # Clicking an item retrieves it (admin action).
+
   items:
+    # Button type - displays admin expired items with retrieval functionality.
     type: ZAUCTIONHOUSE_ADMIN_EXPIRED_ITEMS
+
+    # Slots for displaying expired items (4 rows × 9 columns = 36 slots).
     slots:
-      - 9-17
-      - 18-26
-      - 27-35
-      - 36-44
+      - 9-17    # Row 2
+      - 18-26   # Row 3
+      - 27-35   # Row 4
+      - 36-44   # Row 5
+
+    # Fallback when no expired items exist.
     else:
       slots:
         - 22

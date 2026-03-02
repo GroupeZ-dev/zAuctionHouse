@@ -13,133 +13,255 @@
 #
 ################################################################################################################################
 
+#=============================================================================
+# DEBUG & MONITORING SETTINGS
+#=============================================================================
+
 # Enables detailed logs and error messages in the console.
-# If you need support, make sure to activate this option and check your console logs.
+# Use this when troubleshooting issues or when support requests debugging info.
+# When enabled, the plugin will output verbose information about operations.
+# Recommended: Keep disabled in production, enable only when investigating issues.
 enable-debug: false
 
 # Enables performance monitoring and logging.
-# When enabled, the plugin will log execution times for heavy operations like:
+# When enabled, the plugin will log execution times for heavy operations such as:
 # - Item sorting and filtering
-# - Category matching
-# - Database loading
-# - Cache operations
-# Useful for diagnosing performance issues with large auction houses.
+# - Category matching and counting
+# - Database loading and queries
+# - Cache operations and rebuilds
+# Useful for diagnosing performance issues with large auction houses (1000+ items).
+# Recommended: Enable temporarily when experiencing lag or slow inventory loading.
 enable-performance-debug: false
 
-# Allows you to check if you are using the latest version of the plugin
+# Enables automatic version checking against the latest release.
+# When enabled, the plugin will notify console/admins if a newer version is available.
+# This does NOT auto-update the plugin, it only displays a notification.
+# Recommended: Keep enabled to stay informed about important updates and bug fixes.
 enable-version-checker: true
 
-# Performance debug filter configuration
-# Allows you to whitelist or blacklist specific operation names
+# Performance debug filter configuration.
+# Allows you to focus on specific operations by filtering which ones are logged.
+# Only relevant when 'enable-performance-debug' is set to true.
 performance-debug:
   filter:
-    # Filter mode: DISABLED (log all), WHITELIST (only log listed), BLACKLIST (log all except listed)
+    # Filter mode options:
+    # - DISABLED: Log all operations (default, no filtering)
+    # - WHITELIST: Only log operations listed in 'operations'
+    # - BLACKLIST: Log all operations EXCEPT those listed in 'operations'
     mode: DISABLED
-    # List of operation names to filter
-    # Supports wildcard suffix (*) for prefix matching, e.g., "loadItems.*" matches all loadItems operations
-    # Available operations:
-    # - loadItems.loadPlayers, loadItems.loadItemsFromDB, loadItems.loadAuctionItemsFromDB
-    # - loadItems.processItems, loadItems.total, loadItems.rebuildSortedItemsCache
-    # - getItemsListedForSale, resolveItems[SALE], getItemIds[SALE]
-    # - applyCategories, computeCategoryCount[categoryId]
-    # - SortedItemsCache.rebuild, item.BuildItemStack, item.CreatePlaceholders
-    # - openInventory.<file name>
+
+    # List of operation names to filter.
+    # Supports wildcard suffix (*) for prefix matching.
+    # Example: "loadItems.*" matches loadItems.loadPlayers, loadItems.loadItemsFromDB, etc.
+    #
+    # Available operation names:
+    # Loading operations:
+    #   - loadItems.loadPlayers        : Time to load player data from database
+    #   - loadItems.loadItemsFromDB    : Time to load items from database
+    #   - loadItems.loadAuctionItemsFromDB : Time to load auction items from database
+    #   - loadItems.processItems       : Time to process loaded items
+    #   - loadItems.total              : Total loading time
+    #   - loadItems.rebuildSortedItemsCache : Time to rebuild sorted cache
+    #
+    # Cache operations:
+    #   - SortedItemsCache.rebuild     : Time to rebuild the sorted items cache
+    #   - getItemsListedForSale        : Time to retrieve items for sale list
+    #   - resolveItems[SALE]           : Time to resolve sale items
+    #   - getItemIds[SALE]             : Time to get item IDs for sale
+    #
+    # Category operations:
+    #   - applyCategories              : Time to apply category filters
+    #   - computeCategoryCount[categoryId] : Time to count items per category
+    #
+    # Item operations:
+    #   - item.BuildItemStack          : Time to build item stacks for display
+    #   - item.CreatePlaceholders      : Time to create item placeholders
+    #
+    # Inventory operations:
+    #   - openInventory.<file name>    : Time to open a specific inventory
     operations:
       - "loadItems.*"
       - "SortedItemsCache.*"
 
+#=============================================================================
+# GENERAL SETTINGS
+#=============================================================================
+
+# Date format used throughout the plugin for displaying timestamps.
+# Uses Java SimpleDateFormat patterns.
+# Common patterns:
+#   dd    - Day of month (01-31)
+#   MM    - Month (01-12)
+#   yyyy  - Year (4 digits)
+#   HH    - Hour in 24-hour format (00-23)
+#   hh    - Hour in 12-hour format (01-12)
+#   mm    - Minutes (00-59)
+#   ss    - Seconds (00-59)
+# Examples:
+#   "dd/MM/yyyy HH:mm:ss" → "25/12/2024 14:30:45"
+#   "MM-dd-yyyy hh:mm a"  → "12-25-2024 02:30 PM"
 date-format: dd/MM/yyyy HH:mm:ss
 
-#
-# - SQLITE
-# - MARIADB
-# - MYSQL
+#=============================================================================
+# DATABASE CONFIGURATION
+#=============================================================================
+
+# Database storage type for auction data.
+# Available options:
+# - SQLITE  : Local file-based database (default, no setup required)
+#             Best for: Single server, small to medium auction houses
+# - MYSQL   : MySQL database server
+#             Best for: Multi-server setups, large auction houses
+# - MARIADB : MariaDB database server (MySQL-compatible)
+#             Best for: Multi-server setups, large auction houses
+# Note: For multi-server synchronization, use MySQL/MariaDB with the Redis addon.
 storage-type: SQLITE
 
-# Nom du serveur pour identifier l'origine des ventes dans le cadre d'une gestion multi-serveur.
+# Server name identifier for multi-server setups.
+# This name is stored with each auction listing to identify which server it came from.
+# Useful for tracking sales origin when using a shared database across multiple servers.
+# Recommended: Use a unique, descriptive name (e.g., "skyblock", "survival", "creative").
 server-name: skyblock
 
-# Database configuration.
-# It is strongly recommended to use a database to store all plugin data.
-database-configuration: # Prefix applied to all tables created by the plugin.
-  # If you use the same database for multiple plugins, this helps avoid conflicts.
-  # It is recommended not to change this value once the plugin is in use.
+# Database connection settings for MySQL/MariaDB.
+# Only used when 'storage-type' is set to MYSQL or MARIADB.
+database-configuration:
+  # Prefix applied to all database tables created by the plugin.
+  # Useful when sharing a database with other plugins to avoid table name conflicts.
+  # WARNING: Do not change this after the plugin has stored data, or data will be lost.
+  # Default tables created: {prefix}items, {prefix}auction_items, {prefix}players, etc.
   table-prefix: zauctionhouse_
-  # IP address of the machine hosting your database.
-  host: 192.168.10.10
-  # Port of your database server.
-  # Default MySQL port: 3306
-  port: 3306
-  # Username used to log into the database.
-  user: homestead
-  # Password associated with the database user.
-  password: secret
-  # Name of the database where data will be stored.
-  database: zauctionhouse
-  # Enables SQL debugging.
-  # Activates verbose SQL logs, useful for identifying database issues.
-  debug: true
 
-# Il vous permet de définir des clés qui seront remplacées par la couleur pour vos messages.
-# Cela permet de simplifier la configuration de vos messages
+  # IP address or hostname of the database server.
+  # Use 'localhost' or '127.0.0.1' if the database is on the same machine.
+  # For remote databases, use the server's IP address or domain name.
+  host: 192.168.10.10
+
+  # Port number of the database server.
+  # Default MySQL/MariaDB port: 3306
+  # Only change if your database uses a non-standard port.
+  port: 3306
+
+  # Username for database authentication.
+  # This user must have permissions: SELECT, INSERT, UPDATE, DELETE, CREATE TABLE
+  user: homestead
+
+  # Password for the database user.
+  # Keep this secure and don't share your configuration file publicly.
+  password: secret
+
+  # Name of the database where auction data will be stored.
+  # The database must exist before the plugin starts.
+  # The plugin will automatically create the required tables.
+  database: zauctionhouse
+
+  # Enables SQL query debugging.
+  # When enabled, all SQL queries will be logged to console.
+  # WARNING: This generates a lot of output. Only enable for database troubleshooting.
+  # Recommended: Keep disabled in production.
+  debug: false
+
+#=============================================================================
+# MESSAGE COLOR SHORTCUTS
+#=============================================================================
+
+# Custom color keys that can be used in messages throughout the plugin.
+# These shortcuts simplify message customization by defining reusable color codes.
+# Usage: Write <primary> in any message and it will be replaced with the hex color.
+# Supports MiniMessage format and hex colors (#RRGGBB).
+#
+# Example usage in messages:
+#   "<primary>Welcome <secondary>to the auction house!"
+#   Becomes: "#24d65d Welcome #656665 to the auction house!"
 message-colors:
+  # Primary color - Used for important text, titles, highlights
   - key: <primary>
     color: '#24d65d'
+  # Secondary color - Used for less important text, descriptions
   - key: <secondary>
     color: '#656665'
+  # Error color - Used for error messages, warnings
   - key: <error>
     color: '#ff0000'
+  # Success color - Used for success messages, confirmations
   - key: <success>
     color: '#00ff00'
 
-# Configuration des commandes, aliases, arguments
-# Pour reload cette configuration, vous devez relancer votre serveur !
-commands: # Commande principale, /zauctionhouse
-  main-command: # Aliases de la commande principale
-    aliases:
-      - ah
-      - hdv
-      - auction
-      - zauction
+#=============================================================================
+# COMMAND CONFIGURATION
+#=============================================================================
 
-  # Commande de vente /zauctionhouse sell
+# Command configuration for aliases and arguments.
+# IMPORTANT: Server restart required after changing this section!
+# Changes to commands are not applied with /ah admin reload.
+
+commands:
+  # Main command: /zauctionhouse (opens the auction house)
+  main-command:
+    # Alternative command names that work identically to /zauctionhouse
+    # Players can use any of these to open the auction house.
+    aliases:
+      - ah           # Short and common
+      - hdv          # French abbreviation (Hôtel des Ventes)
+      - auction      # Full English name
+      - zauction     # Plugin-prefixed version
+
+  # Sell command: /zauctionhouse sell <price> [amount] [economy]
+  # Used by players to list items for sale on the auction house.
   sell:
-    # Si activé, /ah sell sans argument ouvre un inventaire de vente où le joueur peut choisir
-    # les items à vendre, ajuster le prix et sélectionner l'économie.
-    # Si désactivé, /ah sell nécessite un prix en argument.
+    # When enabled, running /ah sell without arguments opens a GUI
+    # where the player can select items, adjust price, and choose economy.
+    # When disabled, /ah sell requires a price argument.
+    # Recommended: Enable for better user experience, disable for command-line power users.
     enable-sell-inventory: false
+
+    # Alternative names for the sell subcommand.
+    # Example: /ah s 1000 (list item in hand for 1000)
     aliases:
       - sell
       - s
-      - vendre
+      - vendre       # French: "to sell"
+
+    # Command arguments configuration
     arguments:
+      # Price argument (required when sell inventory is disabled)
       - name: price
         display-name: price
         required: true
+        # Tab completion suggestions for price
+        # These appear when the player presses Tab while typing the command.
         auto-completion:
           - 1000
           - 10000
           - 25000
+
+      # Amount argument (optional) - How many items to sell from the stack
       - name: amount
         display-name: amount
         required: false
+        # %max-stack-size% is replaced with the item's maximum stack size
         auto-completion:
           - '1'
           - '%max-stack-size%'
+
+      # Economy argument (optional) - Which currency to use
       - name: economy
         display-name: economy
         required: false
+        # List your enabled economy names here for tab completion
         auto-completion:
           - vault
 
-  # Command /ah claim
+  # Claim command: /zauctionhouse claim
+  # Used by players to claim pending money from sales (when auto-claim is disabled).
   claim:
     aliases:
       - claim
       - c
-      - recuperer
+      - recuperer    # French: "to recover"
 
-  # Command /ah page <page>
+  # Page command: /zauctionhouse page <number>
+  # Opens the auction house at a specific page directly.
   page:
     aliases:
       - page
@@ -155,19 +277,25 @@ commands: # Commande principale, /zauctionhouse
           - '5'
           - '10'
 
+  # Custom inventory commands
+  # These commands provide quick access to specific auction house sections.
+  # Each entry creates a new subcommand under /zauctionhouse.
   inventories:
-
-    # Command /ah selling
+    # Command: /ah selling - Opens the player's currently listed items
     - enable: true
+      # Permission required to use this command (leave empty for no permission)
       permission: "zauctionhouse.selling"
+      # Description shown in help and tab completion
       description: "Open selling items"
       aliases:
         - 'selling'
+      # Internal inventory identifier (see inventories/ folder)
       inventory: SELLING_ITEMS
+      # Uncomment to enable page argument: /ah selling <page>
       # enable-page: true
       # page-name: "page"
 
-    # Command /ah expired
+    # Command: /ah expired - Opens the player's expired items
     - enable: true
       permission: "zauctionhouse.expired"
       description: "Open expired items"
@@ -175,7 +303,7 @@ commands: # Commande principale, /zauctionhouse
         - 'expired'
       inventory: EXPIRED_ITEMS
 
-    # Command /ah purchased
+    # Command: /ah purchased - Opens items the player has bought
     - enable: true
       permission: "zauctionhouse.purchased"
       description: "Open purchased items"
@@ -183,7 +311,7 @@ commands: # Commande principale, /zauctionhouse
         - 'purchased'
       inventory: PURCHASED_ITEMS
 
-    # Command /ah history
+    # Command: /ah history - Opens the player's sales history
     - enable: true
       permission: "zauctionhouse.history"
       description: "Open history"
@@ -191,51 +319,87 @@ commands: # Commande principale, /zauctionhouse
         - 'history'
       inventory: HISTORY
 
+#=============================================================================
+# PRICE SHORTCUTS
+#=============================================================================
+
+# Number multiplication shortcuts for sell commands.
+# Allows players to use shorthand notation for large numbers.
+# Example: /ah sell 1K = /ah sell 1000
+# Example: /ah sell 2.5M = /ah sell 2500000
 number-sell-multiplication:
+  # Enable or disable this feature
   enable: true
+
+  # Format definitions (case-insensitive)
+  # Players type the 'format' suffix, and the price is multiplied by 'multiplication'.
   formats:
-    - format: K
+    - format: K          # Thousand (1,000)
       multiplication: 1000
-    - format: M
+    - format: M          # Million (1,000,000)
       multiplication: 1000000
-    - format: B
+    - format: B          # Billion (1,000,000,000)
       multiplication: 1000000000
-    - format: T
+    - format: T          # Trillion
       multiplication: 1000000000000
-    - format: Q
+    - format: Q          # Quadrillion
       multiplication: 1000000000000000
-    - format: QQ
+    - format: QQ         # Quintillion
       multiplication: 1000000000000000000
-    - format: S
+    - format: S          # Sextillion
       multiplication: 1000000000000000000000
-    - format: SS
+    - format: SS         # Septillion
       multiplication: 1000000000000000000000000
-    - format: O
+    - format: O          # Octillion
       multiplication: 1000000000000000000000000000
-    - format: N
+    - format: N          # Nonillion
       multiplication: 1000000000000000000000000000000
-    - format: D
+    - format: D          # Decillion
       multiplication: 1000000000000000000000000000000000
-    - format: UN
+    - format: UN         # Undecillion
       multiplication: 1000000000000000000000000000000000000
-    - format: DD
+    - format: DD         # Duodecillion
       multiplication: 1000000000000000000000000000000000000000
-    - format: TR
+    - format: TR         # Tredecillion
       multiplication: 1000000000000000000000000000000000000000000
 
+#=============================================================================
+# EXPIRATION SETTINGS
+#=============================================================================
+
+# Expiration times for various item states.
+# All times are in SECONDS.
+# Common values:
+#   3600    = 1 hour
+#   86400   = 1 day
+#   172800  = 2 days
+#   259200  = 3 days
+#   604800  = 1 week
+#   2592000 = 30 days
+
 expiration:
-  auction: # Le default permission doit être la valeur la plus petite
+  # How long auction listings remain active before expiring.
+  auction:
+    # Default expiration time in seconds (172800 = 2 days)
+    # After this time, unsold items move to the "expired items" section.
     default-expiration: 172800
+
+    # Permission-based expiration times.
+    # Players with specific permissions can have different expiration durations.
     permission:
+      # Enable or disable permission-based expiration
       enable: false
+      # Permission list (checked in order, first match is used)
+      # IMPORTANT: Order from lowest to highest priority (default should be smallest)
       permissions:
         - permission: zauctionhouse.expiration.vip
-          expiration: 3600
+          expiration: 3600       # 1 hour
         - permission: zauctionhouse.expiration.elite
-          expiration: 7200
+          expiration: 7200       # 2 hours
         - permission: zauctionhouse.expiration.legend
-          expiration: 259200
+          expiration: 259200     # 3 days
 
+  # How long bid listings remain active (for future bid feature).
   bid:
     default-expiration: 172800
     permission:
@@ -248,6 +412,7 @@ expiration:
         - permission: zauctionhouse.expiration.legend
           expiration: 259200
 
+  # How long rent listings remain active (for future rent feature).
   rent:
     default-expiration: 172800
     permission:
@@ -260,18 +425,31 @@ expiration:
         - permission: zauctionhouse.expiration.legend
           expiration: 259200
 
+  # How long expired items are kept before permanent deletion.
+  # After this time, expired items that weren't claimed are permanently lost.
+  # Recommended: Set to at least 1 week to give players time to retrieve items.
   expire:
-    default-expiration: 604800
+    default-expiration: 604800   # 1 week
     permission:
       enable: false
 
+  # How long purchased items are kept before permanent deletion.
+  # After this time, purchased items that weren't claimed are permanently lost.
+  # Recommended: Set to at least 1 week to give players time to retrieve items.
   purchase:
-    default-expiration: 604800
+    default-expiration: 604800   # 1 week
     permission:
       enable: false
 
-# Permission pour le nombre maximum d'item qu'un joueur peut vendre
+#=============================================================================
+# LISTING LIMITS
+#=============================================================================
+
+# Maximum number of items a player can have listed at once.
+# Players need specific permissions to increase their limit.
+
 permissions:
+  # Limits for regular auction listings
   auction:
     - permission: zauctionhouse.max.5
       limit: 5
@@ -279,6 +457,8 @@ permissions:
       limit: 10
     - permission: zauctionhouse.max.15
       limit: 15
+
+  # Limits for rent listings (future feature)
   rent:
     - permission: zauctionhouse.max.5
       limit: 5
@@ -286,6 +466,8 @@ permissions:
       limit: 10
     - permission: zauctionhouse.max.15
       limit: 15
+
+  # Limits for bid listings (future feature)
   bid:
     - permission: zauctionhouse.max.5
       limit: 5
@@ -294,16 +476,48 @@ permissions:
     - permission: zauctionhouse.max.15
       limit: 15
 
-# Liste des mondes bannis
+#=============================================================================
+# WORLD RESTRICTIONS
+#=============================================================================
+
+# Worlds where players cannot create new listings.
+# Players can still VIEW and BUY items, but cannot SELL.
+# Useful for restricting sales in event worlds, minigame worlds, etc.
+# Use exact world folder names (case-sensitive on Linux).
+
 banned-worlds:
+  # Worlds where auction listings are blocked
   auction:
     - "world_the_end"
+  # Worlds where rent listings are blocked
   rent:
     - "world_the_end"
+  # Worlds where bid listings are blocked
   bid:
     - "world_the_end"
+
+#=============================================================================
+# ITEM DISPLAY LORE
+#=============================================================================
+
+# Custom lore lines added to items when displayed in the auction house.
+# These lines are APPENDED to the item's original lore.
+# Use MiniMessage formatting and hex colors (#RRGGBB).
+#
+# Available placeholders:
+#   %seller%         - Name of the player who listed the item
+#   %buyer%          - Name of the player who bought the item
+#   %price%          - Formatted price of the item
+#   %time-remaining% - Time until the listing expires
+#   %date%           - Date of the transaction
+#   %status%         - Dynamic status message (buy/retrieve)
+#   %items%          - Item display name
+#   %type%           - Log entry type (for admin logs)
+#   %player%         - Player involved in the action
+#   %target%         - Target player (for admin operations)
 
 item-lore:
+  # Lore for items displayed in the main auction listing (single item sales)
   listed-auction-item:
     - ""
     - "<white>⌂ #92ffffSeller#8c8c8c: #2CCED2%seller%"
@@ -312,6 +526,7 @@ item-lore:
     - ""
     - "%status%"
 
+  # Lore for bulk sales (multiple items in one listing, e.g., shulker boxes)
   multiple-listed-auction-item:
     - ""
     - "<white>⌂ #92ffffSeller#8c8c8c: #2CCED2%seller%"
@@ -321,36 +536,43 @@ item-lore:
     - "#8c8c8c• #2CCED2ʟᴇғᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ sᴇᴇ ᴛʜᴇ ᴄᴏɴᴛᴇɴᴛ"
     - "%status%"
 
+  # Lore for items in the expired items inventory
   expired-item:
     - ""
     - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
     - ""
     - "#8c8c8c• #2CCED2Click to retrieve this item"
 
+  # Lore for items in the purchased items inventory
   purchased-item:
     - ""
     - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
     - ""
     - "#8c8c8c• #2CCED2Click to retrieve this item"
 
+  # Lore for items in the "your items" (selling) inventory
   selling-item:
     - ""
     - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
     - ""
     - "#8c8c8c• #2CCED2Click to retrieve this item"
 
+  # Lore for items that are currently being purchased by another player
+  # This prevents the seller from retrieving the item during a transaction.
   being-purchased-item:
     - ""
     - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
     - ""
     - "#8c8c8c• #ff3535Your item is being purchased, you cannot retrieve it."
 
+  # Lore for items in the sales history
   history-item:
     - ""
     - "<white>⌂ #92ffffBuyer#8c8c8c: #2CCED2%buyer%"
     - "<white>☆ #92ffffPrice#8c8c8c: #2CCED2%price%"
     - "<white>⌚ #92ffffDate#8c8c8c: #969696%date%"
 
+  # Lore for items in admin log view (single item)
   admin-log-item:
     - ""
     - "<white>⚡ #92ffffType#8c8c8c: #2CCED2%type%"
@@ -361,6 +583,7 @@ item-lore:
     - ""
     - "#8c8c8c• #2CCED2ʟᴇғᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜᴇ ɪᴛᴇᴍ"
 
+  # Lore for items in admin log view (multiple items)
   admin-log-multiple-item:
     - ""
     - "<white>⚡ #92ffffType#8c8c8c: #2CCED2%type%"
@@ -372,16 +595,23 @@ item-lore:
     - "#8c8c8c• #2CCED2ʟᴇғᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜᴇ ɪᴛᴇᴍ"
     - "#8c8c8c• #2CCED2ʀɪɢʜᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ sᴇᴇ ᴀʟʟ ɪᴛᴇᴍs"
 
+  # Lore for items in the sell inventory (removal instructions)
   sell-inventory-remove-item:
     - ''
     - '#8c8c8c• #2CCED2ʟᴇғᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴍᴏᴠᴇ ᴛʜɪs ɪᴛᴇᴍ'
 
+  # Dynamic status messages based on the viewer's relationship to the item
   status:
+    # Shown to the seller viewing their own item (click to remove from sale)
     seller: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
+    # Shown to potential buyers (click to purchase)
     buyer: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"
+    # Shown to seller for right-click action
     right-seller: "#8c8c8c• #2CCED2ʀɪɢʜᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
+    # Shown to buyer for right-click action
     right-buyer: "#8c8c8c• #2CCED2ʀɪɢʜᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"
 
+  # Human-readable names for log entry types
   log-type-names:
     SALE: "Item Listed"
     PURCHASE: "Item Purchased"
@@ -390,190 +620,284 @@ item-lore:
     REMOVE_EXPIRED: "Retrieved Expired"
     REMOVE_PURCHASED: "Retrieved Purchase"
 
-# Permet de définir l'item qui sera affiché si pour un item en vente il y a plusieurs items
+#=============================================================================
+# SPECIAL ITEMS
+#=============================================================================
+
+# Special display items used in the auction house interface.
+# These replace the actual item preview for special cases.
+
 special-items:
+  # Display item for bulk sales (multiple items in one listing)
+  # This chest icon indicates that clicking will show the contents.
   auction-item:
     material: CHEST
     name: "#00ff00Bulk sale"
 
+#=============================================================================
+# ITEM DISPLAY FORMATTING
+#=============================================================================
+
+# Configuration for how items are displayed in messages and lore.
+# Used when showing item names in chat messages and notifications.
+
 item-display:
+  # Format for items using Minecraft's language translation keys
+  # Used when the item has a translation key (most vanilla items)
+  # Placeholders: %amount%, %item-translation-key%
   lang: "#8ee6e3x%amount% &7<lang:%item-translation-key%>"
+
+  # Format for items with custom display names
+  # Used when the item has a custom name set by plugins or anvils
+  # Placeholders: %amount%, %item-name%
   item-name: "#8ee6e3x%amount% &7%item-name%"
+
+  # Separator used between the last two items in a list
+  # Example: "Diamond, Gold, and Emerald"
   and: " &fand "
+
+  # Separator used between items in a list (except the last two)
+  # Example: "Diamond, Gold, Iron"
   between: "&f, "
+
+  # When enabled, similar items are merged in display
+  # Example: "3x Diamond" instead of "Diamond, Diamond, Diamond"
   merge-similar-items: true
 
-time: # ---- Unités (singulier / pluriel) ----
+#=============================================================================
+# TIME FORMAT
+#=============================================================================
+
+# Time unit labels and display formats for countdowns and durations.
+# Used throughout the plugin for expiration timers, remaining time, etc.
+
+time:
+  # Time unit labels (singular and plural forms)
   second: second
   seconds: seconds
-  
+
   minute: minute
   minutes: minutes
-  
+
   hour: hour
   hours: hours
-  
+
   day: day
   days: days
 
-  # ---- Formats de temps ----
-  # %02d = valeur numérique (jours / heures / minutes / secondes)
-  # %second%, %minute%, %hour%, %day% = unité adaptée en fonction du quantificateur
-  # Exemple : "1 day", "2 days", "01ᴅ 02ʜ 30ᴍ", etc.
-
-  # Format utilisé pour les durées >= 1 jour
+  # Time format strings using printf-style placeholders
+  # %02d = Number padded to 2 digits (e.g., 01, 05, 12)
+  # %second%, %minute%, %hour%, %day% = Dynamic unit based on quantity
+  #
+  # Format for durations >= 1 day
+  # Example output: "02ᴅ 05ʜ 30ᴍ"
   time-day: '%02dᴅ %02dʜ %02dᴍ'
-  
-  # Format utilisé pour les durées >= 1 heure, mais < 1 jour
+
+  # Format for durations >= 1 hour but < 1 day
+  # Example output: "05ʜ 30ᴍ 45s"
   time-hour: '%02dʜ %02dᴍ %02ds'
-  
-  # Format utilisé pour les durées >= 1 minute, mais < 1 heure
+
+  # Format for durations >= 1 minute but < 1 hour
+  # Example output: "30ᴍ 45s"
   time-minute: '%02dᴍ %02ds'
-  
-  # Format utilisé pour les durées < 1 minute
+
+  # Format for durations < 1 minute
+  # Example output: "45s"
   time-second: '%02ds'
 
-action:
+#=============================================================================
+# ACTION BEHAVIOR
+#=============================================================================
 
-  # Permet de mettre à jour l'inventaire des items en vente lorsqu'un item est ajouté ou retiré de la vente
+# Configuration for how different actions behave in the plugin.
+# Controls what happens after purchases, removals, and other operations.
+
+action:
+  # When enabled, the auction inventory automatically refreshes when items are added or removed.
+  # Disable if you experience performance issues with frequent updates.
   update-inventory-on-action: true
 
-  remove-listed-item: # On donne l'item après avoir retiré l'item de la vente
+  # Behavior when removing an item from active listings (seller cancels their sale)
+  remove-listed-item:
+    # If true, the item is immediately given to the player's inventory
+    # If false, the item goes to their "expired items" section for later retrieval
     give-item: false
-    
-    # On ouvre l'inventaire après l'avoir retiré
+
+    # If true, reopens the auction inventory after removing the item
     open-inventory: true
 
-    # Permet d'ouvrir l'inventaire de confirmation
+    # If true, shows a confirmation GUI before removing the item
+    # Recommended: Enable to prevent accidental removals
     open-confirm-inventory: true
-  
-  remove-expired-item:
-    
-    # On ouvre l'inventaire après l'avoir retiré
-    open-inventory: true
-  
-  purchased-item:
 
-    # On donne l'item après l'achat
+  # Behavior when retrieving expired items
+  remove-expired-item:
+    # If true, reopens the expired items inventory after retrieval
+    open-inventory: true
+
+  # Behavior when purchasing items
+  purchased-item:
+    # If true, purchased items are immediately given to the buyer's inventory
+    # If false, items go to their "purchased items" section for later retrieval
     give-item: false
 
-    # Si l'option give item est active, alors cette option va vérifier le contenu de l'inventaire du joueur et vérifier s'il a assez de place pour recevoir le ou les objets.
+    # If give-item is true, this checks if the player has enough inventory space
+    # If false and no space available, the purchase is blocked
     player-inventory-must-have-free-space: true
 
-    # On ouvre l'inventaire après l'avoir retiré de l'inventaire des items acheté
+    # If true, reopens the auction inventory after purchasing
     open-inventory: true
 
-    # On affiche un item d'erreur
+    # Visual feedback when the player doesn't have enough money
     money-item:
-      enable: true # Activé / désactivé
-      duration: 60 # Durée en ticks
-      item: # Item à afficher
+      # Enable or disable the visual feedback
+      enable: true
+      # Duration in ticks to show the error item (20 ticks = 1 second)
+      duration: 60
+      # Item displayed in place of the purchase when funds are insufficient
+      item:
         material: BARRIER
         name: "#ff3535✘ You don't have enough money to buy this!"
 
-    # Envoie un message si le joueur n'a pas assez d'argent
+    # If true, sends a chat message when the player can't afford the item
     money-message: true
 
+    # Sound played when the player can't afford the item
     money-sound:
       enable: true
+      # Sound category (affects volume sliders)
       category: MASTER
+      # Minecraft sound identifier
       sound: minecraft:entity.villager.no
+      # Volume level (0.0 to 1.0)
       volume: 1
+      # Pitch (0.5 to 2.0, 1.0 is normal)
       pitch: 1
 
+  # Behavior when retrieving items from "your items" (selling) inventory
   selling-item:
-
-    # On ouvre l'inventaire après l'avoir retiré de l'inventaire de mes items
+    # If true, reopens the selling items inventory after retrieval
     open-inventory: true
 
-# Système de tri
-# Configuration for automatic money claiming
-# When a player sells an item and the buyer is offline, the money is stored as "pending"
-# This configuration controls how pending money is handled
+#=============================================================================
+# AUTO-CLAIM CONFIGURATION
+#=============================================================================
+
+# Automatic money claiming for offline sales.
+# When a player's item sells while they're offline, the money is stored as "pending".
+# This configuration controls how that pending money is handled.
+
 auto-claim:
-  # If true, pending money will be automatically given to the player when they join
+  # If true, pending money is automatically deposited when the player joins
+  # If false, players must manually run /ah claim to receive their money
   enable: false
 
   # Delay in ticks before auto-claiming on join (20 ticks = 1 second)
-  # Set to 0 for immediate claim
+  # This allows time for the player to load fully before transactions.
+  # Set to 0 for immediate claim (not recommended).
   delay-ticks: 20
 
-  # If true, a message will be sent when money is auto-claimed
+  # If true, sends a message to the player when their money is auto-claimed
   notify-player: true
 
-  # If auto-claim is disabled, this option will notify the player about pending money on join
+  # If auto-claim is disabled, this option notifies the player about pending money
+  # Useful to remind players to claim their earnings
   notify-pending: true
 
-  # Delay in ticks before sending the notification about pending money
+  # Delay before sending the pending money notification
   notify-delay-ticks: 40
 
-  # The reason shown in the economy transaction when depositing money
-  # This is typically displayed in economy plugins or transaction logs
+  # Reason string passed to the economy plugin for the transaction
+  # May appear in economy logs or transaction history
   deposit-reason: "Claimed pending auction money"
 
-# Configuration for sales notification on player join
-# Notifies players about items they sold while offline
+#=============================================================================
+# SALES NOTIFICATION
+#=============================================================================
+
+# Notifications sent to players about items sold while they were offline.
+# This informs sellers about their successful sales when they rejoin.
+
 sales-notification:
-  # If true, players will be notified about sales made while they were offline
+  # If true, players receive a summary of offline sales when they join
   enable: true
 
   # Delay in ticks before sending the notification (20 ticks = 1 second)
+  # Higher values allow other join messages to appear first.
   delay-ticks: 60
 
-sort-items:
+#=============================================================================
+# SORTING CONFIGURATION
+#=============================================================================
 
-  # Tri par défaut
+# Item sorting options for the auction house display.
+# Controls how items are ordered when viewing listings.
+
+sort-items:
+  # Default sort type applied when a player first opens the auction house
+  # Options: ASCENDING_PRICE, ASCENDING_DATE, DECREASING_DATE, DECREASING_PRICE
   default-sort: DECREASING_DATE
 
+  # Display names for each sort type in the GUI
   translations:
-    ASCENDING_PRICE: "ᴀsᴄᴇɴᴅɪɴɢ ᴘʀɪᴄᴇ"
-    ASCENDING_DATE: "ᴀsᴄᴇɴᴅɪɴɢ ᴅᴀᴛᴇ"
-    DECREASING_DATE: "ᴅᴇᴄʀᴇᴀsɪɴɢ ᴅᴀᴛᴇ"
-    DECREASING_PRICE: "ᴅᴇᴄʀᴇᴀsɪɴɢ ᴘʀɪᴄᴇ"
+    ASCENDING_PRICE: "ᴀsᴄᴇɴᴅɪɴɢ ᴘʀɪᴄᴇ"    # Cheapest first
+    ASCENDING_DATE: "ᴀsᴄᴇɴᴅɪɴɢ ᴅᴀᴛᴇ"      # Oldest first
+    DECREASING_DATE: "ᴅᴇᴄʀᴇᴀsɪɴɢ ᴅᴀᴛᴇ"    # Newest first
+    DECREASING_PRICE: "ᴅᴇᴄʀᴇᴀsɪɴɢ ᴘʀɪᴄᴇ"  # Most expensive first
 
-################################################################
+################################################################################################################################
 # MIGRATION FROM OTHER PLUGINS
-################################################################
+################################################################################################################################
 # This section allows you to migrate data from other auction plugins to zAuctionHouse V4.
-# Configure the appropriate source section, then run:
-#   /ah admin migrate <source> confirm
 #
-# Available sources:
+# HOW TO MIGRATE:
+# 1. Configure the appropriate source section below with your old plugin's database settings
+# 2. Stop your server and backup all data (CRITICAL!)
+# 3. Start the server with zAuctionHouse V4
+# 4. Run: /ah admin migrate <source> confirm
+#
+# SUPPORTED SOURCES:
 #   - zauctionhousev3 (aliases: zah, zahv3, v3)
 #
-# IMPORTANT: Backup your data before migrating!
+# WARNING: Always backup your data before migrating! Migration cannot be undone.
+
 migration:
 
-  # ============================================================
+  #============================================================
   # zAuctionHouse V3 Migration
-  # ============================================================
+  #============================================================
+  # Migrates data from zAuctionHouse V3 to V4.
   # Command: /ah admin migrate zauctionhousev3 confirm
   zauctionhouse-v3:
-
-    # Source type: MYSQL, MARIADB, SQLITE, or JSON
+    # Source storage type from V3
+    # Options: MYSQL, MARIADB, SQLITE, or JSON
     source-type: SQLITE
 
-    # Table prefix used in V3 (default: zauctionhouse_)
+    # Table prefix used in your V3 installation
+    # Check your V3 config.yml if unsure (default was "zauctionhouse_")
     table-prefix: "zauctionhouse_"
 
-    # === For SQLITE ===
-    # Path to the V3 SQLite database file
+    # === SQLite Configuration ===
+    # Path to the V3 SQLite database file (relative to server root)
     sqlite-path: "plugins/zAuctionHousev3/database.db"
 
-    # === For MYSQL/MARIADB ===
+    # === MySQL/MariaDB Configuration ===
+    # Only needed if source-type is MYSQL or MARIADB
     host: "localhost"
     port: 3306
     database: "zauctionhouse"
     user: "root"
     password: ""
 
-    # === For JSON ===
-    # Path to the V3 data folder containing JSON files
+    # === JSON Configuration ===
+    # Path to the V3 data folder containing JSON storage files
     json-folder: "plugins/zAuctionHouseV3"
 
-  # ============================================================
-  # Future migration sources will be added here
-  # ============================================================
+  #============================================================
+  # Future Migration Sources
+  #============================================================
+  # Additional migration sources will be added in future updates.
+  # Examples:
   # axauctions:
   #   source-type: SQLITE
   #   sqlite-path: "plugins/AxAuctions/data.db"

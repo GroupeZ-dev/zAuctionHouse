@@ -1,115 +1,279 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Categories Configuration
+#
+#   This file defines item categories for organizing the auction house.
+#   Categories help players browse items more easily by filtering by type.
+#
+#   HOW CATEGORIES WORK:
+#   - Each category has a unique ID (the YAML key, e.g., "weapons", "armor")
+#   - Categories use rules to determine which items belong to them
+#   - Items are automatically sorted into categories based on these rules
+#   - An item can appear in multiple categories if it matches multiple rules
+#   - The "misc" category (or any category without rules) acts as a fallback
+#
+#   CATEGORY ORDER:
+#   - Categories appear in the GUI in the order defined in inventories/categories.yml
+#   - This file only defines the rules, not the display order
+#
+#   RULE TYPES (see rules.yml for full documentation):
+#   - material        : Match by Minecraft material name
+#   - material-suffix : Match materials ending with suffix
+#   - tag             : Match by Bukkit/Paper item tag
+#   - name            : Match by item display name
+#   - lore            : Match by item lore content
+#   - custom-model-data: Match by CustomModelData value
+#   - and/or          : Combine multiple rules
+#   - Custom item plugin rules (itemsadder, oraxen, mmoitems, etc.)
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# CATEGORY SETTINGS
+#=============================================================================
+
 settings:
-  # Enable or disable the category system
-  # If disabled, all items will be shown together without filtering
+  # Enable or disable the category system entirely.
+  # When disabled, all items are shown together without filtering options.
+  # The "All" category will be the only available view.
   enabled: true
 
-  # Name of the "All" category
+  # Display name for the "All" category (shows all items regardless of type).
+  # This category always exists and shows every listed item.
+  # Supports MiniMessage formatting and hex colors.
   all-category-name: "#0c1719Auction House"
 
-# Blocks Category
+#=============================================================================
+# CATEGORY DEFINITIONS
+#=============================================================================
+# Each category is defined with:
+#   - Key (unique identifier, e.g., "weapons") - used in inventory files
+#   - display-name: Shown in the GUI (supports MiniMessage formatting)
+#   - rules: List of rules that determine which items belong to this category
+#
+# IMPORTANT: Category keys must match the 'category' field in inventories/categories.yml
+
+#-----------------------------------------------------------------------------
+# BLOCKS CATEGORY
+#-----------------------------------------------------------------------------
+# Contains all placeable blocks from Minecraft.
+# Uses Bukkit's BLOCKS tag for comprehensive matching.
+
 blocks:
+  # Display name shown in the categories inventory.
   display-name: "#0c1719Blocks"
+
+  # Rules to match items for this category.
+  # An item matching ANY rule will appear in this category.
   rules:
-    # Match all block materials using Bukkit tag
+    # Match all block materials using Bukkit's item tag system.
+    # The BLOCKS tag includes all placeable Minecraft blocks.
+    # This is more reliable than listing individual materials.
     - type: tag
       tags:
-        - BLOCKS # Custom tags, all minecraft blocks
+        - BLOCKS    # Custom tag that matches all Minecraft blocks
 
-# Weapons Category
+#-----------------------------------------------------------------------------
+# WEAPONS CATEGORY
+#-----------------------------------------------------------------------------
+# Contains combat weapons: swords, bows, crossbows, tridents.
+
 weapons:
   display-name: "#0c1719Weapons"
+
   rules:
-    # Match swords
+    # Match all sword types by suffix.
+    # This catches: WOODEN_SWORD, STONE_SWORD, IRON_SWORD, GOLDEN_SWORD,
+    # DIAMOND_SWORD, NETHERITE_SWORD, and any modded swords.
     - type: material-suffix
       suffixes:
         - "_SWORD"
-    # Match ranged weapons
+
+    # Match ranged weapons specifically by material.
+    # These don't follow a pattern, so we list them individually.
     - type: material
       materials:
-        - BOW
-        - CROSSBOW
-        - TRIDENT
+        - BOW         # Standard bow
+        - CROSSBOW    # Crossbow with loading mechanics
+        - TRIDENT     # Throwable and melee weapon
 
-# Armor Category
+#-----------------------------------------------------------------------------
+# ARMOR CATEGORY
+#-----------------------------------------------------------------------------
+# Contains protective equipment: helmets, chestplates, leggings, boots, shields.
+
 armor:
   display-name: "#0c1719Armor"
+
   rules:
+    # Match standard armor pieces by suffix.
+    # This catches all material types: leather, chainmail, iron, gold, diamond, netherite.
     - type: material-suffix
       suffixes:
         - "_HELMET"
         - "_CHESTPLATE"
         - "_LEGGINGS"
         - "_BOOTS"
+
+    # Match special protective items that don't follow the suffix pattern.
     - type: material
       materials:
-        - ELYTRA
-        - SHIELD
-        - TURTLE_HELMET
+        - ELYTRA        # Wings for gliding
+        - SHIELD        # Blocking item
+        - TURTLE_HELMET # Special helmet from turtle scutes
 
-# Tools Category
+#-----------------------------------------------------------------------------
+# TOOLS CATEGORY
+#-----------------------------------------------------------------------------
+# Contains utility tools: pickaxes, axes, shovels, hoes, and misc tools.
+
 tools:
   display-name: "#0c1719Tools"
+
   rules:
+    # Match standard tools by suffix.
+    # This catches all material types: wooden, stone, iron, golden, diamond, netherite.
     - type: material-suffix
       suffixes:
         - "_PICKAXE"
         - "_AXE"
         - "_SHOVEL"
         - "_HOE"
+
+    # Match miscellaneous tools that don't follow the suffix pattern.
     - type: material
       materials:
-        - SHEARS
-        - FLINT_AND_STEEL
-        - FISHING_ROD
+        - SHEARS          # For shearing sheep and breaking blocks
+        - FLINT_AND_STEEL # For lighting fires
+        - FISHING_ROD     # For fishing
 
-# Consumables Category
+#-----------------------------------------------------------------------------
+# CONSUMABLES CATEGORY
+#-----------------------------------------------------------------------------
+# Contains food and potions that can be consumed.
+
 consumables:
   display-name: "#0c1719Consumables"
+
   rules:
+    # Match potions and valuable food items specifically.
+    # We list common valuable consumables rather than all food
+    # to keep this category focused on tradeable items.
     - type: material
       materials:
-        - POTION
-        - SPLASH_POTION
-        - LINGERING_POTION
-        - GOLDEN_APPLE
-        - ENCHANTED_GOLDEN_APPLE
-        - COOKED_BEEF
-        - COOKED_PORKCHOP
-        - BREAD
-        - CAKE
-        - COOKIE
-        - PUMPKIN_PIE
+        # Potions
+        - POTION           # Drinkable potions
+        - SPLASH_POTION    # Throwable potions
+        - LINGERING_POTION # Area effect potions
 
-# Resources Category
+        # Valuable food items
+        - GOLDEN_APPLE           # Standard golden apple
+        - ENCHANTED_GOLDEN_APPLE # Notch apple / God apple
+
+        # Common tradeable cooked food
+        - COOKED_BEEF     # Steak
+        - COOKED_PORKCHOP # Cooked porkchop
+        - BREAD           # Basic staple food
+        - CAKE            # Placeable food
+        - COOKIE          # Small snack
+        - PUMPKIN_PIE     # Harvest food
+
+#-----------------------------------------------------------------------------
+# RESOURCES CATEGORY
+#-----------------------------------------------------------------------------
+# Contains ores, ingots, and crafting materials.
+
 resources:
   display-name: "#0c1719Resources"
+
   rules:
+    # Match valuable crafting resources.
+    # These are commonly traded materials used in crafting.
     - type: material
       materials:
-        - COAL
-        - IRON_INGOT
-        - GOLD_INGOT
-        - DIAMOND
-        - EMERALD
-        - NETHERITE_INGOT
-        - LAPIS_LAZULI
-        - REDSTONE
-        - COPPER_INGOT
-        - AMETHYST_SHARD
-        - RAW_IRON
-        - RAW_GOLD
-        - RAW_COPPER
+        # Processed materials (ingots and gems)
+        - COAL            # Fuel and crafting
+        - IRON_INGOT      # Common metal
+        - GOLD_INGOT      # Precious metal
+        - DIAMOND         # Valuable gem
+        - EMERALD         # Villager currency
+        - NETHERITE_INGOT # Endgame material
+        - LAPIS_LAZULI    # Enchanting material
+        - REDSTONE        # Circuitry material
+        - COPPER_INGOT    # Building material
+        - AMETHYST_SHARD  # Decoration material
 
-# Enchanted Books Category
+        # Raw ores (for silk touch mining)
+        - RAW_IRON        # Raw iron ore
+        - RAW_GOLD        # Raw gold ore
+        - RAW_COPPER      # Raw copper ore
+
+#-----------------------------------------------------------------------------
+# ENCHANTED BOOKS CATEGORY
+#-----------------------------------------------------------------------------
+# Contains enchanted books for trading enchantments.
+# Enchanted books are commonly traded items on auction houses.
+
 enchanted-books:
   display-name: "#0c1719Enchanted Books"
+
   rules:
+    # Match enchanted books only.
+    # Note: This matches the item type, not whether it has enchantments.
+    # Regular books (BOOK) are not included.
     - type: material
       materials:
         - ENCHANTED_BOOK
 
-# Miscellaneous Category (Fallback)
-# Items that don't match any other category will go here
+#-----------------------------------------------------------------------------
+# MISCELLANEOUS CATEGORY (FALLBACK)
+#-----------------------------------------------------------------------------
+# Contains all items that don't match any other category.
+# This acts as a catch-all to ensure every item has a category.
+#
+# IMPORTANT: A category without rules becomes the fallback category.
+# Items not matching any other category will appear here.
+
 misc:
   display-name: "#0c1719Miscellaneous"
-  # No rules = fallback category for unmatched items
+  # No rules defined = fallback category for unmatched items.
+  # Any item that doesn't match weapons, armor, tools, etc. goes here.
+
+#=============================================================================
+# ADDING CUSTOM CATEGORIES
+#=============================================================================
+# You can add your own categories by following the same format:
+#
+# my-custom-category:
+#   display-name: "#ff5555My Category"
+#   rules:
+#     - type: material
+#       materials:
+#         - DIAMOND_BLOCK
+#         - EMERALD_BLOCK
+#
+# Don't forget to also add a button for your category in:
+# inventories/categories.yml
+#
+# EXAMPLES:
+#
+# # Custom category for ItemsAdder items
+# custom-items:
+#   display-name: "#ffd700Custom Items"
+#   rules:
+#     - type: itemsadder
+#       items:
+#         - "mynamespace:*"  # All items from your namespace
+#
+# # Category for items with specific lore
+# special-items:
+#   display-name: "#ff00ffSpecial Items"
+#   rules:
+#     - type: lore
+#       mode: CONTAINS
+#       values:
+#         - "Special Edition"
+#         - "Limited"

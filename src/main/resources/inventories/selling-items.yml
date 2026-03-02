@@ -1,20 +1,74 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Selling Items Inventory (Your Items)
+#
+#   This inventory displays items the player currently has listed for sale.
+#   Players can remove listings here to cancel sales and retrieve items.
+#
+#   FEATURES:
+#   - View all your active listings
+#   - See remaining time until expiration
+#   - Remove items from sale (cancel listing)
+#   - Items are not purchasable from this view (they're your own items)
+#
+#   ACCESS:
+#   - /ah selling
+#   - Click the "Your Items" button in the main auction house
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# Inventory title with pagination placeholders.
 name: '#0c1719Selling items (%page%/%max-page%)'
+
+# Inventory size - 6 rows.
 size: 54
 
+#=============================================================================
+# PATTERNS
+#=============================================================================
+
 patterns:
+  # Decorative glass pane borders.
   - 'zauctionhouse-decoration'
+  # Previous/next page buttons.
   - 'zauctionhouse-pagination'
+  # Back button to return to auction house.
   - 'zauctionhouse-back'
 
+#=============================================================================
+# ITEMS
+#=============================================================================
+
 items:
+
+  #---------------------------------------------------------------------------
+  # SELLING ITEMS DISPLAY
+  #---------------------------------------------------------------------------
+  # Shows all items currently listed for sale by the viewing player.
+  # Click items to remove them from sale.
+
   items:
+    # Button type - displays and handles the player's selling items.
     type: ZAUCTIONHOUSE_SELLING_ITEMS
+
+    # Slot for empty state placeholder.
     empty-slot: 22
+
+    # Slots for displaying selling items (4 rows × 9 columns = 36 slots).
     slots:
-      - 9-17
-      - 18-26
-      - 27-35
-      - 36-44
+      - 9-17    # Row 2
+      - 18-26   # Row 3
+      - 27-35   # Row 4
+      - 36-44   # Row 5
+
+    # Placeholder item when no items are listed.
     item:
       material: BARRIER
       name: '#ff0000&nNo items found'

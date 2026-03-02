@@ -1,19 +1,71 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Admin Selling Items Inventory
+#
+#   This inventory allows admins to view and manage a player's active listings.
+#   Admins can remove items from sale on behalf of players.
+#
+#   ADMIN ACTIONS:
+#   - View all items currently listed for sale by the target player
+#   - Remove items from sale (cancels the listing)
+#   - Useful for removing inappropriate listings or scams
+#
+#   ACCESS:
+#   - From admin history main menu → Sale Items button
+#   - /ah admin open selling <player>
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# Inventory title with pagination placeholders.
+# Note: Title says "listed" but type uses "selling" for consistency.
 name: '#0c1719Admin listed items (%page%/%max-page%)'
+
+# Inventory size - 6 rows.
 size: 54
 
+#=============================================================================
+# PATTERNS
+#=============================================================================
+
 patterns:
+  # Decorative glass pane borders.
   - 'zauctionhouse-decoration'
+  # Previous/next page buttons.
   - 'zauctionhouse-pagination'
+  # Back button to return to admin history main.
   - 'zauctionhouse-back'
 
+#=============================================================================
+# ITEMS
+#=============================================================================
+
 items:
+
+  #---------------------------------------------------------------------------
+  # SELLING ITEMS DISPLAY
+  #---------------------------------------------------------------------------
+  # Shows all items currently listed for sale by the target player.
+  # Clicking an item removes it from sale (admin action).
+
   items:
+    # Button type - displays admin selling items with removal functionality.
     type: ZAUCTIONHOUSE_ADMIN_SELLING_ITEMS
+
+    # Slots for displaying selling items (4 rows × 9 columns = 36 slots).
     slots:
-      - 9-17
-      - 18-26
-      - 27-35
-      - 36-44
+      - 9-17    # Row 2
+      - 18-26   # Row 3
+      - 27-35   # Row 4
+      - 36-44   # Row 5
+
+    # Fallback when no items are listed.
     else:
       slots:
         - 22

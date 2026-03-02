@@ -1,13 +1,61 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Back Button Pattern
+#
+#   This pattern provides a back button to return to the previous inventory.
+#   Used in sub-menus and detail views to navigate back.
+#
+#   HOW IT WORKS:
+#   - Clicking the back button returns to the previously opened inventory
+#   - Uses zMenu's built-in BACK button type
+#   - The inventory history is maintained automatically
+#
+#   USAGE:
+#   Include this pattern in inventory files that need a back button:
+#     patterns:
+#       - 'zauctionhouse-back'
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+# Pattern name - referenced in other inventory files.
 name: "zauctionhouse-back"
+
+# Inventory size (must match the inventories using this pattern).
+# Designed for 6-row (54 slot) inventories.
 size: 54
+
+# Back button item.
 items:
+
+  #---------------------------------------------------------------------------
+  # BACK BUTTON
+  #---------------------------------------------------------------------------
   previous:
+    # Button type - BACK is a zMenu built-in type.
+    # Returns the player to the inventory they came from.
+    # Works with zMenu's inventory history tracking.
     type: BACK
+
+    # Permanent items cannot be moved by players.
     is-permanent: true
+
+    # Slot position - center of bottom row.
+    # Slot 49 is the middle slot in the bottom row of a 54-slot inventory.
     slot: 49
+
+    # Item configuration
     item:
+      # Barrier block is commonly used for "close" or "back" actions.
+      # Its red X visual clearly indicates navigation away.
       material: BARRIER
+
+      # Display name with MiniMessage formatting.
       name: "#2CCED2<bold>ʙᴀᴄᴋ"
+
+      # Lore lines describing the button's action.
       lore:
         - "#92ffffGo to the previous inventory."
         - ""

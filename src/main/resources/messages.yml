@@ -1,15 +1,80 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Messages Configuration
+#
+#   This file contains all player-facing messages displayed by the plugin.
+#   Customize these messages to match your server's language and style.
+#
+#   FORMATTING:
+#   - Supports MiniMessage format: <red>, <bold>, <gradient:red:blue>, etc.
+#   - Supports hex colors: #RRGGBB or #RGB
+#   - Supports legacy codes: &c, &l, etc. (not recommended, use MiniMessage)
+#   - Use custom color shortcuts defined in config.yml: <primary>, <secondary>, <error>, <success>
+#
+#   PLACEHOLDERS:
+#   - %placeholder% style is used for dynamic values
+#   - Available placeholders vary by message (documented inline)
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# GENERAL MESSAGES
+#=============================================================================
+
+# Prefix added before all plugin messages.
+# Set to empty string "" to disable the prefix.
+# Available placeholders: none
 prefix: "<primary>zAuctionHouse <secondary>• "
 
+#=============================================================================
+# VERSION & UPDATE MESSAGES
+#=============================================================================
+
+# Shown when a new plugin version is available (if version-checker is enabled).
+# Available placeholders:
+#   %version% - Current installed version
+#   %latest%  - Latest available version
 version-available: "<#ff0000>There is a new version of zAuctionHouse available ! <gray>(<white>current: <#ff9900>%version% <gray>| <white>latest: <#00ff00>%latest%<gray>)"
 
+#=============================================================================
+# COMMAND MESSAGES
+#=============================================================================
+
+# Shown when a command is used incorrectly.
+# Available placeholders:
+#   %syntax% - Correct command syntax
 command-syntax-error: "<error>You must execute the command like this<gray>: <success>%syntax%"
+
+# Shown when player lacks permission for a command.
+# Available placeholders: none
 command-no-permission: "<error>You do not have permission to run this command."
+
+# Shown when a player-only command is run from console.
+# Available placeholders: none
 command-no-console: "<error>Only one player can execute this command."
+
+# Shown when command arguments don't match any valid subcommand.
+# Available placeholders: none
 command-no-arg: "<error>Impossible to find the command with its arguments."
+
+# Shown when a command is used in a restricted context (banned world, etc.).
+# Available placeholders: none
 command-restricted: "<error>You cannot use this command here."
+
+# Format for command help entries.
+# Available placeholders:
+#   %syntax%      - Command syntax
+#   %description% - Command description
 command-syntax-help: "<white>%syntax% <dark_gray>» <gray>%description%"
 
-inventory-not-found: "<error>Impossible to find the inventory <white>%inventory-name%<error>."
+#=============================================================================
+# COMMAND DESCRIPTIONS
+#=============================================================================
+# Descriptions shown in help menus and tab completion.
+# These should be short and descriptive.
 
 command-description-auction: "Open auction house"
 command-description-auction-sell: "Add an item to the sale"
@@ -27,106 +92,433 @@ command-description-auction-admin-cache-clear: "Clear player cache"
 command-description-auction-admin-cache-show: "Show player cache"
 command-description-auction-claim: "Claim pending money from sales"
 command-description-auction-page: "Open auction house at a specific page"
+command-description-auction-migrate: "Migrate data from another auction plugin"
 
+#=============================================================================
+# INVENTORY MESSAGES
+#=============================================================================
+
+# Shown when an inventory file cannot be found.
+# Available placeholders:
+#   %inventory-name% - Name of the missing inventory
+inventory-not-found: "<error>Impossible to find the inventory <white>%inventory-name%<error>."
+
+#=============================================================================
+# SELL MESSAGES
+#=============================================================================
+
+# Shown when a player tries to sell nothing (empty hand).
+# Available placeholders: none
 sell-error-air: "<error>Are you stupid ? You can't sell air !"
+
+# Shown when the item in hand changed during the sell process.
+# Available placeholders: none
 sell-error-change: "<error>The item in your hand has changed, sale cancelled."
+
+# Shown when the specified economy provider doesn't exist.
+# Available placeholders:
+#   %name% - Economy name that was specified
 sell-error-economy: "<error>Unable to find the economy <white>%name%<error>."
+
+# Shown when trying to confirm a sale with no items selected (sell inventory).
+# Available placeholders: none
 sell-inventory-empty: "<error>You must place items in the inventory before confirming."
+
+# Shown when a player cancels the sell inventory.
+# Available placeholders: none
 sell-inventory-cancelled: "<error>You cancelled the sale, your items have been returned."
+
+# Shown when selected items are cleared from the sell inventory.
+# Available placeholders: none
 sell-items-cleared: "<success>Selected items have been cleared."
+
+# Shown when an item is added to the sell list.
+# Available placeholders: none
 sell-item-added: "<success>Item added to sale list."
+
+# Shown when an item is removed from the sell list.
+# Available placeholders: none
 sell-item-removed: "<success>Item removed from sale list."
 
+#=============================================================================
+# ADMIN MESSAGES
+#=============================================================================
+
+# Shown when admin commands require a target player but none was specified.
+# Available placeholders: none
 admin-target-required: "<error>You must specify a valid target player."
+
+# Shown when the specified target player cannot be found.
+# Available placeholders:
+#   %target% - Name that was specified
 admin-target-not-found: "<error>Unable to find the player <white>%target%<error>."
+
+# Shown when opening a player's items as admin.
+# Available placeholders:
+#   %type%   - Type of items (selling, expired, purchased)
+#   %target% - Target player name
 admin-open-inventory: "<success>Opening %type% items for <white>%target%<success>."
+
+# Shown when opening a player's history as admin.
+# Available placeholders:
+#   %target% - Target player name
 admin-open-history: "<success>Opening history for <white>%target%<success>."
+
+# Shown when admin removes items from a player.
+# Available placeholders:
+#   %items%  - Item description
+#   %target% - Target player name
 admin-item-removed: "<success>You removed <white>%items%<success> from <white>%target%<success>."
+
+# Shown when admin adds items to a player.
+# Available placeholders:
+#   %items%  - Item description
+#   %target% - Target player name
+#   %type%   - Category type (selling, expired, purchased)
 admin-item-added: "<success>You added <white>%items%<success> to <white>%target%<success> in <white>%type%<success>."
+
+# Shown when admin successfully retrieves an item from logs.
+# Available placeholders: none
 admin-item-retrieved: "<success>Item(s) retrieved successfully."
+
+# Shown when trying to retrieve from a log entry with no item.
+# Available placeholders: none
 admin-no-item-to-retrieve: "<error>No item to retrieve from this log entry."
 
+#=============================================================================
+# RELOAD MESSAGES
+#=============================================================================
+
+# Shown when plugin configuration is reloaded.
+# Available placeholders: none
 reload-success: "<success>You just reloaded the plugin !"
 
+#=============================================================================
+# ITEM REMOVAL MESSAGES
+#=============================================================================
+# Shown when players retrieve items from different inventories.
+# Available placeholders:
+#   %items% - Description of removed items
+
+# Removing from active auction listings
 item-remove-listed: "#e6fff3You just removed %items% #e6fff3from the listed items."
+
+# Removing from expired items
 item-remove-expired: "#e6fff3You just removed %items% #e6fff3from the expired items."
+
+# Removing from purchased items
 item-remove-purchased: "#e6fff3You just removed %items% #e6fff3from the purchased items."
+
+# Removing from selling (your items) inventory
 item-remove-selling: "#e6fff3You just removed %items% #e6fff3from your items."
 
+#=============================================================================
+# TRANSACTION MESSAGES
+#=============================================================================
+
+# Shown to seller when they list an item.
+# Available placeholders:
+#   %items% - Item description
+#   %price% - Sale price
 item-sold: "#e6fff3You just sold %items% #e6fff3for #92bed8%price%#e6fff3."
 
+# Shown to seller when their item is purchased (if online).
+# Available placeholders:
+#   %buyer% - Name of the buyer
+#   %items% - Item description
+#   %price% - Sale price
 item-bought-seller: "#ffacd5%buyer% #e6fff3just bought %items% #e6fff3for #92bed8%price%#e6fff3."
+
+# Shown to buyer after purchasing an item.
+# Available placeholders:
+#   %items% - Item description
+#   %price% - Purchase price
 item-bought-buyer: "#e6fff3You have just bought %items% #e6fff3for #92bed8%price%#e6fff3."
 
-not-enough-money: "<error>You don’t have enough money to buy this."
+#=============================================================================
+# ERROR MESSAGES
+#=============================================================================
+
+# Shown when player doesn't have enough money to purchase.
+# Available placeholders: none
+not-enough-money: "<error>You don't have enough money to buy this."
+
+# Shown when player's inventory is full (if space check is enabled).
+# Available placeholders: none
 not-enough-space: "<error>You don't have enough space in your inventory to buy this item."
 
+# Shown when listing price exceeds the maximum allowed.
+# Available placeholders:
+#   %max-price% - Maximum allowed price
 price-too-high: "<error>You cannot sell for more than <white>%max-price%<error>."
+
+# Shown when listing price is below the minimum required.
+# Available placeholders:
+#   %min-price% - Minimum required price
 price-too-low: "<error>You cannot sell for less than <white>%min-price%<error>."
 
+# Shown when player has reached their listing limit.
+# Available placeholders:
+#   %max-items% - Maximum items allowed
 listed-items-limit: "<error>You cannot sell more than <white>%max-items%<error> items<error>. &8(&7Did you set the zauctionhouse.<number in config.yml> ?&8)"
+
+# Shown when trying to sell in a banned world.
+# Available placeholders: none
 world-banned: "<error>You cannot sell items in this world."
 
+# Shown when trying to sell a blacklisted item.
+# Available placeholders: none
 item-blacklisted: "<error>You cannot sell blacklisted items."
+
+# Shown when trying to sell an item not on the whitelist (if whitelist is enabled).
+# Available placeholders: none
 item-whitelisted: "<error>You cannot sell an item that is not whitelist."
 
+#=============================================================================
+# ADMIN GENERATE MESSAGES
+#=============================================================================
+# Messages for the fake item generation command (performance testing).
+
+# Warning shown before generating fake items.
+# Available placeholders:
+#   %amount% - Number of items to generate
 admin-generate-warning:
   - "<error>⚠ WARNING ⚠"
   - "<error>This command will generate <white>%amount%<error> fake auction items for performance testing."
   - "<error>This data is <white>FAKE<error> and will need to be reset after testing."
   - "<error>Execute this command again within <white>30 seconds<error> to confirm."
+
+# Shown after confirming generation.
+# Available placeholders:
+#   %amount% - Number of items being generated
 admin-generate-confirmed: "<success>Generation confirmed! Creating <white>%amount%<success> auction items..."
+
+# Progress update during generation.
+# Available placeholders:
+#   %current% - Current progress
+#   %total%   - Total items to generate
 admin-generate-progress: "<gray>Progress: <white>%current%<gray>/<white>%total%<gray> items created..."
+
+# Shown when generation completes.
+# Available placeholders:
+#   %amount% - Number of items generated
+#   %time%   - Time taken in milliseconds
 admin-generate-complete: "<success>Successfully generated <white>%amount%<success> auction items in <white>%time%ms<success>."
+
+# Shown when no valid materials are found for generation.
+# Available placeholders: none
 admin-generate-no-materials: "<error>No valid materials found in categories. Make sure you have categories other than 'misc' configured."
+
+# Shown when an invalid amount is specified.
+# Available placeholders: none
 admin-generate-invalid-amount: "<error>Invalid amount. Please specify a number between <white>1<error> and <white>100000<error>."
 
+#=============================================================================
+# ADMIN CACHE MESSAGES
+#=============================================================================
+# Messages for cache management commands.
+
+# Header for cache display.
+# Available placeholders:
+#   %player% - Player name
 admin-cache-show-header: "<primary>Cache for <white>%player%<primary>:"
+
+# Format for each cache entry.
+# Available placeholders:
+#   %key%   - Cache key name
+#   %value% - Cache value
 admin-cache-show-entry: "<gray>  %key% <dark_gray>» <white>%value%"
+
+# Shown when cache is empty.
+# Available placeholders: none
 admin-cache-show-empty: "<gray>  No cache entries found."
+
+# Shown when clearing a specific cache key.
+# Available placeholders:
+#   %key%    - Cache key name
+#   %player% - Player name
 admin-cache-cleared: "<success>Cleared cache key <white>%key%<success> for <white>%player%<success>."
+
+# Shown when clearing all cache for a player.
+# Available placeholders:
+#   %player% - Player name
 admin-cache-cleared-all: "<success>Cleared all cache for <white>%player%<success>."
+
+# Shown when clearing a cache key for all players.
+# Available placeholders:
+#   %key%   - Cache key name
+#   %count% - Number of players affected
 admin-cache-cleared-all-players: "<success>Cleared cache key <white>%key%<success> for <white>%count%<success> players."
+
+# Shown when clearing all cache for all players.
+# Available placeholders:
+#   %count% - Number of players affected
 admin-cache-cleared-all-players-all: "<success>Cleared all cache for <white>%count%<success> players."
+
+# Shown when setting a cache value.
+# Available placeholders:
+#   %key%    - Cache key name
+#   %value%  - New value
+#   %player% - Player name
 admin-cache-set: "<success>Set <white>%key%<success> to <white>%value%<success> for <white>%player%<success>."
+
+# Shown when setting a cache value for all players.
+# Available placeholders:
+#   %key%   - Cache key name
+#   %value% - New value
+#   %count% - Number of players affected
 admin-cache-set-all-players: "<success>Set <white>%key%<success> to <white>%value%<success> for <white>%count%<success> players."
+
+# Shown when an invalid cache key is specified.
+# Available placeholders:
+#   %key% - Invalid key name
 admin-cache-invalid-key: "<error>Invalid cache key <white>%key%<error>. Use tab completion for valid keys."
+
+# Shown when an invalid value is specified for a cache key.
+# Available placeholders:
+#   %value% - Invalid value
+#   %key%   - Cache key name
 admin-cache-invalid-value: "<error>Invalid value <white>%value%<error> for key <white>%key%<error>."
+
+# Shown when trying to set a read-only cache key.
+# Available placeholders:
+#   %key% - Cache key name
 admin-cache-key-not-settable: "<error>Cache key <white>%key%<error> cannot be set from command."
+
+# Shown when targeting an offline player for cache operations.
+# Available placeholders:
+#   %player% - Player name
 admin-cache-player-not-online: "<error>Player <white>%player%<error> is not online."
 
+#=============================================================================
+# CLAIM MESSAGES
+#=============================================================================
+# Messages for the pending money claim system.
+
+# Shown when player has no pending money to claim.
+# Available placeholders: none
 claim-no-pending: "<error>You have no pending money to claim."
+
+# Shown when money is successfully claimed.
+# Available placeholders: none
 claim-success: "<success>You have successfully claimed your pending money!"
+
+# Shown for each economy when claiming (if multiple economies have pending money).
+# Available placeholders:
+#   %amount%  - Amount claimed
+#   %economy% - Economy name
 claim-economy-success: "<success>You received <white>%amount%<success> from <white>%economy%<success>."
+
+# Notification shown when player has pending money (on join).
+# Available placeholders:
+#   %amount% - Total pending amount
 claim-pending-notify: "#e6fff3You have pending money to claim! Use <white>/ah claim<#e6fff3> to receive <white>%amount%<#e6fff3>."
 
+#=============================================================================
+# SALES NOTIFICATION
+#=============================================================================
+# Messages shown when a player logs in and has sold items while offline.
+# This is a clickable message that opens the sales history.
+
+# Available placeholders:
+#   %count% - Number of items sold
+#   %total% - Total earnings from sales
 sales-notification:
   - "<click:run_command:/ah history>#e6fff3While you were away, <white>%count%<#e6fff3> of your items were sold for a total of <white>%total%<#e6fff3>!"
   - "<click:run_command:/ah history>#8c8c8c• #2CCED2Click here<#92ffff> to view your sales history</click>"
 
-# Tax messages
+#=============================================================================
+# TAX MESSAGES
+#=============================================================================
+# Messages related to the taxation system (if enabled in economies.yml).
+
+# Shown to seller when listing tax is applied.
+# Available placeholders:
+#   %tax%        - Tax amount
+#   %percentage% - Tax percentage
 tax-sell-applied: "<gray>A tax of <white>%tax%<gray> (%percentage%%) has been applied to this sale."
+
+# Shown when purchase tax is deducted from seller's earnings.
+# Available placeholders:
+#   %tax%        - Tax amount
+#   %percentage% - Tax percentage
 tax-purchase-applied: "<gray>A tax of <white>%tax%<gray> (%percentage%%) has been applied to this purchase."
+
+# Shown to buyer when VAT/capitalism tax is applied (buyer pays extra).
+# Available placeholders:
+#   %tax%        - Tax amount
+#   %percentage% - Tax percentage
 tax-capitalism-info: "<gray>The price includes <white>%tax%<gray> VAT (%percentage%%)."
+
+# Shown when player is exempt from taxes.
+# Available placeholders: none
 tax-exempt: "<green>You are exempt from taxes."
+
+# Shown when player has a reduced tax rate.
+# Available placeholders:
+#   %percentage% - Reduced tax percentage
 tax-reduced: "<green>You benefit from a reduced tax rate (%percentage%%)."
+
+# Shown when player can't afford the tax.
+# Available placeholders:
+#   %tax% - Required tax amount
 tax-insufficient-funds: "<error>You don't have enough money to pay the tax of <white>%tax%<error>."
 
-# Migration messages
+#=============================================================================
+# MIGRATION MESSAGES
+#=============================================================================
+# Messages for the data migration system (importing from other auction plugins).
 # Usage: /ah admin migrate <source> confirm
-# Available sources: zauctionhousev3
-command-description-auction-migrate: "Migrate data from another auction plugin"
+# Supported sources: zauctionhousev3
+
+# Shown when migration is not configured.
+# Available placeholders:
+#   %source% - Migration source name
 migration-not-configured: "<error>Migration for <white>%source%<error> is not configured. Please configure the <white>migration<error> section in config.yml."
+
+# Shown when an unknown migration source is specified.
+# Available placeholders:
+#   %source% - Invalid source name
 migration-invalid-source: "<error>Unknown migration source: <white>%source%"
+
+# Shown to list available migration sources.
+# Available placeholders:
+#   %sources% - Comma-separated list of valid sources
 migration-available-sources: "<gray>Available sources: %sources%"
+
+# Information about the migration before confirmation.
+# Available placeholders:
+#   %source%  - Migration source name
+#   %details% - Migration configuration details
 migration-info:
   - "<primary>Migration from <white>%source%"
   - "<gray>Details: <white>%details%"
+
+# Prompt to confirm migration.
+# Available placeholders:
+#   %source% - Migration source name
 migration-confirm:
   - "<gray>Run <white>/ah admin migrate %source% confirm<gray> to start the migration."
   - "<error>⚠ WARNING: This will import data into V4. Make sure to backup your data first!"
+
+# Shown when migration starts.
+# Available placeholders:
+#   %source% - Migration source name
 migration-started: "<success>Migration from <white>%source%<success> started... This may take a while."
+
+# Progress updates during migration.
+# Available placeholders:
+#   %progress% - Current progress message
 migration-progress: "<gray>[Migration] %progress%"
+
+# Shown when migration completes successfully.
+# Available placeholders:
+#   %source%       - Migration source name
+#   %players%      - Number of players migrated
+#   %items%        - Number of items migrated
+#   %transactions% - Number of transactions migrated
+#   %errors%       - Number of errors encountered
+#   %duration%     - Time taken in milliseconds
 migration-success:
   - "<success>Migration from <white>%source%<success> completed successfully!"
   - "<gray>  Players: <white>%players%"
@@ -134,4 +526,8 @@ migration-success:
   - "<gray>  Transactions: <white>%transactions%"
   - "<gray>  Errors: <white>%errors%"
   - "<gray>  Duration: <white>%duration%ms"
+
+# Shown when migration fails.
+# Available placeholders:
+#   %error% - Error message
 migration-failed: "<error>Migration failed: <white>%error%"

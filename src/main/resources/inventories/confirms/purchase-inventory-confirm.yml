@@ -1,18 +1,71 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Bulk Purchase Confirmation Inventory
+#
+#   This inventory confirms purchase of multiple items (bulk sales).
+#   Shows all items in the sale with a preview before purchase.
+#
+#   FEATURES:
+#   - Preview all items in the bulk sale
+#   - View shulker contents (if applicable)
+#   - Single click to confirm purchase of all items
+#
+#   ACCESS:
+#   - Automatically opens when clicking a bulk item to buy
+#   - Bulk items are indicated by a chest icon in the auction house
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# Inventory title - question format with plural "items".
 name: "#0c1719Purchase these items ?"
+
+# Inventory size - 6 rows to show all items in the bulk sale.
 size: 54
 
+#=============================================================================
+# PATTERNS
+#=============================================================================
+
 patterns:
+  # Decorative glass pane borders.
   - 'zauctionhouse-decoration'
+
+#=============================================================================
+# ITEMS
+#=============================================================================
 
 items:
 
+  #---------------------------------------------------------------------------
+  # BULK ITEM CONTENT DISPLAY
+  #---------------------------------------------------------------------------
+  # Shows all items included in the bulk sale.
+  # Items are display-only (cannot be taken individually).
+
   item-content:
+    # Button type - displays all items in the sale.
     type: ZAUCTIONHOUSE_ITEM_CONTENT
+
+    # Slots for displaying items (4 rows × 9 columns = 36 slots).
     slots:
       - 9-44
 
+  #---------------------------------------------------------------------------
+  # CONFIRM BUTTON
+  #---------------------------------------------------------------------------
+  # Completes the purchase of all items.
+
   confirm:
+    # Note: Uses REMOVE_LISTED type as it handles the confirmation logic.
     type: ZAUCTIONHOUSE_CONFIRM_REMOVE_LISTED
+
     item:
       material: GREEN_STAINED_GLASS_PANE
       name: "#2CCED2<bold>ᴘᴜʀᴄʜᴀsᴇ"
@@ -20,11 +73,19 @@ items:
         - "#92ffffPurchase this item."
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto purchase"
+
+    # Bottom-left area (3 slots).
     slots:
       - 46-48
 
+  #---------------------------------------------------------------------------
+  # CANCEL/BACK BUTTON
+  #---------------------------------------------------------------------------
+  # Cancels and returns to the auction house.
+
   deny:
     type: BACK
+
     item:
       material: RED_STAINED_GLASS_PANE
       name: "#2CCED2<bold>ʙᴀᴄᴋ"
@@ -32,13 +93,22 @@ items:
         - "#92ffffGo back."
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto go back"
+
+    # Bottom-right area (3 slots).
     slots:
       - 50-52
 
-  # View shulker content (only visible if item contains shulkers)
+  #---------------------------------------------------------------------------
+  # SHULKER CONTENT BUTTON
+  #---------------------------------------------------------------------------
+  # Opens the shulker content viewer.
+
   shulker:
     type: ZAUCTIONHOUSE_SHULKER_OPEN
+
+    # Center of bottom row.
     slot: 49
+
     item:
       material: SHULKER_BOX
       name: "#2CCED2<bold>ᴠɪᴇᴡ sʜᴜʟᴋᴇʀ ᴄᴏɴᴛᴇɴᴛ"

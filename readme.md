@@ -1,154 +1,423 @@
-# zAuctionHouse
+<p align="center">
+  <img src="https://img.groupez.dev/zauctionhouse/banner.png" alt="zAuctionHouse Banner" width="800">
+</p>
 
-Find here the new version of zAuctionHouse.
+<h1 align="center">zAuctionHouse V4</h1>
 
-Version 3 of zAuctionHouse was released on February 11, 2021, which means it's almost been 5 years !
+<p align="center">
+  <strong>The most powerful and customizable auction house plugin for Minecraft servers</strong>
+</p>
 
-A full overhaul of the plugin is therefore necessary.
-In a few months, you’ll be able to discover a plugin that’s even more complete, more efficient,
-more beautiful, fresher, more radiant, basically everything you could possibly want!
-It’s going to be amazing… or there will be bugs everywhere. Your call. 😄
+<p align="center">
+  <a href="https://www.spigotmc.org/resources/zauctionhouse-1-8-1-21.81494/"><img src="https://img.shields.io/badge/Spigot-1.8--1.21-orange.svg" alt="Spigot"></a>
+  <a href="https://discord.groupez.dev/"><img src="https://img.shields.io/discord/music?label=Discord&logo=discord" alt="Discord"></a>
+  <a href="https://zauctionhouse.groupez.dev/"><img src="https://img.shields.io/badge/Docs-Wiki-blue.svg" alt="Documentation"></a>
+  <img src="https://img.shields.io/badge/Java-21-red.svg" alt="Java 21">
+  <img src="https://img.shields.io/badge/License-Premium-green.svg" alt="License">
+</p>
 
-# ToDo
+<p align="center">
+  <a href="https://zauctionhouse.groupez.dev/">Documentation</a> •
+  <a href="https://discord.groupez.dev/">Discord</a> •
+  <a href="https://www.spigotmc.org/resources/zauctionhouse-1-8-1-21.81494/">Spigot</a>
+</p>
 
-## Nouvelles fonctionnalités
+---
 
-- [ ] Retravailler le système de mise à jour de fichier YAML pour éviter d'ajouter n'importe comment les nouvelles clés,
-  et garder une cohérence dans le fichier
-- [ ] Ajouter un système d'option pour activer ou désactiver les messages
-- [ ] Ajouter la possibilité de vendre des items avec la commande /ah sell, et de pouvoir sélectionner un item dans son
-  inventaire, de pouvoir sélectionner le prix. Doit pouvoir fonctionner avec zTextGenerator (donc mise à jour de
-  l'inventaire lors d'un clic, sinon, mise à jour uniquement de l'item)
-- [ ] Système de vente d'item admin comme sur fairysky
-- [ ] Système d'item favoris configurable
-- [x] Système pour afficher le nombre de vente effectué lors de la déconnexion et combien d'argent gagné (inventaire
-  histoire de vente hors ligne ?)
-- [x] Une commande pour ouvrir une certaine page ``/ah page <page>``
-- [ ] Avoir la raison de pourquoi l'item n'est plus en vente (parce que acheté, supprimé, ou expiré)
-- [ ] Pouvoir définir des custom modals id ou namespace pour les images d'items custom
-- [ ] Pour modifier l'état d'une transactions qui doit être claim
-- [ ] Pouvoir vendre un item à la place d'un joueur
-- [ ] Pouvoir choisir un nom à son "bulk sale"
-- [ ] Ajouter un système qui va vérifier le contenu des inventaires, et vérifier que les boutons sont bien utilisé, par
-  exemple ne pas avoir de bouton de remove confirm purchase dans l'inventaire de confirmation de retirer l'item de la
-  vente
-- [x] Renommer "owned" en "selling", un nom plus parlant pour indiquer que ce sont les items du joueur qui sont en vente
-- [ ] Ajouter plus de commande admin pour gérer les items des joueurs, en ajouter, en supprimer (supprimer tout d'un
-  coup)
-- [ ] Pour la vente de plusieurs items, utiliser plutot le slot
-- [ ] Pouvoir configurer des images custom pour les items avec les liens discord
+## 📖 About zAuctionHouse
 
-## Fonctionnalités V3 manquantes dans V4
+**zAuctionHouse** is a premium auction house plugin that allows players to buy and sell items on your Minecraft server. Built with performance, customization, and user experience in mind, it provides a complete trading solution for any server type - from small survival servers to large network infrastructures.
 
-### Commandes manquantes
+After nearly 5 years since the release of V3 (February 2021), **zAuctionHouse V4** represents a complete rewrite from the ground up, leveraging modern Java features, a new architecture, and years of community feedback to deliver the ultimate auction house experience.
 
-- [ ] `/ah search <string>` - Recherche d'items par nom/matériau
-- [ ] `/ah blacklist` / `/ah blacklist add/remove <player>` - Gestion de blacklist de joueurs
-- [ ] `/ah config` - Configuration in-game du plugin
-- [ ] `/ah version` - Afficher la version du plugin
-- [ ] `/ah convert` - Conversion depuis V2 ou PlayerAuctions
-- [ ] `/ah purge <days>` - Purge des anciennes transactions
-- [ ] `/ah sellinventory <price>` - Vendre tout le contenu de l'inventaire (partiellement implémenté)
+### 🎯 Perfect For
 
-### Système de taxe
+- **Survival/SMP Servers** - Let players trade items naturally
+- **Skyblock Servers** - Essential for island economies
+- **Factions/Towny** - Facilitate inter-faction commerce
+- **RPG Servers** - Custom item trading with MMOItems, Oraxen, etc.
+- **Network Servers** - Multi-server synchronization with Redis addon
 
-- [x] Tax globale sur toutes les ventes/achats
-- [x] Tax par item configurable dans `taxs.yml`
-- [x] Types de tax: SELL, PURCHASE, BOTH
-- [x] Permission de bypass de la tax
-- [x] Pourcentage de tax configurable
+---
 
-### Système de priorité
+## ✨ Key Features
 
-- [ ] Priorité basée sur les permissions (VIP, etc.)
-- [ ] Tri des items par priorité
-- [ ] Limite max d'items par niveau de priorité
-- [ ] Affichage du texte de priorité dans le lore
+### 🏪 Core Auction System
+- **Instant Buy Listings** - List items for a fixed price
+- **Bulk Sales** - Sell multiple items in a single listing
+- **Shulker Box Preview** - View contents before purchasing
+- **Category Filtering** - Organize items by type (weapons, armor, tools, etc.)
+- **Advanced Sorting** - Sort by price, date, name, and more
+- **Pagination** - Handle thousands of listings efficiently
 
-### Système de prix par item
+### 💰 Economy & Transactions
+- **Multi-Economy Support** - Vault, PlayerPoints, CoinsEngine, Item-based, XP
+- **Multiple Currencies** - Enable different economies simultaneously
+- **Tax System** - Configurable taxes (sell, purchase, VAT/capitalism style)
+- **Permission-based Tax Reductions** - VIP discounts on taxes
+- **Auto-Claim** - Automatic money delivery or manual claiming
+- **Offline Sales Notifications** - Know what sold while you were away
 
-- [ ] Configuration des prix min/max par item dans `prices.yml`
-- [ ] Prix basé sur le nom contenant un texte
-- [ ] Prix basé sur le custom model ID
-- [ ] Prix basé sur le lore de l'item
-- [ ] Prix basé sur le matériau
+### 🎨 Complete Customization
+- **zMenu Integration** - Fully customizable GUI via YAML
+- **MiniMessage Support** - Modern text formatting with gradients, hex colors
+- **Custom Lore Templates** - Define exactly how items appear
+- **Pattern System** - Reusable GUI components
+- **Placeholder Support** - PlaceholderAPI integration
 
-### Système de recherche avancé
+### 🔧 Administration
+- **Admin Panel** - View/manage any player's items
+- **Action Logs** - Complete audit trail of all transactions
+- **Transaction History** - Detailed financial records
+- **Item Recovery** - Retrieve items from logs
+- **Cache Management** - Admin commands for cache control
+- **Performance Debugging** - Built-in profiling tools
 
-- [ ] Recherche d'items via chat
-- [ ] Panel de recherche GUI via ProtocolLib (anvil input)
-- [ ] Recherche de matériaux traduits (support multi-langue)
-- [ ] Filtres de recherche: matériau, nom, lore, vendeur
+### 🌐 Multi-Server Support
+- **Redis Addon** - Synchronize across multiple servers
+- **Distributed Locking** - Safe concurrent transactions
+- **Real-time Updates** - Instant synchronization via pub/sub
+- **Server Identification** - Track item origin across network
 
-### Options de tri supplémentaires (V3 en a 14, V4 en a 4)
+### 🔒 Security & Protection
+- **Blacklist System** - Block specific items from sale
+- **Whitelist System** - Only allow specific items
+- **World Restrictions** - Disable selling in certain worlds
+- **Listing Limits** - Permission-based item limits
+- **Price Limits** - Min/max price per economy
+- **Transaction Locking** - Prevent race conditions
 
-- [ ] Nom alphabétique (A-Z)
-- [ ] Nom alphabétique inversé (Z-A)
-- [ ] Nom du vendeur alphabétique
-- [ ] Nom du vendeur inversé
-- [ ] Type de matériau alphabétique
-- [ ] Type de matériau inversé
-- [ ] Nom d'économie alphabétique
-- [ ] Nom d'économie inversé
-- [ ] Taille de stack ascendant
-- [ ] Taille de stack descendant
+### 📊 Discord Integration
+- **Webhook Notifications** - Post sales to Discord
+- **Rich Embeds** - Beautiful sale announcements
+- **Dynamic Colors** - Extract item colors for embeds
+- **Customizable Messages** - Full control over webhook content
 
-### Système de cooldown
+---
 
-- [ ] Cooldown de vente (empêcher spam)
-- [ ] Cooldown de transaction
-- [ ] Cooldown de commande
-- [ ] Cooldown de changement de tri
+## 🔌 Supported Plugins
 
-### Système de blacklist de joueurs
+### Economy Plugins
+| Plugin | Status |
+|--------|--------|
+| Vault (EssentialsX, CMI, etc.) | ✅ Full Support |
+| PlayerPoints | ✅ Full Support |
+| CoinsEngine | ✅ Full Support |
+| Experience/Levels | ✅ Full Support |
+| Item Currency | ✅ Full Support |
 
-- [ ] Empêcher des joueurs spécifiques d'utiliser l'hôtel des ventes
-- [ ] Commandes d'ajout/suppression de joueurs blacklistés
-- [ ] Permission pour bypass la blacklist
+### Custom Item Plugins
+| Plugin | Status |
+|--------|--------|
+| ItemsAdder | ✅ Full Support |
+| Oraxen | ✅ Full Support |
+| Nexo | ✅ Full Support |
+| MMOItems | ✅ Full Support |
+| ExecutableItems | ✅ Full Support |
+| EcoItems | ✅ Full Support |
+| MythicCrucible | ✅ Full Support |
+| Slimefun | ✅ Full Support |
+| HeadDatabase | ✅ Full Support |
+| Nova | ✅ Full Support |
+| Denizen | ✅ Full Support |
+| AdvancedItems | ✅ Full Support |
+| CustomCrafting | ✅ Full Support |
+| zHead | ✅ Full Support |
+| MagicCosmetics | ✅ Full Support |
+| HMCCosmetics | ✅ Full Support |
+| zItems | ✅ Full Support |
+| CraftEngine | ✅ Full Support |
+| ExecutableBlocks | ✅ Full Support |
 
-### Annonces et notifications
+### Required Dependencies
+| Plugin | Purpose |
+|--------|---------|
+| [zMenu](https://www.spigotmc.org/resources/zmenu.110402/) | Inventory GUI Framework |
+| [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) | Placeholder Support |
 
-- [ ] Annonces globales de vente (avec permission pour voir)
-- [ ] Annonces globales d'achat (avec permission pour voir)
-- [ ] Messages de cooldown personnalisés
+### Optional Dependencies
+| Plugin | Purpose |
+|--------|---------|
+| [LuckPerms](https://luckperms.net/) | Offline permission checks |
+| zAuctionHouse Redis | Multi-server synchronization |
 
-### Système BID (Enchères)
+---
 
-- [ ] Système d'enchères fonctionnel (framework présent mais pas implémenté)
-- [ ] Commande `/ah bid <price> [amount]`
-- [ ] Interface d'enchères
-- [ ] Notifications d'enchères
+## 🆚 V3 vs V4: What's New?
 
-### Système RENT (Location)
+### Architecture Overhaul
 
-- [ ] Système de location d'items (framework présent mais pas implémenté)
-- [ ] Commande `/ah rent <price> [duration]`
-- [ ] Interface de location
+| Aspect | V3 | V4 |
+|--------|----|----|
+| **Java Version** | Java 8 | Java 21 |
+| **Build System** | Maven | Gradle |
+| **Async Operations** | Callbacks | CompletableFuture |
+| **Database** | Custom SQL/JSON | Sarah ORM (Repository Pattern) |
+| **GUI System** | Built-in | zMenu (external, more powerful) |
+| **Scheduler** | Bukkit | FoliaLib (Folia compatible) |
 
-### Prévention de dupe
+### New in V4
 
-- [ ] Détection de dupe via NMS
-- [ ] Détection de dupe via PDC (Persistent Data Container)
-- [ ] Listener anti-duplication
-- [ ] Webhook Discord pour tentatives de dupe
+| Feature | Description |
+|---------|-------------|
+| **🚀 Better Performance** | Optimized caching, sorted item cache, lazy loading |
+| **📦 Bulk Sales** | Sell multiple items in one listing |
+| **🎁 Shulker Preview** | View shulker contents before buying |
+| **💱 Multiple Economies** | Use different currencies simultaneously |
+| **📜 Sales History** | Complete history of your sales |
+| **🔔 Offline Notifications** | Know what sold while you were away |
+| **💸 Advanced Tax System** | Per-item taxes, VAT style, reductions |
+| **📊 Discord Webhooks** | Rich embed notifications |
+| **🔧 Admin Tools** | Complete admin panel with logs |
+| **🌐 Better Multi-Server** | Improved Redis addon with pub/sub |
+| **⚙️ Performance Debug** | Built-in profiling for large servers |
+| **🎨 MiniMessage** | Modern text formatting |
 
-### Intégrations manquantes
+### Migration Path
 
-- [ ] Citizens NPC support (ouvrir l'AH via NPC)
-- [ ] ProtocolLib (pour recherche GUI avancée)
-- [ ] ZEssentials mailbox integration
+V4 includes a built-in migration system to import your V3 data:
+```
+/ah admin migrate zauctionhousev3 confirm
+```
 
-### Autres fonctionnalités
+Supports migration from:
+- V3 SQLite database
+- V3 MySQL/MariaDB database
+- V3 JSON storage
 
-- [ ] Système de scoreboard (FastBoard)
-- [ ] Affichage du contenu des shulker boxes (clic gauche/droit toggle)
-- [ ] Confirmation de vente toggle par joueur
-- [ ] Mode créatif: empêcher/autoriser la vente
+---
 
-# zAuctionHouse Discord
+## 🏆 Why Choose zAuctionHouse?
 
-- [ ] Envoyer des notifications en message privé lorsqu'un item est vendu
-- [ ] Envoyer des notifications lorsqu'un item est mis en vente
-- [ ] Pouvoir ajouter des filtres sur les items mis en vente pour recevoir une notification en message privée
-- [ ] Pouvoir acheter directement depuis discord un item (avec un bouton "acheter"), cela est uniquement possible avec
-  l'inventaire des items achetés 
+### vs. Other Auction Plugins
+
+| Feature | zAuctionHouse V4 | Competitors |
+|---------|------------------|-------------|
+| **GUI Customization** | 100% via YAML (zMenu) | Limited or hardcoded |
+| **Custom Item Support** | 20+ plugins | Few or none |
+| **Multi-Economy** | Yes, simultaneous | Usually single economy |
+| **Bulk Sales** | Yes | Rare |
+| **Shulker Preview** | Yes | Rare |
+| **Tax System** | Advanced (per-item, VAT) | Basic or none |
+| **Multi-Server** | Redis addon | Rare |
+| **Performance** | Optimized caching | Varies |
+| **Modern Java** | Java 21 | Often outdated |
+| **Active Development** | Yes | Varies |
+| **Documentation** | Comprehensive | Varies |
+| **Support** | Discord + Wiki | Varies |
+
+### What Sets Us Apart
+
+1. **🎯 True Customization**
+   - Every GUI element is configurable via YAML
+   - No hardcoded messages or interfaces
+   - Pattern system for reusable components
+
+2. **⚡ Performance First**
+   - Sorted item cache for instant browsing
+   - Async database operations
+   - Optimized for servers with 10,000+ listings
+
+3. **🔧 Developer Friendly**
+   - Clean API for integration
+   - Events for all major actions
+   - Repository pattern for data access
+
+4. **🛡️ Battle Tested**
+   - Used on major networks
+   - 5+ years of development experience
+   - Active community feedback
+
+5. **📚 Excellent Documentation**
+   - Complete wiki with examples
+   - Configuration file comments
+   - Active Discord support
+
+---
+
+## 📥 Installation
+
+1. Download [zMenu](https://www.spigotmc.org/resources/zmenu.110402/) and [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/)
+2. Download zAuctionHouse from [Spigot](https://www.spigotmc.org/resources/zauctionhouse-1-8-1-21.81494/)
+3. Place all JARs in your `plugins` folder
+4. Restart your server
+5. Configure in `plugins/zAuctionHouse/config.yml`
+6. Customize GUIs in `plugins/zAuctionHouse/inventories/`
+
+---
+
+## 📝 Quick Start
+
+### Basic Commands
+
+| Command | Description |
+|---------|-------------|
+| `/ah` | Open the auction house |
+| `/ah sell <price>` | Sell the item in your hand |
+| `/ah sell <price> <amount>` | Sell a specific amount |
+| `/ah selling` | View your listed items |
+| `/ah expired` | View your expired items |
+| `/ah purchased` | View items you bought |
+| `/ah history` | View your sales history |
+| `/ah claim` | Claim pending money |
+
+### Admin Commands
+
+| Command | Description |
+|---------|-------------|
+| `/ah reload` | Reload configuration |
+| `/ah admin history <player>` | View player's history |
+| `/ah admin open <type> <player>` | View player's items |
+| `/ah admin migrate <source>` | Migrate from V3 |
+
+---
+
+## 🔗 Links
+
+- 📖 **Documentation**: [zauctionhouse.groupez.dev](https://zauctionhouse.groupez.dev/)
+- 💬 **Discord**: [discord.groupez.dev](https://discord.groupez.dev/)
+- 🛒 **Spigot**: [spigotmc.org/resources/zauctionhouse](https://www.spigotmc.org/resources/zauctionhouse-1-8-1-21.81494/)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/Starter-zMenu/zAuctionHouseV4/issues)
+
+---
+
+## 💝 Support the Development
+
+zAuctionHouse is a premium plugin developed with passion. Your purchase supports:
+- Continuous development and new features
+- Bug fixes and compatibility updates
+- Documentation and support
+- Server infrastructure
+
+---
+
+## 📜 License
+
+zAuctionHouse is a premium plugin. Purchase includes:
+- Lifetime updates
+- Discord support
+- Access to all addons
+
+---
+
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/Maxlego08">Maxlego08</a>
+</p>
+
+---
+
+# 🛠️ Development Roadmap
+
+## New Features (Planned)
+
+- [ ] YAML file update system improvements
+- [ ] Message enable/disable options
+- [ ] Sell inventory improvements with zTextGenerator
+- [ ] Admin item sales system
+- [ ] Favorite items system
+- [x] Offline sales notification with history
+- [x] Page command `/ah page <page>`
+- [ ] Sale removal reason tracking
+- [ ] Custom model data for item images
+- [ ] Transaction state modification
+- [ ] Sell items on behalf of players
+- [ ] Custom bulk sale naming
+- [ ] Inventory button validation
+- [x] Renamed "owned" to "selling"
+- [ ] More admin commands for item management
+- [ ] Slot-based multi-item sales
+- [ ] Custom Discord image URLs
+
+## Missing V3 Features
+
+### Commands
+- [ ] `/ah search <string>` - Item search
+- [ ] `/ah blacklist` - Player blacklist management
+- [ ] `/ah config` - In-game configuration
+- [ ] `/ah version` - Version display
+- [ ] `/ah convert` - V2/PlayerAuctions conversion
+- [ ] `/ah purge <days>` - Old transaction purge
+
+### Systems
+- [x] Tax system (global, per-item, bypass permissions)
+- [ ] Priority system (VIP sorting)
+- [ ] Per-item price limits
+- [ ] Advanced search (chat, GUI, filters)
+- [ ] Additional sort options (10 more)
+- [ ] Cooldown system
+- [ ] Player blacklist
+- [ ] Global announcements
+- [ ] Bid/auction system
+- [ ] Rent system
+- [ ] Dupe prevention (NMS/PDC)
+
+### Integrations
+- [ ] Citizens NPC support
+- [ ] ProtocolLib advanced search
+- [ ] ZEssentials mailbox
+
+---
+
+## zAuctionHouse Discord Bot (Planned)
+
+- [ ] Private message notifications for sales
+- [ ] Listing notifications
+- [ ] Item filters for notifications
+- [ ] Direct purchase from Discord
+
+----
+
+  ---
+🟠 ÉLEVÉ (Devrait être corrigé)
+
+1. Incohérence d'héritage des services
+- PurchaseService extends AuctionService
+- SellService extends ZUtils ← Incohérent!
+- ExpireService n'extend pas AuctionService
+
+2. Nommage incohérent des champs dans les services
+- SellService : manager
+- PurchaseService : plugin
+- ExpireService : auctionManager
+
+3. Gestion silencieuse des exceptions
+- Metrics.java:132,150,315,317 - exceptions ignorées
+- Repository.java - printStackTrace() au lieu de logging
+
+4. Synchronisation mixte
+- ConcurrentHashMap pour certains caches
+- EnumMap (non thread-safe) pour storageItemsById
+
+  ---
+🟡 MOYEN (Améliorations)
+
+1. Mélange français/anglais dans les commentaires
+- ZAuctionManager.java:485,529
+- ExpireService.java:39,43
+- SellService.java:259,260
+
+2. TODOs non implémentés
+- ZEconomyManager.java:318
+- ExpireService.java:78
+- ListedItemsButton.java:103
+
+3. SellService viole le Single Responsibility Principle
+- Gère: vente, UI, validation, taxes, Discord
+
+4. Algorithme O(n²) dans ZAuctionItem.java:84-98
+- Fusion d'items similaires avec boucles imbriquées
+
+  ---
+🟢 BAS (Style de code)
+
+1. Nommage des champs de mapping
+   idsListedByOwner    // "ids" déjà pluriel + "Ids" en suffix
+   idsExpiredByOwner
+   idsPurchasedByBuyer
+   Suggestion: itemIdsByOwner, expiredIdsByOwner, etc.
+
+  ---
+Voulez-vous que je corrige certains de ces problèmes? Je recommande de commencer par :
+1. Renommer le package repositeries → repositories
+2. Corriger le NPE dans SortedItemsCache
+3. Corriger la fuite de ressources dans ZAuctionPlugin

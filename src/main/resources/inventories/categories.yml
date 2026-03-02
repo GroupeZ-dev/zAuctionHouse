@@ -1,43 +1,113 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Categories Inventory
+#
+#   This inventory displays the category selection menu.
+#   Players can choose a category to filter auction house items.
+#
+#   CATEGORIES ARE DEFINED IN:
+#   - categories.yml - Defines which items belong to each category
+#   - This file - Defines the GUI buttons for each category
+#
+#   ADDING NEW CATEGORIES:
+#   1. Add the category definition to categories.yml (with rules)
+#   2. Add a button here with type: ZAUCTIONHOUSE_CATEGORY and category: <name>
+#   3. Use the placeholder %zauctionhouse_category_count_<name>% for item counts
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# Inventory title - static text for the categories menu.
 name: "#0c1719Categories"
+
+# Inventory size - 6 rows (54 slots).
 size: 54
 
+#=============================================================================
+# PATTERNS
+#=============================================================================
+
 patterns:
+  # Decorative glass pane borders.
   - 'zauctionhouse-decoration'
+  # Back button to return to auction house.
   - 'zauctionhouse-back'
 
+#=============================================================================
+# CATEGORY BUTTONS
+#=============================================================================
+# Each button opens the auction house filtered by that category.
+# Button types use ZAUCTIONHOUSE_CATEGORY with a 'category' field.
+# The 'category' value must match a key from categories.yml.
+
 items:
+
+  #---------------------------------------------------------------------------
+  # ALL ITEMS CATEGORY
+  #---------------------------------------------------------------------------
+  # Shows all items regardless of type (no filtering).
+  # This is the default view when first opening the auction house.
+
   all-items:
+    # Button type for category selection.
     type: ZAUCTIONHOUSE_CATEGORY
+
+    # Category identifier - 'all' is a special category showing everything.
     category: all
+
+    # Slot position - center of top row (excluding decoration).
     slot: 4
+
     item:
       material: CHEST
       name: "#2CCED2<bold>ᴀʟʟ ɪᴛᴇᴍs"
       lore:
         - "#92ffffView all auction listings"
         - ""
+        # %zauctionhouse_category_count_all% shows total items.
         - "#92ffffTotal items#8c8c8c: #2CCED2%zauctionhouse_category_count_all%"
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto browse"
 
+  #---------------------------------------------------------------------------
+  # BLOCKS CATEGORY
+  #---------------------------------------------------------------------------
+  # Shows only placeable block items.
+
   blocks:
     type: ZAUCTIONHOUSE_CATEGORY
+    # Must match the key in categories.yml
     category: blocks
     slot: 19
+
     item:
+      # Representative material for this category.
       material: GRASS_BLOCK
       name: "#7a7a7a<bold>ʙʟᴏᴄᴋs"
       lore:
         - "#92ffffAll building blocks"
         - ""
+        # Dynamic item count for this category.
         - "#92ffffItems#8c8c8c: #2CCED2%zauctionhouse_category_count_blocks%"
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto browse"
+
+  #---------------------------------------------------------------------------
+  # WEAPONS CATEGORY
+  #---------------------------------------------------------------------------
+  # Shows swords, bows, crossbows, and other weapons.
 
   weapons:
     type: ZAUCTIONHOUSE_CATEGORY
     category: weapons
     slot: 20
+
     item:
       material: DIAMOND_SWORD
       name: "#ff5555<bold>ᴡᴇᴀᴘᴏɴs"
@@ -49,10 +119,16 @@ items:
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto browse"
 
+  #---------------------------------------------------------------------------
+  # ARMOR CATEGORY
+  #---------------------------------------------------------------------------
+  # Shows helmets, chestplates, leggings, boots, and shields.
+
   armor:
     type: ZAUCTIONHOUSE_CATEGORY
     category: armor
     slot: 21
+
     item:
       material: DIAMOND_CHESTPLATE
       name: "#55ffff<bold>ᴀʀᴍᴏʀ"
@@ -63,10 +139,16 @@ items:
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto browse"
 
+  #---------------------------------------------------------------------------
+  # TOOLS CATEGORY
+  #---------------------------------------------------------------------------
+  # Shows pickaxes, axes, shovels, hoes, and other tools.
+
   tools:
     type: ZAUCTIONHOUSE_CATEGORY
     category: tools
     slot: 22
+
     item:
       material: DIAMOND_PICKAXE
       name: "#ffff55<bold>ᴛᴏᴏʟs"
@@ -77,10 +159,16 @@ items:
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto browse"
 
+  #---------------------------------------------------------------------------
+  # CONSUMABLES CATEGORY
+  #---------------------------------------------------------------------------
+  # Shows potions, food, and other consumable items.
+
   consumables:
     type: ZAUCTIONHOUSE_CATEGORY
     category: consumables
     slot: 23
+
     item:
       material: GOLDEN_APPLE
       name: "#55ff55<bold>ᴄᴏɴsᴜᴍᴀʙʟᴇs"
@@ -91,10 +179,16 @@ items:
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto browse"
 
+  #---------------------------------------------------------------------------
+  # RESOURCES CATEGORY
+  #---------------------------------------------------------------------------
+  # Shows ores, ingots, and crafting materials.
+
   resources:
     type: ZAUCTIONHOUSE_CATEGORY
     category: resources
     slot: 24
+
     item:
       material: DIAMOND
       name: "#ffaa00<bold>ʀᴇsᴏᴜʀᴄᴇs"
@@ -105,10 +199,16 @@ items:
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto browse"
 
+  #---------------------------------------------------------------------------
+  # ENCHANTED BOOKS CATEGORY
+  #---------------------------------------------------------------------------
+  # Shows enchanted books only.
+
   enchanted-books:
     type: ZAUCTIONHOUSE_CATEGORY
     category: enchanted-books
     slot: 25
+
     item:
       material: ENCHANTED_BOOK
       name: "#ff55ff<bold>ᴇɴᴄʜᴀɴᴛᴇᴅ ʙᴏᴏᴋs"
@@ -119,10 +219,16 @@ items:
         - ""
         - "#8c8c8c• #2CCED2Click #92ffffto browse"
 
+  #---------------------------------------------------------------------------
+  # MISCELLANEOUS CATEGORY
+  #---------------------------------------------------------------------------
+  # Shows items that don't fit in other categories.
+
   misc:
     type: ZAUCTIONHOUSE_CATEGORY
     category: misc
     slot: 31
+
     item:
       material: CHEST
       name: "#555555<bold>ᴍɪsᴄᴇʟʟᴀɴᴇᴏᴜs"

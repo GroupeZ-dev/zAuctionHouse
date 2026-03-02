@@ -1,49 +1,138 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Admin History Main Inventory
+#
+#   This is the admin hub for viewing a player's auction history.
+#   From here, admins can access all aspects of a player's auction activity.
+#
+#   FEATURES:
+#   - View target player's expired items
+#   - View target player's purchased items
+#   - View target player's selling items
+#   - Access action logs
+#   - Access transaction history
+#
+#   ACCESS:
+#   - /ah admin history <player>
+#   - Requires admin permission
+#
+#   Documentation: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# Inventory title with target player placeholder.
+# %target% = name of the player being viewed
 name: '#0c1719Admin global history (%target%)'
+
+# Inventory size - 6 rows.
 size: 54
+
+#=============================================================================
+# ITEMS
+#=============================================================================
+
 items:
+
+  #---------------------------------------------------------------------------
+  # TARGET PLAYER HEAD
+  #---------------------------------------------------------------------------
+  # Shows the player head of the target being viewed.
+
   target:
+    # Button type - displays target player information.
     type: ZAUCTIONHOUSE_ADMIN_HISTORY_MAIN
+
+    # Slot position - top center.
     slot: 13
+
     item:
+      # Display the target player's head.
+      # %target% is replaced with the player name.
       player-head: '%target%'
       name: '#2CCED2<bold>%target%'
 
+  #---------------------------------------------------------------------------
+  # EXPIRED ITEMS BUTTON
+  #---------------------------------------------------------------------------
+  # Opens the target player's expired items.
+
   expired:
+    # Button type - opens admin expired items view.
     type: ZAUCTIONHOUSE_ADMIN_HISTORY_EXPIRED
+
+    # Slot position.
     slot: 28
+
     item:
+      # Hourglass/clock texture.
       url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjdhYWRmZjlkZGM1NDZmZGNlYzZlZDU5MTljYzM5ZGZhOGQwYzA3ZmY0YmM2MTNhMTlmMmU2ZDdmMjU5MyJ9fX0="
       name: '#2CCED2<bold>ᴇxᴘɪʀᴇᴅ ɪᴛᴇᴍs'
       lore:
+        # %expired-items% = number of expired items for target
+        # %s% = pluralization suffix
         - '#92ffff%target% has #2CCED2%expired-items% #92ffffexpired item%s%.'
         - ''
         - '#8c8c8c• #2CCED2Click #92ffffto open'
 
+  #---------------------------------------------------------------------------
+  # PURCHASED ITEMS BUTTON
+  #---------------------------------------------------------------------------
+  # Opens the target player's purchased items.
+
   purchased:
+    # Button type - opens admin purchased items view.
     type: ZAUCTIONHOUSE_ADMIN_HISTORY_PURCHASED
+
     slot: 29
+
     item:
+      # Chest texture.
       url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjM3Y2FlNWM1MWViMTU1OGVhODI4ZjU4ZTBkZmY4ZTZiN2IwYjFhMTgzZDczN2VlY2Y3MTQ2NjE3NjEifX19"
       name: '#2CCED2<bold>ᴘᴜʀᴄʜᴀsᴇᴅ ɪᴛᴇᴍs'
       lore:
+        # %purchased-items% = number of purchased items
         - '#92ffff%target% has #2CCED2%purchased-items% #92ffffbought item%s%.'
         - ''
         - '#8c8c8c• #2CCED2Click #92ffffto open'
 
+  #---------------------------------------------------------------------------
+  # SELLING ITEMS BUTTON
+  #---------------------------------------------------------------------------
+  # Opens the target player's currently listed items.
+
   selling:
+    # Button type - opens admin selling items view.
     type: ZAUCTIONHOUSE_ADMIN_HISTORY_SELLING
+
     slot: 30
+
     item:
+      # Player icon texture.
       url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjU4MDdjYzRjM2I2OTU4YWVhNjE1NmU4NDUxOGQ5MWE0OWM1ZjMyOTcxZTZlYjI2OWEyM2EyNWEyNzE0NSJ9fX0="
       name: '#2CCED2<bold>sᴀʟᴇ ɪᴛᴇᴍs'
       lore:
+        # %selling-items% = number of items on sale
         - '#92ffff%target% has #2CCED2%selling-items% #92ffffitem%s% on sale.'
         - ''
         - '#8c8c8c• #2CCED2Click #92ffffto open'
 
+  #---------------------------------------------------------------------------
+  # LOGS BUTTON
+  #---------------------------------------------------------------------------
+  # Opens the action logs for the target player.
+  # Logs show all auction actions: listings, purchases, removals.
+
   logs:
+    # Button type - opens admin logs view.
     type: ZAUCTIONHOUSE_ADMIN_HISTORY_LOGS
+
     slot: 33
+
     item:
       material: SUNFLOWER
       name: '#2CCED2<bold>ʟᴏɢs'
@@ -51,9 +140,18 @@ items:
         - ''
         - '#8c8c8c• #2CCED2Click #92ffffto open'
 
+  #---------------------------------------------------------------------------
+  # TRANSACTIONS BUTTON
+  #---------------------------------------------------------------------------
+  # Opens the transaction history for the target player.
+  # Transactions show completed sales with financial details.
+
   transactions:
+    # Button type - opens admin transactions view.
     type: ZAUCTIONHOUSE_ADMIN_HISTORY_TRANSACTIONS
+
     slot: 34
+
     item:
       material: NETHER_STAR
       name: '#2CCED2<bold>ᴛʀᴀɴsᴀᴄᴛɪᴏɴs'
