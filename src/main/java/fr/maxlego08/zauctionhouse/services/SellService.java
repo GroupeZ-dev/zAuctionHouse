@@ -60,11 +60,8 @@ public class SellService extends ZUtils implements AuctionSellService {
             return;
         }
 
-        // Use first item for tax calculation (item-specific rules)
-        ItemStack representativeItem = itemsToSell.getFirst();
-
-        // Calculate and apply sell tax asynchronously
-        applySellTaxAsync(player, price, representativeItem, auctionEconomy).thenAccept(taxResult -> {
+        // Calculate and apply sell tax asynchronously (considers all items for item-specific rules)
+        applySellTaxAsync(player, price, itemsToSell, auctionEconomy).thenAccept(taxResult -> {
             if (taxResult == null) {
                 return; // Tax payment failed
             }
@@ -247,14 +244,16 @@ public class SellService extends ZUtils implements AuctionSellService {
 
     /**
      * Calculates and applies the sell tax for a listing asynchronously.
+     * Takes into account all items being sold and uses the highest tax among them
+     * (in case of item-specific tax rules).
      *
      * @param player         the player selling
      * @param price          the sale price
-     * @param itemStack      the item being sold (for item-specific rules)
+     * @param itemStacks     the items being sold (for item-specific rules)
      * @param auctionEconomy the economy used
      * @return a CompletableFuture containing the tax result, or null if the player cannot afford the tax
      */
-    private CompletableFuture<TaxResult> applySellTaxAsync(Player player, BigDecimal price, ItemStack itemStack, AuctionEconomy auctionEconomy) {
+    private CompletableFuture<TaxResult> applySellTaxAsync(Player player, BigDecimal price, List<ItemStack> itemStacks, AuctionEconomy auctionEconomy) {
         var taxConfig = auctionEconomy.getTaxConfiguration();
         var economyManager = this.plugin.getEconomyManager();
 
@@ -264,7 +263,22 @@ public class SellService extends ZUtils implements AuctionSellService {
             return CompletableFuture.completedFuture(TaxResult.disabled(price));
         }
 
-        TaxResult taxResult = auctionEconomy.calculateSellTax(player, price, itemStack);
+        // Calculate tax for each item and keep the highest one
+        // This ensures item-specific tax rules are respected
+        TaxResult highestTaxResult = null;
+        for (ItemStack itemStack : itemStacks) {
+            TaxResult itemTaxResult = auctionEconomy.calculateSellTax(player, price, itemStack);
+            if (highestTaxResult == null || itemTaxResult.taxAmount().compareTo(highestTaxResult.taxAmount()) > 0) {
+                highestTaxResult = itemTaxResult;
+            }
+        }
+
+        // Fallback if no items (shouldn't happen, but safety check)
+        if (highestTaxResult == null) {
+            return CompletableFuture.completedFuture(TaxResult.disabled(price));
+        }
+
+        final TaxResult taxResult = highestTaxResult;
 
         if (taxResult.isBypassed()) {
             message(this.plugin, player, Message.TAX_EXEMPT);
