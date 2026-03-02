@@ -11,11 +11,7 @@ import fr.maxlego08.zauctionhouse.api.messages.messages.TitleMessage;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -41,17 +37,25 @@ public class MessageLoader implements ConfigurationFile {
             this.plugin.getLogger().log(Level.SEVERE, "Messages were not loaded correctly.");
             for (Message value : Message.values()) {
                 if (!this.loadedMessages.contains(value)) {
+
                     value.setPlugin(plugin);
-                    this.plugin.getLogger().log(Level.SEVERE, value + " was not loaded.");
+
+                    String messageKey = value.name().replace("_", "-").toLowerCase();
+                    this.plugin.getLogger().log(Level.SEVERE, messageKey + " has not been found, use of the default value.");
 
                     List<AuctionMessage> newMessages = new ArrayList<>();
                     for (AuctionMessage message : value.getMessages()) {
-                        if (message instanceof ClassicMessage classicMessage) {
-                            newMessages.add(new ClassicMessage(classicMessage.messageType(), classicMessage.messages().stream().map(this::replaceMessagesColors).toList()));
-                        } else if (message instanceof BossBarMessage bossBarMessage) {
-                            newMessages.add(new BossBarMessage(this.replaceMessagesColors(bossBarMessage.text()), bossBarMessage.color(), bossBarMessage.overlay(), bossBarMessage.flags(), bossBarMessage.duration(), bossBarMessage.isStatic()));
-                        } else if (message instanceof TitleMessage titleMessage) {
-                            newMessages.add(new TitleMessage(this.replaceMessagesColors(titleMessage.title()), this.replaceMessagesColors(titleMessage.subtitle()), titleMessage.start(), titleMessage.time(), titleMessage.end()));
+                        if (message instanceof ClassicMessage(MessageType messageType, List<String> messages)) {
+                            newMessages.add(new ClassicMessage(messageType, messages.stream().map(this::replaceMessagesColors).toList()));
+                        } else if (message instanceof BossBarMessage(
+                                String text, String color, String overlay, List<String> flags, long duration,
+                                boolean isStatic
+                        )) {
+                            newMessages.add(new BossBarMessage(this.replaceMessagesColors(text), color, overlay, flags, duration, isStatic));
+                        } else if (message instanceof TitleMessage(
+                                String title, String subtitle, long start, long time, long end
+                        )) {
+                            newMessages.add(new TitleMessage(this.replaceMessagesColors(title), this.replaceMessagesColors(subtitle), start, time, end));
                         }
                     }
                     value.setMessages(newMessages);
@@ -72,7 +76,7 @@ public class MessageLoader implements ConfigurationFile {
 
                 Message message = Message.fromString(messageKey);
                 if (message == null) {
-                    plugin.getLogger().severe("Impossible to find the message " + key + ", it does not exist, you must delete it.");
+                    // this.plugin.getLogger().severe("Impossible to find the message " + key + ", it does not exist, you must delete it.");
                     continue;
                 }
 

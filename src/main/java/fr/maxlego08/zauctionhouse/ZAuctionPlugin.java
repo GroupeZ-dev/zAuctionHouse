@@ -38,6 +38,7 @@ import fr.maxlego08.zauctionhouse.rule.ZRuleLoaderRegistry;
 import fr.maxlego08.zauctionhouse.storage.ZStorageManager;
 import fr.maxlego08.zauctionhouse.utils.Metrics;
 import fr.maxlego08.zauctionhouse.utils.VersionChecker;
+import fr.maxlego08.zauctionhouse.utils.documentation.DocumentationGenerator;
 import fr.maxlego08.zauctionhouse.utils.yaml.YamlUpdater;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
@@ -116,6 +117,9 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
             VersionChecker versionChecker = new VersionChecker(this, 1);
             versionChecker.useLastVersion();
         }
+
+        var documentation = new DocumentationGenerator(this);
+        documentation.generate(this.commandManager.getCommands(), ((LocalPlaceholder) placeholder).getAutoPlaceholders());
 
         isEnabled = true;
         this.getLogger().info("zAuctionHouse has just been loaded successfully!");
