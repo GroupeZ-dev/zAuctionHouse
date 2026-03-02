@@ -103,6 +103,7 @@ items:
 
     # Inventory file to open (inventories/categories.yml).
     inventory: "categories"
+    is-permanent: true
 
     # Button appearance
     item:
@@ -211,7 +212,6 @@ items:
   # Navigates to the previous page of items.
 
   previous:
-    # Permanent items cannot be taken by players.
     is-permanent: true
 
     # Button type - PREVIOUS is a zMenu built-in type.
