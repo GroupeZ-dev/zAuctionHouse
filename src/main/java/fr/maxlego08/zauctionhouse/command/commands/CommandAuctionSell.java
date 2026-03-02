@@ -6,11 +6,14 @@ import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.event.events.sell.AuctionPreSellEvent;
 import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
+import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
 import fr.maxlego08.zauctionhouse.api.utils.Permission;
 import fr.maxlego08.zauctionhouse.command.VCommandArgument;
 import fr.maxlego08.zauctionhouse.utils.commands.CommandType;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
+import java.util.Map;
 import java.util.Optional;
 
 public class CommandAuctionSell extends VCommandArgument<CommandSellArguments> {
@@ -80,7 +83,13 @@ public class CommandAuctionSell extends VCommandArgument<CommandSellArguments> {
         auctionEconomy = event.getAuctionEconomy();
         itemStack = event.getItemStack();
 
-        auctionManager.getSellService().sellAuctionItem(player, price, amount, expiredAt, itemStack, auctionEconomy);
+        // Clone the item with the correct amount for selling
+        var clonedItemStack = itemStack.clone();
+        clonedItemStack.setAmount(amount);
+
+        // Use MAIN_HAND_SLOT to indicate the item is in the player's main hand
+        Map<Integer, ItemStack> slotItems = Map.of(AuctionSellService.MAIN_HAND_SLOT, clonedItemStack);
+        auctionManager.getSellService().sellAuctionItems(player, price, expiredAt, slotItems, auctionEconomy);
 
         return CommandType.SUCCESS;
     }

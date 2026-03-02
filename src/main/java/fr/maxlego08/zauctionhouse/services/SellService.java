@@ -18,10 +18,13 @@ import fr.maxlego08.zauctionhouse.api.utils.Base64ItemStack;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class SellService extends ZUtils implements AuctionSellService {
@@ -35,73 +38,68 @@ public class SellService extends ZUtils implements AuctionSellService {
     }
 
     @Override
-    public void sellAuctionItem(Player player, BigDecimal price, int amount, long expiredAt, ItemStack itemStack, AuctionEconomy auctionEconomy) {
+    public void sellAuctionItems(Player player, BigDecimal price, long expiredAt, Map<Integer, ItemStack> slotItems, AuctionEconomy auctionEconomy) {
 
-        var clonedItemStack = itemStack.clone();
-        clonedItemStack.setAmount(amount);
+        // Filter out null or air items and clone them
+        var validSlotItems = slotItems.entrySet().stream().filter(entry -> entry.getValue() != null && !entry.getValue().getType().isAir()).collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().clone()));
 
-        if (this.invalidateItems(player, price, auctionEconomy, List.of(clonedItemStack))) return;
+        if (validSlotItems.isEmpty()) {
+            message(this.plugin, player, Message.SELL_ERROR_AIR);
+            return;
+        }
 
-        var currentItemInHand = player.getInventory().getItemInMainHand();
-        if (!currentItemInHand.isSimilar(itemStack) || currentItemInHand.getAmount() < amount) {
+        List<ItemStack> itemsToSell = new ArrayList<>(validSlotItems.values());
+
+        if (this.invalidateItems(player, price, auctionEconomy, itemsToSell)) {
+            return;
+        }
+
+        // Verify items are still in their slots before async operation
+        if (!verifyItemsInSlots(player, validSlotItems)) {
             message(this.plugin, player, Message.SELL_ERROR_CHANGE);
             return;
         }
 
-        // Calculate and apply sell tax
-        TaxResult taxResult = applySellTax(player, price, clonedItemStack, auctionEconomy);
-        if (taxResult == null) {
-            return; // Tax payment failed
-        }
+        // Use first item for tax calculation (item-specific rules)
+        ItemStack representativeItem = itemsToSell.getFirst();
 
-        removeItemInHand(player, amount);
+        // Calculate and apply sell tax asynchronously
+        applySellTaxAsync(player, price, representativeItem, auctionEconomy).thenAccept(taxResult -> {
+            if (taxResult == null) {
+                return; // Tax payment failed
+            }
 
-        var storageManager = this.plugin.getStorageManager();
-        storageManager.createAuctionItem(player, price, expiredAt, List.of(clonedItemStack), auctionEconomy) //
-                .thenAccept(auctionItem -> this.postSell(player, auctionItem, auctionEconomy, taxResult)) //
-                .exceptionally(throwable -> { //
+            // Return to main thread to verify items and remove them
+            this.plugin.getScheduler().runNextTick(task -> {
+                // Re-verify that items are still in their original slots after async tax check
+                if (!verifyItemsInSlots(player, validSlotItems)) {
+                    message(this.plugin, player, Message.SELL_ERROR_CHANGE);
+                    // Refund the tax if items changed
+                    if (taxResult.hasTax()) {
+                        auctionEconomy.deposit(player, taxResult.taxAmount(), "Refund sell tax (items changed)");
+                    }
+                    return;
+                }
+
+                // Remove items from their slots
+                removeItemsFromSlots(player, validSlotItems);
+
+                var storageManager = this.plugin.getStorageManager();
+                storageManager.createAuctionItem(player, price, expiredAt, itemsToSell, auctionEconomy).thenAccept(auctionItem -> this.postSell(player, auctionItem, auctionEconomy, taxResult)).exceptionally(throwable -> {
                     this.plugin.getLogger().severe("Unable to sell item");
                     throwable.printStackTrace();
-                    player.getInventory().addItem(clonedItemStack);
+                    // Return items to player
+                    itemsToSell.forEach(itemStack -> player.getInventory().addItem(itemStack));
                     // Refund the tax if the sale failed
                     if (taxResult.hasTax()) {
                         auctionEconomy.deposit(player, taxResult.taxAmount(), "Refund sell tax (sale failed)");
                     }
                     return null;
                 });
-    }
-
-    @Override
-    public void sellAuctionItems(Player player, BigDecimal price, long expiredAt, List<ItemStack> itemStacks, AuctionEconomy auctionEconomy) {
-
-        var sellableItems = itemStacks.stream().filter(Objects::nonNull).filter(item -> !item.getType().isAir()).map(ItemStack::clone).toList();
-        if (sellableItems.isEmpty()) {
-            message(this.plugin, player, Message.SELL_ERROR_AIR);
-            return;
-        }
-
-        if (this.invalidateItems(player, price, auctionEconomy, sellableItems)) {
-            sellableItems.forEach(itemStack -> player.getInventory().addItem(itemStack));
-            return;
-        }
-
-        // Calculate and apply sell tax (use first item for item-specific rules)
-        ItemStack representativeItem = sellableItems.getFirst();
-        TaxResult taxResult = applySellTax(player, price, representativeItem, auctionEconomy);
-        if (taxResult == null) {
-            sellableItems.forEach(itemStack -> player.getInventory().addItem(itemStack));
-            return; // Tax payment failed
-        }
-
-        var storageManager = this.plugin.getStorageManager();
-        storageManager.createAuctionItem(player, price, expiredAt, sellableItems, auctionEconomy).thenAccept(auctionItem -> this.postSell(player, auctionItem, auctionEconomy, taxResult)).exceptionally(throwable -> {
-            this.plugin.getLogger().severe("Unable to sell item");
+            });
+        }).exceptionally(throwable -> {
+            this.plugin.getLogger().severe("Unable to check tax for sell");
             throwable.printStackTrace();
-            sellableItems.forEach(itemStack -> player.getInventory().addItem(itemStack));
-            // Refund the tax if the sale failed
-            if (taxResult.hasTax()) {
-                auctionEconomy.deposit(player, taxResult.taxAmount(), "Refund sell tax (sale failed)");
-            }
             return null;
         });
     }
@@ -110,7 +108,6 @@ public class SellService extends ZUtils implements AuctionSellService {
     public void openSellCommandInventory(Player player, BigDecimal price, AuctionEconomy auctionEconomy) {
         var cache = this.manager.getCache(player);
         var configuration = this.plugin.getConfiguration();
-        var economyManager = this.plugin.getEconomyManager();
 
         long expiration = configuration.getSellExpiration().getExpiration(player);
         long expiredAt = expiration > 0 ? System.currentTimeMillis() + (expiration * 1000) : 0;
@@ -122,6 +119,68 @@ public class SellService extends ZUtils implements AuctionSellService {
         cache.remove(PlayerCacheKey.SELL_ITEMS);
 
         this.plugin.getInventoriesLoader().openInventory(player, Inventories.SELL_INVENTORY);
+    }
+
+    /**
+     * Verifies that all items are still in their expected inventory slots.
+     *
+     * @param player    the player whose inventory to check
+     * @param slotItems map of slot to expected ItemStack
+     * @return true if all items are still in their slots with correct amounts, false otherwise
+     */
+    private boolean verifyItemsInSlots(Player player, Map<Integer, ItemStack> slotItems) {
+        PlayerInventory inventory = player.getInventory();
+
+        for (Map.Entry<Integer, ItemStack> entry : slotItems.entrySet()) {
+            int slot = entry.getKey();
+            ItemStack expectedItem = entry.getValue();
+
+            ItemStack currentItem;
+            if (slot == MAIN_HAND_SLOT) {
+                currentItem = inventory.getItemInMainHand();
+            } else {
+                currentItem = inventory.getItem(slot);
+            }
+
+            if (currentItem == null || !currentItem.isSimilar(expectedItem) || currentItem.getAmount() < expectedItem.getAmount()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Removes items from their inventory slots.
+     *
+     * @param player    the player whose inventory to modify
+     * @param slotItems map of slot to ItemStack to remove
+     */
+    private void removeItemsFromSlots(Player player, Map<Integer, ItemStack> slotItems) {
+        PlayerInventory inventory = player.getInventory();
+
+        for (Map.Entry<Integer, ItemStack> entry : slotItems.entrySet()) {
+            int slot = entry.getKey();
+            ItemStack itemToRemove = entry.getValue();
+            int amountToRemove = itemToRemove.getAmount();
+
+            if (slot == MAIN_HAND_SLOT) {
+                ItemStack currentItem = inventory.getItemInMainHand();
+                if (currentItem.getAmount() > amountToRemove) {
+                    currentItem.setAmount(currentItem.getAmount() - amountToRemove);
+                } else {
+                    inventory.setItemInMainHand(null);
+                }
+            } else {
+                ItemStack currentItem = inventory.getItem(slot);
+                if (currentItem != null) {
+                    if (currentItem.getAmount() > amountToRemove) {
+                        currentItem.setAmount(currentItem.getAmount() - amountToRemove);
+                    } else {
+                        inventory.setItem(slot, null);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -187,57 +246,59 @@ public class SellService extends ZUtils implements AuctionSellService {
     }
 
     /**
-     * Calculates and applies the sell tax for a listing.
+     * Calculates and applies the sell tax for a listing asynchronously.
      *
      * @param player         the player selling
      * @param price          the sale price
      * @param itemStack      the item being sold (for item-specific rules)
      * @param auctionEconomy the economy used
-     * @return the tax result, or null if the player cannot afford the tax
+     * @return a CompletableFuture containing the tax result, or null if the player cannot afford the tax
      */
-    private TaxResult applySellTax(Player player, BigDecimal price, ItemStack itemStack, AuctionEconomy auctionEconomy) {
+    private CompletableFuture<TaxResult> applySellTaxAsync(Player player, BigDecimal price, ItemStack itemStack, AuctionEconomy auctionEconomy) {
         var taxConfig = auctionEconomy.getTaxConfiguration();
         var economyManager = this.plugin.getEconomyManager();
 
         // Check if sell tax applies
         TaxType taxType = taxConfig.getTaxType();
         if (!taxConfig.isEnabled() || (taxType != TaxType.SELL && taxType != TaxType.BOTH)) {
-            return TaxResult.disabled(price);
+            return CompletableFuture.completedFuture(TaxResult.disabled(price));
         }
 
         TaxResult taxResult = auctionEconomy.calculateSellTax(player, price, itemStack);
 
         if (taxResult.isBypassed()) {
             message(this.plugin, player, Message.TAX_EXEMPT);
-            return taxResult;
+            return CompletableFuture.completedFuture(taxResult);
         }
 
         if (!taxResult.hasTax()) {
+            return CompletableFuture.completedFuture(taxResult);
+        }
+
+        // Check if player has enough money to pay the tax asynchronously
+        return auctionEconomy.has(player, taxResult.taxAmount()).thenApply(hasMoney -> {
+            if (!hasMoney) {
+                // Send message on main thread
+                this.plugin.getScheduler().runNextTick(task -> {
+                    message(this.plugin, player, Message.TAX_INSUFFICIENT_FUNDS, "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()));
+                });
+                return null;
+            }
+
+            // Withdraw the tax
+            auctionEconomy.withdraw(player, taxResult.taxAmount(), "Sell tax (zAuctionHouse)");
+
+            // Send appropriate messages on main thread
+            this.plugin.getScheduler().runNextTick(task -> {
+                if (taxResult.isReduced()) {
+                    message(this.plugin, player, Message.TAX_REDUCED, "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
+                }
+
+                message(this.plugin, player, Message.TAX_SELL_APPLIED, "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()), "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
+            });
+
             return taxResult;
-        }
-
-        // Check if player has enough money to pay the tax
-        boolean hasEnough = auctionEconomy.has(player, taxResult.taxAmount()).join();
-        if (!hasEnough) {
-            message(this.plugin, player, Message.TAX_INSUFFICIENT_FUNDS,
-                    "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()));
-            return null;
-        }
-
-        // Withdraw the tax
-        auctionEconomy.withdraw(player, taxResult.taxAmount(), "Sell tax (zAuctionHouse)");
-
-        // Send appropriate message
-        if (taxResult.isReduced()) {
-            message(this.plugin, player, Message.TAX_REDUCED,
-                    "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
-        }
-
-        message(this.plugin, player, Message.TAX_SELL_APPLIED,
-                "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()),
-                "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
-
-        return taxResult;
+        });
     }
 
     /**

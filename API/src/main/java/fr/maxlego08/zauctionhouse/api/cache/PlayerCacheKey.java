@@ -17,7 +17,9 @@ import fr.maxlego08.zauctionhouse.api.utils.IntList;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public enum PlayerCacheKey {
@@ -37,7 +39,7 @@ public enum PlayerCacheKey {
     SELL_ECONOMY(new TypeToken<AuctionEconomy>() {}, () -> null),
     SELL_EXPIRED_AT(new TypeToken<Long>() {}, () -> 0L),
     SELL_AMOUNT(new TypeToken<Integer>() {}, () -> 1),
-    SELL_ITEMS(new TypeToken<List<org.bukkit.inventory.ItemStack>>() {}, ArrayList::new),
+    SELL_ITEMS(new TypeToken<Map<Integer, org.bukkit.inventory.ItemStack>>() {}, HashMap::new),
     CURRENT_CATEGORY(new TypeToken<Category>() {}, () -> null),
 
     // Admin Logs

@@ -8,6 +8,7 @@ import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
+import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -16,8 +17,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Button to confirm the sale of selected items.
@@ -44,15 +45,16 @@ public class SellConfirmButton extends Button {
         var manager = this.plugin.getAuctionManager();
         var cache = manager.getCache(player);
 
-        List<ItemStack> sellItems = cache.get(PlayerCacheKey.SELL_ITEMS);
+        Map<Integer, ItemStack> sellItems = cache.get(PlayerCacheKey.SELL_ITEMS);
         if (sellItems == null || sellItems.isEmpty()) {
+            // If no items selected, use main hand item
             ItemStack mainHandItem = player.getInventory().getItemInMainHand();
             if (mainHandItem.getType().isAir()) {
                 this.plugin.getAuctionManager().message(player, Message.SELL_INVENTORY_EMPTY);
                 return;
             }
-            sellItems = new ArrayList<>();
-            sellItems.add(mainHandItem.clone());
+            sellItems = new HashMap<>();
+            sellItems.put(AuctionSellService.MAIN_HAND_SLOT, mainHandItem.clone());
         }
 
         BigDecimal price = cache.get(PlayerCacheKey.SELL_PRICE, BigDecimal.ZERO);
@@ -60,22 +62,13 @@ public class SellConfirmButton extends Button {
         long expiredAt = cache.get(PlayerCacheKey.SELL_EXPIRED_AT, 0L);
 
         cache.set(PlayerCacheKey.CURRENT_PAGE, 1);
-
-        List<ItemStack> itemsFromCache = cache.get(PlayerCacheKey.SELL_ITEMS);
-
-        if (itemsFromCache == null || itemsFromCache.isEmpty()) {
-            player.getInventory().setItemInMainHand(null);
-        } else {
-            for (ItemStack item : sellItems) {
-                player.getInventory().removeItem(item);
-            }
-        }
-
         cache.remove(PlayerCacheKey.SELL_ITEMS);
 
-        manager.getSellService().sellAuctionItems(player, price, expiredAt, sellItems, economy);
-
+        // Close inventory before selling - items will be removed by the service after verification
         player.closeInventory();
+
+        // The service will verify items are still in their slots and remove them after async tax check
+        manager.getSellService().sellAuctionItems(player, price, expiredAt, sellItems, economy);
     }
 
     @Override
@@ -92,13 +85,16 @@ public class SellConfirmButton extends Button {
         BigDecimal price = cache.get(PlayerCacheKey.SELL_PRICE, BigDecimal.ZERO);
         AuctionEconomy economy = cache.get(PlayerCacheKey.SELL_ECONOMY, economyManager.getDefaultEconomy(ItemType.AUCTION));
 
-        List<ItemStack> sellItems = cache.get(PlayerCacheKey.SELL_ITEMS);
+        Map<Integer, ItemStack> sellItems = cache.get(PlayerCacheKey.SELL_ITEMS);
         int itemCount = 0;
         int totalAmount = 0;
 
         if (sellItems != null && !sellItems.isEmpty()) {
             itemCount = sellItems.size();
-            totalAmount = sellItems.stream().filter(item -> item != null && !item.getType().isAir()).mapToInt(ItemStack::getAmount).sum();
+            totalAmount = sellItems.values().stream()
+                    .filter(item -> item != null && !item.getType().isAir())
+                    .mapToInt(ItemStack::getAmount)
+                    .sum();
         }
 
         placeholders.register("price", economyManager.format(economy, price));

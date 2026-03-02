@@ -13,7 +13,9 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SellShowItemButton extends Button {
 
@@ -33,7 +35,7 @@ public class SellShowItemButton extends Button {
         var cache = manager.getCache(player);
         var config = this.plugin.getConfiguration().getItemLore().sellInventoryRemoveItem();
 
-        List<ItemStack> sellItems = cache.get(PlayerCacheKey.SELL_ITEMS);
+        Map<Integer, ItemStack> sellItems = cache.get(PlayerCacheKey.SELL_ITEMS);
 
         this.slots.forEach(slot -> {
             inventoryEngine.getSpigotInventory().setItem(slot, null);
@@ -43,10 +45,13 @@ public class SellShowItemButton extends Button {
         if (sellItems.isEmpty()) {
             inventoryEngine.addItem(this.emptySlot, this.getItemStack().build(player, false, new Placeholders()));
         } else {
-            var maxIndex = Math.min(slots.size(), sellItems.size());
+            List<Map.Entry<Integer, ItemStack>> entries = new ArrayList<>(sellItems.entrySet());
+            var maxIndex = Math.min(slots.size(), entries.size());
             for (int i = 0; i != maxIndex; i++) {
 
-                var finalItemStack = sellItems.get(i);
+                var entry = entries.get(i);
+                var inventorySlot = entry.getKey();
+                var finalItemStack = entry.getValue();
 
                 var itemStack = finalItemStack.clone();
                 var itemMeta = itemStack.getItemMeta();
@@ -57,7 +62,7 @@ public class SellShowItemButton extends Button {
                 if (button == null) continue;
 
                 button.setClick(e -> {
-                    if (removeFromSellList(player, finalItemStack)) {
+                    if (removeFromSellList(player, inventorySlot)) {
                         this.plugin.getInventoriesLoader().getInventoryManager().updateInventory(player);
                     }
                 });
@@ -96,23 +101,18 @@ public class SellShowItemButton extends Button {
             return;
         }
 
-        List<ItemStack> sellItems = cache.get(PlayerCacheKey.SELL_ITEMS);
+        int clickedSlot = event.getSlot();
+        Map<Integer, ItemStack> sellItems = cache.get(PlayerCacheKey.SELL_ITEMS);
         if (sellItems == null) {
-            sellItems = new ArrayList<>();
+            sellItems = new HashMap<>();
         }
 
-        boolean found = false;
-        for (int i = 0; i < sellItems.size(); i++) {
-            if (sellItems.get(i).isSimilar(clickedItem)) {
-                sellItems.remove(i);
-                found = true;
-                manager.message(player, Message.SELL_ITEM_REMOVED);
-                break;
-            }
-        }
-
-        if (!found) {
-            sellItems.add(clickedItem.clone());
+        // Toggle: if slot already in map, remove it; otherwise add it
+        if (sellItems.containsKey(clickedSlot)) {
+            sellItems.remove(clickedSlot);
+            manager.message(player, Message.SELL_ITEM_REMOVED);
+        } else {
+            sellItems.put(clickedSlot, clickedItem.clone());
             manager.message(player, Message.SELL_ITEM_ADDED);
         }
 
@@ -121,15 +121,15 @@ public class SellShowItemButton extends Button {
         this.plugin.getInventoriesLoader().getInventoryManager().updateInventory(player);
     }
 
-    public boolean removeFromSellList(Player player, ItemStack itemStack) {
+    public boolean removeFromSellList(Player player, int slot) {
         var manager = this.plugin.getAuctionManager();
         var cache = manager.getCache(player);
-        List<ItemStack> sellItems = cache.get(PlayerCacheKey.SELL_ITEMS);
+        Map<Integer, ItemStack> sellItems = cache.get(PlayerCacheKey.SELL_ITEMS);
         if (sellItems == null || sellItems.isEmpty()) {
             return false;
         }
 
-        boolean removed = sellItems.removeIf(item -> item.isSimilar(itemStack));
+        boolean removed = sellItems.remove(slot) != null;
         cache.set(PlayerCacheKey.SELL_ITEMS, sellItems);
         return removed;
     }
