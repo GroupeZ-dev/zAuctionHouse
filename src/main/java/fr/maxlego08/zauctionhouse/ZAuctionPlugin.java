@@ -36,6 +36,7 @@ import fr.maxlego08.zauctionhouse.placeholder.placeholders.PlayerPlaceholders;
 import fr.maxlego08.zauctionhouse.rule.ZItemRuleManager;
 import fr.maxlego08.zauctionhouse.rule.ZRuleLoaderRegistry;
 import fr.maxlego08.zauctionhouse.storage.ZStorageManager;
+import fr.maxlego08.zauctionhouse.utils.yaml.YamlUpdater;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -66,6 +67,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     private final ZRuleLoaderRegistry ruleLoaderRegistry = new ZRuleLoaderRegistry(this);
     private final ItemRuleManager itemRuleManager = new ZItemRuleManager(this, ruleLoaderRegistry);
     private final CategoryManager categoryManager = new ZCategoryManager(this, ruleLoaderRegistry);
+    private final YamlUpdater yamlUpdater = new YamlUpdater(this);
     private InventoriesLoader inventoriesLoader;
     private DiscordWebhookService discordWebhookService;
     private boolean isEnabled = false;
@@ -302,6 +304,15 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         return this.discordWebhookService;
     }
 
+    /**
+     * Gets the YAML updater that preserves comments when updating configuration files.
+     *
+     * @return The YamlUpdater instance
+     */
+    public YamlUpdater getYamlUpdater() {
+        return this.yamlUpdater;
+    }
+
     private void addListener(Listener listener) {
         this.getServer().getPluginManager().registerEvents(listener, this);
     }
@@ -362,41 +373,8 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
             return;
         }
 
-        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-
-        try {
-
-            InputStream inputStream = this.getResource(resourcePath);
-
-            if (inputStream == null) {
-                this.getLogger().severe("Cannot find file " + resourcePath);
-                return;
-            }
-
-            Reader defConfigStream = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-            YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
-
-            Set<String> defaultKeys = defConfig.getKeys(deep);
-
-            boolean configUpdated = false;
-            for (String key : defaultKeys) {
-                if (!config.contains(key)) {
-                    this.getLogger().severe("I can’t find " + key + " in the file " + file.getName());
-                    configUpdated = true;
-                }
-            }
-
-            config.setDefaults(defConfig);
-            config.options().copyDefaults(true);
-
-            if (configUpdated) {
-                this.getLogger().info("Update file " + toPath);
-                config.save(file);
-            }
-
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
+        // Use the new YamlUpdater that preserves comments
+        this.yamlUpdater.update(resourcePath, toPath);
     }
 
     @Override
