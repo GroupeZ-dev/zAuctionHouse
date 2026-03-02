@@ -12,6 +12,8 @@ public enum Message {
 
     PREFIX("<primary>zAuctionHouse <secondary>• "),
 
+    VERSION_AVAILABLE("<#ff0000>There is a new version of zAuctionHouse available ! <gray>(<white>current: <#ff9900>%version% <gray>| <white>latest: <#00ff00>%latest%<gray>)"),
+
     COMMAND_SYNTAX_ERROR("<error>You must execute the command like this<gray>: <success>%syntax%"),
     COMMAND_NO_PERMISSION("<error>You do not have permission to run this command."),
     COMMAND_NO_CONSOLE("<error>Only one player can execute this command."),

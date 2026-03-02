@@ -26,6 +26,9 @@ enable-debug: false
 # Useful for diagnosing performance issues with large auction houses.
 enable-performance-debug: false
 
+# Allows you to check if you are using the latest version of the plugin
+enable-version-checker: true
+
 # Performance debug filter configuration
 # Allows you to whitelist or blacklist specific operation names
 performance-debug:

@@ -112,8 +112,10 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
 
         new Metrics(this, 5326);
 
-        VersionChecker versionChecker = new VersionChecker(this, 1);
-        versionChecker.useLastVersion();
+        if (getConfig().getBoolean("enable-version-checker", true)) {
+            VersionChecker versionChecker = new VersionChecker(this, 1);
+            versionChecker.useLastVersion();
+        }
 
         isEnabled = true;
         this.getLogger().info("zAuctionHouse has just been loaded successfully!");

@@ -1,6 +1,7 @@
 package fr.maxlego08.zauctionhouse.utils;
 
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
+import fr.maxlego08.zauctionhouse.api.messages.Message;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -25,11 +26,13 @@ public class VersionChecker extends ZUtils implements Listener {
     private final AuctionPlugin plugin;
     private final int pluginID;
     private boolean useLastVersion = false;
+    private String lastVersion;
 
     public VersionChecker(AuctionPlugin plugin, int pluginID) {
         super();
         this.plugin = plugin;
         this.pluginID = pluginID;
+        this.lastVersion = plugin.getPluginMeta().getVersion();
     }
 
     /**
@@ -48,8 +51,13 @@ public class VersionChecker extends ZUtils implements Listener {
             long plVersion = Long.parseLong(pluginVersion.replace(".", ""));
             atomicBoolean.set(plVersion >= ver);
             this.useLastVersion = atomicBoolean.get();
-            if (atomicBoolean.get()) this.plugin.getLogger().info("No update available.");
-            else {
+            this.lastVersion = pluginVersion;
+
+            if (this.useLastVersion) {
+
+                this.plugin.getLogger().info("No update available.");
+            } else {
+
                 this.plugin.getLogger().info("New update available. Your version: " + pluginVersion + ", latest version: " + version);
                 this.plugin.getLogger().info("Download plugin here: " + String.format(URL_RESOURCE, this.pluginID));
             }
@@ -62,8 +70,8 @@ public class VersionChecker extends ZUtils implements Listener {
         final Player player = event.getPlayer();
         if (!useLastVersion && event.getPlayer().hasPermission("zplugin.notifs")) {
             this.plugin.getScheduler().runAtLocationLater(player.getLocation(), () -> {
-                message(player, "&8(&bzAuctionHouse&8) #ff0000You do not use the latest version of the plugin! Thank you for taking the latest version to avoid any risk of problem!");
-                message(player, "&8(&bzAuctionHouse&8) &fDownload plugin here: &a" + String.format(URL_RESOURCE, pluginID));
+                var pluginVersion = this.plugin.getPluginMeta().getVersion();
+                message(this.plugin, player, Message.VERSION_AVAILABLE, "%version%", pluginVersion, "%latest%", this.lastVersion);
             }, 20);
         }
     }

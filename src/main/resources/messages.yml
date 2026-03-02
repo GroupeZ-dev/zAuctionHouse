@@ -1,5 +1,7 @@
 prefix: "<primary>zAuctionHouse <secondary>• "
 
+version-available: "<#ff0000>There is a new version of zAuctionHouse available ! <gray>(<white>current: <#ff9900>%version% <gray>| <white>latest: <#00ff00>%latest%<gray>)"
+
 command-syntax-error: "<error>You must execute the command like this<gray>: <success>%syntax%"
 command-no-permission: "<error>You do not have permission to run this command."
 command-no-console: "<error>Only one player can execute this command."
