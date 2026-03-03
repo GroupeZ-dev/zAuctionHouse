@@ -156,8 +156,8 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
     }
 
     @Override
-    public void log(LogType logType, int itemId, Player player, UUID targetUniqueId, String itemstack, BigDecimal price, String economyName, String additionalData) {
-        async(() -> with(LogRepository.class).createLog(logType, itemId, player.getUniqueId(), targetUniqueId, itemstack, price, economyName, additionalData));
+    public void log(LogType logType, int itemId, Player player, UUID targetUniqueId, String itemstack, BigDecimal price, String economyName, String additionalData, Date readedAt) {
+        async(() -> with(LogRepository.class).createLog(logType, itemId, player.getUniqueId(), targetUniqueId, itemstack, price, economyName, additionalData, readedAt));
     }
 
     @Override

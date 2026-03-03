@@ -16,7 +16,7 @@ public class LogRepository extends Repository {
         super(plugin, connection, Tables.LOGS);
     }
 
-    public void createLog(LogType logType, int itemId, UUID playerUniqueId, UUID targetUniqueId, String itemstack, BigDecimal price, String economyName, String additionalData) {
+    public void createLog(LogType logType, int itemId, UUID playerUniqueId, UUID targetUniqueId, String itemstack, BigDecimal price, String economyName, String additionalData, Date readedAt) {
         insert(schema -> {
             schema.string("log_type", logType.name());
             schema.object("item_id", itemId);
@@ -26,6 +26,7 @@ public class LogRepository extends Repository {
             schema.decimal("price", price == null ? BigDecimal.ZERO : price);
             if (economyName != null) schema.string("economy_name", economyName);
             if (additionalData != null) schema.string("additional_data", additionalData);
+            if (readedAt != null) schema.object("readed_at", readedAt);
         });
     }
 

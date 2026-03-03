@@ -768,7 +768,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             player.closeInventory();
         }
 
-        logItemAction(LogType.PURCHASE, auctionItem, player, auctionItem.getSellerUniqueId(), "purchase_item");
+        logItemAction(LogType.PURCHASE, auctionItem, player, auctionItem.getSellerUniqueId(), "purchase_item", seller.isOnline() ? new Date() : null);
 
         // Discord webhook notification
         if (this.plugin instanceof ZAuctionPlugin zAuctionPlugin) {
@@ -844,7 +844,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         return future;
     }
 
-    private void logItemAction(LogType logType, Item item, Player player, UUID targetUniqueId, String additionalData) {
+    private void logItemAction(LogType logType, Item item, Player player, UUID targetUniqueId, String additionalData, Date readedAt) {
         var storageManager = this.plugin.getStorageManager();
         var economy = item.getAuctionEconomy();
         var economyName = economy == null ? null : economy.getName();
@@ -857,7 +857,11 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             }
         }
 
-        storageManager.log(logType, item.getId(), player, targetUniqueId, encodedItemStack, item.getPrice(), economyName, additionalData);
+        storageManager.log(logType, item.getId(), player, targetUniqueId, encodedItemStack, item.getPrice(), economyName, additionalData, readedAt);
+    }
+
+    private void logItemAction(LogType logType, Item item, Player player, UUID targetUniqueId, String additionalData) {
+        logItemAction(logType, item, player, targetUniqueId, additionalData, null);
     }
 
     private void callEvent(AuctionEvent auctionEvent) {

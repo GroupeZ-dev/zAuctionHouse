@@ -13,6 +13,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -122,8 +123,9 @@ public interface StorageManager {
      * @param price          price related to the action
      * @param economyName    economy used for the transaction
      * @param additionalData extra serialized data for the log entry
+     * @param readedAt       if not null, marks the log as already read (e.g., when seller was online during sale)
      */
-    void log(LogType logType, int itemId, Player player, UUID targetUniqueId, String itemstack, BigDecimal price, String economyName, String additionalData);
+    void log(LogType logType, int itemId, Player player, UUID targetUniqueId, String itemstack, BigDecimal price, String economyName, String additionalData, Date readedAt);
 
     /**
      * Creates a transaction record for economy operations.

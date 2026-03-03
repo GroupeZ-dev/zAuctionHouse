@@ -157,16 +157,45 @@ public class CommandAuctionAdminGenerate extends VCommand {
                 var itemRepository = storageManager.with(ItemRepository.class);
                 var auctionItemRepository = storageManager.with(AuctionItemRepository.class);
 
-                // First, register all unique players (directly, no async wrapper)
+                // First, count unique players
+                Set<String> uniquePlayerNames = new HashSet<>();
+                for (GenerationData data : dataList) {
+                    uniquePlayerNames.add(data.sellerName);
+                }
+                int totalPlayers = uniquePlayerNames.size();
+
+                plugin.getLogger().info("[Generate] Starting registration of " + totalPlayers + " unique players...");
+                plugin.getScheduler().runNextTick(t -> message(plugin, commandSender, Message.ADMIN_GENERATE_PLAYERS_START, "%total%", String.valueOf(totalPlayers)));
+
+                // Register all unique players (directly, no async wrapper)
                 Map<String, UUID> registeredPlayers = new HashMap<>();
+                AtomicInteger playersCreated = new AtomicInteger(0);
+                AtomicInteger lastPlayersReported = new AtomicInteger(0);
+
                 for (GenerationData data : dataList) {
                     if (!registeredPlayers.containsKey(data.sellerName)) {
                         playerRepository.upsertPlayer(data.sellerUUID, data.sellerName);
                         registeredPlayers.put(data.sellerName, data.sellerUUID);
+
+                        int currentPlayers = playersCreated.incrementAndGet();
+
+                        // Log and report progress every 100 players
+                        if (currentPlayers - lastPlayersReported.get() >= 100) {
+                            lastPlayersReported.set(currentPlayers);
+                            plugin.getLogger().info("[Generate] Players registered: " + currentPlayers + "/" + totalPlayers);
+                            final int current = currentPlayers;
+                            plugin.getScheduler().runNextTick(t -> message(plugin, commandSender, Message.ADMIN_GENERATE_PLAYERS_PROGRESS, "%current%", String.valueOf(current), "%total%", String.valueOf(totalPlayers)));
+                        }
                     }
                 }
 
+                int finalPlayersCount = playersCreated.get();
+                plugin.getLogger().info("[Generate] Completed registration of " + finalPlayersCount + " unique players.");
+                plugin.getScheduler().runNextTick(t -> message(plugin, commandSender, Message.ADMIN_GENERATE_PLAYERS_COMPLETE, "%amount%", String.valueOf(finalPlayersCount)));
+
                 // Then create all items (directly, no async wrapper)
+                plugin.getLogger().info("[Generate] Starting creation of " + totalAmount + " auction items...");
+                plugin.getScheduler().runNextTick(t -> message(plugin, commandSender, Message.ADMIN_GENERATE_ITEMS_START, "%total%", String.valueOf(totalAmount)));
                 for (GenerationData data : dataList) {
                     try {
                         ItemStack itemStack = new ItemStack(data.material, data.itemAmount);
