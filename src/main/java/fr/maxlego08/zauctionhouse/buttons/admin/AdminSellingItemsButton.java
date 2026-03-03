@@ -8,6 +8,7 @@ import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -37,7 +38,7 @@ public class AdminSellingItemsButton extends PaginateButton {
     }
 
     @Override
-    public int getPaginationSize(Player player) {
+    public int getPaginationSize(@NonNull Player player) {
         return this.getTarget(player).map(uuid -> this.plugin.getAuctionManager().getPlayerSellingItems(uuid).size()).orElse(0);
     }
 
