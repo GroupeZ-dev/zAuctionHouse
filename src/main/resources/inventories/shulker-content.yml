@@ -24,9 +24,9 @@
 #=============================================================================
 
 # Inventory title with shulker navigation placeholders.
-# %shulker_current% = currently viewing shulker number (1-based)
-# %shulker_total% = total number of shulkers in the sale
-name: "#0c1719Shulker Content (%shulker_current%/%shulker_total%)"
+# %shulker-current% = currently viewing shulker number (1-based)
+# %shulker-total% = total number of shulkers in the sale
+name: "#0c1719Shulker Content (%shulker-current%/%shulker-total%)"
 
 # Inventory size - 6 rows.
 size: 54
@@ -60,10 +60,10 @@ items:
     # Slots for displaying shulker contents.
     # 4 rows × 7 columns = 28 slots (shulkers hold 27 items).
     slots:
-      - 10-16   # Row 2 (center 7 slots)
-      - 19-25   # Row 3 (center 7 slots)
-      - 28-34   # Row 4 (center 7 slots)
-      - 37-43   # Row 5 (center 7 slots)
+      - 9-17    # Row 2
+      - 18-26   # Row 3
+      - 27-35   # Row 4
+      - 36-44   # Row 5
 
   #---------------------------------------------------------------------------
   # SHULKER INFO DISPLAY

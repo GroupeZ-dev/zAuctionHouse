@@ -17,12 +17,7 @@ import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
-import fr.maxlego08.zauctionhouse.api.services.AuctionClaimService;
-import fr.maxlego08.zauctionhouse.api.services.AuctionExpireService;
-import fr.maxlego08.zauctionhouse.api.services.AuctionHistoryService;
-import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
-import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
-import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
+import fr.maxlego08.zauctionhouse.api.services.*;
 import fr.maxlego08.zauctionhouse.api.tax.TaxResult;
 import fr.maxlego08.zauctionhouse.api.tax.TaxType;
 import fr.maxlego08.zauctionhouse.api.transaction.TransactionStatus;
@@ -31,12 +26,7 @@ import fr.maxlego08.zauctionhouse.api.utils.IntArrayList;
 import fr.maxlego08.zauctionhouse.api.utils.IntList;
 import fr.maxlego08.zauctionhouse.buttons.list.ListedItemsButton;
 import fr.maxlego08.zauctionhouse.discord.DiscordWebhookService;
-import fr.maxlego08.zauctionhouse.services.ClaimService;
-import fr.maxlego08.zauctionhouse.services.ExpireService;
-import fr.maxlego08.zauctionhouse.services.HistoryService;
-import fr.maxlego08.zauctionhouse.services.PurchaseService;
-import fr.maxlego08.zauctionhouse.services.RemoveService;
-import fr.maxlego08.zauctionhouse.services.SellService;
+import fr.maxlego08.zauctionhouse.services.*;
 import fr.maxlego08.zauctionhouse.utils.PerformanceDebug;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import fr.maxlego08.zauctionhouse.utils.cache.SortedItemsCache;
@@ -691,12 +681,9 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
                 // Send tax info message
                 if (taxResult.isReduced()) {
-                    message(this.plugin, player, Message.TAX_REDUCED,
-                            "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
+                    message(this.plugin, player, Message.TAX_REDUCED, "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
                 }
-                message(player, Message.TAX_CAPITALISM_INFO,
-                        "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()),
-                        "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
+                message(player, Message.TAX_CAPITALISM_INFO, "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()), "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
             } else {
                 // PURCHASE or BOTH: buyer pays full price, seller receives price - tax
                 buyerPays = price;
@@ -704,12 +691,9 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
                 // Send tax info message
                 if (taxResult.isReduced()) {
-                    message(this.plugin, player, Message.TAX_REDUCED,
-                            "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
+                    message(this.plugin, player, Message.TAX_REDUCED, "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
                 }
-                message(player, Message.TAX_PURCHASE_APPLIED,
-                        "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()),
-                        "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
+                message(player, Message.TAX_PURCHASE_APPLIED, "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()), "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
             }
         } else {
             buyerPays = price;
@@ -753,7 +737,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         this.updateListedItems(auctionItem, false, player);
         clearPlayerCache(player, PlayerCacheKey.ITEMS_PURCHASED);
         if (seller.isOnline()) {
-            clearPlayerCache(seller.getPlayer(), PlayerCacheKey.ITEMS_SELLING);
+            clearPlayerCache(seller.getPlayer(), PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.HISTORY_DATA);
         }
 
         removeItem(StorageType.LISTED, auctionItem);
