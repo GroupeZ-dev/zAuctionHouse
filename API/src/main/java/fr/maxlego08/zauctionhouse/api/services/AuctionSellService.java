@@ -1,11 +1,13 @@
 package fr.maxlego08.zauctionhouse.api.services;
 
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
+import fr.maxlego08.zauctionhouse.api.services.result.SellResult;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Service responsible for listing items for sale in the auction house.
@@ -37,8 +39,9 @@ public interface AuctionSellService {
      * @param expiredAt      the expiration timestamp (0 for no expiration)
      * @param slotItems      map of inventory slot to ItemStack (use MAIN_HAND_SLOT for main hand)
      * @param auctionEconomy the economy to use for the transaction
+     * @return a future containing the result of the sell operation
      */
-    void sellAuctionItems(Player player, BigDecimal price, long expiredAt, Map<Integer, ItemStack> slotItems, AuctionEconomy auctionEconomy);
+    CompletableFuture<SellResult> sellAuctionItems(Player player, BigDecimal price, long expiredAt, Map<Integer, ItemStack> slotItems, AuctionEconomy auctionEconomy);
 
     /**
      * Opens the sell command inventory for a player with pre-configured price and economy.

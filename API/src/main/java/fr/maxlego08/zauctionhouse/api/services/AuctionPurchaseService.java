@@ -1,6 +1,7 @@
 package fr.maxlego08.zauctionhouse.api.services;
 
 import fr.maxlego08.zauctionhouse.api.item.Item;
+import fr.maxlego08.zauctionhouse.api.services.result.PurchaseResult;
 import org.bukkit.entity.Player;
 
 import java.util.concurrent.CompletableFuture;
@@ -28,7 +29,7 @@ public interface AuctionPurchaseService {
      *
      * @param player the player purchasing the item
      * @param item   the item being purchased
-     * @return a future that completes when the purchase is finalized
+     * @return a future containing the result of the purchase operation
      */
-    CompletableFuture<Void> purchaseItem(Player player, Item item);
+    CompletableFuture<PurchaseResult> purchaseItem(Player player, Item item);
 }

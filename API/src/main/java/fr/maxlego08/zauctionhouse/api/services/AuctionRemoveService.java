@@ -1,6 +1,7 @@
 package fr.maxlego08.zauctionhouse.api.services;
 
 import fr.maxlego08.zauctionhouse.api.item.Item;
+import fr.maxlego08.zauctionhouse.api.services.result.RemoveResult;
 import org.bukkit.entity.Player;
 
 import java.util.concurrent.CompletableFuture;
@@ -22,9 +23,9 @@ public interface AuctionRemoveService {
      *
      * @param player the player removing their listing
      * @param item   the listed item to remove
-     * @return a future that completes when the item is removed
+     * @return a future containing the result of the remove operation
      */
-    CompletableFuture<Void> removeListedItem(Player player, Item item);
+    CompletableFuture<RemoveResult> removeListedItem(Player player, Item item);
 
     /**
      * Removes an item that the player is currently selling.
@@ -34,9 +35,9 @@ public interface AuctionRemoveService {
      *
      * @param player the player removing their item
      * @param item   the selling item to remove
-     * @return a future that completes when the item is removed
+     * @return a future containing the result of the remove operation
      */
-    CompletableFuture<Void> removeSellingItem(Player player, Item item);
+    CompletableFuture<RemoveResult> removeSellingItem(Player player, Item item);
 
     /**
      * Removes an expired item and returns it to the player's inventory.
@@ -46,9 +47,9 @@ public interface AuctionRemoveService {
      *
      * @param player the player claiming their expired item
      * @param item   the expired item to remove
-     * @return a future that completes when the item is removed
+     * @return a future containing the result of the remove operation
      */
-    CompletableFuture<Void> removeExpiredItem(Player player, Item item);
+    CompletableFuture<RemoveResult> removeExpiredItem(Player player, Item item);
 
     /**
      * Removes a purchased item and delivers it to the player's inventory.
@@ -58,8 +59,8 @@ public interface AuctionRemoveService {
      *
      * @param player the player claiming their purchased item
      * @param item   the purchased item to remove
-     * @return a future that completes when the item is removed
+     * @return a future containing the result of the remove operation
      */
-    CompletableFuture<Void> removePurchasedItem(Player player, Item item);
+    CompletableFuture<RemoveResult> removePurchasedItem(Player player, Item item);
 
 }

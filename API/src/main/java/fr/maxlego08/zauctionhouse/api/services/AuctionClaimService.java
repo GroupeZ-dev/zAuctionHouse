@@ -1,5 +1,6 @@
 package fr.maxlego08.zauctionhouse.api.services;
 
+import fr.maxlego08.zauctionhouse.api.services.result.ClaimResult;
 import fr.maxlego08.zauctionhouse.api.storage.dto.TransactionDTO;
 import org.bukkit.entity.Player;
 
@@ -18,9 +19,9 @@ public interface AuctionClaimService {
      * Claims all pending money for a player.
      *
      * @param player the player to claim money for
-     * @return a future that completes when the claim is processed
+     * @return a future containing the result of the claim operation
      */
-    CompletableFuture<Void> claimMoney(Player player);
+    CompletableFuture<ClaimResult> claimMoney(Player player);
 
     /**
      * Gets the total pending money for a player, grouped by economy.

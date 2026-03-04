@@ -3,6 +3,7 @@ package fr.maxlego08.zauctionhouse.services;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionClaimService;
+import fr.maxlego08.zauctionhouse.api.services.result.ClaimResult;
 import fr.maxlego08.zauctionhouse.api.storage.dto.TransactionDTO;
 import fr.maxlego08.zauctionhouse.api.transaction.TransactionStatus;
 import fr.maxlego08.zauctionhouse.storage.repository.repositories.TransactionRepository;
@@ -25,11 +26,11 @@ public class ClaimService extends AuctionService implements AuctionClaimService 
     }
 
     @Override
-    public CompletableFuture<Void> claimMoney(Player player) {
-        return getPendingTransactions(player.getUniqueId()).thenAccept(transactions -> {
+    public CompletableFuture<ClaimResult> claimMoney(Player player) {
+        return getPendingTransactions(player.getUniqueId()).thenApply(transactions -> {
             if (transactions.isEmpty()) {
                 message(this.plugin, player, Message.CLAIM_NO_PENDING);
-                return;
+                return ClaimResult.nothingToClaim("No pending transactions");
             }
 
             // Group transactions by economy
@@ -40,6 +41,7 @@ public class ClaimService extends AuctionService implements AuctionClaimService 
             var depositReason = this.plugin.getConfiguration().getAutoClaimConfiguration().depositReason();
 
             BigDecimal totalClaimed = BigDecimal.ZERO;
+            var lastEconomy = new Object() { fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy value = null; };
 
             for (var entry : byEconomy.entrySet()) {
                 String economyName = entry.getKey();
@@ -52,6 +54,7 @@ public class ClaimService extends AuctionService implements AuctionClaimService 
                 }
 
                 var economy = optionalEconomy.get();
+                lastEconomy.value = economy;
 
                 // Calculate total for this economy (only positive values = money to receive)
                 BigDecimal economyTotal = economyTransactions.stream().map(TransactionDTO::value).filter(v -> v.compareTo(BigDecimal.ZERO) > 0).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -72,7 +75,10 @@ public class ClaimService extends AuctionService implements AuctionClaimService 
 
             if (totalClaimed.compareTo(BigDecimal.ZERO) > 0) {
                 message(this.plugin, player, Message.CLAIM_SUCCESS, "%amount%", totalClaimed.toString());
+                return ClaimResult.success("Money claimed successfully", totalClaimed.doubleValue(), lastEconomy.value);
             }
+
+            return ClaimResult.nothingToClaim("No positive amount to claim");
         });
     }
 

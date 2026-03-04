@@ -12,6 +12,8 @@ import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
+import fr.maxlego08.zauctionhouse.api.services.result.SellFailReason;
+import fr.maxlego08.zauctionhouse.api.services.result.SellResult;
 import fr.maxlego08.zauctionhouse.api.tax.TaxResult;
 import fr.maxlego08.zauctionhouse.api.tax.TaxType;
 import fr.maxlego08.zauctionhouse.api.utils.Base64ItemStack;
@@ -38,32 +40,36 @@ public class SellService extends ZUtils implements AuctionSellService {
     }
 
     @Override
-    public void sellAuctionItems(Player player, BigDecimal price, long expiredAt, Map<Integer, ItemStack> slotItems, AuctionEconomy auctionEconomy) {
+    public CompletableFuture<SellResult> sellAuctionItems(Player player, BigDecimal price, long expiredAt, Map<Integer, ItemStack> slotItems, AuctionEconomy auctionEconomy) {
 
         // Filter out null or air items and clone them
         var validSlotItems = slotItems.entrySet().stream().filter(entry -> entry.getValue() != null && !entry.getValue().getType().isAir()).collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().clone()));
 
         if (validSlotItems.isEmpty()) {
             message(this.plugin, player, Message.SELL_ERROR_AIR);
-            return;
+            return CompletableFuture.completedFuture(SellResult.failure("No valid items to sell", SellFailReason.INVALID_ITEM));
         }
 
         List<ItemStack> itemsToSell = new ArrayList<>(validSlotItems.values());
 
-        if (this.invalidateItems(player, price, auctionEconomy, itemsToSell)) {
-            return;
+        SellFailReason validationReason = this.validateItems(player, price, auctionEconomy, itemsToSell);
+        if (validationReason != SellFailReason.NONE) {
+            return CompletableFuture.completedFuture(SellResult.failure("Validation failed", validationReason));
         }
 
         // Verify items are still in their slots before async operation
         if (!verifyItemsInSlots(player, validSlotItems)) {
             message(this.plugin, player, Message.SELL_ERROR_CHANGE);
-            return;
+            return CompletableFuture.completedFuture(SellResult.failure("Items changed", SellFailReason.ITEMS_CHANGED));
         }
+
+        CompletableFuture<SellResult> resultFuture = new CompletableFuture<>();
 
         // Calculate and apply sell tax asynchronously (considers all items for item-specific rules)
         applySellTaxAsync(player, price, itemsToSell, auctionEconomy).thenAccept(taxResult -> {
             if (taxResult == null) {
-                return; // Tax payment failed
+                resultFuture.complete(SellResult.failure("Insufficient funds for tax", SellFailReason.INSUFFICIENT_FUNDS));
+                return;
             }
 
             // Return to main thread to verify items and remove them
@@ -75,6 +81,7 @@ public class SellService extends ZUtils implements AuctionSellService {
                     if (taxResult.hasTax()) {
                         auctionEconomy.deposit(player, taxResult.taxAmount(), "Refund sell tax (items changed)");
                     }
+                    resultFuture.complete(SellResult.failure("Items changed", SellFailReason.ITEMS_CHANGED));
                     return;
                 }
 
@@ -82,7 +89,10 @@ public class SellService extends ZUtils implements AuctionSellService {
                 removeItemsFromSlots(player, validSlotItems);
 
                 var storageManager = this.plugin.getStorageManager();
-                storageManager.createAuctionItem(player, price, expiredAt, itemsToSell, auctionEconomy).thenAccept(auctionItem -> this.postSell(player, auctionItem, auctionEconomy, taxResult)).exceptionally(throwable -> {
+                storageManager.createAuctionItem(player, price, expiredAt, itemsToSell, auctionEconomy).thenAccept(auctionItem -> {
+                    this.postSell(player, auctionItem, auctionEconomy, taxResult);
+                    resultFuture.complete(SellResult.success("Item listed successfully", auctionItem));
+                }).exceptionally(throwable -> {
                     this.plugin.getLogger().severe("Unable to sell item");
                     throwable.printStackTrace();
                     // Return items to player
@@ -91,14 +101,18 @@ public class SellService extends ZUtils implements AuctionSellService {
                     if (taxResult.hasTax()) {
                         auctionEconomy.deposit(player, taxResult.taxAmount(), "Refund sell tax (sale failed)");
                     }
+                    resultFuture.complete(SellResult.failure("Database error", SellFailReason.DATABASE_ERROR));
                     return null;
                 });
             });
         }).exceptionally(throwable -> {
             this.plugin.getLogger().severe("Unable to check tax for sell");
             throwable.printStackTrace();
+            resultFuture.complete(SellResult.failure("Tax calculation error", SellFailReason.TAX_ERROR));
             return null;
         });
+
+        return resultFuture;
     }
 
     @Override
@@ -181,7 +195,7 @@ public class SellService extends ZUtils implements AuctionSellService {
     }
 
     /**
-     * Check if the player is allowed to sell items.
+     * Validates if the player is allowed to sell items.
      * This method checks if the price is valid, if the player has reached the maximum
      * number of items for sale, if the world is banned, if the items are blacklisted
      * or whitelisted.
@@ -190,9 +204,9 @@ public class SellService extends ZUtils implements AuctionSellService {
      * @param price          the price of the items
      * @param auctionEconomy the economy of the items
      * @param itemStacks     the items the player wants to sell
-     * @return true if the player is not allowed to sell items, false otherwise
+     * @return the fail reason if validation failed, NONE if validation passed
      */
-    private boolean invalidateItems(Player player, BigDecimal price, AuctionEconomy auctionEconomy, List<ItemStack> itemStacks) {
+    private SellFailReason validateItems(Player player, BigDecimal price, AuctionEconomy auctionEconomy, List<ItemStack> itemStacks) {
 
         var economyManager = this.plugin.getEconomyManager();
         var configuration = this.plugin.getConfiguration();
@@ -202,44 +216,44 @@ public class SellService extends ZUtils implements AuctionSellService {
 
         if (price.compareTo(maxPrice) > 0) {
             message(plugin, player, Message.PRICE_TOO_HIGH, "%max-price%", economyManager.format(auctionEconomy, maxPrice));
-            return true;
+            return SellFailReason.PRICE_TOO_HIGH;
         }
 
         if (price.compareTo(minPrice) < 0) {
             message(plugin, player, Message.PRICE_TOO_LOW, "%min-price%", economyManager.format(auctionEconomy, minPrice));
-            return true;
+            return SellFailReason.PRICE_TOO_LOW;
         }
 
         long listedItems = manager.getPlayerSellingItems(player).size();
         long maxSellPermission = configuration.getPermission().getLimit(ItemType.AUCTION, player);
         if (listedItems >= maxSellPermission) {
             message(plugin, player, Message.LISTED_ITEMS_LIMIT, "%max-items%", String.valueOf(maxSellPermission));
-            return true;
+            return SellFailReason.LISTING_LIMIT_REACHED;
         }
 
         if (configuration.getWorld().isWorldBanned(ItemType.AUCTION, player.getWorld().getName())) {
             message(plugin, player, Message.WORLD_BANNED);
-            return true;
+            return SellFailReason.WORLD_RESTRICTED;
         }
 
         for (ItemStack itemStack : itemStacks) {
 
             if (itemStack.getType().isAir()) {
                 message(plugin, player, Message.SELL_ERROR_AIR);
-                return true;
+                return SellFailReason.INVALID_ITEM;
             }
 
             if (ruleManager.isBlacklistEnabled() && ruleManager.isBlacklisted(itemStack)) {
                 message(plugin, player, Message.ITEM_BLACKLISTED);
-                return true;
+                return SellFailReason.BLACKLISTED;
             }
 
             if (ruleManager.isWhitelistEnabled() && !ruleManager.isWhitelisted(itemStack)) {
                 message(plugin, player, Message.ITEM_WHITELISTED);
-                return true;
+                return SellFailReason.NOT_WHITELISTED;
             }
         }
-        return false;
+        return SellFailReason.NONE;
     }
 
     /**
