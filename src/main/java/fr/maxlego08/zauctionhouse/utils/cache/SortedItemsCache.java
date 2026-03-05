@@ -12,6 +12,7 @@ import fr.maxlego08.zauctionhouse.utils.PerformanceDebug;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -33,17 +34,21 @@ public class SortedItemsCache {
     private final Supplier<Collection<Item>> itemsSupplier;
 
     // Cache for all items sorted by each SortItem type
-    private final Map<SortItem, IntList> sortedAllItems = new ConcurrentHashMap<>();
+    // Using AtomicReference for lock-free reads with copy-on-write semantics
+    private final AtomicReference<Map<SortItem, IntList>> sortedAllItems = new AtomicReference<>(new ConcurrentHashMap<>());
 
     // Cache for items filtered by category, then sorted
     // Key format: "categoryId:sortItem"
-    private final Map<String, IntList> sortedByCategoryItems = new ConcurrentHashMap<>();
+    private final AtomicReference<Map<String, IntList>> sortedByCategoryItems = new AtomicReference<>(new ConcurrentHashMap<>());
 
-    // Lock for rebuilding the cache
+    // Lock for rebuilding the cache (only used during rebuild, not for reads)
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     // Flag indicating the cache needs to be rebuilt
     private final AtomicBoolean dirty = new AtomicBoolean(true);
+
+    // Flag indicating a rebuild is currently in progress
+    private final AtomicBoolean rebuildInProgress = new AtomicBoolean(false);
 
     // Reference to ongoing async rebuild (null if none in progress)
     private final AtomicReference<CompletableFuture<Void>> ongoingRebuild = new AtomicReference<>(null);
@@ -51,52 +56,83 @@ public class SortedItemsCache {
     // Timestamp of last rebuild for debugging
     private volatile long lastRebuildTime = 0;
 
+    // Threshold for using parallel sort (Arrays.parallelSort)
+    private static final int PARALLEL_SORT_THRESHOLD = 10000;
+
+    // Threshold for using parallel category processing
+    private static final int PARALLEL_CATEGORY_THRESHOLD = 5000;
+
+    // Custom ForkJoinPool for parallel operations (avoids blocking common pool)
+    private final ForkJoinPool forkJoinPool;
+
     public SortedItemsCache(AuctionPlugin plugin, Supplier<Collection<Item>> itemsSupplier) {
         this.plugin = plugin;
         this.performanceDebug = new PerformanceDebug(plugin);
         this.itemsSupplier = itemsSupplier;
+        // Use a dedicated pool with parallelism based on available processors
+        this.forkJoinPool = new ForkJoinPool(Math.max(2, Runtime.getRuntime().availableProcessors() - 1));
     }
 
     /**
      * Gets the sorted list of item IDs for all available items.
+     * <p>
+     * This method is NON-BLOCKING. If the cache is dirty, it triggers an async
+     * rebuild and returns the current (possibly stale) data immediately.
+     * This ensures players are never blocked waiting for cache rebuilds.
      *
      * @param sortItem the sort order
-     * @return list of item IDs in sorted order
+     * @return list of item IDs in sorted order (may be stale during rebuild)
      */
     public IntList getSortedIds(SortItem sortItem) {
-        ensureCacheValid();
+        // Trigger async rebuild if needed (non-blocking)
+        triggerRebuildIfNeeded();
 
-        lock.readLock().lock();
-        try {
-            IntList cached = sortedAllItems.get(sortItem);
-            return cached != null ? cached.clone() : new IntArrayList();
-        } finally {
-            lock.readLock().unlock();
-        }
+        // Lock-free read from AtomicReference
+        Map<SortItem, IntList> cache = sortedAllItems.get();
+        IntList cached = cache.get(sortItem);
+        return cached != null ? cached.clone() : new IntArrayList();
     }
 
     /**
      * Gets the sorted list of item IDs filtered by category.
+     * <p>
+     * This method is NON-BLOCKING. Returns current data immediately,
+     * triggering async rebuild if cache is dirty.
      *
      * @param category the category to filter by (null for all items)
      * @param sortItem the sort order
-     * @return list of item IDs in sorted order
+     * @return list of item IDs in sorted order (may be stale during rebuild)
      */
     public IntList getSortedIds(Category category, SortItem sortItem) {
         if (category == null) {
             return getSortedIds(sortItem);
         }
 
-        ensureCacheValid();
+        // Trigger async rebuild if needed (non-blocking)
+        triggerRebuildIfNeeded();
 
         String cacheKey = buildCacheKey(category.getId(), sortItem);
 
-        lock.readLock().lock();
-        try {
-            IntList cached = sortedByCategoryItems.get(cacheKey);
-            return cached != null ? cached : new IntArrayList();
-        } finally {
-            lock.readLock().unlock();
+        // Lock-free read from AtomicReference
+        Map<String, IntList> cache = sortedByCategoryItems.get();
+        IntList cached = cache.get(cacheKey);
+        return cached != null ? cached.clone() : new IntArrayList();
+    }
+
+    /**
+     * Triggers an async cache rebuild if the cache is dirty and no rebuild is in progress.
+     * This method is non-blocking and returns immediately.
+     */
+    private void triggerRebuildIfNeeded() {
+        if (dirty.get() && rebuildInProgress.compareAndSet(false, true)) {
+            // We won the race, trigger async rebuild
+            plugin.getScheduler().runAsync(w -> {
+                try {
+                    rebuildCache();
+                } finally {
+                    rebuildInProgress.set(false);
+                }
+            });
         }
     }
 
@@ -151,36 +187,30 @@ public class SortedItemsCache {
 
     /**
      * Returns the total number of cached items for the given sort type.
+     * Non-blocking, returns current count (may be stale during rebuild).
      */
     public int getTotalCount(SortItem sortItem) {
-        ensureCacheValid();
-        lock.readLock().lock();
-        try {
-            IntList cached = sortedAllItems.get(sortItem);
-            return cached != null ? cached.size() : 0;
-        } finally {
-            lock.readLock().unlock();
-        }
+        triggerRebuildIfNeeded();
+        Map<SortItem, IntList> cache = sortedAllItems.get();
+        IntList cached = cache.get(sortItem);
+        return cached != null ? cached.size() : 0;
     }
 
     /**
      * Returns the total number of cached items for the given category and sort type.
+     * Non-blocking, returns current count (may be stale during rebuild).
      */
     public int getTotalCount(Category category, SortItem sortItem) {
         if (category == null) {
             return getTotalCount(sortItem);
         }
 
-        ensureCacheValid();
+        triggerRebuildIfNeeded();
         String cacheKey = buildCacheKey(category.getId(), sortItem);
 
-        lock.readLock().lock();
-        try {
-            IntList cached = sortedByCategoryItems.get(cacheKey);
-            return cached != null ? cached.size() : 0;
-        } finally {
-            lock.readLock().unlock();
-        }
+        Map<String, IntList> cache = sortedByCategoryItems.get();
+        IntList cached = cache.get(cacheKey);
+        return cached != null ? cached.size() : 0;
     }
 
     /**
@@ -260,10 +290,11 @@ public class SortedItemsCache {
 
             // Get all items
             Collection<Item> allItems = itemsSupplier.get();
+            int totalItems = allItems.size();
 
             // OPTIMIZATION 1: Single pass to filter available items AND group by category
-            // This replaces the previous O(N × C) with O(N)
-            List<Item> availableItems = new ArrayList<>(allItems.size());
+            // Pre-allocate with estimated size to avoid resizing
+            List<Item> availableItems = new ArrayList<>(totalItems);
             Map<String, List<Item>> itemsByCategory = new HashMap<>();
 
             for (Item item : allItems) {
@@ -280,45 +311,76 @@ public class SortedItemsCache {
                 }
             }
 
-            // Clear existing cache
-            sortedAllItems.clear();
-            sortedByCategoryItems.clear();
-
             int itemCount = availableItems.size();
             int categoryCount = itemsByCategory.size();
 
-            // OPTIMIZATION 2: Sort once by each comparator, then extract IDs
-            // Instead of creating new ArrayList copies, we sort in-place and extract
-            // We need to sort by DATE and by PRICE only (reversed views are just reversed iteration)
+            // Build new maps (copy-on-write pattern)
+            // These are built completely before being published to readers
+            Map<SortItem, IntList> newSortedAllItems = new ConcurrentHashMap<>();
+            Map<String, IntList> newSortedByCategoryItems = new ConcurrentHashMap<>();
 
-            // Sort by date ascending (oldest first)
-            availableItems.sort(SortItem.ASCENDING_DATE.getComparator());
-            IntList ascendingDateIds = extractIds(availableItems);
-            IntList descendingDateIds = reverseIds(ascendingDateIds);
+            if (itemCount == 0) {
+                // No items, publish empty maps and mark as clean
+                sortedAllItems.set(newSortedAllItems);
+                sortedByCategoryItems.set(newSortedByCategoryItems);
+                dirty.set(false);
+                lastRebuildTime = System.currentTimeMillis();
+                performanceDebug.end("SortedItemsCache.rebuild", startTime, "items=0");
+                return;
+            }
 
-            sortedAllItems.put(SortItem.ASCENDING_DATE, ascendingDateIds);
-            sortedAllItems.put(SortItem.DECREASING_DATE, descendingDateIds);
+            // OPTIMIZATION 2: Convert to array for faster sorting
+            // Arrays.parallelSort is significantly faster for large datasets
+            Item[] itemArray = availableItems.toArray(new Item[0]);
 
-            // Sort by price ascending (cheapest first)
-            availableItems.sort(SortItem.ASCENDING_PRICE.getComparator());
-            IntList ascendingPriceIds = extractIds(availableItems);
-            IntList descendingPriceIds = reverseIds(ascendingPriceIds);
+            // Sort by date and extract IDs
+            if (itemCount >= PARALLEL_SORT_THRESHOLD) {
+                Arrays.parallelSort(itemArray, SortItem.ASCENDING_DATE.getComparator());
+            } else {
+                Arrays.sort(itemArray, SortItem.ASCENDING_DATE.getComparator());
+            }
+            int[] ascDateIds = extractIdsToArray(itemArray);
+            int[] descDateIds = reverseArray(ascDateIds);
 
-            sortedAllItems.put(SortItem.ASCENDING_PRICE, ascendingPriceIds);
-            sortedAllItems.put(SortItem.DECREASING_PRICE, descendingPriceIds);
+            newSortedAllItems.put(SortItem.ASCENDING_DATE, wrapArray(ascDateIds));
+            newSortedAllItems.put(SortItem.DECREASING_DATE, wrapArray(descDateIds));
 
-            // OPTIMIZATION 3: Process categories in parallel for large datasets
-            if (categoryCount > 2 && itemCount > 10000) {
-                // Parallel processing for large datasets
-                itemsByCategory.entrySet().parallelStream().forEach(entry -> {
-                    buildCategorySortedLists(entry.getKey(), entry.getValue());
-                });
+            // Sort by price and extract IDs
+            if (itemCount >= PARALLEL_SORT_THRESHOLD) {
+                Arrays.parallelSort(itemArray, SortItem.ASCENDING_PRICE.getComparator());
+            } else {
+                Arrays.sort(itemArray, SortItem.ASCENDING_PRICE.getComparator());
+            }
+            int[] ascPriceIds = extractIdsToArray(itemArray);
+            int[] descPriceIds = reverseArray(ascPriceIds);
+
+            newSortedAllItems.put(SortItem.ASCENDING_PRICE, wrapArray(ascPriceIds));
+            newSortedAllItems.put(SortItem.DECREASING_PRICE, wrapArray(descPriceIds));
+
+            // OPTIMIZATION 3: Process categories in parallel using dedicated ForkJoinPool
+            if (categoryCount > 2 && itemCount >= PARALLEL_CATEGORY_THRESHOLD) {
+                try {
+                    forkJoinPool.submit(() ->
+                        itemsByCategory.entrySet().parallelStream().forEach(entry ->
+                            buildCategorySortedLists(entry.getKey(), entry.getValue(), newSortedByCategoryItems)
+                        )
+                    ).get();
+                } catch (Exception e) {
+                    // Fallback to sequential if parallel fails
+                    for (Map.Entry<String, List<Item>> entry : itemsByCategory.entrySet()) {
+                        buildCategorySortedLists(entry.getKey(), entry.getValue(), newSortedByCategoryItems);
+                    }
+                }
             } else {
                 // Sequential processing for small datasets (less overhead)
                 for (Map.Entry<String, List<Item>> entry : itemsByCategory.entrySet()) {
-                    buildCategorySortedLists(entry.getKey(), entry.getValue());
+                    buildCategorySortedLists(entry.getKey(), entry.getValue(), newSortedByCategoryItems);
                 }
             }
+
+            // Atomically publish the new cache (readers will see either old or new, never partial)
+            sortedAllItems.set(newSortedAllItems);
+            sortedByCategoryItems.set(newSortedByCategoryItems);
 
             dirty.set(false);
             lastRebuildTime = System.currentTimeMillis();
@@ -333,48 +395,78 @@ public class SortedItemsCache {
 
     /**
      * Builds sorted lists for a single category.
-     * Optimized to sort only twice (by date and by price) and create reversed views.
+     * Optimized to use array-based sorting for better cache locality.
+     *
+     * @param categoryId the category ID
+     * @param categoryItems the items in this category
+     * @param targetMap the map to store results (thread-safe ConcurrentHashMap)
      */
-    private void buildCategorySortedLists(String categoryId, List<Item> categoryItems) {
-        // Sort by date ascending
-        categoryItems.sort(SortItem.ASCENDING_DATE.getComparator());
-        IntList ascDateIds = extractIds(categoryItems);
-        IntList descDateIds = reverseIds(ascDateIds);
+    private void buildCategorySortedLists(String categoryId, List<Item> categoryItems, Map<String, IntList> targetMap) {
+        int size = categoryItems.size();
+        if (size == 0) return;
 
-        sortedByCategoryItems.put(buildCacheKey(categoryId, SortItem.ASCENDING_DATE), ascDateIds);
-        sortedByCategoryItems.put(buildCacheKey(categoryId, SortItem.DECREASING_DATE), descDateIds);
+        // Convert to array for faster sorting
+        Item[] itemArray = categoryItems.toArray(new Item[0]);
+
+        // Sort by date ascending
+        if (size >= PARALLEL_SORT_THRESHOLD) {
+            Arrays.parallelSort(itemArray, SortItem.ASCENDING_DATE.getComparator());
+        } else {
+            Arrays.sort(itemArray, SortItem.ASCENDING_DATE.getComparator());
+        }
+        int[] ascDateIds = extractIdsToArray(itemArray);
+        int[] descDateIds = reverseArray(ascDateIds);
+
+        targetMap.put(buildCacheKey(categoryId, SortItem.ASCENDING_DATE), wrapArray(ascDateIds));
+        targetMap.put(buildCacheKey(categoryId, SortItem.DECREASING_DATE), wrapArray(descDateIds));
 
         // Sort by price ascending
-        categoryItems.sort(SortItem.ASCENDING_PRICE.getComparator());
-        IntList ascPriceIds = extractIds(categoryItems);
-        IntList descPriceIds = reverseIds(ascPriceIds);
+        if (size >= PARALLEL_SORT_THRESHOLD) {
+            Arrays.parallelSort(itemArray, SortItem.ASCENDING_PRICE.getComparator());
+        } else {
+            Arrays.sort(itemArray, SortItem.ASCENDING_PRICE.getComparator());
+        }
+        int[] ascPriceIds = extractIdsToArray(itemArray);
+        int[] descPriceIds = reverseArray(ascPriceIds);
 
-        sortedByCategoryItems.put(buildCacheKey(categoryId, SortItem.ASCENDING_PRICE), ascPriceIds);
-        sortedByCategoryItems.put(buildCacheKey(categoryId, SortItem.DECREASING_PRICE), descPriceIds);
+        targetMap.put(buildCacheKey(categoryId, SortItem.ASCENDING_PRICE), wrapArray(ascPriceIds));
+        targetMap.put(buildCacheKey(categoryId, SortItem.DECREASING_PRICE), wrapArray(descPriceIds));
     }
 
     /**
-     * Extracts item IDs from a list of items.
+     * Extracts item IDs from an array of items into a primitive int array.
+     * Using primitive arrays improves cache locality and reduces memory overhead.
      */
-    private IntList extractIds(List<Item> items) {
-        IntList ids = new IntArrayList(items.size());
-        for (Item item : items) {
-            ids.add(item.getId());
+    private int[] extractIdsToArray(Item[] items) {
+        int[] ids = new int[items.length];
+        for (int i = 0; i < items.length; i++) {
+            ids[i] = items[i].getId();
         }
         return ids;
     }
 
     /**
-     * Creates a reversed copy of an IntList.
+     * Creates a reversed copy of a primitive int array.
      * This is O(n) but avoids sorting again.
      */
-    private IntList reverseIds(IntList source) {
-        int size = source.size();
-        IntList reversed = new IntArrayList(size);
-        for (int i = size - 1; i >= 0; i--) {
-            reversed.add(source.getInt(i));
+    private int[] reverseArray(int[] source) {
+        int length = source.length;
+        int[] reversed = new int[length];
+        for (int i = 0; i < length; i++) {
+            reversed[i] = source[length - 1 - i];
         }
         return reversed;
+    }
+
+    /**
+     * Wraps a primitive int array into an IntList.
+     */
+    private IntList wrapArray(int[] array) {
+        IntList list = new IntArrayList(array.length);
+        for (int id : array) {
+            list.add(id);
+        }
+        return list;
     }
 
     private String buildCacheKey(String categoryId, SortItem sortItem) {
