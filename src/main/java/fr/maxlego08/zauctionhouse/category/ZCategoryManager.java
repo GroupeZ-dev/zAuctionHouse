@@ -256,7 +256,14 @@ public class ZCategoryManager implements CategoryManager {
         if (categoryId.equals("all")) {
             count = items.size();
         } else {
-            count = items.stream().filter(item -> item.hasCategory(categoryId)).count();
+            // Optimized: use simple iteration instead of stream for better performance
+            int c = 0;
+            for (var item : items) {
+                if (item.hasCategory(categoryId)) {
+                    c++;
+                }
+            }
+            count = c;
         }
 
         performanceDebug.end("computeCategoryCount[" + categoryId + "]", startTime, "total=" + items.size() + ", count=" + count);

@@ -224,13 +224,19 @@ public interface Item {
 
     /**
      * Checks if the item belongs to a category with the specified ID.
+     * Optimized to use simple iteration instead of stream for better performance.
      *
      * @param categoryId the category ID to check
      * @return {@code true} if the item belongs to the category
      */
     default boolean hasCategory(String categoryId) {
         var categories = getCategories();
-        if (categories == null) return false;
-        return categories.stream().anyMatch(c -> c.getId().equals(categoryId));
+        if (categories == null || categoryId == null) return false;
+        for (var category : categories) {
+            if (categoryId.equals(category.getId())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

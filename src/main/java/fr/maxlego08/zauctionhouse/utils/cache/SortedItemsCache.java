@@ -261,11 +261,22 @@ public class SortedItemsCache {
             // Get all items
             Collection<Item> allItems = itemsSupplier.get();
 
-            // Filter to available items only
-            List<Item> availableItems = new ArrayList<>();
+            // OPTIMIZATION 1: Single pass to filter available items AND group by category
+            // This replaces the previous O(N × C) with O(N)
+            List<Item> availableItems = new ArrayList<>(allItems.size());
+            Map<String, List<Item>> itemsByCategory = new HashMap<>();
+
             for (Item item : allItems) {
                 if (item.getStatus() == ItemStatus.AVAILABLE && !item.isExpired()) {
                     availableItems.add(item);
+
+                    // Group by category in the same pass
+                    Set<Category> categories = item.getCategories();
+                    if (categories != null) {
+                        for (Category category : categories) {
+                            itemsByCategory.computeIfAbsent(category.getId(), k -> new ArrayList<>()).add(item);
+                        }
+                    }
                 }
             }
 
@@ -273,48 +284,39 @@ public class SortedItemsCache {
             sortedAllItems.clear();
             sortedByCategoryItems.clear();
 
-            // Build sorted lists for all items
-            for (SortItem sortItem : SortItem.values()) {
-                List<Item> sorted = new ArrayList<>(availableItems);
-                sorted.sort(sortItem.getComparator());
+            int itemCount = availableItems.size();
+            int categoryCount = itemsByCategory.size();
 
-                IntList ids = new IntArrayList(sorted.size());
-                for (Item item : sorted) {
-                    ids.add(item.getId());
-                }
-                sortedAllItems.put(sortItem, ids);
-            }
+            // OPTIMIZATION 2: Sort once by each comparator, then extract IDs
+            // Instead of creating new ArrayList copies, we sort in-place and extract
+            // We need to sort by DATE and by PRICE only (reversed views are just reversed iteration)
 
-            // Build sorted lists by category
-            // First, collect all unique categories from items
-            Set<String> categoryIds = new HashSet<>();
-            for (Item item : availableItems) {
-                Set<Category> categories = item.getCategories();
-                if (categories != null) {
-                    for (Category category : categories) {
-                        categoryIds.add(category.getId());
-                    }
-                }
-            }
+            // Sort by date ascending (oldest first)
+            availableItems.sort(SortItem.ASCENDING_DATE.getComparator());
+            IntList ascendingDateIds = extractIds(availableItems);
+            IntList descendingDateIds = reverseIds(ascendingDateIds);
 
-            // For each category, build sorted lists
-            for (String categoryId : categoryIds) {
-                List<Item> categoryItems = new ArrayList<>();
-                for (Item item : availableItems) {
-                    if (item.hasCategory(categoryId)) {
-                        categoryItems.add(item);
-                    }
-                }
+            sortedAllItems.put(SortItem.ASCENDING_DATE, ascendingDateIds);
+            sortedAllItems.put(SortItem.DECREASING_DATE, descendingDateIds);
 
-                for (SortItem sortItem : SortItem.values()) {
-                    List<Item> sorted = new ArrayList<>(categoryItems);
-                    sorted.sort(sortItem.getComparator());
+            // Sort by price ascending (cheapest first)
+            availableItems.sort(SortItem.ASCENDING_PRICE.getComparator());
+            IntList ascendingPriceIds = extractIds(availableItems);
+            IntList descendingPriceIds = reverseIds(ascendingPriceIds);
 
-                    IntList ids = new IntArrayList(sorted.size());
-                    for (Item item : sorted) {
-                        ids.add(item.getId());
-                    }
-                    sortedByCategoryItems.put(buildCacheKey(categoryId, sortItem), ids);
+            sortedAllItems.put(SortItem.ASCENDING_PRICE, ascendingPriceIds);
+            sortedAllItems.put(SortItem.DECREASING_PRICE, descendingPriceIds);
+
+            // OPTIMIZATION 3: Process categories in parallel for large datasets
+            if (categoryCount > 2 && itemCount > 10000) {
+                // Parallel processing for large datasets
+                itemsByCategory.entrySet().parallelStream().forEach(entry -> {
+                    buildCategorySortedLists(entry.getKey(), entry.getValue());
+                });
+            } else {
+                // Sequential processing for small datasets (less overhead)
+                for (Map.Entry<String, List<Item>> entry : itemsByCategory.entrySet()) {
+                    buildCategorySortedLists(entry.getKey(), entry.getValue());
                 }
             }
 
@@ -322,11 +324,57 @@ public class SortedItemsCache {
             lastRebuildTime = System.currentTimeMillis();
 
             performanceDebug.end("SortedItemsCache.rebuild", startTime,
-                    "items=" + availableItems.size() + ", categories=" + categoryIds.size());
+                    "items=" + itemCount + ", categories=" + categoryCount);
 
         } finally {
             lock.writeLock().unlock();
         }
+    }
+
+    /**
+     * Builds sorted lists for a single category.
+     * Optimized to sort only twice (by date and by price) and create reversed views.
+     */
+    private void buildCategorySortedLists(String categoryId, List<Item> categoryItems) {
+        // Sort by date ascending
+        categoryItems.sort(SortItem.ASCENDING_DATE.getComparator());
+        IntList ascDateIds = extractIds(categoryItems);
+        IntList descDateIds = reverseIds(ascDateIds);
+
+        sortedByCategoryItems.put(buildCacheKey(categoryId, SortItem.ASCENDING_DATE), ascDateIds);
+        sortedByCategoryItems.put(buildCacheKey(categoryId, SortItem.DECREASING_DATE), descDateIds);
+
+        // Sort by price ascending
+        categoryItems.sort(SortItem.ASCENDING_PRICE.getComparator());
+        IntList ascPriceIds = extractIds(categoryItems);
+        IntList descPriceIds = reverseIds(ascPriceIds);
+
+        sortedByCategoryItems.put(buildCacheKey(categoryId, SortItem.ASCENDING_PRICE), ascPriceIds);
+        sortedByCategoryItems.put(buildCacheKey(categoryId, SortItem.DECREASING_PRICE), descPriceIds);
+    }
+
+    /**
+     * Extracts item IDs from a list of items.
+     */
+    private IntList extractIds(List<Item> items) {
+        IntList ids = new IntArrayList(items.size());
+        for (Item item : items) {
+            ids.add(item.getId());
+        }
+        return ids;
+    }
+
+    /**
+     * Creates a reversed copy of an IntList.
+     * This is O(n) but avoids sorting again.
+     */
+    private IntList reverseIds(IntList source) {
+        int size = source.size();
+        IntList reversed = new IntArrayList(size);
+        for (int i = size - 1; i >= 0; i--) {
+            reversed.add(source.getInt(i));
+        }
+        return reversed;
     }
 
     private String buildCacheKey(String categoryId, SortItem sortItem) {
