@@ -24,7 +24,7 @@ public class Repositories {
             Repository repository = tableClass.getConstructor(AuctionPlugin.class, DatabaseConnection.class).newInstance(this.plugin, this.connection);
             this.tables.put(tableClass, repository);
         } catch (Exception exception) {
-            exception.printStackTrace();
+            this.plugin.getLogger().severe("Failed to register repository " + tableClass.getSimpleName() + ": " + exception.getMessage());
         }
     }
 

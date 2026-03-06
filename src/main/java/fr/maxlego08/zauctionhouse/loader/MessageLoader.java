@@ -215,8 +215,7 @@ public class MessageLoader implements ConfigurationFile {
                 this.loadedMessages.add(message);
 
             } catch (Exception exception) {
-                exception.printStackTrace();
-                this.plugin.getLogger().log(Level.SEVERE, messageKey + " key was not found !");
+                this.plugin.getLogger().log(Level.SEVERE, "Failed to load message " + messageKey + ": " + exception.getMessage());
             }
         }
 

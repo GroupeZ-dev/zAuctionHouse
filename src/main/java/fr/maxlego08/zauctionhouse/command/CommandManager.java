@@ -245,7 +245,7 @@ public class CommandManager extends ZUtils implements CommandExecutor, TabComple
                 plugin.getLogger().info("Unable to add the command " + vCommand.getSyntax());
             }
         } catch (Exception exception) {
-            exception.printStackTrace();
+            this.plugin.getLogger().severe("Failed to register command " + string + ": " + exception.getMessage());
         }
     }
 }

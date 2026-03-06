@@ -1,0 +1,67 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Pattern di Decorazione
+#
+#   Questo file di pattern fornisce pannelli di vetro decorativi per i bordi dell'inventario.
+#   Viene riutilizzato in più inventari per mantenere uno stile coerente.
+#
+#   COME FUNZIONANO I PATTERN:
+#   - I pattern sono modelli di inventario riutilizzabili
+#   - Possono essere inclusi in qualsiasi inventario usando la lista 'patterns'
+#   - Più pattern possono essere combinati in un singolo inventario
+#   - Gli elementi dai pattern possono essere sovrascritti dall'inventario che li include
+#
+#   UTILIZZO:
+#   Includi questo pattern nei tuoi file di inventario:
+#     patterns:
+#       - 'zauctionhouse-decoration'
+#
+#   Documentazione: https://zauctionhouse.groupez.dev/
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+# Nome del pattern - referenziato in altri file di inventario.
+# Deve essere unico tra tutti i file di pattern.
+name: "zauctionhouse-decoration"
+
+# Dimensione dell'inventario (deve corrispondere agli inventari che usano questo pattern).
+# Dimensioni standard: 9, 18, 27, 36, 45, 54
+# Questo pattern è progettato per inventari a 6 righe (54 slot).
+size: 54
+
+# Elementi in questo pattern.
+# Vengono posizionati nell'inventario quando il pattern viene applicato.
+items:
+
+  # Bordo di pannelli di vetro decorativi
+  decoration:
+    # Quando true, questo elemento non può essere spostato o preso dai giocatori.
+    # Usa sempre is-permanent: true per gli elementi decorativi.
+    is-permanent: true
+
+    # Slot dove appare questo elemento.
+    # Intervalli di slot: '0-8' significa slot 0, 1, 2, 3, 4, 5, 6, 7, 8
+    # Questo crea un bordo superiore e inferiore.
+    #
+    # DISPOSIZIONE DEGLI SLOT (inventario 54 slot):
+    # Riga 1 (alto):    0  1  2  3  4  5  6  7  8
+    # Riga 2:           9 10 11 12 13 14 15 16 17
+    # Riga 3:          18 19 20 21 22 23 24 25 26
+    # Riga 4:          27 28 29 30 31 32 33 34 35
+    # Riga 5:          36 37 38 39 40 41 42 43 44
+    # Riga 6 (basso):  45 46 47 48 49 50 51 52 53
+    slots:
+      - '0-8'     # Riga superiore (9 slot)
+      - '45-53'   # Riga inferiore (9 slot)
+
+    # Configurazione dell'elemento
+    item:
+      # Tipo di materiale - usa le varianti STAINED_GLASS_PANE per la decorazione.
+      # Colori disponibili: WHITE, ORANGE, MAGENTA, LIGHT_BLUE, YELLOW, LIME,
+      # PINK, GRAY, LIGHT_GRAY, CYAN, PURPLE, BLUE, BROWN, GREEN, RED, BLACK
+      material: LIGHT_BLUE_STAINED_GLASS_PANE
+
+      # Nome dell'elemento - impostato su un codice colore solo per renderlo vuoto.
+      # Usando solo "<white>" si nasconde il nome impedendo il nome predefinito.
+      name: "<white>"

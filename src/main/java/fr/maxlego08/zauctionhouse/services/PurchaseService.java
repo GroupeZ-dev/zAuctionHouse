@@ -125,8 +125,7 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
             if (e.getCause() instanceof TimeoutException) {
                 logger.warning("Purchase operation timed out for item " + item.getId());
             } else {
-                logger.severe("Error during purchase: " + e.getMessage());
-                e.printStackTrace();
+                logger.severe("Error during purchase for item " + item.getId() + ": " + e.getMessage());
             }
 
             // Ensure lock is released on any exception

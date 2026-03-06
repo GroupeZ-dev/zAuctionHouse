@@ -163,7 +163,6 @@ public class V3MigrationService {
 
             } catch (Exception e) {
                 plugin.getLogger().severe("Migration failed: " + e.getMessage());
-                e.printStackTrace();
                 return V3MigrationResult.failure("Migration failed: " + e.getMessage());
             } finally {
                 reader.close();

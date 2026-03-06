@@ -216,7 +216,6 @@ public class CommandAuctionAdminGenerate extends VCommand {
                         }
                     } catch (Exception e) {
                         plugin.getLogger().warning("Failed to generate auction item: " + e.getMessage());
-                        e.printStackTrace();
                     }
                 }
 
@@ -231,7 +230,6 @@ public class CommandAuctionAdminGenerate extends VCommand {
 
             } catch (Exception e) {
                 plugin.getLogger().severe("Failed to generate auction items: " + e.getMessage());
-                e.printStackTrace();
                 plugin.getScheduler().runNextTick(t -> message(plugin, commandSender, Message.ADMIN_GENERATE_COMPLETE, "%amount%", String.valueOf(created.get()), "%time%", "ERROR"));
             }
         });

@@ -6,9 +6,12 @@ import org.bukkit.Tag;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TagRegistry {
 
+    private static final Logger LOGGER = Logger.getLogger(TagRegistry.class.getName());
     private static final Map<String, Tag<Material>> tagMap = new HashMap<>();
 
     static {
@@ -20,7 +23,7 @@ public class TagRegistry {
                         register(field.getName(), (Tag<Material>) field.get(null));
                     }
                 } catch (Exception exception) {
-                    exception.printStackTrace();
+                    LOGGER.log(Level.WARNING, "Failed to register tag " + field.getName(), exception);
                 }
             }
         }

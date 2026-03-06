@@ -273,8 +273,7 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
         if (throwable.getCause() instanceof TimeoutException) {
             logger.warning("Removal operation timed out for item " + context.item.getId());
         } else {
-            logger.severe("Error during removal: " + throwable.getMessage());
-            throwable.printStackTrace();
+            logger.severe("Error during removal for item " + context.item.getId() + ": " + throwable.getMessage());
         }
 
         // Release lock if acquired

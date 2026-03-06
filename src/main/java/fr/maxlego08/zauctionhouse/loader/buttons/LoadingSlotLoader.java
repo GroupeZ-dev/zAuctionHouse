@@ -28,7 +28,7 @@ public class LoadingSlotLoader extends ButtonLoader {
             try {
                 return this.clazz.getDeclaredConstructor().newInstance();
             } catch (Exception exception2) {
-                exception.printStackTrace();
+                this.plugin.getLogger().severe("Failed to load button " + this.clazz.getSimpleName() + ": " + exception2.getMessage());
             }
         }
         return null;

@@ -154,7 +154,7 @@ public abstract class ZUtils extends MessageUtils {
         try (Stream<Path> s = Files.walk(Paths.get(folder.getPath()))) {
             s.skip(1).map(Path::toFile).filter(File::isFile).filter(e -> e.getName().endsWith(".yml")).forEach(consumer);
         } catch (IOException exception) {
-            exception.printStackTrace();
+            Logger.getLogger(ZUtils.class.getName()).log(Level.SEVERE, "Failed to walk folder " + folder.getPath(), exception);
         }
     }
 

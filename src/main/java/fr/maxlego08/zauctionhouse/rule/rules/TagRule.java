@@ -25,8 +25,7 @@ public class TagRule implements Rule {
         try {
             return TagRegistry.getTag(name.toLowerCase(Locale.ROOT));
         } catch (Exception exception) {
-            plugin.getLogger().severe("Failed to resolve tag: " + name);
-            exception.printStackTrace();
+            plugin.getLogger().severe("Failed to resolve tag '" + name + "': " + exception.getMessage());
         }
 
         return null;

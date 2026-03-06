@@ -643,7 +643,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             clusterBridge.unlockItem(item, lockToken, storageType);
 
         }).exceptionally(e -> {
-            e.printStackTrace();
+            this.plugin.getLogger().severe("Failed to remove item for admin: " + e.getMessage());
             inventoryManager.updateInventory(admin);
             return null;
         });
