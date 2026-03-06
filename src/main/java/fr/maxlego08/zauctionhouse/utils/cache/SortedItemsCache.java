@@ -500,14 +500,20 @@ public class SortedItemsCache {
     /**
      * Shuts down the ForkJoinPool used for parallel processing.
      * Should be called when the plugin is disabled to prevent resource leaks.
+     * Uses a 10-second timeout to allow ongoing cache rebuilds to complete.
      */
     public void shutdown() {
         forkJoinPool.shutdown();
         try {
-            if (!forkJoinPool.awaitTermination(2, java.util.concurrent.TimeUnit.SECONDS)) {
+            if (!forkJoinPool.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS)) {
+                plugin.getLogger().warning("ForkJoinPool did not terminate within 10 seconds, forcing shutdown");
                 forkJoinPool.shutdownNow();
+                if (!forkJoinPool.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                    plugin.getLogger().severe("ForkJoinPool did not terminate properly after forced shutdown");
+                }
             }
         } catch (InterruptedException e) {
+            plugin.getLogger().warning("ForkJoinPool shutdown interrupted, forcing shutdown");
             forkJoinPool.shutdownNow();
             Thread.currentThread().interrupt();
         }

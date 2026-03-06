@@ -599,7 +599,22 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     public void adminRemoveItem(Player admin, UUID targetUniqueId, Item item, StorageType storageType) {
 
         var clusterBridge = this.plugin.getAuctionClusterBridge();
-        var inventoryManager = this.plugin.getInventoriesLoader().getInventoryManager();
+        if (clusterBridge == null) {
+            this.plugin.getLogger().severe("Cluster bridge is not initialized");
+            return;
+        }
+
+        var inventoriesLoader = this.plugin.getInventoriesLoader();
+        if (inventoriesLoader == null) {
+            this.plugin.getLogger().severe("Inventories loader is not initialized");
+            return;
+        }
+
+        var inventoryManager = inventoriesLoader.getInventoryManager();
+        if (inventoryManager == null) {
+            this.plugin.getLogger().severe("Inventory manager is not initialized");
+            return;
+        }
 
         clusterBridge.checkAvailability(item).thenCompose(available -> {
 
@@ -718,15 +733,21 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             auctionEconomy.deposit(seller, sellerReceives, args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items));
         }
 
-        // Créer les transactions
+        // Créer les transactions avec gestion d'erreur
         final BigDecimal finalBuyerPays = buyerPays;
         final BigDecimal finalSellerReceives = sellerReceives;
         auctionEconomy.get(player).thenAccept(buyerBalance -> {
             storageManager.createTransaction(auctionItem, player.getUniqueId(), economyName, buyerBalance.add(finalBuyerPays), buyerBalance, finalBuyerPays.negate(), TransactionStatus.RETRIEVED);
+        }).exceptionally(throwable -> {
+            this.plugin.getLogger().severe("Failed to create buyer transaction for item " + auctionItem.getId() + ": " + throwable.getMessage());
+            return null;
         });
 
         auctionEconomy.get(seller).thenAccept(sellerBalance -> {
             storageManager.createTransaction(auctionItem, seller.getUniqueId(), economyName, sellerBalance.subtract(finalSellerReceives), sellerBalance, finalSellerReceives, transactionStatus);
+        }).exceptionally(throwable -> {
+            this.plugin.getLogger().severe("Failed to create seller transaction for item " + auctionItem.getId() + ": " + throwable.getMessage());
+            return null;
         });
 
         if (seller.isOnline()) {
@@ -851,7 +872,9 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         if (this.caches.containsKey(player)) {
             var cache = this.caches.get(player);
             IntList items = cache.get(PlayerCacheKey.ITEMS_LISTED);
-            items.rem(item.getId());
+            if (items != null && !items.isEmpty()) {
+                items.rem(item.getId());
+            }
         }
     }
 

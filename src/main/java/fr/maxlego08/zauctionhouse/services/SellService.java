@@ -93,10 +93,18 @@ public class SellService extends ZUtils implements AuctionSellService {
                     this.postSell(player, auctionItem, auctionEconomy, taxResult);
                     resultFuture.complete(SellResult.success("Item listed successfully", auctionItem));
                 }).exceptionally(throwable -> {
-                    this.plugin.getLogger().severe("Unable to sell item");
-                    throwable.printStackTrace();
-                    // Return items to player
-                    itemsToSell.forEach(itemStack -> player.getInventory().addItem(itemStack));
+                    this.plugin.getLogger().severe("Unable to sell item: " + throwable.getMessage());
+                    if (throwable.getCause() != null) {
+                        this.plugin.getLogger().severe("Caused by: " + throwable.getCause().getMessage());
+                    }
+                    // Return items to player safely
+                    if (player.isOnline() && itemsToSell != null) {
+                        itemsToSell.forEach(itemStack -> {
+                            if (itemStack != null) {
+                                player.getInventory().addItem(itemStack);
+                            }
+                        });
+                    }
                     // Refund the tax if the sale failed
                     if (taxResult.hasTax()) {
                         auctionEconomy.deposit(player, taxResult.taxAmount(), "Refund sell tax (sale failed)");
