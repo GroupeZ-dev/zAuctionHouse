@@ -58,11 +58,10 @@ public class ItemRepository extends Repository {
             List<Item> items = entry.getValue();
             if (items.isEmpty()) continue;
 
-            List<Schema> schemas = new ArrayList<>(items.size());
+            // Update each item individually using the consumer pattern
             for (Item item : items) {
-                schemas.add(createUpdateSchema(createUpdateSchema(item, storageType)));
+                update(createUpdateSchema(item, storageType));
             }
-            update(schemas);
         }
     }
 

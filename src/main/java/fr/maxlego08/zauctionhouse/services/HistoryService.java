@@ -98,6 +98,9 @@ public class HistoryService extends AuctionService implements AuctionHistoryServ
             } else {
                 this.plugin.getScheduler().runLater(task -> notifyTask.run(), delay);
             }
+        }).exceptionally(throwable -> {
+            this.plugin.getLogger().warning("Failed to fetch unread sales for player " + player.getName() + ": " + throwable.getMessage());
+            return null;
         });
     }
 

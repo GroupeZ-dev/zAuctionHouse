@@ -4,8 +4,12 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GlobalDatabaseConfiguration {
+
+    private static final Logger LOGGER = Logger.getLogger(GlobalDatabaseConfiguration.class.getName());
 
     private final FileConfiguration pluginConfiguration;
     private final FileConfiguration globalConfiguration;
@@ -13,11 +17,15 @@ public class GlobalDatabaseConfiguration {
     public GlobalDatabaseConfiguration(FileConfiguration pluginConfiguration) {
         this.pluginConfiguration = pluginConfiguration;
         File file = new File("database-configuration.yml");
+        FileConfiguration loadedConfig = null;
         if (file.exists()) {
-            this.globalConfiguration = YamlConfiguration.loadConfiguration(file);
-        } else {
-            this.globalConfiguration = null;
+            try {
+                loadedConfig = YamlConfiguration.loadConfiguration(file);
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Failed to load global database configuration file, using plugin configuration instead", e);
+            }
         }
+        this.globalConfiguration = loadedConfig;
     }
 
     /**

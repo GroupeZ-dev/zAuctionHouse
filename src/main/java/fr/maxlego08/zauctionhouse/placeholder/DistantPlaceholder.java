@@ -17,7 +17,8 @@ public class DistantPlaceholder extends PlaceholderExpansion {
 
     @Override
     public String getAuthor() {
-        return this.plugin.getDescription().getAuthors().get(0);
+        var authors = this.plugin.getDescription().getAuthors();
+        return authors.isEmpty() ? "Unknown" : authors.get(0);
     }
 
     @Override

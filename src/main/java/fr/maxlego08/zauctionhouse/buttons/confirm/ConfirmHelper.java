@@ -39,7 +39,11 @@ public abstract class ConfirmHelper extends Button {
         // Si lors de la fermeture, le status est similaire à celui de l'ouverture, alors l'état n'a pas changé, et donc on doit mettre le prochain état de l'item.
         if (item.getStatus() == this.previous) {
             item.setStatus(this.next);
-            this.plugin.getAuctionClusterBridge().notifyItemStatusChange(item, this.previous, this.next);
+            this.plugin.getAuctionClusterBridge().notifyItemStatusChange(item, this.previous, this.next)
+                .exceptionally(throwable -> {
+                    this.plugin.getLogger().warning("Failed to notify item status change on inventory close: " + throwable.getMessage());
+                    return null;
+                });
 
             manager.clearPlayersCache(PlayerCacheKey.ITEMS_LISTED);
             manager.updateListedItems(item, true, player);
@@ -56,7 +60,11 @@ public abstract class ConfirmHelper extends Button {
         if (item == null) return;
 
         item.setStatus(this.next);
-        this.plugin.getAuctionClusterBridge().notifyItemStatusChange(item, this.previous, this.next);
+        this.plugin.getAuctionClusterBridge().notifyItemStatusChange(item, this.previous, this.next)
+            .exceptionally(throwable -> {
+                this.plugin.getLogger().warning("Failed to notify item status change on back click: " + throwable.getMessage());
+                return null;
+            });
 
         manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_LISTED);
         manager.updateListedItems(item, true, player);

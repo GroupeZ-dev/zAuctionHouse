@@ -9,7 +9,6 @@ import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.history.HistorySortType;
 import fr.maxlego08.zauctionhouse.api.history.ItemLog;
 import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
-import fr.maxlego08.zauctionhouse.api.storage.dto.LogDTO;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -85,7 +84,7 @@ public class HistoryItemsButton extends LoadingButton {
     @Override
     public int getPaginationSize(@NonNull Player player) {
         var cache = this.plugin.getAuctionManager().getCache(player);
-        List<LogDTO> history = cache.get(PlayerCacheKey.HISTORY_DATA);
+        List<ItemLog> history = cache.get(PlayerCacheKey.HISTORY_DATA);
         return history != null ? history.size() : 0;
     }
 

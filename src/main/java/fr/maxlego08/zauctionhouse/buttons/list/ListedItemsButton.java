@@ -165,6 +165,12 @@ public class ListedItemsButton extends PaginateButton {
         cache.set(PlayerCacheKey.PURCHASE_ITEM, true);
 
         var economy = item.getAuctionEconomy();
+        if (economy == null) {
+            this.plugin.getLogger().warning("Item " + item.getId() + " has no economy set, cannot process purchase");
+            cache.set(PlayerCacheKey.PURCHASE_ITEM, false);
+            return;
+        }
+
         economy.has(player, item.getPrice()).whenComplete((hasMoney, throwable) -> {
 
             if (throwable != null) {
