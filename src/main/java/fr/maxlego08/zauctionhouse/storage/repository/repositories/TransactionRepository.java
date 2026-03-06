@@ -46,9 +46,13 @@ public class TransactionRepository extends Repository {
     public void updateStatus(Collection<Integer> transactionIds, TransactionStatus status) {
         if (transactionIds == null || transactionIds.isEmpty()) return;
 
-        transactionIds.forEach(transactionId -> update(schema -> {
-            schema.where("id", transactionId);
-            schema.string("status", status.name());
-        }));
+        // Use batch update for better performance
+        var schemas = transactionIds.stream()
+                .map(transactionId -> createUpdateSchema(schema -> {
+                    schema.where("id", transactionId);
+                    schema.string("status", status.name());
+                }))
+                .toList();
+        update(schemas);
     }
 }

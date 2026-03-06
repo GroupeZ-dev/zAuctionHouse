@@ -32,8 +32,8 @@ public class AdminSellingItemsButton extends PaginateButton {
         var manager = this.plugin.getAuctionManager();
         var items = manager.getPlayerSellingItems(target.get());
         paginate(items, inventoryEngine, (slot, item) -> inventoryEngine.addItem(slot, item.buildItemStack(player)).setClick(event -> {
+            // adminRemoveItem handles inventory update internally
             manager.adminRemoveItem(player, target.get(), item, StorageType.LISTED);
-            this.plugin.getInventoriesLoader().getInventoryManager().updateInventory(player);
         }));
     }
 

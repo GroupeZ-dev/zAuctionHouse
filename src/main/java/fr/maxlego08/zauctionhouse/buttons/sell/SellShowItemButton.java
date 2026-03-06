@@ -42,7 +42,7 @@ public class SellShowItemButton extends Button {
             inventoryEngine.removeItem(slot);
         });
 
-        if (sellItems.isEmpty()) {
+        if (sellItems == null || sellItems.isEmpty()) {
             inventoryEngine.addItem(this.emptySlot, this.getItemStack().build(player, false, new Placeholders()));
         } else {
             List<Map.Entry<Integer, ItemStack>> entries = new ArrayList<>(sellItems.entrySet());

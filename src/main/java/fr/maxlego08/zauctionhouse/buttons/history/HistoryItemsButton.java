@@ -41,6 +41,10 @@ public class HistoryItemsButton extends LoadingButton {
 
                 cache.set(PlayerCacheKey.HISTORY_LOADING, true);
                 manager.getHistoryService().getSalesHistory(player.getUniqueId()).thenAccept(history -> {
+                    // Check if player is still online before modifying cache
+                    if (!player.isOnline()) {
+                        return;
+                    }
                     cache.set(PlayerCacheKey.HISTORY_DATA, history);
                     cache.set(PlayerCacheKey.HISTORY_LOADING, false);
                     this.plugin.getScheduler().runNextTick(task -> {

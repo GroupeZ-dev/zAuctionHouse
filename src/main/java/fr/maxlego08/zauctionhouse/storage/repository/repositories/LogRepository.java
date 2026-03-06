@@ -94,10 +94,15 @@ public class LogRepository extends Repository {
     public void markAsRead(Collection<Integer> logIds) {
         if (logIds == null || logIds.isEmpty()) return;
 
-        logIds.forEach(logId -> update(schema -> {
-            schema.where("id", logId);
-            schema.object("readed_at", new Date());
-        }));
+        // Use batch update for better performance
+        Date now = new Date();
+        var schemas = logIds.stream()
+                .map(logId -> createUpdateSchema(schema -> {
+                    schema.where("id", logId);
+                    schema.object("readed_at", now);
+                }))
+                .toList();
+        update(schemas);
     }
 
     /**

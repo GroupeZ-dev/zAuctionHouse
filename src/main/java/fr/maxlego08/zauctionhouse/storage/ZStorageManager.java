@@ -189,7 +189,7 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
                     var auctionItem = createAuctionItem(this.plugin, dto, sellerName, auctionItems, optionalAuctionEconomy.get());
 
                     if (dto.buyer_unique_id() != null) {
-                        auctionItem.setBuyer(dto.buyer_unique_id(), with(PlayerRepository.class).select(dto.seller_unique_id()));
+                        auctionItem.setBuyer(dto.buyer_unique_id(), with(PlayerRepository.class).select(dto.buyer_unique_id()));
                     }
 
                     return auctionItem;

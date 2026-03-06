@@ -66,10 +66,12 @@ public class ClaimService extends AuctionService implements AuctionClaimService 
                 BigDecimal economyTotal = economyTransactions.stream().map(TransactionDTO::value).filter(v -> v.compareTo(BigDecimal.ZERO) > 0).reduce(BigDecimal.ZERO, BigDecimal::add);
 
                 if (economyTotal.compareTo(BigDecimal.ZERO) > 0) {
-                    plugin.getScheduler().runAsync(w -> economy.deposit(player, economyTotal, depositReason));
+                    // Check if player is still online before depositing
+                    if (player.isOnline()) {
+                        plugin.getScheduler().runAsync(w -> economy.deposit(player, economyTotal, depositReason));
+                        message(this.plugin, player, Message.CLAIM_ECONOMY_SUCCESS, "%amount%", economyManager.format(economy, economyTotal), "%economy%", economy.getDisplayName());
+                    }
                     totalClaimed = totalClaimed.add(economyTotal);
-
-                    message(this.plugin, player, Message.CLAIM_ECONOMY_SUCCESS, "%amount%", economyManager.format(economy, economyTotal), "%economy%", economy.getDisplayName());
                 }
             }
 
@@ -120,6 +122,11 @@ public class ClaimService extends AuctionService implements AuctionClaimService 
         var config = this.plugin.getConfiguration().getAutoClaimConfiguration();
 
         getPendingMoneyByEconomy(player.getUniqueId()).thenAccept(pendingByEconomy -> {
+            // Check if player is still online at the start of async callback
+            if (!player.isOnline()) {
+                return;
+            }
+
             if (pendingByEconomy.isEmpty()) {
                 return;
             }
