@@ -95,7 +95,7 @@ public class ZEconomyManager implements EconomyManager {
             TypedMapAccessor accessor = new TypedMapAccessor((Map<String, Object>) map);
             var format = accessor.getString("format");
             var maxAmount = accessor.getString("max-amount");
-            var display = accessor.getString("display");
+            var display = accessor.getString("display", "%amount%");
 
             if (format == null || format.isEmpty()) {
                 this.plugin.getLogger().severe("Price reduction format is not set, skip it...");
