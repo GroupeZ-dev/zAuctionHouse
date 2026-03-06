@@ -16,10 +16,10 @@ public record NumberMultiplicationConfiguration(boolean enable, Map<String, BigD
 
     public static NumberMultiplicationConfiguration of(AuctionPlugin plugin, FileConfiguration configuration) {
 
-        var enable = configuration.getBoolean("number-multiplication.enable");
+        var enable = configuration.getBoolean("number-sell-multiplication.enable");
         var multiplications = new HashMap<String, BigDecimal>();
         if (enable) {
-            var maps = configuration.getMapList("number-multiplication.formats");
+            var maps = configuration.getMapList("number-sell-multiplication.formats");
             for (Map<?, ?> elements : maps) {
                 TypedMapAccessor accessor = new TypedMapAccessor((Map<String, Object>) elements);
                 var key = accessor.getString("format");
@@ -51,7 +51,7 @@ public record NumberMultiplicationConfiguration(boolean enable, Map<String, BigD
         if (!matcher.matches()) return null;
 
         BigDecimal number = new BigDecimal(matcher.group(1));
-        String suffix = matcher.group(2);
+        String suffix = matcher.group(2).toUpperCase();
 
         if (this.multiplications.containsKey(suffix)) {
 
