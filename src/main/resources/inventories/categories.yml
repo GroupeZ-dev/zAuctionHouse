@@ -14,7 +14,7 @@
 #   2. Add a button here with type: ZAUCTIONHOUSE_CATEGORY and category: <name>
 #   3. Use the placeholder %zauctionhouse_category_count_<name>% for item counts
 #
-#   Documentation: https://zauctionhouse.groupez.dev/
+#   Documentation: https://docs.groupez.dev/zauctionhouse/introduction
 #   Discord: https://discord.groupez.dev/
 #
 ################################################################################################################################

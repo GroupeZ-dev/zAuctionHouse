@@ -14,7 +14,7 @@
 #   - Si apre automaticamente quando un venditore clicca sul proprio oggetto in vendita
 #   - Mostrato solo se open-confirm-inventory è true in config.yml
 #
-#   Documentazione: https://zauctionhouse.groupez.dev/
+#   Documentazione: https://docs.groupez.dev/zauctionhouse/introduction
 #   Discord: https://discord.groupez.dev/
 #
 ################################################################################################################################

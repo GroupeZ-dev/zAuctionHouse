@@ -14,7 +14,7 @@
 #   2. Ajoutez un bouton ici avec type: ZAUCTIONHOUSE_CATEGORY et category: <nom>
 #   3. Utilisez le placeholder %zauctionhouse_category_count_<nom>% pour les compteurs
 #
-#   Documentation: https://zauctionhouse.groupez.dev/
+#   Documentation: https://docs.groupez.dev/zauctionhouse/introduction
 #   Discord: https://discord.groupez.dev/
 #
 ################################################################################################################################

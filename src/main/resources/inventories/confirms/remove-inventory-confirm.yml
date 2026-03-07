@@ -14,7 +14,7 @@
 #   - Automatically opens when a seller clicks their own bulk listing
 #   - Only shown if open-confirm-inventory is true in config.yml
 #
-#   Documentation: https://zauctionhouse.groupez.dev/
+#   Documentation: https://docs.groupez.dev/zauctionhouse/introduction
 #   Discord: https://discord.groupez.dev/
 #
 ################################################################################################################################

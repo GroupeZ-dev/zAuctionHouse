@@ -14,7 +14,7 @@
 #   2. Agrega un boton aqui con type: ZAUCTIONHOUSE_CATEGORY y category: <nombre>
 #   3. Usa el placeholder %zauctionhouse_category_count_<nombre>% para los contadores
 #
-#   Documentacion: https://zauctionhouse.groupez.dev/
+#   Documentacion: https://docs.groupez.dev/zauctionhouse/introduction
 #   Discord: https://discord.groupez.dev/
 #
 ################################################################################################################################

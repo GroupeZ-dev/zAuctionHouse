@@ -6,6 +6,7 @@ import fr.maxlego08.menu.api.utils.Placeholders;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.NonNull;
 
 public class ExpiredItemsButton extends PaginateButton {
 
@@ -38,7 +39,7 @@ public class ExpiredItemsButton extends PaginateButton {
     }
 
     @Override
-    public int getPaginationSize(Player player) {
+    public int getPaginationSize(@NonNull Player player) {
         return this.plugin.getAuctionManager().getExpiredItems(player).size();
     }
 }
