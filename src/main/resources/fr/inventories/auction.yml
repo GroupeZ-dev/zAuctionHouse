@@ -263,18 +263,25 @@ items:
         name: "<white>"
 
   #---------------------------------------------------------------------------
-  # BOUTON INFORMATIONS
+  # BOUTON RAFRAICHISSEMENT
   #---------------------------------------------------------------------------
   # Affiche les informations de l'hôtel des ventes et rafraîchit la liste.
 
-  informations:
+  refresh:
+    # Type de bouton - ZAUCTIONHOUSE_REFRESH gère le rafraîchissement async.
+    type: ZAUCTIONHOUSE_REFRESH
+
     # Position du slot - centre de la rangée du bas.
     slot: 49
 
-    # Les items permanents ne peuvent pas être pris.
-    is-permanent: true
+    # Item affiché pendant le chargement/rafraîchissement (empêche les clics spam).
+    loading-item:
+      material: CLOCK
+      name: "#2CCED2<bold>ʀᴀғʀᴀɪᴄʜɪssᴇᴍᴇɴᴛ..."
+      lore:
+        - "#8c8c8c• #ff3535Chargement, veuillez patienter..."
 
-    # Item statique (pas de type spécial = item d'affichage normal).
+    # Affichage normal du bouton de rafraîchissement.
     item:
       material: BELL
       name: "#2CCED2<bold>ɪɴғᴏʀᴍᴀᴛɪᴏɴs"

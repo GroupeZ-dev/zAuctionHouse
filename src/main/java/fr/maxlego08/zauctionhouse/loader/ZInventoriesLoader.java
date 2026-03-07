@@ -150,6 +150,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new NoneLoader(this.plugin, AdminHistoryMainExpiredButton.class, "ZAUCTIONHOUSE_ADMIN_HISTORY_EXPIRED"));
 
         this.buttonManager.register(new SortLoader(this.plugin, this.inventoryManager));
+        this.buttonManager.register(new RefreshLoader(this.plugin, this.inventoryManager));
         this.buttonManager.register(new CategoryButtonLoader(this.plugin));
 
         // Shulker

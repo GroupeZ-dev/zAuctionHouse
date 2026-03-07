@@ -263,18 +263,25 @@ items:
         name: "<white>"
 
   #---------------------------------------------------------------------------
-  # PULSANTE INFORMAZIONI
+  # PULSANTE AGGIORNA
   #---------------------------------------------------------------------------
   # Mostra le informazioni della casa d'aste e aggiorna la lista.
 
-  informations:
+  refresh:
+    # Tipo di pulsante - ZAUCTIONHOUSE_REFRESH gestisce l'aggiornamento asincrono.
+    type: ZAUCTIONHOUSE_REFRESH
+
     # Posizione dello slot - centro della riga inferiore.
     slot: 49
 
-    # Gli oggetti permanenti non possono essere presi.
-    is-permanent: true
+    # Oggetto mostrato durante il caricamento/aggiornamento (previene i clic spam).
+    loading-item:
+      material: CLOCK
+      name: "#2CCED2<bold>ᴀɢɢɪᴏʀɴᴀᴍᴇɴᴛᴏ..."
+      lore:
+        - "#8c8c8c• #ff3535Caricamento, attendere..."
 
-    # Oggetto statico (nessun tipo speciale = oggetto di visualizzazione normale).
+    # Visualizzazione normale del pulsante di aggiornamento.
     item:
       material: BELL
       name: "#2CCED2<bold>ɪɴғᴏʀᴍᴀᴢɪᴏɴɪ"

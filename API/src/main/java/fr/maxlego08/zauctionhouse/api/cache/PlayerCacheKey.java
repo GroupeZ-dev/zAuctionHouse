@@ -72,7 +72,10 @@ public enum PlayerCacheKey {
 
     // Shulker Content Viewer
     SHULKER_INDEX(new TypeToken<Integer>() {}, () -> 0),
-    SHULKER_ITEMS(new TypeToken<List<org.bukkit.inventory.ItemStack>>() {}, ArrayList::new)
+    SHULKER_ITEMS(new TypeToken<List<org.bukkit.inventory.ItemStack>>() {}, ArrayList::new),
+
+    // Refresh Button
+    REFRESH_LOADING(new TypeToken<Boolean>() {}, () -> false)
     ;
 
     private final TypeToken<?> type;

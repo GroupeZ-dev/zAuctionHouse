@@ -263,18 +263,25 @@ items:
         name: "<white>"
 
   #---------------------------------------------------------------------------
-  # INFORMATION BUTTON
+  # REFRESH BUTTON
   #---------------------------------------------------------------------------
   # Displays auction house information and refreshes the item list.
 
-  informations:
+  refresh:
+    # Button type - ZAUCTIONHOUSE_REFRESH handles async refresh.
+    type: ZAUCTIONHOUSE_REFRESH
+
     # Slot position - center of bottom row.
     slot: 49
 
-    # Permanent items cannot be taken.
-    is-permanent: true
+    # Item shown while loading/refreshing (prevents spam clicks).
+    loading-item:
+      material: CLOCK
+      name: "#2CCED2<bold>ʀᴇғʀᴇsʜɪɴɢ..."
+      lore:
+        - "#8c8c8c• #ff3535Loading, please wait..."
 
-    # Static item (no special type = normal display item).
+    # Normal refresh button display.
     item:
       material: BELL
       name: "#2CCED2<bold>ᴀᴜᴄᴛɪᴏɴ ɪɴғᴏʀᴍᴀᴛɪᴏɴ"

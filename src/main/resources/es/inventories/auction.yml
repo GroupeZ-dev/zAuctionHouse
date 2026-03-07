@@ -263,18 +263,25 @@ items:
         name: "<white>"
 
   #---------------------------------------------------------------------------
-  # BOTON INFORMACION
+  # BOTON ACTUALIZAR
   #---------------------------------------------------------------------------
   # Muestra informacion de la casa de subastas y actualiza la lista.
 
-  informations:
+  refresh:
+    # Tipo de boton - ZAUCTIONHOUSE_REFRESH gestiona la actualizacion asincrona.
+    type: ZAUCTIONHOUSE_REFRESH
+
     # Posicion del slot - centro de la fila inferior.
     slot: 49
 
-    # Los objetos permanentes no pueden ser tomados.
-    is-permanent: true
+    # Objeto mostrado durante la carga/actualizacion (previene clics spam).
+    loading-item:
+      material: CLOCK
+      name: "#2CCED2<bold>ᴀᴄᴛᴜᴀʟɪᴢᴀɴᴅᴏ..."
+      lore:
+        - "#8c8c8c* #ff3535Cargando, espere..."
 
-    # Objeto estatico (sin tipo especial = objeto de visualizacion normal).
+    # Visualizacion normal del boton de actualizacion.
     item:
       material: BELL
       name: "#2CCED2<bold>INFORMACION"
