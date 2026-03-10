@@ -1,0 +1,160 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Admin History Main Inventory
+#
+#   Inventory หลักของแอดมินสำหรับดูประวัติการใช้งานตลาด (auction) ของผู้เล่น
+#   จากหน้านี้ แอดมินสามารถเข้าถึงทุกส่วนของกิจกรรมการประมูลของผู้เล่นได้
+#
+#   FEATURES:
+#   - ดูไอเทมหมดอายุ (expired items) ของผู้เล่นเป้าหมาย
+#   - ดูไอเทมที่ผู้เล่นเป้าหมายเคยซื้อ (purchased items)
+#   - ดูไอเทมที่ผู้เล่นเป้าหมายกำลังขายอยู่ (selling items)
+#   - เข้าถึง action logs
+#   - เข้าถึง transaction history
+#
+#   ACCESS:
+#   - /ah admin history <player>
+#   - ต้องมีสิทธิ์แอดมิน
+#
+#   Documentation: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# ชื่อ inventory พร้อม placeholder สำหรับชื่อผู้เล่นเป้าหมาย
+# %target% = ชื่อของผู้เล่นที่กำลังถูกดูประวัติอยู่
+name: '#0c1719Admin logs (%page%/%max-page%)'
+
+# ขนาด inventory - 6 แถว
+size: 54
+
+#=============================================================================
+# ITEMS
+#=============================================================================
+
+items:
+
+  #---------------------------------------------------------------------------
+  # หัวผู้เล่นเป้าหมาย (TARGET PLAYER HEAD)
+  #---------------------------------------------------------------------------
+  # แสดงหัวของผู้เล่นที่กำลังถูกตรวจสอบอยู่
+
+  target:
+    # ประเภทปุ่ม - ใช้แสดงข้อมูลผู้เล่นเป้าหมาย
+    type: ZAUCTIONHOUSE_ADMIN_HISTORY_MAIN
+
+    # ตำแหน่งช่อง - ด้านบนกึ่งกลาง
+    slot: 13
+
+    item:
+      # แสดงหัวของผู้เล่นเป้าหมาย
+      # %target% จะถูกแทนด้วยชื่อผู้เล่น
+      player-head: '%target%'
+      name: '#2CCED2<bold>%target%'
+
+  #---------------------------------------------------------------------------
+  # ปุ่มดูไอเทมหมดอายุ (EXPIRED ITEMS BUTTON)
+  #---------------------------------------------------------------------------
+  # เปิดหน้าดูไอเทมหมดอายุของผู้เล่นเป้าหมาย
+
+  expired:
+    # ประเภทปุ่ม - เปิดหน้า admin expired items
+    type: ZAUCTIONHOUSE_ADMIN_HISTORY_EXPIRED
+
+    # ตำแหน่งช่อง
+    slot: 28
+
+    item:
+      # เท็กซ์เจอร์รูปนาฬิกาทราย/นาฬิกา
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjdhYWRmZjlkZGM1NDZmZGNlYzZlZDU5MTljYzM5ZGZhOGQwYzA3ZmY0YmM2MTNhMTlmMmU2ZDdmMjU5MyJ9fX0="
+      name: '#2CCED2<bold>ไอเทมหมดอายุ'
+      lore:
+        # %expired-items% = จำนวนไอเทมหมดอายุของผู้เล่นเป้าหมาย
+        # %s% = ตัวสะกดเติมท้าย (s) เมื่อเป็นพหูพจน์
+        - '#92ffff%target% มีไอเทมหมดอายุแล้ว #2CCED2%expired-items% #92ffffชิ้น%s%.'
+        - ''
+        - '#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู'
+
+  #---------------------------------------------------------------------------
+  # ปุ่มดูไอเทมที่เคยซื้อ (PURCHASED ITEMS BUTTON)
+  #---------------------------------------------------------------------------
+  # เปิดหน้าดูไอเทมที่ผู้เล่นเป้าหมายเคยซื้อ
+
+  purchased:
+    # ประเภทปุ่ม - เปิดหน้า admin purchased items
+    type: ZAUCTIONHOUSE_ADMIN_HISTORY_PURCHASED
+
+    slot: 29
+
+    item:
+      # เท็กซ์เจอร์หีบ (Chest)
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjM3Y2FlNWM1MWViMTU1OGVhODI4ZjU4ZTBkZmY4ZTZiN2IwYjFhMTgzZDczN2VlY2Y3MTQ2NjE3NjEifX19"
+      name: '#2CCED2<bold>ไอเทมที่เคยซื้อ'
+      lore:
+        # %purchased-items% = จำนวนไอเทมที่เคยซื้อ
+        - '#92ffff%target% เคยซื้อไอเทมไปแล้ว #2CCED2%purchased-items% #92ffffชิ้น%s%.'
+        - ''
+        - '#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู'
+
+  #---------------------------------------------------------------------------
+  # ปุ่มดูไอเทมที่กำลังขาย (SELLING ITEMS BUTTON)
+  #---------------------------------------------------------------------------
+  # เปิดหน้าดูไอเทมที่ผู้เล่นเป้าหมายกำลังลงขายอยู่
+
+  selling:
+    # ประเภทปุ่ม - เปิดหน้า admin selling items
+    type: ZAUCTIONHOUSE_ADMIN_HISTORY_SELLING
+
+    slot: 30
+
+    item:
+      # เท็กซ์เจอร์ไอคอนผู้เล่น
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjU4MDdjYzRjM2I2OTU4YWVhNjE1NmU4NDUxOGQ5MWE0OWM1ZjMyOTcxZTZlYjI2OWEyM2EyNWEyNzE0NSJ9fX0="
+      name: '#2CCED2<bold>ไอเทมที่กำลังขาย'
+      lore:
+        # %selling-items% = จำนวนไอเทมที่กำลังลงขาย
+        - '#92ffff%target% กำลังขายไอเทมอยู่ #2CCED2%selling-items% #92ffffชิ้น%s%.'
+        - ''
+        - '#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู'
+
+  #---------------------------------------------------------------------------
+  # ปุ่มดู logs (LOGS BUTTON)
+  #---------------------------------------------------------------------------
+  # เปิดดู action logs ของผู้เล่นเป้าหมาย
+  # แสดงทุกการกระทำเกี่ยวกับตลาด: ลงขาย, ซื้อ, ลบประกาศ ฯลฯ
+
+  logs:
+    # ประเภทปุ่ม - เปิดหน้า admin logs
+    type: ZAUCTIONHOUSE_ADMIN_HISTORY_LOGS
+
+    slot: 33
+
+    item:
+      material: SUNFLOWER
+      name: '#2CCED2<bold>ประวัติ'
+      lore:
+        - ''
+        - '#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู'
+
+  #---------------------------------------------------------------------------
+  # ปุ่มดูธุรกรรม (TRANSACTIONS BUTTON)
+  #---------------------------------------------------------------------------
+  # เปิดดูประวัติธุรกรรมของผู้เล่นเป้าหมาย
+  # แสดงดีลที่สำเร็จพร้อมรายละเอียดด้านการเงิน
+
+  transactions:
+    # ประเภทปุ่ม - เปิดหน้า admin transactions
+    type: ZAUCTIONHOUSE_ADMIN_HISTORY_TRANSACTIONS
+
+    slot: 34
+
+    item:
+      material: NETHER_STAR
+      name: '#2CCED2<bold>ธุรกรรม'
+      lore:
+        - ''
+        - '#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู'

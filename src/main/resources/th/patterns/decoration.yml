@@ -1,0 +1,67 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Decoration Pattern
+#
+#   ไฟล์แพทเทิร์นนี้ใช้สำหรับทำกรอบตกแต่งรอบ inventory ด้วยกระจกสี (glass pane)
+#   สามารถนำไปใช้ซ้ำในหลาย ๆ inventory เพื่อให้สไตล์ UI เหมือนกัน
+#
+#   HOW PATTERNS WORK:
+#   - pattern คือ template ของ inventory ที่สามารถนำกลับมาใช้ซ้ำได้
+#   - สามารถนำไปใส่ใน inventory ไหนก็ได้ โดยใช้รายการ 'patterns'
+#   - สามารถใช้หลาย pattern รวมกันใน inventory เดียวได้
+#   - item จาก pattern สามารถถูก override จากฝั่ง inventory ที่นำไปใช้ได้
+#
+#   USAGE:
+#   ใส่ pattern นี้ในไฟล์ inventory ที่ต้องการ:
+#     patterns:
+#       - 'zauctionhouse-decoration'
+#
+#   Documentation: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+# ชื่อ pattern - ใช้อ้างอิงจากไฟล์ inventory อื่น
+# ต้องไม่ซ้ำกับชื่อ pattern อื่นทั้งหมด
+name: "zauctionhouse-decoration"
+
+# ขนาด inventory (ต้องตรงกับ inventory ที่ใช้ pattern นี้)
+# ขนาดมาตรฐาน: 9, 18, 27, 36, 45, 54
+# pattern นี้ออกแบบมาสำหรับ 6 แถว (54 slot)
+size: 54
+
+# item ต่าง ๆ ใน pattern นี้
+# item เหล่านี้จะถูกวางใน inventory เมื่อ pattern ถูก apply
+items:
+
+  # กรอบตกแต่งด้วยกระจกสีรอบ ๆ
+  decoration:
+    # ถ้าเป็น true item นี้จะไม่สามารถถูกย้ายหรือหยิบโดยผู้เล่น
+    # สำหรับ item ตกแต่ง แนะนำให้ตั้ง is-permanent: true เสมอ
+    is-permanent: true
+
+    # slot ที่ item นี้จะไปวางอยู่
+    # ช่วง slot: '0-8' หมายถึง slot 0, 1, 2, 3, 4, 5, 6, 7, 8
+    # ตรงนี้จะกลายเป็นกรอบบนและกรอบล่างของ inventory
+    #
+    # SLOT LAYOUT (inventory ขนาด 54 slot):
+    # แถว 1 (บนสุด):       0  1  2  3  4  5  6  7  8
+    # แถว 2:               9 10 11 12 13 14 15 16 17
+    # แถว 3:              18 19 20 21 22 23 24 25 26
+    # แถว 4:              27 28 29 30 31 32 33 34 35
+    # แถว 5:              36 37 38 39 40 41 42 43 44
+    # แถว 6 (ล่างสุด):    45 46 47 48 49 50 51 52 53
+    slots:
+      - '0-8'     # แถวบนสุด (9 slot)
+      - '45-53'   # แถวล่างสุด (9 slot)
+
+    # การตั้งค่า item
+    item:
+      # ประเภท material - แนะนำให้ใช้ STAINED_GLASS_PANE แบบสีต่าง ๆ สำหรับตกแต่ง
+      # สีที่มีให้ใช้: WHITE, ORANGE, MAGENTA, LIGHT_BLUE, YELLOW, LIME,
+      # PINK, GRAY, LIGHT_GRAY, CYAN, PURPLE, BLUE, BROWN, GREEN, RED, BLACK
+      material: LIGHT_BLUE_STAINED_GLASS_PANE
+
+      # ชื่อ item - ใส่แค่โค้ดสีเพื่อให้ชื่อดูว่างเปล่า
+      # การใช้ "<white>" อย่างเดียวจะซ่อนชื่อ แต่ยังกันไม่ให้ใช้ชื่อ default
+      name: "<white>"

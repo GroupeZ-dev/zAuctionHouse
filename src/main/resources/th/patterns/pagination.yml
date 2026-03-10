@@ -1,0 +1,105 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Pagination Pattern
+#
+#   แพทเทิร์นนี้ใช้สำหรับทำปุ่มย้อนหน้า / หน้าถัดไป ใน inventory แบบแบ่งหน้า (paginated)
+#   ใช้ได้กับทุก inventory ที่มีการแสดง item หลายหน้า
+#
+#   HOW IT WORKS:
+#   - ปุ่ม PREVIOUS จะแสดงเมื่อมีหน้าก่อนหน้าให้ย้อนกลับ
+#   - ปุ่ม NEXT จะแสดงเมื่อมีหน้าถัดไปให้ไปต่อ
+#   - ถ้าไม่มีหน้าถัดไปหรือก่อนหน้า ปุ่มจะถูกแทนที่ด้วย glass pane
+#
+#   USAGE:
+#   ใส่แพทเทิร์นนี้ในไฟล์ inventory แบบแบ่งหน้า (paginated) ที่ต้องการ:
+#     patterns:
+#       - 'zauctionhouse-pagination'
+#
+#   Documentation: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+# ชื่อ pattern - ใช้อ้างอิงจากไฟล์ inventory อื่น
+name: "zauctionhouse-pagination"
+
+# ขนาด inventory (ต้องตรงกับ inventory ที่ใช้แพทเทิร์นนี้)
+# ออกแบบมาสำหรับ 6 แถว (54 slot)
+size: 54
+
+# item ของปุ่มเปลี่ยนหน้า
+items:
+
+  #---------------------------------------------------------------------------
+  # ปุ่มย้อนหน้าก่อนหน้า (PREVIOUS PAGE BUTTON)
+  #---------------------------------------------------------------------------
+  previous:
+    # ประเภทปุ่ม - PREVIOUS เป็น type ที่มีอยู่ใน zMenu อยู่แล้ว
+    # จัดการการเปลี่ยนหน้าและการแสดงผลให้อัตโนมัติ
+    type: PREVIOUS
+
+    # item แบบ permanent ผู้เล่นจะไม่สามารถย้ายได้
+    is-permanent: true
+
+    # ตำแหน่ง slot - ด้านซ้ายของแถวล่างสุด
+    # slot 48 คือช่องที่ 4 จากซ้ายในแถวล่างสุด
+    slot: 48
+
+    # item ที่จะแสดงเมื่อ "มี" หน้าก่อนหน้าให้ย้อนกลับ (page > 1)
+    item:
+      # ใช้หัวผู้เล่น (Player head) พร้อม texture แบบ custom
+      # 'url' ใช้ค่า texture ที่เข้ารหัสแบบ Base64
+      # texture นี้จะเป็นหัวลูกศรชี้ไปทางซ้าย
+      # หา texture เพิ่มได้จาก: minecraft-heads.com, freshcoal.com
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjllYTFkODYyNDdmNGFmMzUxZWQxODY2YmNhNmEzMDQwYTA2YzY4MTc3Yzc4ZTQyMzE2YTEwOThlNjBmYjdkMyJ9fX0="
+
+      # ชื่อที่แสดง พร้อม MiniMessage formatting
+      # <bold> คือทำให้ตัวอักษรหนา
+      name: "#2CCED2<bold>ก่อนหน้า"
+
+      # Lore (คำอธิบาย) เพิ่มเติมใต้ชื่อ
+      lore:
+        - "#92ffffไปยังหน้าก่อนหน้า"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อย้อนกลับ"
+
+    # item สำรองที่จะแสดงเมื่อ "ไม่มี" หน้าก่อนหน้า (page = 1)
+    # 'else' ใช้สำหรับกำหนด item อีกแบบ เมื่อเงื่อนไขของปุ่มไม่เข้า
+    else:
+      item:
+        # ใช้ glass pane ธรรมดา เพื่อให้ layout ดูเป็นระเบียบเหมือนเดิม
+        material: LIGHT_BLUE_STAINED_GLASS_PANE
+        name: "<white>"
+
+  #---------------------------------------------------------------------------
+  # ปุ่มไปหน้าถัดไป (NEXT PAGE BUTTON)
+  #---------------------------------------------------------------------------
+  next:
+    # ประเภทปุ่ม - NEXT เป็น type ที่มีอยู่ใน zMenu อยู่แล้ว
+    # จัดการการเปลี่ยนหน้าและการแสดงผลให้อัตโนมัติ
+    type: NEXT
+
+    # item แบบ permanent ผู้เล่นจะไม่สามารถย้ายได้
+    is-permanent: true
+
+    # ตำแหน่ง slot - ด้านขวาของแถวล่างสุด
+    # slot 50 คือช่องที่ 6 จากซ้ายในแถวล่างสุด
+    slot: 50
+
+    # item ที่จะแสดงเมื่อ "มี" หน้าถัดไป
+    item:
+      # texture ของหัวลูกศรชี้ไปทางขวา
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODI3MWE0NzEwNDQ5NWUzNTdjM2U4ZTgwZjUxMWE5ZjEwMmIwNzAwY2E5Yjg4ZTg4Yjc5NWQzM2ZmMjAxMDVlYiJ9fX0="
+
+      name: "#2CCED2<bold>หน้าถัดไป"
+
+      lore:
+        - "#92ffffไปยังหน้าถัดไป"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อไปหน้าถัดไป"
+
+    # item สำรองที่จะแสดงเมื่อ "ไม่มี" หน้าถัดไป (หน้าสุดท้าย)
+    else:
+      item:
+        material: LIGHT_BLUE_STAINED_GLASS_PANE
+        name: "<white>"
