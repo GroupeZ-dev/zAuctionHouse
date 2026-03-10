@@ -30,6 +30,7 @@
 #   - fr   : French (Francais)
 #   - es   : Spanish (Espanol)
 #   - it   : Italian (Italiano)
+#   - th   : Thailand (ภาษาไทย)
 #
 language: auto
 
@@ -74,6 +75,7 @@ language: auto
 #   - French:  src/main/resources/fr/
 #   - Spanish: src/main/resources/es/
 #   - Italian: src/main/resources/it/
+#   - Thailand: src/main/resources/th/
 #
 # If you need to reset a specific file to its default, you can:
 # 1. Delete the file from your server
@@ -102,6 +104,9 @@ language: auto
 #
 # Italian (it):
 #   Italy, San Marino, Vatican City
+#
+# Thailand (th):
+#   Thailand
 #
 # English (en):
 #   All other countries (default fallback)

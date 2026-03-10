@@ -1,0 +1,554 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - การตั้งค่าข้อความ (Messages Configuration)
+#
+#   ไฟล์นี้เก็บข้อความทั้งหมดที่ผู้เล่นจะเห็นจากปลั๊กอิน
+#   คุณสามารถแก้ไขให้ตรงกับภาษาและสไตล์ของเซิร์ฟเวอร์คุณได้
+#
+#   การจัดรูปแบบ (FORMATTING):
+#   - รองรับรูปแบบ MiniMessage เช่น <red>, <bold>, <gradient:red:blue> เป็นต้น
+#   - รองรับสีแบบ hex: #RRGGBB หรือ #RGB
+#   - รองรับโค้ดสีแบบ legacy: &c, &l เป็นต้น (ไม่แนะนำ ควรใช้ MiniMessage แทน)
+#   - สามารถใช้โค้ดสีลัดที่กำหนดไว้ใน config.yml ได้ เช่น <primary>, <secondary>, <error>, <success>
+#
+#   PLACEHOLDERS:
+#   - ใช้รูปแบบ %placeholder% สำหรับค่าที่เปลี่ยนแปลงได้
+#   - placeholder ที่ใช้ได้จะแตกต่างกันไปในแต่ละข้อความ (อธิบายไว้ในคอมเมนต์ของแต่ละส่วน)
+#
+#   Documentation: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# GENERAL MESSAGES
+#=============================================================================
+
+# prefix ที่จะถูกเพิ่มไว้หน้าข้อความทั้งหมดของปลั๊กอิน
+# ตั้งค่าเป็นสตริงว่าง "" หากต้องการปิด prefix
+# placeholder ที่ใช้ได้: ไม่มี
+prefix: "<primary>zAuctionHouse <secondary>• "
+
+#=============================================================================
+# VERSION & UPDATE MESSAGES
+#=============================================================================
+
+# แสดงเมื่อมีเวอร์ชันใหม่ของปลั๊กอิน (ถ้าเปิดใช้งานตัวเช็กเวอร์ชัน)
+# placeholder ที่ใช้ได้:
+#   %version% - เวอร์ชันที่ติดตั้งอยู่ตอนนี้
+#   %latest%  - เวอร์ชันล่าสุดที่มีให้ใช้
+version-available: "<#ff0000>มีเวอร์ชันใหม่ของ zAuctionHouse ให้ใช้งานแล้ว! <gray>(<white>ปัจจุบัน: <#ff9900>%version% <gray>| <white>ล่าสุด: <#00ff00>%latest%<gray>)"
+
+#=============================================================================
+# COMMAND MESSAGES
+#=============================================================================
+
+# แสดงเมื่อผู้เล่นใช้คำสั่งผิดรูปแบบ
+# placeholder ที่ใช้ได้:
+#   %syntax% - รูปแบบคำสั่งที่ถูกต้อง
+command-syntax-error: "<error>คุณต้องใช้คำสั่งในรูปแบบนี้<gray>: <success>%syntax%"
+
+# แสดงเมื่อผู้เล่นไม่มีสิทธิ์ใช้คำสั่ง
+# placeholder ที่ใช้ได้: ไม่มี
+command-no-permission: "<error>คุณไม่มีสิทธิ์ใช้คำสั่งนี้."
+
+# แสดงเมื่อคำสั่งที่ใช้ได้เฉพาะผู้เล่น ถูกเรียกจากคอนโซล
+# placeholder ที่ใช้ได้: ไม่มี
+command-no-console: "<error>คำสั่งนี้ใช้ได้เฉพาะผู้เล่นเท่านั้น."
+
+# แสดงเมื่ออาร์กิวเมนต์ของคำสั่งไม่ตรงกับ subcommand ใด ๆ
+# placeholder ที่ใช้ได้: ไม่มี
+command-no-arg: "<error>ไม่พบคำสั่งที่ตรงกับอาร์กิวเมนต์นี้."
+
+# แสดงเมื่อใช้คำสั่งในบริเวณที่ถูกจำกัด (เช่น world ที่ถูกแบน ฯลฯ)
+# placeholder ที่ใช้ได้: ไม่มี
+command-restricted: "<error>คุณไม่สามารถใช้คำสั่งนี้ในที่นี่ได้."
+
+# รูปแบบบรรทัดช่วยเหลือคำสั่ง (help)
+# placeholder ที่ใช้ได้:
+#   %syntax%      - รูปแบบคำสั่ง
+#   %description% - คำอธิบายคำสั่ง
+command-syntax-help: "<white>%syntax% <dark_gray>» <gray>%description%"
+
+#=============================================================================
+# COMMAND DESCRIPTIONS
+#=============================================================================
+# คำอธิบายคำสั่งที่จะแสดงในเมนูช่วยเหลือและ tab-complete
+# ควรเขียนให้สั้นและเข้าใจง่าย
+
+command-description-auction: "เปิดตลาดประมูล"
+command-description-auction-sell: "เพิ่มไอเท็มเข้าสู่การขาย"
+command-description-auction-rent: "เพิ่มไอเท็มสำหรับให้เช่า"
+command-description-auction-bid: "เพิ่มไอเท็มเข้าสู่การประมูล"
+command-description-auction-reload: "รีโหลดไฟล์ตั้งค่าทั้งหมด"
+command-description-auction-admin: "เปิดเครื่องมือจัดการตลาดประมูลสำหรับแอดมิน"
+command-description-auction-admin-generate: "สร้างไอเท็มจำลองสำหรับทดสอบ"
+command-description-auction-admin-open: "เปิดดูไอเท็มที่กำลังขายอยู่ตอนนี้"
+command-description-auction-admin-history: "เปิดดูประวัติการใช้งานตลาดของผู้เล่น"
+command-description-auction-admin-add: "เพิ่มไอเท็มเข้าสู่การประมูลให้ผู้เล่น"
+command-description-auction-admin-cache: "จัดการ cache ของผู้เล่น"
+command-description-auction-admin-cache-set: "ตั้งค่าค่าใน cache ของผู้เล่น"
+command-description-auction-admin-cache-clear: "ล้าง cache ของผู้เล่น"
+command-description-auction-admin-cache-show: "แสดง cache ของผู้เล่น"
+command-description-auction-claim: "รับเงินจากการขายที่ค้างอยู่"
+command-description-auction-page: "เปิดตลาดประมูลที่หน้าที่กำหนด"
+command-description-auction-migrate: "ย้ายข้อมูลจากปลั๊กอินตลาดประมูลตัวอื่น"
+
+#=============================================================================
+# INVENTORY MESSAGES
+#=============================================================================
+
+# แสดงเมื่อหาไฟล์ inventory ไม่พบ
+# placeholder ที่ใช้ได้:
+#   %inventory-name% - ชื่อ inventory ที่หาไม่เจอ
+inventory-not-found: "<error>ไม่พบ inventory <white>%inventory-name%<error>."
+
+#=============================================================================
+# SELL MESSAGES
+#=============================================================================
+
+# แสดงเมื่อผู้เล่นพยายามขายทั้งที่มือว่าง (ไม่มีไอเท็ม)
+# placeholder ที่ใช้ได้: ไม่มี
+sell-error-air: "<error>คุณไม่สามารถขายอากาศได้! กรุณาถือไอเท็มในมือก่อน."
+
+# แสดงเมื่อไอเท็มในมือถูกเปลี่ยนระหว่างกำลังทำการขาย
+# placeholder ที่ใช้ได้: ไม่มี
+sell-error-change: "<error>ไอเท็มในมือของคุณมีการเปลี่ยนแปลง การขายถูกยกเลิก."
+
+# แสดงเมื่อไม่พบระบบ economy ตามชื่อที่ระบุ
+# placeholder ที่ใช้ได้:
+#   %name% - ชื่อ economy ที่ระบุ
+sell-error-economy: "<error>ไม่พบเศรษฐกิจชื่อ <white>%name%<error>."
+
+# แสดงเมื่อพยายามยืนยันการขายทั้งที่ยังไม่ได้เลือกไอเท็ม (ใน inventory ขาย)
+# placeholder ที่ใช้ได้: ไม่มี
+sell-inventory-empty: "<error>คุณต้องวางไอเท็มลงใน inventory ก่อนยืนยันการขาย."
+
+# แสดงเมื่อผู้เล่นกดยกเลิก inventory สำหรับขาย
+# placeholder ที่ใช้ได้: ไม่มี
+sell-inventory-cancelled: "<error>คุณได้ยกเลิกการขาย ไอเท็มของคุณถูกส่งคืนแล้ว."
+
+# แสดงเมื่อไอเท็มที่เลือกใน inventory ขายถูกล้างออกทั้งหมด
+# placeholder ที่ใช้ได้: ไม่มี
+sell-items-cleared: "<success>ลบไอเท็มที่เลือกออกแล้ว."
+
+# แสดงเมื่อมีไอเท็มถูกเพิ่มเข้าสู่รายการขาย
+# placeholder ที่ใช้ได้: ไม่มี
+sell-item-added: "<success>เพิ่มไอเท็มเข้าสู่รายการขายแล้ว."
+
+# แสดงเมื่อมีไอเท็มถูกลบออกจากรายการขาย
+# placeholder ที่ใช้ได้: ไม่มี
+sell-item-removed: "<success>ลบไอเท็มออกจากรายการขายแล้ว."
+
+#=============================================================================
+# ADMIN MESSAGES
+#=============================================================================
+
+# แสดงเมื่อคำสั่งของแอดมินต้องระบุผู้เล่นเป้าหมาย แต่ไม่ได้ระบุ
+# placeholder ที่ใช้ได้: ไม่มี
+admin-target-required: "<error>คุณต้องระบุผู้เล่นเป้าหมายที่ถูกต้อง."
+
+# แสดงเมื่อไม่พบผู้เล่นตามชื่อที่ระบุ
+# placeholder ที่ใช้ได้:
+#   %target% - ชื่อผู้เล่นที่ระบุ
+admin-target-not-found: "<error>ไม่พบผู้เล่น <white>%target%<error>."
+
+# แสดงเมื่อแอดมินเปิดดูไอเท็มของผู้เล่น
+# placeholder ที่ใช้ได้:
+#   %type%   - ประเภทไอเท็ม (selling, expired, purchased)
+#   %target% - ชื่อผู้เล่นเป้าหมาย
+admin-open-inventory: "<success>กำลังเปิดดูไอเท็มประเภท %type% ของ <white>%target%<success>."
+
+# แสดงเมื่อแอดมินเปิดดูประวัติของผู้เล่น
+# placeholder ที่ใช้ได้:
+#   %target% - ชื่อผู้เล่นเป้าหมาย
+admin-open-history: "<success>กำลังเปิดประวัติของ <white>%target%<success>."
+
+# แสดงเมื่อแอดมินลบไอเท็มออกจากผู้เล่น
+# placeholder ที่ใช้ได้:
+#   %items%  - รายละเอียดไอเท็ม
+#   %target% - ชื่อผู้เล่นเป้าหมาย
+admin-item-removed: "<success>คุณได้ลบ <white>%items%<success> จาก <white>%target%<success> แล้ว."
+
+# แสดงเมื่อแอดมินเพิ่มไอเท็มให้ผู้เล่น
+# placeholder ที่ใช้ได้:
+#   %items%  - รายละเอียดไอเท็ม
+#   %target% - ชื่อผู้เล่นเป้าหมาย
+#   %type%   - ประเภทหมวดหมู่ (selling, expired, purchased)
+admin-item-added: "<success>คุณได้เพิ่ม <white>%items%<success> ให้กับ <white>%target%<success> ในหมวด <white>%type%<success> แล้ว."
+
+# แสดงเมื่อดึงไอเท็มจาก log สำเร็จ
+# placeholder ที่ใช้ได้: ไม่มี
+admin-item-retrieved: "<success>ดึงไอเท็มสำเร็จแล้ว."
+
+# แสดงเมื่อพยายามดึงไอเท็มจาก log ที่ไม่มีไอเท็มอยู่
+# placeholder ที่ใช้ได้: ไม่มี
+admin-no-item-to-retrieve: "<error>ไม่มีไอเท็มให้ดึงจากรายการล็อกนี้."
+
+#=============================================================================
+# RELOAD MESSAGES
+#=============================================================================
+
+# แสดงเมื่อรีโหลดการตั้งค่าปลั๊กอินเสร็จสิ้น
+# placeholder ที่ใช้ได้: ไม่มี
+reload-success: "<success>คุณได้รีโหลดปลั๊กอินเรียบร้อยแล้ว!"
+
+#=============================================================================
+# ITEM REMOVAL MESSAGES
+#=============================================================================
+# แสดงเมื่อผู้เล่นดึงไอเท็มออกจาก inventory ต่าง ๆ
+# placeholder ที่ใช้ได้:
+#   %items% - รายละเอียดไอเท็มที่ถูกลบออก
+#
+# ลบออกจากรายการที่กำลังขายอยู่ (listed)
+item-remove-listed: "#e6fff3คุณได้ลบ %items% #e6fff3ออกจากรายการที่กำลังขายอยู่."
+#
+# ลบออกจากรายการสินค้าหมดอายุ
+item-remove-expired: "#e6fff3คุณได้ลบ %items% #e6fff3ออกจากรายการสินค้าหมดอายุ."
+#
+# ลบออกจากรายการสินค้าที่ซื้อแล้ว
+item-remove-purchased: "#e6fff3คุณได้ลบ %items% #e6fff3ออกจากรายการสินค้าที่ซื้อแล้ว."
+#
+# ลบออกจาก inventory ไอเท็มของคุณเอง
+item-remove-selling: "#e6fff3คุณได้ลบ %items% #e6fff3ออกจากไอเท็มของคุณ."
+
+#=============================================================================
+# TRANSACTION MESSAGES
+#=============================================================================
+
+# แสดงให้ผู้ขายเมื่อมีการลงขายไอเท็ม
+# placeholder ที่ใช้ได้:
+#   %items% - รายละเอียดไอเท็ม
+#   %price% - ราคาขาย
+item-sold: "#e6fff3คุณเพิ่งขาย %items% #e6fff3ในราคา #92bed8%price%#e6fff3."
+
+# แสดงให้ผู้ขายเมื่อมีคนซื้อไอเท็ม (และผู้ขายออนไลน์อยู่)
+# placeholder ที่ใช้ได้:
+#   %buyer% - ชื่อผู้ซื้อ
+#   %items% - รายละเอียดไอเท็ม
+#   %price% - ราคาขาย
+item-bought-seller: "#ffacd5%buyer% #e6fff3เพิ่งซื้อ %items% #e6fff3ในราคา #92bed8%price%#e6fff3."
+
+# แสดงให้ผู้ซื้อหลังจากซื้อไอเท็มสำเร็จ
+# placeholder ที่ใช้ได้:
+#   %items% - รายละเอียดไอเท็ม
+#   %price% - ราคาที่ซื้อ
+item-bought-buyer: "#e6fff3คุณเพิ่งซื้อ %items% #e6fff3ในราคา #92bed8%price%#e6fff3."
+
+#=============================================================================
+# ERROR MESSAGES
+#=============================================================================
+
+# แสดงเมื่อผู้เล่นมีเงินไม่พอที่จะซื้อไอเท็ม
+# placeholder ที่ใช้ได้: ไม่มี
+not-enough-money: "<error>คุณมีเงินไม่เพียงพอที่จะซื้อไอเท็มนี้."
+
+# แสดงเมื่อ inventory ของผู้เล่นเต็ม (ถ้าเปิดเช็กพื้นที่)
+# placeholder ที่ใช้ได้: ไม่มี
+not-enough-space: "<error>พื้นที่ใน inventory ของคุณไม่เพียงพอสำหรับไอเท็มนี้."
+
+# แสดงเมื่อราคาที่ตั้งขายสูงกว่าราคาสูงสุดที่อนุญาต
+# placeholder ที่ใช้ได้:
+#   %max-price% - ราคาสูงสุดที่อนุญาต
+price-too-high: "<error>คุณไม่สามารถตั้งราคามากกว่า <white>%max-price%<error> ได้."
+
+# แสดงเมื่อราคาที่ตั้งขายต่ำกว่าราคาต่ำสุดที่กำหนด
+# placeholder ที่ใช้ได้:
+#   %min-price% - ราคาต่ำสุดที่กำหนด
+price-too-low: "<error>คุณไม่สามารถตั้งราคาน้อยกว่า <white>%min-price%<error> ได้."
+
+# แสดงเมื่อผู้เล่นขายไอเท็มถึงจำนวนสูงสุดที่กำหนดแล้ว
+# placeholder ที่ใช้ได้:
+#   %max-items% - จำนวนไอเท็มสูงสุดที่อนุญาต
+listed-items-limit: "<error>คุณไม่สามารถขายไอเท็มมากกว่า <white>%max-items%<error> ชิ้นได้<error>. &8(&7คุณได้ตั้งค่า zauctionhouse.<number ใน config.yml แล้วหรือยัง?&8)"
+
+# แสดงเมื่อพยายามขายไอเท็มใน world ที่ถูกแบน
+# placeholder ที่ใช้ได้: ไม่มี
+world-banned: "<error>คุณไม่สามารถขายไอเท็มในโลกนี้ได้."
+
+# แสดงเมื่อพยายามขายไอเท็มที่อยู่ใน blacklist
+# placeholder ที่ใช้ได้: ไม่มี
+item-blacklisted: "<error>คุณไม่สามารถขายไอเท็มที่ถูกแบล็กลิสต์ได้."
+
+# แสดงเมื่อพยายามขายไอเท็มที่ไม่อยู่ใน whitelist (หากเปิดใช้งาน whitelist)
+# placeholder ที่ใช้ได้: ไม่มี
+item-whitelisted: "<error>คุณไม่สามารถขายไอเท็มที่ไม่ได้อยู่ใน whitelist ได้."
+
+#=============================================================================
+# ADMIN GENERATE MESSAGES
+#=============================================================================
+# ข้อความสำหรับคำสั่งสร้างไอเท็มจำลอง (ใช้ทดสอบประสิทธิภาพเซิร์ฟเวอร์)
+
+# คำเตือนที่แสดงก่อนสร้างไอเท็มจำลอง
+# placeholder ที่ใช้ได้:
+#   %amount% - จำนวนไอเท็มที่จะสร้าง
+admin-generate-warning:
+  - "<error>⚠ คำเตือน ⚠"
+  - "<error>คำสั่งนี้จะสร้างไอเท็มประมูลจำลองจำนวน <white>%amount%<error> ชิ้นเพื่อใช้ทดสอบประสิทธิภาพ."
+  - "<error>ข้อมูลเหล่านี้เป็น <white>ข้อมูลจำลอง<error> และควรถูกลบหลังจากทดสอบเสร็จ."
+  - "<error>พิมพ์คำสั่งนี้ซ้ำภายใน <white>30 วินาที<error> เพื่อยืนยัน."
+
+# แสดงหลังจากยืนยันการสร้างไอเท็มจำลองแล้ว
+# placeholder ที่ใช้ได้:
+#   %amount% - จำนวนไอเท็มที่จะถูกสร้าง
+admin-generate-confirmed: "<success>ยืนยันแล้ว! กำลังสร้างไอเท็มประมูลจำนวน <white>%amount%<success> ชิ้น..."
+
+# อัปเดตความคืบหน้าระหว่างการสร้างไอเท็ม
+# placeholder ที่ใช้ได้:
+#   %current% - จำนวนที่สร้างไปแล้ว
+#   %total%   - จำนวนทั้งหมดที่ต้องสร้าง
+admin-generate-progress: "<gray>ความคืบหน้า: <white>%current%<gray>/<white>%total%<gray> ไอเท็มถูกสร้างแล้ว..."
+
+# แสดงเมื่อสร้างไอเท็มจำลองเสร็จ
+# placeholder ที่ใช้ได้:
+#   %amount% - จำนวนไอเท็มที่สร้าง
+#   %time%   - เวลาที่ใช้ (มิลลิวินาที)
+admin-generate-complete: "<success>สร้างไอเท็มประมูลจำนวน <white>%amount%<success> ชิ้นสำเร็จในเวลา <white>%time%ms<success>."
+
+# แสดงเมื่อไม่พบ material ที่ใช้ได้สำหรับการสร้างไอเท็ม
+# placeholder ที่ใช้ได้: ไม่มี
+admin-generate-no-materials: "<error>ไม่พบ material ที่ใช้ได้ในหมวดหมู่ โปรดตรวจสอบให้แน่ใจว่ามีหมวดหมู่อื่นที่ไม่ใช่ 'misc' ตั้งค่าไว้."
+
+# แสดงเมื่อระบุจำนวนไม่ถูกต้อง
+# placeholder ที่ใช้ได้: ไม่มี
+admin-generate-invalid-amount: "<error>จำนวนไม่ถูกต้อง กรุณาระบุค่าระหว่าง <white>1<error> ถึง <white>100000<error>."
+
+# แสดงเมื่อเริ่มสร้างผู้เล่นจำลอง
+# placeholder ที่ใช้ได้:
+#   %total% - จำนวนผู้เล่นที่จะสร้าง
+admin-generate-players-start: "<gray>กำลังลงทะเบียนผู้เล่นจำลองจำนวน <white>%total%<gray> คน..."
+
+# อัปเดตความคืบหน้าระหว่างการสร้างผู้เล่นจำลอง
+# placeholder ที่ใช้ได้:
+#   %current% - จำนวนที่สร้างไปแล้ว
+#   %total%   - จำนวนทั้งหมดที่จะสร้าง
+admin-generate-players-progress: "<gray>ลงทะเบียนผู้เล่นแล้ว: <white>%current%<gray>/<white>%total%<gray>..."
+
+# แสดงเมื่อสร้างผู้เล่นจำลองเสร็จ
+# placeholder ที่ใช้ได้:
+#   %amount% - จำนวนผู้เล่นที่สร้าง
+admin-generate-players-complete: "<success>ลงทะเบียนผู้เล่นจำลองจำนวน <white>%amount%<success> คนสำเร็จแล้ว."
+
+# แสดงเมื่อเริ่มสร้างไอเท็มจำลอง
+# placeholder ที่ใช้ได้:
+#   %total% - จำนวนไอเท็มทั้งหมดที่จะสร้าง
+admin-generate-items-start: "<gray>กำลังสร้างไอเท็มประมูลจำนวน <white>%total%<gray> ชิ้น..."
+
+#=============================================================================
+# ADMIN CACHE MESSAGES
+#=============================================================================
+# ข้อความสำหรับคำสั่งจัดการ cache
+
+# หัวข้อแสดง cache ของผู้เล่น
+# placeholder ที่ใช้ได้:
+#   %player% - ชื่อผู้เล่น
+admin-cache-show-header: "<primary>Cache ของ <white>%player%<primary>:"
+
+# รูปแบบการแสดงแต่ละรายการ cache
+# placeholder ที่ใช้ได้:
+#   %key%   - ชื่อ key ของ cache
+#   %value% - ค่าใน cache
+admin-cache-show-entry: "<gray>  %key% <dark_gray>» <white>%value%"
+
+# แสดงเมื่อไม่มีข้อมูลใน cache
+# placeholder ที่ใช้ได้: ไม่มี
+admin-cache-show-empty: "<gray>  ไม่พบข้อมูล cache."
+
+# แสดงเมื่อเคลียร์ key ใด key หนึ่งของ cache
+# placeholder ที่ใช้ได้:
+#   %key%    - ชื่อ key ของ cache
+#   %player% - ชื่อผู้เล่น
+admin-cache-cleared: "<success>ล้าง cache key <white>%key%<success> ของ <white>%player%<success> แล้ว."
+
+# แสดงเมื่อเคลียร์ cache ทั้งหมดของผู้เล่นคนหนึ่ง
+# placeholder ที่ใช้ได้:
+#   %player% - ชื่อผู้เล่น
+admin-cache-cleared-all: "<success>ล้าง cache ทั้งหมดของ <white>%player%<success> แล้ว."
+
+# แสดงเมื่อเคลียร์ cache key เดียวกันให้ผู้เล่นทุกคน
+# placeholder ที่ใช้ได้:
+#   %key%   - ชื่อ key ของ cache
+#   %count% - จำนวนผู้เล่นที่ได้รับผลกระทบ
+admin-cache-cleared-all-players: "<success>ล้าง cache key <white>%key%<success> สำหรับผู้เล่นจำนวน <white>%count%<success> คนแล้ว."
+
+# แสดงเมื่อเคลียร์ cache ทั้งหมดของผู้เล่นทุกคน
+# placeholder ที่ใช้ได้:
+#   %count% - จำนวนผู้เล่นที่ได้รับผลกระทบ
+admin-cache-cleared-all-players-all: "<success>ล้าง cache ทั้งหมดสำหรับผู้เล่นจำนวน <white>%count%<success> คนแล้ว."
+
+# แสดงเมื่อตั้งค่าค่าใน cache ให้ผู้เล่นหนึ่งคน
+# placeholder ที่ใช้ได้:
+#   %key%    - ชื่อ key ของ cache
+#   %value%  - ค่าที่ตั้งใหม่
+#   %player% - ชื่อผู้เล่น
+admin-cache-set: "<success>ตั้งค่า <white>%key%<success> เป็น <white>%value%<success> ให้กับ <white>%player%<success> แล้ว."
+
+# แสดงเมื่อตั้งค่าค่าใน cache ให้ผู้เล่นทุกคน
+# placeholder ที่ใช้ได้:
+#   %key%   - ชื่อ key ของ cache
+#   %value% - ค่าที่ตั้งใหม่
+#   %count% - จำนวนผู้เล่นที่ได้รับผลกระทบ
+admin-cache-set-all-players: "<success>ตั้งค่า <white>%key%<success> เป็น <white>%value%<success> สำหรับผู้เล่นจำนวน <white>%count%<success> คนแล้ว."
+
+# แสดงเมื่อระบุ cache key ที่ไม่ถูกต้อง
+# placeholder ที่ใช้ได้:
+#   %key% - ชื่อ key ที่ไม่ถูกต้อง
+admin-cache-invalid-key: "<error>cache key <white>%key%<error> ไม่ถูกต้อง กรุณาใช้ tab-complete เพื่อดู key ที่ใช้ได้."
+
+# แสดงเมื่อระบุค่าที่ไม่ถูกต้องให้กับ cache key
+# placeholder ที่ใช้ได้:
+#   %value% - ค่าที่ไม่ถูกต้อง
+#   %key%   - ชื่อ key ของ cache
+admin-cache-invalid-value: "<error>ค่า <white>%value%<error> ไม่ถูกต้องสำหรับ key <white>%key%<error>."
+
+# แสดงเมื่อพยายามตั้งค่า cache key ที่เป็นแบบอ่านอย่างเดียว
+# placeholder ที่ใช้ได้:
+#   %key% - ชื่อ key ของ cache
+admin-cache-key-not-settable: "<error>cache key <white>%key%<error> ไม่สามารถตั้งค่าผ่านคำสั่งได้."
+
+# แสดงเมื่อทำงานกับ cache ของผู้เล่นที่ออฟไลน์อยู่
+# placeholder ที่ใช้ได้:
+#   %player% - ชื่อผู้เล่น
+admin-cache-player-not-online: "<error>ผู้เล่น <white>%player%<error> ไม่ได้ออนไลน์."
+
+#=============================================================================
+# CLAIM MESSAGES
+#=============================================================================
+# ข้อความสำหรับระบบการรับเงินที่ค้างอยู่ (claim)
+
+# แสดงเมื่อผู้เล่นไม่มีเงินค้างอยู่ให้รับ
+# placeholder ที่ใช้ได้: ไม่มี
+claim-no-pending: "<error>คุณไม่มีเงินที่ค้างอยู่ให้รับ."
+
+# แสดงเมื่อรับเงินที่ค้างอยู่สำเร็จ
+# placeholder ที่ใช้ได้: ไม่มี
+claim-success: "<success>คุณได้รับเงินที่ค้างอยู่เรียบร้อยแล้ว!"
+
+# แสดงสำหรับแต่ละ economy เมื่อมีการรับเงิน (ในกรณีมีหลาย economy)
+# placeholder ที่ใช้ได้:
+#   %amount%  - จำนวนเงินที่ได้รับ
+#   %economy% - ชื่อ economy
+claim-economy-success: "<success>คุณได้รับเงินจำนวน <white>%amount%<success> จาก <white>%economy%<success>."
+
+# ข้อความแจ้งเตือนเมื่อผู้เล่นมีเงินค้างอยู่ (ตอนเข้าเกม)
+# placeholder ที่ใช้ได้:
+#   %amount% - จำนวนเงินค้างรวมทั้งหมด
+claim-pending-notify: "#e6fff3คุณมีเงินที่ต้องเรียกคืน! ใช้คำสั่ง <white>/ah claim<#e6fff3> เพื่อรับ <white>%amount%<#e6fff3>."
+
+#=============================================================================
+# SALES NOTIFICATION
+#=============================================================================
+# ข้อความที่แสดงเมื่อผู้เล่นล็อกอินเข้ามาแล้วพบว่ามีไอเท็มถูกขายไปในช่วงที่ออฟไลน์
+# ข้อความนี้สามารถคลิกได้และจะเปิดหน้าประวัติการขาย
+#
+# placeholder ที่ใช้ได้:
+#   %count% - จำนวนไอเท็มที่ถูกขาย
+#   %total% - จำนวนเงินรวมที่ได้รับจากการขาย
+sales-notification:
+  - "<click:run_command:/ah history>#e6fff3ระหว่างที่คุณออฟไลน์อยู่ มีไอเท็มของคุณถูกขายไปแล้วจำนวน <white>%count%<#e6fff3> ชิ้น รวมเป็นเงินทั้งสิ้น <white>%total%<#e6fff3>!"
+  - "<click:run_command:/ah history>#8c8c8c• #2CCED2คลิกที่นี่<#92ffff> เพื่อดูประวัติการขายของคุณ</click>"
+
+#=============================================================================
+# TAX MESSAGES
+#=============================================================================
+# ข้อความที่เกี่ยวกับระบบภาษี (ถ้าเปิดใช้งานใน economies.yml)
+
+# แสดงให้ผู้ขายเมื่อมีการเก็บภาษีตอนตั้งขาย
+# placeholder ที่ใช้ได้:
+#   %tax%        - จำนวนภาษีที่เก็บ
+#   %percentage% - อัตราภาษีเป็นเปอร์เซ็นต์
+tax-sell-applied: "<gray>มีการเก็บภาษีจำนวน <white>%tax%<gray> (%percentage%%) จากการขายครั้งนี้."
+
+# แสดงเมื่อมีการเก็บภาษีจากรายได้ของผู้ขายหลังการซื้อ
+# placeholder ที่ใช้ได้:
+#   %tax%        - จำนวนภาษีที่เก็บ
+#   %percentage% - อัตราภาษีเป็นเปอร์เซ็นต์
+tax-purchase-applied: "<gray>มีการเก็บภาษีจำนวน <white>%tax%<gray> (%percentage%%) จากการซื้อครั้งนี้."
+
+# แสดงให้ผู้ซื้อเมื่อราคามีการบวก VAT/ภาษีเพิ่มเติมแล้ว
+# placeholder ที่ใช้ได้:
+#   %tax%        - จำนวนภาษี
+#   %percentage% - อัตราภาษีเป็นเปอร์เซ็นต์
+tax-capitalism-info: "<gray>ราคารวมภาษี <white>%tax%<gray> (%percentage%%) แล้ว."
+
+# แสดงเมื่อผู้เล่นได้รับการยกเว้นภาษี
+# placeholder ที่ใช้ได้: ไม่มี
+tax-exempt: "<green>คุณได้รับการยกเว้นภาษี."
+
+# แสดงเมื่อผู้เล่นได้รับอัตราภาษีที่ถูกลดลง
+# placeholder ที่ใช้ได้:
+#   %percentage% - อัตราภาษีที่ลดแล้ว
+tax-reduced: "<green>คุณได้รับอัตราภาษีที่ถูกลดเหลือ (%percentage%%)."
+
+# แสดงเมื่อผู้เล่นมีเงินไม่พอที่จะจ่ายภาษี
+# placeholder ที่ใช้ได้:
+#   %tax% - จำนวนภาษีที่ต้องจ่าย
+tax-insufficient-funds: "<error>คุณมีเงินไม่เพียงพอที่จะจ่ายภาษีจำนวน <white>%tax%<error>."
+
+#=============================================================================
+# MIGRATION MESSAGES
+#=============================================================================
+# ข้อความสำหรับระบบย้ายข้อมูล (migration) จากปลั๊กอินตลาดอื่น
+# การใช้งาน: /ah admin migrate <source> confirm
+# แหล่งข้อมูลที่รองรับ: zauctionhousev3
+
+# แสดงเมื่อยังไม่ได้ตั้งค่าการย้ายข้อมูล
+# placeholder ที่ใช้ได้:
+#   %source% - ชื่อแหล่งข้อมูลที่ต้องการย้าย
+migration-not-configured: "<error>การย้ายข้อมูลจาก <white>%source%<error> ยังไม่ได้ถูกตั้งค่า โปรดตั้งค่าส่วน <white>migration<error> ใน config.yml ก่อน."
+
+# แสดงเมื่อระบุแหล่งข้อมูลสำหรับย้ายที่ไม่รู้จัก
+# placeholder ที่ใช้ได้:
+#   %source% - ชื่อแหล่งข้อมูลที่ไม่ถูกต้อง
+migration-invalid-source: "<error>ไม่รู้จักแหล่งข้อมูลสำหรับย้าย: <white>%source%"
+
+# แสดงรายชื่อแหล่งข้อมูลที่สามารถย้ายได้
+# placeholder ที่ใช้ได้:
+#   %sources% - รายชื่อแหล่งข้อมูล (คั่นด้วยคอมมา)
+migration-available-sources: "<gray>แหล่งข้อมูลที่ใช้ได้: %sources%"
+
+# ข้อมูลสรุปเกี่ยวกับการย้ายข้อมูล ก่อนให้ยืนยัน
+# placeholder ที่ใช้ได้:
+#   %source%  - ชื่อแหล่งข้อมูล
+#   %details% - รายละเอียดการตั้งค่าการย้ายข้อมูล
+migration-info:
+  - "<primary>ย้ายข้อมูลจาก <white>%source%"
+  - "<gray>รายละเอียด: <white>%details%"
+
+# ข้อความยืนยันก่อนเริ่มย้ายข้อมูล
+# placeholder ที่ใช้ได้:
+#   %source% - ชื่อแหล่งข้อมูล
+migration-confirm:
+  - "<gray>พิมพ์ <white>/ah admin migrate %source% confirm<gray> เพื่อเริ่มการย้ายข้อมูล."
+  - "<error>⚠ คำเตือน: การกระทำนี้จะนำเข้าข้อมูลมายัง V4 กรุณาสำรองข้อมูลก่อนทุกครั้ง!"
+
+# แสดงเมื่อเริ่มกระบวนการย้ายข้อมูล
+# placeholder ที่ใช้ได้:
+#   %source% - ชื่อแหล่งข้อมูล
+migration-started: "<success>เริ่มการย้ายข้อมูลจาก <white>%source%<success> แล้ว... อาจใช้เวลาสักครู่."
+
+# อัปเดตความคืบหน้าในระหว่างการย้ายข้อมูล
+# placeholder ที่ใช้ได้:
+#   %progress% - ข้อความสถานะปัจจุบัน
+migration-progress: "<gray>[Migration] %progress%"
+
+# แสดงเมื่อย้ายข้อมูลเสร็จสมบูรณ์
+# placeholder ที่ใช้ได้:
+#   %source%       - ชื่อแหล่งข้อมูล
+#   %players%      - จำนวนผู้เล่นที่ถูกย้าย
+#   %items%        - จำนวนไอเท็มที่ถูกย้าย
+#   %transactions% - จำนวนธุรกรรมที่ถูกย้าย
+#   %errors%       - จำนวนข้อผิดพลาดที่เกิดขึ้น
+#   %duration%     - เวลาในการย้าย (มิลลิวินาที)
+migration-success:
+  - "<success>การย้ายข้อมูลจาก <white>%source%<success> เสร็จสมบูรณ์!"
+  - "<gray>  Players: <white>%players%"
+  - "<gray>  Items: <white>%items%"
+  - "<gray>  Transactions: <white>%transactions%"
+  - "<gray>  Errors: <white>%errors%"
+  - "<gray>  Duration: <white>%duration%ms"
+
+# แสดงเมื่อการย้ายข้อมูลล้มเหลว
+# placeholder ที่ใช้ได้:
+#   %error% - ข้อความอธิบายข้อผิดพลาด
+migration-failed: "<error>การย้ายข้อมูลล้มเหลว: <white>%error%"

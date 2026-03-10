@@ -125,6 +125,10 @@ public class LocaleHelper {
         // Dutch-speaking countries
         COUNTRY_TO_LANGUAGE.put("NL", "nl"); // Netherlands
         COUNTRY_TO_LANGUAGE.put("SR", "nl"); // Suriname
+        
+        // Thailand
+        COUNTRY_TO_LANGUAGE.put("TH", "th"); // Thailand
+
     }
 
     private final Logger logger;
