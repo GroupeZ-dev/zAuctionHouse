@@ -717,6 +717,10 @@ action:
   # Disable if you experience performance issues with frequent updates.
   update-inventory-on-action: true
 
+  # When enabled, the category filter is reset every time a player opens the auction house.
+  # When disabled, the previously selected category persists between opens.
+  reset-category-on-open: true
+
   # Behavior when removing an item from active listings (seller cancels their sale)
   remove-listed-item:
     # If true, the item is immediately given to the player's inventory

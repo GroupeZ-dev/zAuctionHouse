@@ -9,6 +9,7 @@ import java.io.File;
 
 public record ActionConfiguration(
                 boolean updateInventoryOnAction,
+        boolean resetCategoryOnOpen,
         // Listed
         ListedConfiguration listed,
         // Purchased
@@ -21,6 +22,7 @@ public record ActionConfiguration(
     public static ActionConfiguration of(AuctionPlugin plugin, FileConfiguration configuration) {
         return new ActionConfiguration(
                 configuration.getBoolean("action.update-inventory-on-action"),
+                configuration.getBoolean("action.reset-category-on-open", true),
                 // Listed
                 ListedConfiguration.of(plugin, configuration),
                 // Purchased
