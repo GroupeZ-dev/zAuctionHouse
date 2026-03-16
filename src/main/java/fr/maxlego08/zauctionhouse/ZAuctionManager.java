@@ -93,8 +93,9 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var cache = getCache(player);
 
         // Reset category filter if configured
-        if (this.plugin.getConfiguration().getActions().resetCategoryOnOpen()) {
+        if (this.plugin.getConfiguration().getActions().resetCategoryOnOpen() && cache.has(PlayerCacheKey.CURRENT_CATEGORY)) {
             cache.remove(PlayerCacheKey.CURRENT_CATEGORY);
+            cache.remove(PlayerCacheKey.ITEMS_LISTED);
         }
 
         // Check if player's cache is already ready (fast path)
