@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "fr.maxlego08.zauctionhouse"
-version = "4.0.0.0"
+version = "4.0.0.1"
 
 extra.set("targetFolder", file("target/"))
 extra.set("apiFolder", file("target-api/"))
@@ -67,9 +67,9 @@ allprojects {
         compileOnly("me.clip:placeholderapi:2.11.6")
         compileOnly("fr.maxlego08.menu:zmenu-api:1.1.1.0")
 
-        implementation("fr.maxlego08.sarah:sarah:21e38c4")
+        implementation("fr.maxlego08.sarah:sarah:1.23")
         implementation("com.tcoded:FoliaLib:0.5.1")
-        implementation("fr.traqueur.currencies:currenciesapi:1.0.11")
+        implementation("fr.traqueur.currencies:currenciesapi:1.0.12")
     }
 }
 
