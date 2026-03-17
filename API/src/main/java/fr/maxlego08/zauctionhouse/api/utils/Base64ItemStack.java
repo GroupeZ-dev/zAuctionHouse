@@ -22,16 +22,21 @@ public class Base64ItemStack {
     /**
      * Encodes an ItemStack to a Base64-compressed string.
      *
-     * @param item the ItemStack to encode
+     * @param itemStack the ItemStack to encode
      * @return the Base64-encoded string, or {@code null} if encoding fails
      */
-    public static String encode(ItemStack item) {
+    public static String encode(ItemStack itemStack) {
+
+        if (!NmsVersion.getCurrentVersion().isAttributItemStack()) {
+            return ItemStackUtils.serializeItemStack(itemStack);
+        }
+
         Base64.Encoder encoder = Base64.getEncoder();
         try {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
             ObjectOutputStream objectOutputStream = new BukkitObjectOutputStream(gzipOutputStream);
-            objectOutputStream.writeObject(item);
+            objectOutputStream.writeObject(itemStack);
             objectOutputStream.close();
             return encoder.encodeToString(byteArrayOutputStream.toByteArray());
         } catch (IOException exception) {
@@ -47,6 +52,11 @@ public class Base64ItemStack {
      * @return the decoded ItemStack, or {@code null} if decoding fails
      */
     public static ItemStack decode(String data) {
+
+        if (!NmsVersion.getCurrentVersion().isAttributItemStack()) {
+            return ItemStackUtils.safeDeserializeItemStack(data);
+        }
+
         Base64.Decoder decoder = Base64.getDecoder();
         try {
             byte[] bytes = decoder.decode(data);

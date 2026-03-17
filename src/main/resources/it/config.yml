@@ -722,6 +722,10 @@ action:
   # Disattivare se si riscontrano problemi di prestazioni con aggiornamenti frequenti.
   update-inventory-on-action: true
 
+  # Quando attivato, il filtro categoria viene reimpostato ogni volta che un giocatore apre la casa d'aste.
+  # Quando disattivato, la categoria selezionata in precedenza persiste tra le aperture.
+  reset-category-on-open: true
+
   # Comportamento durante il ritiro di un oggetto dagli annunci attivi (il venditore annulla la vendita)
   remove-listed-item:
     # Se true, l'oggetto viene dato immediatamente all'inventario del giocatore

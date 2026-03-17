@@ -93,12 +93,8 @@ public class PaperComponent implements ComponentMessage {
 
     @Override
     public void sendMessage(CommandSender sender, String message) {
-        if (sender instanceof Player player) {
-            sender.sendMessage(this.MINI_MESSAGE.deserialize(colorMiniMessage(message), player));
-        } else {
-            Component component = this.cache.get(message, () -> this.MINI_MESSAGE.deserialize(colorMiniMessage(message)));
-            sender.sendMessage(component);
-        }
+        Component component = this.cache.get(message, () -> this.MINI_MESSAGE.deserialize(colorMiniMessage(message)));
+        sender.sendMessage(component);
     }
 
     @Override

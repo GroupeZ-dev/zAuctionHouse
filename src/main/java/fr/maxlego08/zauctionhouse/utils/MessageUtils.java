@@ -24,7 +24,7 @@ public abstract class MessageUtils extends PlaceholderUtils {
 
         for (int i = 0; i < newArgs.length; i += 2) {
             if (newArgs[i] == null || newArgs[i + 1] == null) {
-                throw new IllegalArgumentException("Keys and replacement values must not be null.");
+                continue;
             }
             message = message.replace(newArgs[i].toString(), newArgs[i + 1].toString());
         }

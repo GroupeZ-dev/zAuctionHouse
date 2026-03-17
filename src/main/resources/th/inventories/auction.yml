@@ -1,0 +1,346 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Main Auction Inventory
+#
+#   Inventory หลักของตลาด (auction house) สำหรับแสดงไอเทมทั้งหมดที่ถูกลงขาย
+#   ผู้เล่นสามารถเปิดได้ผ่านคำสั่ง /ah หรือคลิกที่ NPC ประมูล
+#
+#   Inventory นี้จะแสดง:
+#   - ไอเทมทั้งหมดที่กำลังถูกลงขาย
+#   - ทางลัดไปยังหมวดหมู่ (categories), ไอเทมหมดอายุ, ไอเทมที่เคยซื้อ
+#   - ตัวเลือกการเรียงลำดับ (sorting options)
+#   - การแบ่งหน้า (pagination) สำหรับเลื่อนดูหลายหน้า
+#
+#   Documentation: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# ชื่อ inventory ที่แสดงด้านบนของ GUI
+# รองรับ placeholder และ MiniMessage formatting
+# Placeholder ที่ใช้ได้:
+#   %page%                        - หมายเลขหน้าปัจจุบัน
+#   %max-page%                    - จำนวนหน้าทั้งหมด
+#   %zauctionhouse_category_name% - ชื่อหมวดหมู่ปัจจุบัน
+name: "%zauctionhouse_category_name% (%page%/%max-page%)"
+
+# ขนาด inventory (จำนวนช่อง ต้องเป็นจำนวนที่หารด้วย 9 ลงตัว)
+# ตัวเลือก: 9, 18, 27, 36, 45, 54 (1–6 แถว)
+# แนะนำให้ใช้ 54 ช่อง (6 แถว) สำหรับ auction house
+size: 54
+
+#=============================================================================
+# PATTERNS
+#=============================================================================
+# patterns คือ template ที่ใช้ซ้ำสำหรับ element ทั่วไป
+# จะถูกประมวลผลตามลำดับ pattern หลังจะ override pattern ก่อนหน้า
+
+patterns:
+  # เติมกรอบกระจกตกแต่ง (ด้านบนและด้านล่าง)
+  - 'zauctionhouse-decoration'
+
+#=============================================================================
+# ITEMS
+#=============================================================================
+# items คือปุ่มและส่วนแสดงผลใน inventory นี้
+# แต่ละ item จะมี key ที่ไม่ซ้ำกัน เช่น 'display-items', 'categories'
+
+items:
+
+  #---------------------------------------------------------------------------
+  # แสดงรายการไอเทมหลักของตลาด (MAIN AUCTION ITEMS DISPLAY)
+  #---------------------------------------------------------------------------
+  # ส่วนหลักที่ใช้แสดงไอเทมทั้งหมดที่ลงขาย
+  # มีการแบ่งหน้า และสามารถกรองตามหมวดหมู่ได้
+
+  display-items:
+    # ประเภทปุ่ม - ZAUCTIONHOUSE_LISTED_ITEMS เป็น type เฉพาะของปลั๊กอิน
+    # จัดการให้โดยอัตโนมัติ:
+    # - โหลดและแสดงไอเทมในตลาด
+    # - กรองตามหมวดหมู่
+    # - การเรียงลำดับ
+    # - การคลิกเพื่อซื้อ / ถอดประกาศ
+    type: ZAUCTIONHOUSE_LISTED_ITEMS
+
+    # ช่องที่ใช้แสดงไอเทม "ว่าง" เมื่อไม่มีไอเทมในตลาดเลย
+    empty-slot: 22
+
+    # ช่องที่ใช้แสดงไอเทมในตลาด
+    # แนะนำให้ใช้แถวกลาง ๆ (เว้นแถวบน/ล่างสำหรับปุ่ม UI)
+    # ช่วงช่อง: '9-17' หมายถึงช่อง 9 ถึง 17 (แถวละ 9 ช่อง)
+    # รวมทั้งหมด 36 ช่อง (4 แถว × 9 คอลัมน์)
+    slots:
+      - 9-17    # แถวที่ 2
+      - 18-26   # แถวที่ 3
+      - 27-35   # แถวที่ 4
+      - 36-44   # แถวที่ 5
+
+    # ไอเทมที่ใช้แสดงเมื่อไม่มีไอเทมลงขายเลย (ตลาดว่าง)
+    item:
+      material: BARRIER
+      # &n คือทำให้ข้อความขีดเส้นใต้ (legacy format)
+      name: '#ff0000&nไม่พบไอเทม'
+
+  #---------------------------------------------------------------------------
+  # ปุ่มเลือกหมวดหมู่ (CATEGORIES BUTTON)
+  #---------------------------------------------------------------------------
+  # เปิด inventory เลือกหมวดหมู่เพื่อกรองไอเทม
+
+  categories:
+    # ตำแหน่งช่อง - กึ่งกลางแถวบน
+    slot: 4
+
+    # ประเภทปุ่ม - 'inventory' ใช้เปิด zMenu inventory อื่น
+    type: inventory
+
+    # ปลั๊กอินที่เป็นเจ้าของ inventory เป้าหมาย
+    plugin: "zAuctionHouse"
+
+    # ชื่อ inventory เป้าหมาย (ไฟล์ inventories/categories.yml)
+    inventory: "categories"
+    is-permanent: true
+
+    # หน้าตาของปุ่ม
+    item:
+      material: CHEST
+      name: "#2CCED2<bold>หมวดหมู่"
+      lore:
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิด"
+
+  #---------------------------------------------------------------------------
+  # ปุ่มไอเทมหมดอายุ (EXPIRED ITEMS BUTTON)
+  #---------------------------------------------------------------------------
+  # แสดงไอเทมที่หมดอายุ (ขายไม่ทันเวลา)
+  # หน้าตาปุ่มจะเปลี่ยนตามว่ามีไอเทมหมดอายุหรือไม่
+
+  expired-items:
+    # ประเภทปุ่ม - เปิด expired items inventory ถ้ามีไอเทมหมดอายุ
+    type: ZAUCTIONHOUSE_EXPIRED_INVENTORY
+
+    # ตำแหน่งช่อง - ซ้ายสุดของแถวล่าง
+    slot: 45
+
+    # ไอเทมที่ใช้แสดงเมื่อผู้เล่น "มี" ไอเทมหมดอายุ
+    item:
+      # เท็กซ์เจอร์หัว (นาฬิกาทราย/นาฬิกา)
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjdhYWRmZjlkZGM1NDZmZGNlYzZlZDU5MTljYzM5ZGZhOGQwYzA3ZmY0YmM2MTNhMTlmMmU2ZDdmMjU5MyJ9fX0="
+      name: "#2CCED2<bold>ไอเทมหมดอายุ"
+      lore:
+        # %expired-items% = จำนวนไอเทมหมดอายุ
+        # %s% = เติม s เมื่อเป็นพหูพจน์
+        - "#92ffffคุณมีไอเทมหมดอายุ #2CCED2%expired-items% #92ffffชิ้น%s%."
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู"
+
+    # ไอเทมที่ใช้แสดงเมื่อผู้เล่น "ไม่มี" ไอเทมหมดอายุ
+    else:
+      item:
+        url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjdhYWRmZjlkZGM1NDZmZGNlYzZlZDU5MTljYzM5ZGZhOGQwYzA3ZmY0YmM2MTNhMTlmMmU2ZDdmMjU5MyJ9fX0="
+        name: "#2CCED2<bold>ไอเทมหมดอายุ"
+        lore:
+          - "#ff3535คุณไม่มีไอเทมหมดอายุ"
+
+  #---------------------------------------------------------------------------
+  # ปุ่มไอเทมที่เคยซื้อ (PURCHASED ITEMS BUTTON)
+  #---------------------------------------------------------------------------
+  # แสดงไอเทมที่ผู้เล่นซื้อแล้วแต่ยังไม่ได้กดรับจากเมนู
+
+  purchased-items:
+    # ประเภทปุ่ม - เปิด purchased items inventory ถ้ามีไอเทม
+    type: ZAUCTIONHOUSE_PURCHASED_INVENTORY
+
+    # ตำแหน่งช่อง - อันดับที่สองจากซ้ายในแถวล่าง
+    slot: 46
+
+    # ไอเทมที่ใช้แสดงเมื่อผู้เล่น "มี" ไอเทมที่ซื้อไว้
+    item:
+      # เท็กซ์เจอร์หีบ (Chest)
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjM3Y2FlNWM1MWViMTU1OGVhODI4ZjU4ZTBkZmY4ZTZiN2IwYjFhMTgzZDczN2VlY2Y3MTQ2NjE3NjEifX19"
+      name: "#2CCED2<bold>ไอเทมที่เคยซื้อ"
+      lore:
+        - "#92ffffคุณมีไอเทมที่เคยซื้อ #2CCED2%purchased-items% #92ffffชิ้น%s%."
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู"
+
+    # ไอเทมที่ใช้แสดงเมื่อผู้เล่น "ไม่มี" ไอเทมที่เคยซื้อ
+    else:
+      item:
+        url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjM3Y2FlNWM1MWViMTU1OGVhODI4ZjU4ZTBkZmY4ZTZiN2IwYjFhMTgzZDczN2VlY2Y3MTQ2NjE3NjEifX19"
+        name: "#2CCED2<bold>ไอเทมที่เคยซื้อ"
+        lore:
+          - "#ff3535คุณไม่มีไอเทมที่เคยซื้อ"
+
+  #---------------------------------------------------------------------------
+  # ปุ่มไอเทมที่คุณลงขาย (YOUR ITEMS / SELLING BUTTON)
+  #---------------------------------------------------------------------------
+  # แสดงไอเทมที่ผู้เล่นกำลังลงขายอยู่ในตอนนี้
+
+  selling-items:
+    # ประเภทปุ่ม - เปิด selling items inventory ถ้ามีไอเทมลงขาย
+    type: ZAUCTIONHOUSE_SELLING_INVENTORY
+
+    # ตำแหน่งช่อง - ขวาสุดของแถวล่าง
+    slot: 53
+
+    # ไอเทมที่ใช้แสดงเมื่อผู้เล่น "มี" ไอเทมที่ลงขายอยู่
+    item:
+      # เท็กซ์เจอร์หัวผู้เล่น
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjU4MDdjYzRjM2I2OTU4YWVhNjE1NmU4NDUxOGQ5MWE0OWM1ZjMyOTcxZTZlYjI2OWEyM2EyNWEyNzE0NSJ9fX0="
+      name: "#2CCED2<bold>ไอเทมของคุณ"
+      lore:
+        - "#92ffffคุณกำลังลงขายไอเทมอยู่ #2CCED2%selling-items% #92ffffชิ้น%s%."
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู"
+
+    # ไอเทมที่ใช้แสดงเมื่อผู้เล่น "ไม่มี" ไอเทมที่ลงขายอยู่
+    else:
+      item:
+        url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjU4MDdjYzRjM2I2OTU4YWVhNjE1NmU4NDUxOGQ5MWE0OWM1ZjMyOTcxZTZlYjI2OWEyM2EyNWEyNzE0NSJ9fX0="
+        name: "#2CCED2<bold>ไอเทมของคุณ"
+        lore:
+          - "#ff3535คุณไม่มีไอเทมที่กำลังลงขายอยู่"
+
+  #---------------------------------------------------------------------------
+  # ปุ่มย้อนหน้า (PREVIOUS PAGE BUTTON)
+  #---------------------------------------------------------------------------
+  # ใช้เลื่อนไปหน้าก่อนหน้าของรายการไอเทม
+
+  previous:
+    is-permanent: true
+
+    # ประเภทปุ่ม - PREVIOUS เป็น type มาตรฐานของ zMenu
+    type: PREVIOUS
+
+    # ตำแหน่งช่อง - ด้านซ้ายของกึ่งกลางแถวล่าง
+    slot: 48
+
+    # ไอเทมที่ใช้แสดงเมื่อ "มี" หน้าก่อนหน้าให้เลื่อนไป
+    item:
+      # เท็กซ์เจอร์ลูกศรซ้าย
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjllYTFkODYyNDdmNGFmMzUxZWQxODY2YmNhNmEzMDQwYTA2YzY4MTc3Yzc4ZTQyMzE2YTEwOThlNjBmYjdkMyJ9fX0="
+      name: "#2CCED2<bold>หน้าก่อนหน้า"
+      lore:
+        - "#92ffffไปยังหน้าก่อนหน้า"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเลื่อนไปหน้าก่อน"
+
+    # ไอเทมที่ใช้แสดงเมื่ออยู่หน้าแรก (ไม่มีหน้าก่อนหน้า)
+    else:
+      item:
+        material: LIGHT_BLUE_STAINED_GLASS_PANE
+        name: "<white>"
+
+  #---------------------------------------------------------------------------
+  # ปุ่มหน้าถัดไป (NEXT PAGE BUTTON)
+  #---------------------------------------------------------------------------
+  # ใช้เลื่อนไปหน้าถัดไปของรายการไอเทม
+
+  next:
+    is-permanent: true
+    type: NEXT
+    slot: 50
+
+    # ไอเทมที่ใช้แสดงเมื่อ "มี" หน้าถัดไป
+    item:
+      # เท็กซ์เจอร์ลูกศรขวา
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODI3MWE0NzEwNDQ5NWUzNTdjM2U4ZTgwZjUxMWE5ZjEwMmIwNzAwY2E5Yjg4ZTg4Yjc5NWQzM2ZmMjAxMDVlYiJ9fX0="
+      name: "#2CCED2<bold>หน้าถัดไป"
+      lore:
+        - "#92ffffไปยังหน้าถัดไป"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเลื่อนไปหน้าถัดไป"
+
+    # ไอเทมที่ใช้แสดงเมื่ออยู่หน้าสุดท้าย (ไม่มีหน้าถัดไป)
+    else:
+      item:
+        material: LIGHT_BLUE_STAINED_GLASS_PANE
+        name: "<white>"
+
+  #---------------------------------------------------------------------------
+  # ปุ่มรีเฟรช (REFRESH BUTTON)
+  #---------------------------------------------------------------------------
+  # แสดงข้อมูลของ auction house และใช้รีเฟรชรายการไอเทม
+
+  refresh:
+    # ประเภทปุ่ม - ZAUCTIONHOUSE_REFRESH จัดการรีเฟรชแบบ async
+    type: ZAUCTIONHOUSE_REFRESH
+
+    # ตำแหน่งช่อง - กึ่งกลางแถวล่าง
+    slot: 49
+
+    # ไอเทมที่ใช้แสดงระหว่างกำลังโหลด/รีเฟรช (กันการคลิกถี่ ๆ)
+    loading-item:
+      material: CLOCK
+      name: "#2CCED2<bold>กำลังรีเฟรช..."
+      lore:
+        - "#8c8c8c• #ff3535กำลังโหลด กรุณารอสักครู่..."
+
+    # ไอเทมปกติของปุ่มรีเฟรช
+    item:
+      material: BELL
+      name: "#2CCED2<bold>ข้อมูลตลาดประมูล"
+      lore:
+        - "#92ffffยินดีต้อนรับสู่ auction house"
+        - "#92ffffซื้อขายไอเทมกับผู้เล่นคนอื่นได้ที่นี่"
+        - ""
+        - "#92ffffการใช้งาน#8c8c8c:"
+        - "#2CCED2/ah sell #92ffff<price> [<amount>]"
+        - ""
+        # PlaceholderAPI สำหรับสถิติแบบไดนามิก
+        - "#92ffffจำนวนไอเทมในตลาด#8c8c8c: #2CCED2%zauctionhouse_listed_items%"
+        - "#92ffffรูปแบบการเรียงลำดับปัจจุบัน#8c8c8c: #2CCED2%zauctionhouse_sorting_name%"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อรีเฟรชรายการไอเทม"
+
+  #---------------------------------------------------------------------------
+  # ปุ่มเปลี่ยนรูปแบบการเรียง (SORT TYPE BUTTON)
+  #---------------------------------------------------------------------------
+  # ใช้เปลี่ยนวิธีการเรียงลำดับของไอเทมที่แสดง
+
+  change-sort:
+    # ประเภทปุ่ม - จัดการการวนเปลี่ยน sort
+    type: ZAUCTIONHOUSE_CHANGE_SORT
+
+    # รูปแบบการเรียงลำดับที่จะวนผ่าน (ตามลำดับนี้)
+    # ตัวเลือก: DECREASING_DATE, DECREASING_PRICE, ASCENDING_DATE, ASCENDING_PRICE
+    sorts:
+      - DECREASING_DATE   # ใหม่สุดก่อน (ค่าเริ่มต้น)
+      - DECREASING_PRICE  # แพงสุดก่อน
+      - ASCENDING_DATE    # เก่าสุดก่อน
+      - ASCENDING_PRICE   # ถูกสุดก่อน
+
+    # รูปแบบข้อความสำหรับ sort ที่ "ถูกเลือก" อยู่ (ใช้ใน lore)
+    # %sorting% จะถูกแทนด้วยชื่อ sort จาก config.yml
+    enable-text: ' #F27438➜ %sorting%'
+
+    # รูปแบบข้อความสำหรับ sort ที่ "ยังไม่ถูกเลือก"
+    disable-text: ' #76CDCD➜ %sorting%'
+
+    # ไอเทมที่ใช้แสดงระหว่างกำลังโหลด/เปลี่ยน sort (กันการคลิกถี่ ๆ)
+    loading-item:
+      material: HOPPER
+      name: "#2CCED2<bold>รูปแบบการเรียงลำดับ"
+      lore:
+        - "#8c8c8c• #ff3535กำลังโหลด กรุณารอสักครู่"
+
+    # ตำแหน่งช่อง - ฝั่งขวาของแถวล่าง
+    slot: 52
+
+    # ไอเทมปกติของปุ่มเปลี่ยนรูปแบบการเรียง
+    item:
+      material: HOPPER
+      name: "#2CCED2<bold>การเรียงลำดับ"
+      lore:
+        - "#92ffffรูปแบบการเรียงลำดับที่มีให้เลือก:"
+        # Placeholder ของแต่ละรูปแบบ (ระบบจะจัดรูปแบบด้วย enable/disable-text)
+        - "%DECREASING_DATE%"
+        - "%DECREASING_PRICE%"
+        - "%ASCENDING_DATE%"
+        - "%ASCENDING_PRICE%"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปลี่ยนรูปแบบการเรียง"

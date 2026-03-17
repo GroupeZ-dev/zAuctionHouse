@@ -1,0 +1,240 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Categories Inventory
+#
+#   Inventory นี้ใช้แสดงเมนูเลือกหมวดหมู่ (category selection menu)
+#   ผู้เล่นสามารถเลือกหมวดหมู่เพื่อกรองไอเทมใน auction house
+#
+#   CATEGORIES ถูกกำหนดไว้ใน:
+#   - categories.yml  - ไฟล์กำหนดว่าไอเทมไหนอยู่ในหมวดใดบ้าง
+#   - ไฟล์นี้          - ไฟล์กำหนดปุ่ม GUI สำหรับแต่ละหมวดหมู่
+#
+#   วิธีเพิ่มหมวดหมู่ใหม่:
+#   1. เพิ่มนิยามหมวดหมู่ใน categories.yml (พร้อม rules)
+#   2. เพิ่มปุ่มในไฟล์นี้ โดยใช้ type: ZAUCTIONHOUSE_CATEGORY และ category: <ชื่อหมวด>
+#   3. ใช้ placeholder %zauctionhouse_category_count_<ชื่อหมวด>% เพื่อแสดงจำนวนไอเทมในหมวดนั้น
+#
+#   Documentation: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# INVENTORY SETTINGS
+#=============================================================================
+
+# ชื่อ inventory สำหรับเมนูหมวดหมู่ (static text)
+name: "#0c1719Categories"
+
+# ขนาด inventory - 6 แถว (54 ช่อง)
+size: 54
+
+#=============================================================================
+# PATTERNS
+#=============================================================================
+
+patterns:
+  # กรอบกระจกตกแต่งรอบ ๆ
+  - 'zauctionhouse-decoration'
+  # ปุ่มกลับไปหน้า auction หลัก
+  - 'zauctionhouse-back'
+
+#=============================================================================
+# CATEGORY BUTTONS
+#=============================================================================
+# แต่ละปุ่มจะเปิด auction house โดยกรองตามหมวดนั้น ๆ
+# ประเภทปุ่มใช้ ZAUCTIONHOUSE_CATEGORY พร้อม field 'category'
+# ค่า 'category' ต้องตรงกับ key ในไฟล์ categories.yml
+
+items:
+
+  #---------------------------------------------------------------------------
+  # หมวด ALL ITEMS
+  #---------------------------------------------------------------------------
+  # แสดงทุกไอเทมทั้งหมดโดยไม่กรอง
+  # เป็นมุมมองเริ่มต้นเมื่อเปิด auction house ครั้งแรก
+
+  all-items:
+    # ประเภทปุ่มสำหรับเลือกหมวด
+    type: ZAUCTIONHOUSE_CATEGORY
+
+    # ตัวระบุหมวด - 'all' เป็นหมวดพิเศษที่แสดงทุกอย่าง
+    category: all
+
+    # ตำแหน่งช่อง - กึ่งกลางแถวบน (ไม่รวมช่อง decoration)
+    slot: 4
+
+    item:
+      material: CHEST
+      name: "#2CCED2<bold>ไอเทมทั้งหมดในตลาด"
+      lore:
+        - "#92ffffดูรายการไอเทมทั้งหมดในตลาด"
+        - ""
+        # %zauctionhouse_category_count_all% = จำนวนไอเทมทั้งหมด
+        - "#92ffffจำนวนไอเทมทั้งหมด#8c8c8c: #2CCED2%zauctionhouse_category_count_all%"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู"
+
+  #---------------------------------------------------------------------------
+  # หมวด BLOCKS
+  #---------------------------------------------------------------------------
+  # แสดงไอเทมที่เป็นบล็อก (วางได้)
+
+  blocks:
+    type: ZAUCTIONHOUSE_CATEGORY
+    # ต้องตรงกับ key ใน categories.yml
+    category: blocks
+    slot: 19
+
+    item:
+      # ไอเทมตัวแทนของหมวดนี้
+      material: GRASS_BLOCK
+      name: "#7a7a7a<bold>บล็อกสำหรับใช้สร้างสิ่งปลูกสร้าง"
+      lore:
+        - "#92ffffบล็อกสำหรับใช้สร้างสิ่งปลูกสร้าง"
+        - ""
+        # จำนวนไอเทมในหมวดนี้
+        - "#92ffffจำนวนไอเทม#8c8c8c: #2CCED2%zauctionhouse_category_count_blocks%"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู"
+
+  #---------------------------------------------------------------------------
+  # หมวด WEAPONS
+  #---------------------------------------------------------------------------
+  # แสดงดาบ ธนู หน้าไม้ และอาวุธอื่น ๆ
+
+  weapons:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: weapons
+    slot: 20
+
+    item:
+      material: DIAMOND_SWORD
+      name: "#ff5555<bold>อุปกรณ์ต่อสู้"
+      lore:
+        - "#92ffffอุปกรณ์ต่อสู้"
+        - "#92ffffดาบ ธนู หน้าไม้ ฯลฯ"
+        - ""
+        - "#92ffffจำนวนไอเทม#8c8c8c: #2CCED2%zauctionhouse_category_count_weapons%"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู"
+
+  #---------------------------------------------------------------------------
+  # หมวด ARMOR
+  #---------------------------------------------------------------------------
+  # แสดงหมวก เสื้อ เกง เกราะ ขา รองเท้าบูต และโล่
+
+  armor:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: armor
+    slot: 21
+
+    item:
+      material: DIAMOND_CHESTPLATE
+      name: "#55ffff<bold>อุปกรณ์ป้องกันตัว"
+      lore:
+        - "#92ffffอุปกรณ์ป้องกันตัว"
+        - ""
+        - "#92ffffจำนวนไอเทม#8c8c8c: #2CCED2%zauctionhouse_category_count_armor%"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู"
+
+  #---------------------------------------------------------------------------
+  # หมวด TOOLS
+  #---------------------------------------------------------------------------
+  # แสดง pickaxe ขวาน จอบ เสียม และเครื่องมืออื่น ๆ
+
+  tools:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: tools
+    slot: 22
+
+    item:
+      material: DIAMOND_PICKAXE
+      name: "#ffff55<bold>เครื่องมือขุด ทำฟาร์ม และใช้งานทั่วไป"
+      lore:
+        - "#92ffffเครื่องมือขุด ทำฟาร์ม และใช้งานทั่วไป"
+        - ""
+        - "#92ffffจำนวนไอเทม#8c8c8c: #2CCED2%zauctionhouse_category_count_tools%"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู"
+
+  #---------------------------------------------------------------------------
+  # หมวด CONSUMABLES
+  #---------------------------------------------------------------------------
+  # แสดงโพชัน อาหาร และไอเทมที่ใช้แล้วหมด
+
+  consumables:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: consumables
+    slot: 23
+
+    item:
+      material: GOLDEN_APPLE
+      name: "#55ff55<bold>อาหารและของกิน"
+      lore:
+        - "#92ffffอาหารและโพชัน"
+        - ""
+        - "#92ffffจำนวนไอเทม#8c8c8c: #2CCED2%zauctionhouse_category_count_consumables%"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู"
+
+  #---------------------------------------------------------------------------
+  # หมวด RESOURCES
+  #---------------------------------------------------------------------------
+  # แสดงแร่ อินก็อต และวัตถุดิบคราฟต์ต่าง ๆ
+
+  resources:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: resources
+    slot: 24
+
+    item:
+      material: DIAMOND
+      name: "#ffaa00<bold>แร่และวัสดุสำหรับคราฟต์"
+      lore:
+        - "#92ffffแร่และวัสดุสำหรับคราฟต์"
+        - ""
+        - "#92ffffจำนวนไอเทม#8c8c8c: #2CCED2%zauctionhouse_category_count_resources%"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู"
+
+  #---------------------------------------------------------------------------
+  # หมวด ENCHANTED BOOKS
+  #---------------------------------------------------------------------------
+  # แสดงเฉพาะหนังสือที่มี enchant
+
+  enchanted-books:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: enchanted-books
+    slot: 25
+
+    item:
+      material: ENCHANTED_BOOK
+      name: "#ff55ff<bold>หนังสือที่มี enchantment"
+      lore:
+        - "#92ffffหนังสือที่มี enchantment"
+        - ""
+        - "#92ffffจำนวนไอเทม#8c8c8c: #2CCED2%zauctionhouse_category_count_enchanted-books%"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู"
+
+  #---------------------------------------------------------------------------
+  # หมวด MISCELLANEOUS
+  #---------------------------------------------------------------------------
+  # แสดงไอเทมที่ไม่เข้ากับหมวดอื่น
+
+  misc:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: misc
+    slot: 31
+
+    item:
+      material: CHEST
+      name: "#555555<bold>ไอเทมอื่น ๆ"
+      lore:
+        - "#92ffffไอเทมอื่น ๆ ที่ไม่ได้อยู่ในหมวดหลัก"
+        - ""
+        - "#92ffffจำนวนไอเทม#8c8c8c: #2CCED2%zauctionhouse_category_count_misc%"
+        - ""
+        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู"

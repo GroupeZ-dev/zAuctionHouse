@@ -1,6 +1,7 @@
 package fr.maxlego08.zauctionhouse;
 
 import fr.maxlego08.menu.api.engine.InventoryEngine;
+import fr.maxlego08.menu.api.utils.CompatibilityUtil;
 import fr.maxlego08.zauctionhouse.api.AuctionManager;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCache;
@@ -90,6 +91,12 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     public void openMainAuction(Player player, int page) {
         var inventoriesLoader = this.plugin.getInventoriesLoader();
         var cache = getCache(player);
+
+        // Reset category filter if configured
+        if (this.plugin.getConfiguration().getActions().resetCategoryOnOpen() && cache.has(PlayerCacheKey.CURRENT_CATEGORY)) {
+            cache.remove(PlayerCacheKey.CURRENT_CATEGORY);
+            cache.remove(PlayerCacheKey.ITEMS_LISTED);
+        }
 
         // Check if player's cache is already ready (fast path)
         boolean playerCacheReady = cache.has(PlayerCacheKey.ITEMS_LISTED);
@@ -847,11 +854,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
                 if (onlinePlayer == ignoredPlayer) continue;
 
-                // Null-safe check for inventory operations
-                var inventoryView = onlinePlayer.getOpenInventory();
-                if (inventoryView == null) continue;
-
-                var topInventory = inventoryView.getTopInventory();
+                var topInventory = CompatibilityUtil.getTopInventory(onlinePlayer);
                 if (topInventory == null) continue;
 
                 var holder = topInventory.getHolder();

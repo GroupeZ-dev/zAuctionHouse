@@ -1,0 +1,994 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Main Configuration (ไฟล์ตั้งค่าหลัก)
+#
+#   Sponsor: https://minestrator.com/a/GROUPEZ
+#   Documentation: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# DEBUG & MONITORING SETTINGS (การดีบักและติดตามประสิทธิภาพ)
+#=============================================================================
+
+# เปิด log รายละเอียดและข้อความ error เพิ่มเติมในคอนโซล
+# ใช้ตอนเจอปัญหา หรือเมื่อทีมซัพพอร์ตขอข้อมูลดีบัก
+# ถ้าเปิดจะมีข้อความละเอียดเกี่ยวกับการทำงานของปลั๊กอินเยอะขึ้น
+# แนะนำ: ปิดในโปรดักชัน เปิดเฉพาะตอนสืบหาปัญหา
+enable-debug: false
+
+# เปิดการเก็บข้อมูลด้านประสิทธิภาพ (performance)
+# ถ้าเปิดปลั๊กอินจะ log เวลาที่ใช้ในงานต่าง ๆ เช่น:
+# - การจัดเรียง / กรองไอเท็ม
+# - การคำนวณหมวดหมู่
+# - การโหลด/คิวรีฐานข้อมูล
+# - การทำงานของ cache
+# มีประโยชน์ตอน auction house มีไอเท็มเยอะมาก (1000+ ชิ้น) และเริ่มหน่วง
+# แนะนำ: เปิดชั่วคราวตอนรู้สึกว่ามีแลค หรือหน้า auction โหลดช้า
+enable-performance-debug: false
+
+# ตรวจสอบเวอร์ชันใหม่ของปลั๊กอินอัตโนมัติ
+# ถ้าเปิดปลั๊กอินจะแจ้งในคอนโซล/แอดมินเมื่อมีเวอร์ชันใหม่
+# ปลั๊กอินจะ "ไม่" อัปเดตเอง แค่แจ้งเตือนเท่านั้น
+# แนะนำ: เปิดไว้เพื่อไม่พลาดอัปเดตสำคัญและการแก้บั๊ก
+enable-version-checker: true
+
+# การตั้งค่าฟิลเตอร์สำหรับ performance debug
+# ใช้กรองเฉพาะงานที่อยากดูใน log
+# ใช้งานได้เมื่อ enable-performance-debug เป็น true เท่านั้น
+performance-debug:
+  filter:
+    # โหมดฟิลเตอร์:
+    # - DISABLED : log ทุกออเปอเรชัน (ดีฟอลต์ ไม่กรอง)
+    # - WHITELIST: log เฉพาะชื่อใน 'operations'
+    # - BLACKLIST: log ทุกอย่าง ยกเว้นชื่อใน 'operations'
+    mode: DISABLED
+
+    # รายชื่อ operation ที่จะใช้กรอง
+    # รองรับ wildcard ด้านท้าย (*) สำหรับแมตช์ prefix
+    # ตัวอย่าง: "loadItems.*" จะครอบคลุม loadItems.loadPlayers, loadItems.loadItemsFromDB ฯลฯ
+    #
+    # รายชื่อชื่อ operation ที่มี:
+    # Loading:
+    #   - loadItems.loadPlayers
+    #   - loadItems.loadItemsFromDB
+    #   - loadItems.loadAuctionItemsFromDB
+    #   - loadItems.processItems
+    #   - loadItems.total
+    #   - loadItems.rebuildSortedItemsCache
+    #
+    # Cache:
+    #   - SortedItemsCache.rebuild
+    #   - getItemsListedForSale
+    #   - resolveItems[SALE]
+    #   - getItemIds[SALE]
+    #
+    # Category:
+    #   - applyCategories
+    #   - computeCategoryCount[categoryId]
+    #
+    # Item:
+    #   - item.BuildItemStack
+    #   - item.CreatePlaceholders
+    #
+    # Inventory:
+    #   - openInventory.<file name>
+    operations:
+      - "loadItems.*"
+      - "SortedItemsCache.*"
+
+#=============================================================================
+# GENERAL SETTINGS (ค่าทั่วไป)
+#=============================================================================
+
+# รูปแบบวันที่/เวลา ที่ปลั๊กอินใช้แสดง timestamp ต่าง ๆ
+# ใช้รูปแบบ Java SimpleDateFormat
+# ตัวอย่าง:
+#   "dd/MM/yyyy HH:mm:ss" → "25/12/2024 14:30:45"
+#   "MM-dd-yyyy hh:mm a"  → "12-25-2024 02:30 PM"
+date-format: dd/MM/yyyy HH:mm:ss
+
+#=============================================================================
+# DATABASE CONFIGURATION (ฐานข้อมูล)
+#=============================================================================
+
+# ประเภทฐานข้อมูลที่ใช้เก็บข้อมูล auction
+# ตัวเลือก:
+# - SQLITE  : ฐานข้อมูลไฟล์โลคอล (ดีฟอลต์, ไม่ต้องเตรียมอะไรเพิ่ม) เหมาะกับเซิร์ฟเวอร์เดี่ยว
+# - MYSQL   : ใช้ MySQL server เหมาะกับหลายเซิร์ฟเวอร์ / ข้อมูลเยอะ
+# - MARIADB : ใช้ MariaDB (เข้ากันได้กับ MySQL)
+# หมายเหตุ: ถ้าใช้หลายเซิร์ฟเวอร์แชร์ข้อมูล แนะนำ MySQL/MariaDB + Redis addon
+storage-type: SQLITE
+
+# ชื่อเซิร์ฟเวอร์ (ตัวระบุ) สำหรับระบบหลายเซิร์ฟเวอร์
+# ชื่อนี้จะถูกบันทึกกับแต่ละรายการขาย เพื่อบอกว่ามาจากเซิร์ฟเวอร์ไหน
+# แนะนำ: ตั้งชื่อให้ชัดเจน เช่น "skyblock", "survival"
+server-name: skyblock
+
+# การตั้งค่าการเชื่อมต่อฐานข้อมูลสำหรับ MySQL/MariaDB
+# ใช้เฉพาะเมื่อ storage-type เป็น MYSQL หรือ MARIADB
+database-configuration:
+  # prefix ของชื่อ table ที่ปลั๊กอินสร้าง
+  # มีประโยชน์เมื่อใช้ฐานข้อมูลร่วมกับปลั๊กอินอื่น ป้องกันชื่อชนกัน
+  # คำเตือน: ห้ามเปลี่ยนหลังมีข้อมูลแล้ว ไม่งั้นปลั๊กอินจะมองไม่เห็นข้อมูลเดิม
+  table-prefix: zauctionhouse_
+
+  # IP หรือ hostname ของ database server
+  # ถ้า DB อยู่เครื่องเดียวกันใช้ 'localhost' หรือ '127.0.0.1'
+  host: 192.168.10.10
+
+  # port ของ MySQL/MariaDB (ดีฟอลต์ 3306)
+  port: 3306
+
+  # ชื่อ user ที่ใช้เข้าสู่ระบบฐานข้อมูล
+  # ต้องมีสิทธิ์ SELECT, INSERT, UPDATE, DELETE, CREATE TABLE
+  user: homestead
+
+  # รหัสผ่านของ user
+  # ห้ามให้ไฟล์นี้หลุดสู่สาธารณะ
+  password: secret
+
+  # ชื่อฐานข้อมูลที่จะเก็บข้อมูล auction
+  # DB ต้องถูกสร้างไว้ก่อนแล้ว ปลั๊กอินจะสร้าง table เอง
+  database: zauctionhouse
+
+  # เปิด debug SQL หรือไม่
+  # ถ้าเปิด จะ log query ทั้งหมดลงคอนโซล
+  # คำเตือน: จะมี log เยอะมาก ใช้เฉพาะตอนตรวจปัญหา DB
+  debug: false
+
+#=============================================================================
+# MESSAGE COLOR SHORTCUTS (คีย์สีลัดสำหรับข้อความ)
+#=============================================================================
+
+# กำหนด key สีแบบ custom เพื่อใช้ในข้อความต่าง ๆ
+# ช่วยให้ปรับโทนสีข้อความได้ง่าย โดยเปลี่ยนที่นี่ที่เดียว
+# ใช้ร่วมกับ MiniMessage และสีแบบ hex (#RRGGBB)
+#
+# ตัวอย่างการใช้ใน messages:
+#   "<primary>Welcome <secondary>to the auction house!"
+message-colors:
+  # Primary color - ใช้กับข้อความสำคัญ / ชื่อหัวข้อ / ไฮไลต์
+  - key: <primary>
+    color: '#24d65d'
+  # Secondary color - ใช้กับข้อความรอง / คำอธิบาย
+  - key: <secondary>
+    color: '#656665'
+  # Error color - ใช้กับข้อความ error / คำเตือน
+  - key: <error>
+    color: '#ff0000'
+  # Success color - ใช้กับข้อความสำเร็จ / ยืนยัน
+  - key: <success>
+    color: '#00ff00'
+
+#=============================================================================
+# COMMAND CONFIGURATION (การตั้งค่าคำสั่ง)
+#=============================================================================
+#
+# การตั้งค่า alias และ argument ของคำสั่งต่าง ๆ
+# สำคัญ: เปลี่ยนส่วนนี้แล้วต้อง "รีสตาร์ทเซิร์ฟเวอร์" เท่านั้น /ah admin reload ไม่พอ
+
+commands:
+  # คำสั่งหลัก: /zauctionhouse (เปิด auction house)
+  main-command:
+    # ชื่อคำสั่งอื่นที่ใช้แทน /zauctionhouse ได้
+    # ผู้เล่นสามารถใช้ alias ไหนก็ได้เพื่อเปิด auction
+    aliases:
+      - ah           # สั้นและฮิต
+      - hdv          # ย่อภาษาฝรั่งเศส (Hôtel des Ventes)
+      - auction      # ชื่อเต็มภาษาอังกฤษ
+      - zauction     # เวอร์ชันมีชื่อปลั๊กอินนำหน้า
+
+  # คำสั่งขาย: /zauctionhouse sell <price> [amount] [economy]
+  # ใช้โดยผู้เล่นในการลงขายไอเท็ม
+  sell:
+    # ถ้าเปิด: พิมพ์ /ah sell เฉย ๆ จะเปิด GUI ให้เลือกไอเท็ม/ตั้งราคา/เลือก economy
+    # ถ้าปิด: /ah sell ต้องใส่ราคาในคำสั่ง
+    # แนะนำ: เปิดเพื่อ UX ที่ดีขึ้น ปิดถ้าต้องการเน้นการพิมพ์คำสั่งล้วน ๆ
+    enable-sell-inventory: false
+
+    # alias ของ subcommand sell
+    # ตัวอย่าง: /ah s 1000 (ขายของในมือราคา 1000)
+    aliases:
+      - sell
+      - s
+      - vendre       # ฝรั่งเศส: "ขาย"
+
+    # การตั้งค่า argument
+    arguments:
+      # argument price (จำเป็น ถ้าปิด sell inventory)
+      - name: price
+        display-name: price
+        required: true
+        # คำแนะนำราคาสำหรับ Tab-completion
+        auto-completion:
+          - 1000
+          - 10000
+          - 25000
+
+      # argument amount (ไม่จำเป็น) - จำนวนที่ขายจาก stack
+      - name: amount
+        display-name: amount
+        required: false
+        # %max-stack-size% จะถูกแทนด้วยจำนวน stack สูงสุดของไอเท็มนั้น
+        auto-completion:
+          - '1'
+          - '%max-stack-size%'
+
+      # argument economy (ไม่จำเป็น) - เลือกสกุลเงิน
+      - name: economy
+        display-name: economy
+        required: false
+        # ใส่ชื่อ economy ที่เปิดใช้อยู่เพื่อรองรับ Tab-completion
+        auto-completion:
+          - vault
+
+  # คำสั่งรับเงิน: /zauctionhouse claim
+  # ใช้รับเงินที่ค้างอยู่เมื่อปิด auto-claim
+  claim:
+    aliases:
+      - claim
+      - c
+      - recuperer    # ฝรั่งเศส: "กู้คืน"
+
+  # คำสั่งเปิดหน้า: /zauctionhouse page <number>
+  # เปิด auction ที่หน้าที่กำหนดโดยตรง
+  page:
+    aliases:
+      - page
+      - p
+    arguments:
+      - name: page
+        display-name: page
+        required: true
+        auto-completion:
+          - '1'
+          - '2'
+          - '3'
+          - '5'
+          - '10'
+
+  # คำสั่งเปิด inventory แบบเฉพาะทาง
+  # ใช้เข้าหน้า "ของฉัน", "ของหมดอายุ", "ของที่ซื้อแล้ว", "ประวัติ" ฯลฯ ได้ไว
+  inventories:
+    # /ah selling - เปิดหน้าของที่เรากำลังลงขายอยู่
+    - enable: true
+      permission: "zauctionhouse.selling"
+      description: "Open selling items"
+      aliases:
+        - 'selling'
+      inventory: SELLING_ITEMS
+      # enable-page: true
+      # page-name: "page"
+
+    # /ah expired - เปิดหน้าของที่หมดอายุ
+    - enable: true
+      permission: "zauctionhouse.expired"
+      description: "Open expired items"
+      aliases:
+        - 'expired'
+      inventory: EXPIRED_ITEMS
+
+    # /ah purchased - เปิดหน้าของที่เราซื้อมาแล้ว
+    - enable: true
+      permission: "zauctionhouse.purchased"
+      description: "Open purchased items"
+      aliases:
+        - 'purchased'
+      inventory: PURCHASED_ITEMS
+
+    # /ah history - เปิดหน้าประวัติการขายของเรา
+    - enable: true
+      permission: "zauctionhouse.history"
+      description: "Open history"
+      aliases:
+        - 'history'
+      inventory: HISTORY
+
+#=============================================================================
+# PRICE SHORTCUTS (คีย์ย่อใส่ราคา)
+#=============================================================================
+
+# ระบบคูณเลขเวลาพิมพ์ราคาในคำสั่ง sell
+# ทำให้ผู้เล่นใช้ตัวอักษรแทนจำนวนมากได้
+# เช่น /ah sell 1K = /ah sell 1000
+#     /ah sell 2.5M = /ah sell 2500000
+number-sell-multiplication:
+  # เปิด/ปิดฟีเจอร์นี้
+  enable: true
+
+  # ฟอร์แมตตัวคูณ (ไม่สนตัวพิมพ์เล็กใหญ่)
+  # ผู้เล่นพิมพ์ suffix ตาม 'format' ระบบจะเอาราคามาคูณด้วย 'multiplication'
+  formats:
+    - format: K          # พัน (1,000)
+      multiplication: 1000
+    - format: M          # ล้าน (1,000,000)
+      multiplication: 1000000
+    - format: B          # พันล้าน
+      multiplication: 1000000000
+    - format: T          # ล้านล้าน (trillion)
+      multiplication: 1000000000000
+    - format: Q          # quadrillion
+      multiplication: 1000000000000000
+    - format: QQ         # quintillion
+      multiplication: 1000000000000000000
+    - format: S          # sextillion
+      multiplication: 1000000000000000000000
+    - format: SS         # septillion
+      multiplication: 1000000000000000000000000
+    - format: O          # octillion
+      multiplication: 1000000000000000000000000000
+    - format: N          # nonillion
+      multiplication: 1000000000000000000000000000000
+    - format: D          # decillion
+      multiplication: 1000000000000000000000000000000000
+    - format: UN         # undecillion
+      multiplication: 1000000000000000000000000000000000000
+    - format: DD         # duodecillion
+      multiplication: 1000000000000000000000000000000000000000
+    - format: TR         # tredecillion
+      multiplication: 1000000000000000000000000000000000000000000
+
+#=============================================================================
+# EXPIRATION SETTINGS (เวลาหมดอายุ)
+#=============================================================================
+
+# การตั้งค่าเวลาหมดอายุสำหรับสถานะไอเท็มต่าง ๆ
+# หน่วยเป็น "วินาที"
+# ตัวอย่างเวลา:
+#   3600    = 1 ชั่วโมง
+#   86400   = 1 วัน
+#   172800  = 2 วัน
+#   604800  = 1 สัปดาห์
+#   2592000 = 30 วัน
+
+expiration:
+  # ระยะเวลาที่ประกาศขายจะอยู่ในหน้า auction ก่อนหมดอายุ
+  auction:
+    # เวลาหมดอายุค่าเริ่มต้น (วินาที) 172800 = 2 วัน
+    # หลังครบเวลานี้ ไอเท็มที่ยังขายไม่ออกจะถูกย้ายไป "expired items"
+    default-expiration: 172800
+
+    # เวลาหมดอายุตาม permission
+    # ผู้เล่นที่มี permission บางตัวอาจได้เวลาลงขายนานขึ้น/สั้นลง
+    permission:
+      enable: false
+      # ตรวจตามลำดับ ด้านบนลงล่าง เจออันแรกที่ตรงก็ใช้ตัวนั้น
+      permissions:
+        - permission: zauctionhouse.expiration.vip
+          expiration: 3600       # 1 ชั่วโมง
+        - permission: zauctionhouse.expiration.elite
+          expiration: 7200       # 2 ชั่วโมง
+        - permission: zauctionhouse.expiration.legend
+          expiration: 259200     # 3 วัน
+
+  # เวลาหมดอายุของ bid listings (ระบบ bid ในอนาคต)
+  bid:
+    default-expiration: 172800
+    permission:
+      enable: false
+      permissions:
+        - permission: zauctionhouse.expiration.vip
+          expiration: 3600
+        - permission: zauctionhouse.expiration.elite
+          expiration: 7200
+        - permission: zauctionhouse.expiration.legend
+          expiration: 259200
+
+  # เวลาหมดอายุของ rent listings (ระบบเช่าในอนาคต)
+  rent:
+    default-expiration: 172800
+    permission:
+      enable: false
+      permissions:
+        - permission: zauctionhouse.expiration.vip
+          expiration: 3600
+        - permission: zauctionhouse.expiration.elite
+          expiration: 7200
+        - permission: zauctionhouse.expiration.legend
+          expiration: 259200
+
+  # ระยะเวลาที่เก็บไอเท็ม "หมดอายุ" ไว้ก่อนลบถาวร
+  # หลังครบเวลานี้ ถ้าเจ้าของยังไม่มาเอา ไอเท็มจะหายไปถาวร
+  # แนะนำ: อย่างน้อย 1 สัปดาห์
+  expire:
+    default-expiration: 604800   # 1 สัปดาห์
+    permission:
+      enable: false
+
+  # ระยะเวลาที่เก็บไอเท็ม "ที่ซื้อแล้ว" ไว้ก่อนลบถาวร
+  # หลังครบเวลานี้ ถ้าผู้เล่นยังไม่มาเอา ไอเท็มจะหายไปถาวร
+  # แนะนำ: อย่างน้อย 1 สัปดาห์
+  purchase:
+    default-expiration: 604800   # 1 สัปดาห์
+    permission:
+      enable: false
+
+#=============================================================================
+# LISTING LIMITS (จำนวนไอเท็มที่ลงขายได้)
+#=============================================================================
+
+# จำกัดจำนวนไอเท็มที่ผู้เล่นคนหนึ่งสามารถลงขายพร้อมกัน
+# ต้องให้ permission ตามที่กำหนดเพื่อเพิ่มเพดาน
+
+permissions:
+  # จำกัดจำนวนสำหรับประกาศขายแบบปกติ (auction)
+  auction:
+    - permission: zauctionhouse.max.5
+      limit: 5
+    - permission: zauctionhouse.max.10
+      limit: 10
+    - permission: zauctionhouse.max.15
+      limit: 15
+
+  # จำกัดจำนวนสำหรับ rent (ในอนาคต)
+  rent:
+    - permission: zauctionhouse.max.5
+      limit: 5
+    - permission: zauctionhouse.max.10
+      limit: 10
+    - permission: zauctionhouse.max.15
+      limit: 15
+
+  # จำกัดจำนวนสำหรับ bid (ในอนาคต)
+  bid:
+    - permission: zauctionhouse.max.5
+      limit: 5
+    - permission: zauctionhouse.max.10
+      limit: 10
+    - permission: zauctionhouse.max.15
+      limit: 15
+
+#=============================================================================
+# WORLD RESTRICTIONS (จำกัดโลกที่ขายของได้)
+#=============================================================================
+
+# รายชื่อ world ที่ "ห้ามสร้างประกาศขายใหม่"
+# ผู้เล่นยัง "ดูและซื้อ" ได้ปกติ แต่จะ "ขายไม่ได้"
+# เหมาะสำหรับจำกัดการขายใน world event / มินิเกม ฯลฯ
+# ใช้ชื่อโฟลเดอร์ world ให้ตรงเป๊ะ (Linux จะสนตัวพิมพ์เล็กใหญ่)
+
+banned-worlds:
+  # world ที่ห้ามลงขายแบบ auction
+  auction:
+    - "world_the_end"
+  # world ที่ห้ามลง rent
+  rent:
+    - "world_the_end"
+  # world ที่ห้ามลง bid
+  bid:
+    - "world_the_end"
+
+#=============================================================================
+# ITEM DISPLAY LORE (คำอธิบายไอเท็มใน GUI)
+#=============================================================================
+
+# Lore พิเศษที่ถูก "เพิ่มต่อท้าย" ลงในไอเท็มเมื่อแสดงใน auction
+# ใช้ MiniMessage ได้ และรองรับสีแบบ hex
+#
+# Placeholder ที่ใช้ได้:
+#   %seller%         - ชื่อผู้ขาย
+#   %buyer%          - ชื่อผู้ซื้อ
+#   %price%          - ราคาพร้อมฟอร์แมต
+#   %time-remaining% - เวลาที่เหลือก่อนหมดอายุ
+#   %date%           - วันที่ของธุรกรรม
+#   %status%         - ข้อความสถานะ dynamic (ซื้อ/กดรับ)
+#   %items%          - ชื่อไอเท็ม
+#   %type%           - ประเภท log (สำหรับ admin logs)
+#   %player%         - ผู้เล่นที่เกี่ยวข้อง
+#   %target%         - เป้าหมาย (เช่นผู้เล่นที่ admin จัดการให้)
+
+item-lore:
+  # Lore ของไอเท็มในหน้า auction หลัก (ขายไอเท็มเดี่ยว)
+  listed-auction-item:
+    - ""
+    - "<white>⌂ #92ffffSeller#8c8c8c: #2CCED2%seller%"
+    - "<white>☆ #92ffffPrice#8c8c8c: #2CCED2%price%"
+    - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
+    - ""
+    - "%status%"
+
+  # Lore ของประกาศขายแบบรวมหลายไอเท็ม (เช่นในกล่อง shulker)
+  multiple-listed-auction-item:
+    - ""
+    - "<white>⌂ #92ffffSeller#8c8c8c: #2CCED2%seller%"
+    - "<white>☆ #92ffffPrice#8c8c8c: #2CCED2%price%"
+    - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
+    - ""
+    - "#8c8c8c• #2CCED2ʟᴇғᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ sᴇᴇ ᴛʜᴇ ᴄᴏɴᴛᴇɴᴛ"
+    - "%status%"
+
+  # Lore ของไอเท็มในหน้า expired
+  expired-item:
+    - ""
+    - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
+    - ""
+    - "#8c8c8c• #2CCED2Click to retrieve this item"
+
+  # Lore ของไอเท็มในหน้า purchased
+  purchased-item:
+    - ""
+    - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
+    - ""
+    - "#8c8c8c• #2CCED2Click to retrieve this item"
+
+  # Lore ของไอเท็มในหน้า "Your items" (selling)
+  selling-item:
+    - ""
+    - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
+    - ""
+    - "#8c8c8c• #2CCED2Click to retrieve this item"
+
+  # Lore ของไอเท็มที่กำลังถูกอีกคนซื้ออยู่ (กันไม่ให้ขายซ้อน)
+  being-purchased-item:
+    - ""
+    - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
+    - ""
+    - "#8c8c8c• #ff3535Your item is being purchased, you cannot retrieve it."
+
+  # Lore ในหน้าประวัติการขาย (history)
+  history-item:
+    - ""
+    - "<white>⌂ #92ffffBuyer#8c8c8c: #2CCED2%buyer%"
+    - "<white>☆ #92ffffPrice#8c8c8c: #2CCED2%price%"
+    - "<white>⌚ #92ffffDate#8c8c8c: #969696%date%"
+
+  # Lore สำหรับ admin log (เคสไอเท็มเดียว)
+  admin-log-item:
+    - ""
+    - "<white>⚡ #92ffffType#8c8c8c: #2CCED2%type%"
+    - "<white>⌂ #92ffffPlayer#8c8c8c: #2CCED2%player%"
+    - "<white>⌂ #92ffffTarget#8c8c8c: #2CCED2%target%"
+    - "<white>☆ #92ffffPrice#8c8c8c: #2CCED2%price%"
+    - "<white>⌚ #92ffffDate#8c8c8c: #969696%date%"
+    - ""
+    - "#8c8c8c• #2CCED2ʟᴇғᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜᴇ ɪᴛᴇᴍ"
+
+  # Lore สำหรับ admin log (หลายไอเท็ม)
+  admin-log-multiple-item:
+    - ""
+    - "<white>⚡ #92ffffType#8c8c8c: #2CCED2%type%"
+    - "<white>⌂ #92ffffPlayer#8c8c8c: #2CCED2%player%"
+    - "<white>⌂ #92ffffTarget#8c8c8c: #2CCED2%target%"
+    - "<white>☆ #92ffffPrice#8c8c8c: #2CCED2%price%"
+    - "<white>⌚ #92ffffDate#8c8c8c: #969696%date%"
+    - ""
+    - "#8c8c8c• #2CCED2ʟᴇғᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜᴇ ɪᴛᴇᴍ"
+    - "#8c8c8c• #2CCED2ʀɪɢʜᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ sᴇᴇ ᴀʟʟ ɪᴛᴇᴍs"
+
+  # Lore ใน inventory ขาย (ไอเท็มกดเพื่อลบออกจากช่องขาย)
+  sell-inventory-remove-item:
+    - ''
+    - '#8c8c8c• #2CCED2ʟᴇғᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴍᴏᴠᴇ ᴛʜɪs ɪᴛᴇᴍ'
+
+  # ข้อความสถานะ dynamic ตามมุมมอง (ผู้ขาย/ผู้ซื้อ)
+  status:
+    # แสดงให้ผู้ขายเห็น (กดเพื่อตัวเองดึงไอเท็มคืน)
+    seller: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
+    # แสดงให้ผู้ซื้อเห็น (กดเพื่อซื้อ)
+    buyer: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"
+    # สถานะสำหรับ right-click ฝั่งผู้ขาย
+    right-seller: "#8c8c8c• #2CCED2ʀɪɢʜᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
+    # สถานะสำหรับ right-click ฝั่งผู้ซื้อ
+    right-buyer: "#8c8c8c• #2CCED2ʀɪɢʜᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"
+
+  # ชื่อแบบอ่านง่ายของประเภท log ต่าง ๆ
+  log-type-names:
+    SALE: "Item Listed"
+    PURCHASE: "Item Purchased"
+    REMOVE_LISTED: "Removed from Listing"
+    REMOVE_SELLING: "Retrieved Selling Item"
+    REMOVE_EXPIRED: "Retrieved Expired"
+    REMOVE_PURCHASED: "Retrieved Purchase"
+
+#=============================================================================
+# SPECIAL ITEMS (ไอเท็มพิเศษใน UI)
+#=============================================================================
+
+# ไอเท็มพิเศษสำหรับใช้แทนการแสดงตัวไอเท็มจริงในบางกรณีใน UI
+
+special-items:
+  # ไอเท็มที่ใช้แสดงประกาศแบบ bulk (หลายไอเท็มในหนึ่งประกาศ)
+  # ใช้ไอคอนกล่อง chest เพื่อบอกว่ากดเข้าไปดูเนื้อข้างในได้
+  auction-item:
+    material: CHEST
+    name: "#00ff00Bulk sale"
+
+#=============================================================================
+# ITEM DISPLAY FORMATTING (รูปแบบการแสดงไอเท็มในข้อความ)
+#=============================================================================
+
+# กำหนดว่าจะแสดงชื่อไอเท็มในข้อความอย่างไร
+# ใช้ตอนแสดงในข้อความ chat, log และ notification ต่าง ๆ
+
+item-display:
+  # ฟอร์แมตของไอเท็มที่ใช้ language key ของ Minecraft
+  # ใช้เมื่อไอเท็มมี translation key (ของวานิลลาเกือบทั้งหมด)
+  # placeholder: %amount%, %item-translation-key%
+  lang: "#8ee6e3x%amount% &7<lang:%item-translation-key%>"
+
+  # ฟอร์แมตของไอเท็มที่มีชื่อ custom display name
+  # placeholder: %amount%, %item-name%
+  item-name: "#8ee6e3x%amount% &7%item-name%"
+
+  # ตัวคั่นระหว่างสองชิ้นสุดท้ายในลิสต์
+  # ตัวอย่าง: "Diamond, Gold and Emerald"
+  and: " &fand "
+
+  # ตัวคั่นระหว่างไอเท็มแต่ละชิ้นในลิสต์ (ยกเว้นสองชิ้นสุดท้าย)
+  # ตัวอย่าง: "Diamond, Gold, Iron"
+  between: "&f, "
+
+  # ถ้าเปิด: รวมไอเท็มเหมือนกันเป็นก้อนเดียวเวลาแสดงผล
+  # ตัวอย่าง: "3x Diamond" แทนที่จะเป็น "Diamond, Diamond, Diamond"
+  merge-similar-items: true
+
+#=============================================================================
+# TIME FORMAT (รูปแบบเวลา)
+#=============================================================================
+
+# ป้ายชื่อหน่วยเวลา และรูปแบบการแสดงเวลา
+# ใช้ในหลายที่ เช่น แสดงเวลาที่เหลือก่อนหมดอายุ
+
+time:
+  # ชื่อหน่วยเวลา (เอกพจน์/พหูพจน์)
+  second: second
+  seconds: seconds
+
+  minute: minute
+  minutes: minutes
+
+  hour: hour
+  hours: hours
+
+  day: day
+  days: days
+
+  # รูปแบบ string แสดงเวลา (ใช้ printf-style)
+  # %02d = ตัวเลข 2 หลัก (01, 09, 10 ฯลฯ)
+  #
+  # สำหรับระยะเวลา >= 1 วัน
+  time-day: '%02dᴅ %02dʜ %02dᴍ'
+
+  # สำหรับ >= 1 ชั่วโมง แต่ < 1 วัน
+  time-hour: '%02dʜ %02dᴍ %02ds'
+
+  # สำหรับ >= 1 นาที แต่ < 1 ชั่วโมง
+  time-minute: '%02dᴍ %02ds'
+
+  # สำหรับ < 1 นาที
+  time-second: '%02ds'
+
+#=============================================================================
+# ACTION BEHAVIOR (พฤติกรรมตอนเกิด action ต่าง ๆ)
+#=============================================================================
+
+# การตั้งค่าพฤติกรรมของปลั๊กอินตอนมีการซื้อ/ลบ/กดรับไอเท็ม
+
+action:
+  # ถ้าเปิด: inventory ของ auction จะรีเฟรชอัตโนมัติเมื่อมีการเพิ่ม/ลบไอเท็ม
+  # ถ้าปิด: ช่วยลดโหลดในกรณีที่มีการอัปเดตถี่มาก
+  update-inventory-on-action: true
+
+  # ถ้าเปิด: ตัวกรองหมวดหมู่จะถูกรีเซ็ตทุกครั้งที่ผู้เล่นเปิดบ้านประมูล
+  # ถ้าปิด: หมวดหมู่ที่เลือกไว้ก่อนหน้าจะคงอยู่ระหว่างการเปิด
+  reset-category-on-open: true
+
+  # พฤติกรรมเมื่อลบไอเท็มออกจากประกาศขาย (ผู้ขายยกเลิกการขาย)
+  remove-listed-item:
+    # ถ้า true: ให้ไอเท็มกลับเข้าคลังทันที
+    # ถ้า false: ส่งไอเท็มไปที่หน้า expired แทน (ให้ไปกดรับเองทีหลัง)
+    give-item: false
+
+    # ถ้า true: เปิดหน้าหน้า auction ใหม่หลังลบเสร็จ
+    open-inventory: true
+
+    # ถ้า true: เปิดหน้าคอนเฟิร์มก่อนลบ
+    # แนะนำ: เปิดเพื่อกันผู้เล่นกดพลาด
+    open-confirm-inventory: true
+
+  # พฤติกรรมเมื่อลบไอเท็มจากหน้า expired
+  remove-expired-item:
+    # ถ้า true: เปิดหน้าหมดอายุซ้ำหลังจากกดรับไอเท็ม
+    open-inventory: true
+
+  # พฤติกรรมเมื่อซื้อไอเท็ม
+  purchased-item:
+    # ถ้า true: ให้ไอเท็มเข้าคลังผู้ซื้อทันที
+    # ถ้า false: ส่งไอเท็มไปหน้า "purchased items" ให้ไปกดรับทีหลัง
+    give-item: false
+
+    # ถ้า give-item เป็น true จะตรวจว่าคลังผู้เล่นว่างพอไหม
+    # ถ้า false และไม่มีช่องว่าง การซื้อจะถูกบล็อก
+    player-inventory-must-have-free-space: true
+
+    # ถ้า true: เปิดหน้า auction ใหม่หลังซื้อเสร็จ
+    open-inventory: true
+
+    # การแสดงผลเมื่อผู้เล่นเงินไม่พอซื้อ
+    money-item:
+      # เปิด/ปิดไอเท็ม error แทนที่ตำแหน่งไอเท็ม
+      enable: true
+      # ระยะเวลาที่แสดงไอเท็ม error (ticks, 20 = 1 วินาที)
+      duration: 60
+      # ไอเท็มที่ใช้แสดงเมื่อเงินไม่พอ
+      item:
+        material: BARRIER
+        name: "#ff3535✘ You don't have enough money to buy this!"
+
+    # ถ้า true: ส่งข้อความแชทบอกว่าเงินไม่พอ
+    money-message: true
+
+    # เสียงที่เล่นเมื่อผู้เล่นเงินไม่พอ
+    money-sound:
+      enable: true
+      # หมวดหมู่เสียง
+      category: MASTER
+      # ชื่อ sound ของ Minecraft
+      sound: minecraft:entity.villager.no
+      # ความดัง (0.0 - 1.0)
+      volume: 1
+      # pitch (0.5 - 2.0, 1.0 = ปกติ)
+      pitch: 1
+
+  # พฤติกรรมเมื่อตัวผู้ขายกดรับไอเท็มจากหน้า "Your items"
+  selling-item:
+    # ถ้า true: เปิดหน้า selling ซ้ำหลังการกดรับแต่ละครั้ง
+    open-inventory: true
+
+#=============================================================================
+# AUTO-CLAIM CONFIGURATION (การรับเงินอัตโนมัติ)
+#=============================================================================
+
+# การตั้งค่ารับเงินอัตโนมัติจากการขายตอนออฟไลน์
+# เมื่อไอเท็มถูกขายตอนผู้เล่นออฟไลน์ เงินจะถูกเก็บเป็น "pending"
+
+auto-claim:
+  # ถ้า true: จะโอนเงินที่ค้างอยู่ให้ผู้เล่นอัตโนมัติเมื่อเข้ามาในเกม
+  # ถ้า false: ผู้เล่นต้องใช้ /ah claim เพื่อรับเงินเอง
+  enable: false
+
+  # ดีเลย์ (ticks) ก่อน auto-claim หลังผู้เล่นเข้ามา (20 = 1 วินาที)
+  # ให้เวลาเซิร์ฟเวอร์โหลดผู้เล่นให้พร้อมก่อนทำธุรกรรม
+  delay-ticks: 20
+
+  # ถ้า true: ส่งข้อความแจ้งผู้เล่นเมื่อมีการ auto-claim
+  notify-player: true
+
+  # ถ้า auto-claim ปิด ใช้ตัวนี้เพื่อแจ้งผู้เล่นว่ามีเงินค้างอยู่
+  notify-pending: true
+
+  # ดีเลย์ก่อนส่งข้อความแจ้งเงินค้าง (ticks)
+  notify-delay-ticks: 40
+
+  # ข้อความเหตุผลที่ส่งให้ปลั๊กอิน economy ตอนโอนเงิน
+  deposit-reason: "Claimed pending auction money"
+
+#=============================================================================
+# SALES NOTIFICATION (การแจ้งเตือนเมื่อมีของขายออกตอนออฟไลน์)
+#=============================================================================
+
+# แจ้งเตือนผู้เล่นว่าในช่วงที่ออฟไลน์ มีของขายออกไปกี่ชิ้น/ได้เงินเท่าไร
+
+sales-notification:
+  # ถ้า true: ผู้เล่นจะได้รับสรุปการขายตอนเข้าเกม
+  enable: true
+
+  # ดีเลย์ (ticks) ก่อนส่งข้อความแจ้งเตือน (20 = 1 วินาที)
+  # ค่าเยอะหน่อยจะเว้นที่ให้ข้อความ join อื่น ๆ แสดงก่อน
+  delay-ticks: 60
+
+#=============================================================================
+# PERFORMANCE CONFIGURATION (การจูนประสิทธิภาพ)
+#=============================================================================
+
+# การตั้งค่าขั้นสูงด้าน performance สำหรับ auction house ที่มีของเยอะมาก
+# ส่วนใหญ่เซิร์ฟเวอร์ไม่ต้องเปลี่ยนค่าดีฟอลต์พวกนี้
+
+performance:
+  # การตั้งค่า cache สำหรับรายการไอเท็มที่ sort แล้ว
+  # cache จะ pre-sort ไอเท็มเพื่อให้การแบ่งหน้าเร็ว (O(1))
+  cache:
+    # จำนวนไอเท็มขั้นต่ำก่อนจะใช้ parallel sort (Arrays.parallelSort)
+    # parallel sort ดีกว่ากับชุดข้อมูลใหญ่ แต่มี overhead สำหรับชุดเล็ก
+    # แนะนำ: 10000 สำหรับส่วนใหญ่
+    parallel-sort-threshold: 10000
+
+    # จำนวนไอเท็มขั้นต่ำก่อนจะ process category แบบขนาน
+    # แนะนำ: 5000
+    parallel-category-threshold: 5000
+
+    # จำนวน thread สำหรับงาน parallel
+    # -1 = ตรวจอัตโนมัติ (ใช้ CPU ที่มี -1, อย่างน้อย 2)
+    parallelism: -1
+
+  # timeout สำหรับการทำงานแบบ cluster (หลายเซิร์ฟเวอร์)
+  # ป้องกันไม่ให้ operation ค้างไม่จบ
+  # หน่วยเป็นมิลลิวินาที
+  cluster-timeout:
+    # timeout สำหรับเช็กสถานะ availability ข้ามเซิร์ฟเวอร์
+    check-availability-ms: 5000
+
+    # timeout ในการ lock ไอเท็ม
+    lock-item-ms: 5000
+
+    # timeout ในการปลด lock
+    unlock-item-ms: 3000
+
+    # timeout แจ้ง server อื่นว่า status เปลี่ยน
+    notify-status-change-ms: 3000
+
+    # timeout แจ้ง server อื่นว่าไอเท็มถูกซื้อ/ลบ
+    notify-item-action-ms: 5000
+
+#=============================================================================
+# SORTING CONFIGURATION (การจัดเรียงไอเท็ม)
+#=============================================================================
+
+# การตั้งค่ารูปแบบการ sort ไอเท็มในหน้า auction
+
+sort-items:
+  # รูปแบบ sort ดีฟอลต์เมื่อผู้เล่นเปิด auction ครั้งแรก
+  # ตัวเลือก: ASCENDING_PRICE, ASCENDING_DATE, DECREASING_DATE, DECREASING_PRICE
+  default-sort: DECREASING_DATE
+
+  # ข้อความชื่อของแต่ละโหมด sort ที่แสดงใน GUI
+  translations:
+    ASCENDING_PRICE: "ราคาต่ำไปสูง"    # ราคาต่ำไปสูง
+    ASCENDING_DATE: "วันที่เก่าที่สุดก่อน"      # เก่าที่สุดก่อน
+    DECREASING_DATE: "วันที่ใหม่ที่สุดก่อน"    # ใหม่ที่สุดก่อน
+    DECREASING_PRICE: "ราคาแพงสุดก่อน"  # ราคาแพงสุดก่อน
+
+################################################################################################################################
+# MIGRATION FROM OTHER PLUGINS (ย้ายข้อมูลจากปลั๊กอินอื่น)
+################################################################################################################################
+# ส่วนนี้ใช้สำหรับย้ายข้อมูลจากปลั๊กอิน auction ตัวอื่นมายัง zAuctionHouse V4
+#
+# วิธี migrate:
+# 1. ตั้งค่าหมวด source ด้านล่างด้วยการตั้งค่า DB ของปลั๊กอินเก่า
+# 2. ปิดเซิร์ฟเวอร์แล้ว backup ข้อมูลทุกอย่าง (สำคัญมาก!)
+# 3. เปิดเซิร์ฟเวอร์พร้อม zAuctionHouse V4
+# 4. รัน: /ah admin migrate <source> confirm
+#
+# ปลั๊กอินที่รองรับตอนนี้:
+#   - zauctionhousev3 (aliases: zah, zahv3, v3)
+#
+# คำเตือน: ต้อง backup ก่อนทุกครั้ง การ migrate ไม่สามารถ undo ได้ง่าย ๆ
+
+migration:
+
+  #============================================================
+  # zAuctionHouse V3 Migration
+  #============================================================
+  # ย้ายข้อมูลจาก zAuctionHouse V3 มายัง V4
+  # คำสั่ง: /ah admin migrate zauctionhousev3 confirm
+  zauctionhouse-v3:
+    # ประเภท storage ของ V3
+    # ตัวเลือก: MYSQL, MARIADB, SQLITE, หรือ JSON
+    source-type: SQLITE
+
+    # table prefix ที่ใช้ใน V3
+    # ถ้าไม่แน่ใจให้ดูที่ config.yml ของ V3 (ดีฟอลต์คือ "zauctionhouse_")
+    table-prefix: "zauctionhouse_"
+
+    # === การตั้งค่า SQLite ของ V3 ===
+    # path ของไฟล์ SQLite (relative จากโฟลเดอร์เซิร์ฟเวอร์)
+    sqlite-path: "plugins/zAuctionHousev3/database.db"
+
+    # === การตั้งค่า MySQL/MariaDB ของ V3 ===
+    # ใช้เฉพาะเมื่อ source-type เป็น MYSQL/MARIADB
+    host: "localhost"
+    port: 3306
+    database: "zauctionhouse"
+    user: "root"
+    password: ""
+
+    # === การตั้งค่า JSON ของ V3 ===
+    # path โฟลเดอร์ที่เก็บไฟล์ JSON ของ V3
+    json-folder: "plugins/zAuctionHouseV3"
+
+  #============================================================
+  # แหล่งย้ายข้อมูลอื่น (อนาคต)
+  #============================================================
+  # แหล่ง migration อื่น ๆ อาจถูกเพิ่มในเวอร์ชันถัดไป
+  # ตัวอย่าง:
+  # axauctions:
+  #   source-type: SQLITE
+  #   sqlite-path: "plugins/AxAuctions/data.db"
+
+################################################################################################################################
+# ADMIN GENERATE CONFIGURATION (ตั้งค่าคำสั่ง /ah admin generate)
+################################################################################################################################
+# การตั้งค่าสำหรับคำสั่ง /ah admin generate
+# คำสั่งนี้ใช้สร้างไอเท็มจำลองจำนวนมากสำหรับทดสอบประสิทธิภาพ
+#
+# การใช้งาน: /ah admin generate <amount>
+#
+# คำเตือน: ไอเท็มที่สร้างขึ้นมา "มีไว้ทดสอบเท่านั้น" ควรลบออกหลังทดสอบเสร็จ
+
+admin-generate:
+
+  #============================================================
+  # Expiration Time Configuration (เวลาหมดอายุของไอเท็มจำลอง)
+  #============================================================
+
+  expiration:
+    # โหมด: FIXED หรือ RANDOM
+    # FIXED : ใช้ค่า 'fixed' เหมือนกันทุกชิ้น
+    # RANDOM: สุ่มค่าระหว่าง 'min' และ 'max'
+    mode: RANDOM
+
+    # เวลาหมดอายุแบบ fix (วินาที) ถ้าใช้โหมด FIXED
+    fixed: 172800  # 2 วัน
+
+    # เวลาต่ำสุด (วินาที) ถ้าโหมด RANDOM
+    min: 3600      # 1 ชั่วโมง
+
+    # เวลาสูงสุด (วินาที) ถ้าโหมด RANDOM
+    max: 604800    # 7 วัน
+
+  #============================================================
+  # Price Configuration (ราคาของไอเท็มจำลอง)
+  #============================================================
+
+  price:
+    # โหมด: FIXED หรือ RANDOM
+    mode: RANDOM
+
+    # ราคา fix ถ้าโหมด FIXED
+    fixed: 1000
+
+    # ราคาต่ำสุด ถ้าโหมด RANDOM
+    min: 10
+
+    # ราคาสูงสุด ถ้าโหมด RANDOM
+    max: 1000000
+
+  #============================================================
+  # Item Amount Configuration (จำนวนต่อ stack ของไอเท็มจำลอง)
+  #============================================================
+
+  item-amount:
+    # โหมด: FIXED หรือ RANDOM
+    mode: RANDOM
+
+    # จำนวน fix ถ้าโหมด FIXED (จะถูก cap ตาม max stack size ของไอเท็ม)
+    fixed: 1
+
+    # จำนวนน้อยสุดถ้าโหมด RANDOM
+    min: 1
+
+    # จำนวนมากสุดถ้าโหมด RANDOM
+    # -1 = ใช้ max stack size ของไอเท็มเป็นค่าสูงสุด
+    max: -1
+
+  #============================================================
+  # Bulk Items Configuration (ประกาศแบบหลายไอเท็ม)
+  #============================================================
+  # ประกาศ bulk = รายการขายที่มีหลายไอเท็มในหนึ่งประกาศ (เช่น shulker ใส่ของ)
+
+  bulk-items:
+    # เปอร์เซ็นต์ของไอเท็มที่สร้างให้เป็น bulk (0-100)
+    percentage: 15
+
+    # จำนวนไอเท็มขั้นต่ำในประกาศ bulk
+    min-items: 2
+
+    # จำนวนไอเท็มสูงสุดในประกาศ bulk
+    max-items: 27
+
+  #============================================================
+  # Economy Configuration (สกุลเงินของไอเท็มจำลอง)
+  #============================================================
+
+  economies:
+    # รายชื่อ economy ที่ใช้ตอน generate (ต้องตรงกับชื่อใน economies.yml)
+    # จะสุ่มสกุลเงินจากลิสต์นี้ให้แต่ละไอเท็ม
+    # ถ้าลิสต์ว่าง จะใช้ default economy
+    list:
+      - vault
+
+    # ถ้า true: แจกจ่ายจำนวนไอเท็มให้กระจายเท่า ๆ กันในแต่ละ economy
+    # ถ้า false: สุ่ม economy ให้แต่ละไอเท็มแบบอิสระ
+    even-distribution: false

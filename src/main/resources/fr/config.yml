@@ -721,6 +721,10 @@ action:
   # Désactiver si vous rencontrez des problèmes de performance avec des mises à jour fréquentes.
   update-inventory-on-action: true
 
+  # Quand activé, le filtre de catégorie est réinitialisé à chaque ouverture de l'hôtel des ventes.
+  # Quand désactivé, la catégorie précédemment sélectionnée persiste entre les ouvertures.
+  reset-category-on-open: true
+
   # Comportement lors du retrait d'un item des annonces actives (le vendeur annule sa vente)
   remove-listed-item:
     # Si true, l'item est immédiatement donné à l'inventaire du joueur

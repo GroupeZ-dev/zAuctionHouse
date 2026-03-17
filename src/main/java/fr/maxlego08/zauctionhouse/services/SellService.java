@@ -58,7 +58,7 @@ public class SellService extends ZUtils implements AuctionSellService {
             return CompletableFuture.completedFuture(SellResult.failure("Validation failed", validationReason));
         }
 
-        // Verify items are still in their slots before async operation
+        // Verify items are still in their slots before the async operation
         if (!verifyItemsInSlots(player, validSlotItems)) {
             message(this.plugin, player, Message.SELL_ERROR_CHANGE);
             return CompletableFuture.completedFuture(SellResult.failure("Items changed", SellFailReason.ITEMS_CHANGED));

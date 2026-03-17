@@ -50,6 +50,7 @@ public class ExpireService implements AuctionExpireService {
         if (storageType == StorageType.LISTED) {
 
             item.setStatus(ItemStatus.REMOVED);
+            this.auctionManager.removeItem(StorageType.LISTED, item);
 
             Consumer<Long> applyExpiration = expiration -> this.plugin.getScheduler().runNextTick(w -> {
                 long expiredAt = expiration > 0 ? System.currentTimeMillis() + (expiration * 1000) : 0;
@@ -118,9 +119,10 @@ public class ExpireService implements AuctionExpireService {
             List<Item> onlineSellerItems = new ArrayList<>();
             List<Item> offlineSellerItems = new ArrayList<>();
 
-            // Separate items by seller online status
+            // Remove all items from LISTED storage and separate by seller online status
             for (Item item : items) {
                 item.setStatus(ItemStatus.REMOVED);
+                this.auctionManager.removeItem(StorageType.LISTED, item);
                 if (item.getSeller().isOnline()) {
                     onlineSellerItems.add(item);
                 } else {
