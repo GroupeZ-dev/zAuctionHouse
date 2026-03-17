@@ -5,3 +5,4 @@
 - **Fixed** the `/zauctionhouse` command — it is no longer the default main command (this can be changed in `config.yml`)
 - **Fixed** message system errors that could appear without reason
 - **Added** the `reset-category-on-open` option, allowing categories to reset when reopening the inventory
+- **Added** `EXCELLENTEECONOMY` economy support
