@@ -29,6 +29,7 @@ import fr.maxlego08.zauctionhouse.buttons.sell.SellEconomyButton;
 import fr.maxlego08.zauctionhouse.buttons.shulker.ShulkerInfoButton;
 import fr.maxlego08.zauctionhouse.buttons.shulker.ShulkerOpenButton;
 import fr.maxlego08.zauctionhouse.loader.buttons.*;
+import fr.maxlego08.zauctionhouse.loader.permissibles.CategoryPermissibleLoader;
 import fr.maxlego08.zauctionhouse.utils.PerformanceDebug;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import org.bukkit.entity.Player;
@@ -108,6 +109,9 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
     public void loadButtons() {
 
         this.buttonManager.unregisters(this.plugin);
+
+        // Permissibles
+        this.buttonManager.registerPermissible(new CategoryPermissibleLoader(this.plugin));
 
         // Player
         this.buttonManager.register(new EmptySlotLoader(this.plugin, ListedItemsButton.class, "ZAUCTIONHOUSE_LISTED_ITEMS"));
