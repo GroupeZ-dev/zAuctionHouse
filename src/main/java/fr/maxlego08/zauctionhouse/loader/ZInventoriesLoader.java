@@ -156,6 +156,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new SortLoader(this.plugin, this.inventoryManager));
         this.buttonManager.register(new RefreshLoader(this.plugin, this.inventoryManager));
         this.buttonManager.register(new CategoryButtonLoader(this.plugin));
+        this.buttonManager.register(new CategorySwitcherLoader(this.plugin));
 
         // Shulker
         this.buttonManager.register(new NoneLoader(this.plugin, ShulkerOpenButton.class, "ZAUCTIONHOUSE_SHULKER_OPEN"));
