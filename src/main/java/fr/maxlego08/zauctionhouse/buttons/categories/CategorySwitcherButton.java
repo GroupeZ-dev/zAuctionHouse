@@ -53,11 +53,11 @@ public class CategorySwitcherButton extends Button {
         Category currentCategory = cache.get(PlayerCacheKey.CURRENT_CATEGORY);
 
         String currentId = currentCategory != null ? currentCategory.getId() : "main";
-        placeholders.register("category", currentCategory != null ? currentCategory.getDisplayName() : "All");
+        placeholders.register("category", currentCategory != null ? currentCategory.getDisplayName() : this.plugin.getCategoryManager().getAllCategoryName());
 
         var categoryManager = this.plugin.getCategoryManager();
         this.categories.forEach(categoryId -> {
-            String displayName = categoryManager.getCategory(categoryId).map(Category::getDisplayName).orElse(categoryId);
+            String displayName = categoryManager.getCategory(categoryId).map(Category::getDisplayName).orElse(this.plugin.getCategoryManager().getAllCategoryName());
             String text = (categoryId.equalsIgnoreCase(currentId) ? this.enableText : this.disableText).replace("%category%", displayName);
             placeholders.register(categoryId, text);
         });
