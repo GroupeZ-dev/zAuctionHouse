@@ -54,7 +54,14 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
     }
 
     private ItemStack getItemStack(Player player) {
-        return this.itemStacks.size() == 1 ? this.itemStacks.getFirst().clone() : this.plugin.getConfiguration().getSpecialItems().auctionItem().build(player).clone();
+        if (this.itemStacks.size() == 1) {
+            var itemStack = this.itemStacks.getFirst().clone();
+            if (this.plugin.getConfiguration().getItemLore().forceAmountOne()) {
+                itemStack.setAmount(1);
+            }
+            return itemStack;
+        }
+        return this.plugin.getConfiguration().getSpecialItems().auctionItem().build(player).clone();
     }
 
     @Override

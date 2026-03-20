@@ -522,6 +522,11 @@ banned-worlds:
 #   %target%         - Jugador objetivo (para las operaciones admin)
 
 item-lore:
+  # Fuerza la cantidad mostrada de los objetos a 1 en el inventario de subastas.
+  # La cantidad real se conserva internamente y se entrega al comprador en la compra.
+  # Útil para mantener una visualización limpia y uniforme.
+  force-amount-one: false
+
   # Lore para los objetos visualizados en la lista principal de subastas (ventas individuales)
   listed-auction-item:
     - ""

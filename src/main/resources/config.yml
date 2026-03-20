@@ -517,6 +517,11 @@ banned-worlds:
 #   %target%         - Target player (for admin operations)
 
 item-lore:
+  # Forces the displayed item amount to 1 in the auction inventory.
+  # The real amount is preserved internally and given to the buyer on purchase.
+  # Useful to keep a clean, uniform display.
+  force-amount-one: false
+
   # Lore for items displayed in the main auction listing (single item sales)
   listed-auction-item:
     - ""
