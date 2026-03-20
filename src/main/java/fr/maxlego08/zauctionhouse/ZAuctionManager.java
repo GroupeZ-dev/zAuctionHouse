@@ -727,7 +727,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         }
 
         // On retire l'argent de l'acheteur
-        auctionEconomy.withdraw(player, buyerPays, args(auctionEconomy.getWithdrawReason(), "%seller%", auctionItem.getSellerName(), "%items%", items));
+        auctionEconomy.withdraw(player.getUniqueId(), buyerPays, args(auctionEconomy.getWithdrawReason(), "%seller%", auctionItem.getSellerName(), "%items%", items));
 
         // On donne l'argent au vendeur
         TransactionStatus transactionStatus;
@@ -737,20 +737,20 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         } else {
 
             transactionStatus = TransactionStatus.RETRIEVED;
-            auctionEconomy.deposit(seller, sellerReceives, args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items));
+            auctionEconomy.deposit(seller.getUniqueId(), sellerReceives, args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items));
         }
 
         // Créer les transactions avec gestion d'erreur
         final BigDecimal finalBuyerPays = buyerPays;
         final BigDecimal finalSellerReceives = sellerReceives;
-        auctionEconomy.get(player).thenAccept(buyerBalance -> {
+        auctionEconomy.get(player.getUniqueId()).thenAccept(buyerBalance -> {
             storageManager.createTransaction(auctionItem, player.getUniqueId(), economyName, buyerBalance.add(finalBuyerPays), buyerBalance, finalBuyerPays.negate(), TransactionStatus.RETRIEVED);
         }).exceptionally(throwable -> {
             this.plugin.getLogger().severe("Failed to create buyer transaction for item " + auctionItem.getId() + ": " + throwable.getMessage());
             return null;
         });
 
-        auctionEconomy.get(seller).thenAccept(sellerBalance -> {
+        auctionEconomy.get(seller.getUniqueId()).thenAccept(sellerBalance -> {
             storageManager.createTransaction(auctionItem, seller.getUniqueId(), economyName, sellerBalance.subtract(finalSellerReceives), sellerBalance, finalSellerReceives, transactionStatus);
         }).exceptionally(throwable -> {
             this.plugin.getLogger().severe("Failed to create seller transaction for item " + auctionItem.getId() + ": " + throwable.getMessage());

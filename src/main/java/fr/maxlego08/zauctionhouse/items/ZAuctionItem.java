@@ -45,6 +45,7 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
             var itemMeta = itemStack.getItemMeta();
 
             Placeholders placeholders = createPlaceholders(player);
+            placeholders.register("item_count", this.itemStacks.stream().map(ItemStack::getAmount).reduce(0, Integer::sum).toString());
 
             meta.updateLore(itemMeta, lore.stream().map(placeholders::parse).toList(), LoreType.APPEND);
             itemStack.setItemMeta(itemMeta);

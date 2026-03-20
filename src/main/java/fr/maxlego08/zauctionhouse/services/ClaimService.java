@@ -68,7 +68,7 @@ public class ClaimService extends AuctionService implements AuctionClaimService 
                 if (economyTotal.compareTo(BigDecimal.ZERO) > 0) {
                     // Check if player is still online before depositing
                     if (player.isOnline()) {
-                        plugin.getScheduler().runAsync(w -> economy.deposit(player, economyTotal, depositReason));
+                        plugin.getScheduler().runAsync(w -> economy.deposit(player.getUniqueId(), economyTotal, depositReason));
                         message(this.plugin, player, Message.CLAIM_ECONOMY_SUCCESS, "%amount%", economyManager.format(economy, economyTotal), "%economy%", economy.getDisplayName());
                     }
                     totalClaimed = totalClaimed.add(economyTotal);

@@ -86,7 +86,7 @@ public class SellService extends ZUtils implements AuctionSellService {
                     message(this.plugin, player, Message.SELL_ERROR_CHANGE);
                     // Refund the tax if items changed
                     if (taxResult.hasTax()) {
-                        auctionEconomy.deposit(player, taxResult.taxAmount(), "Refund sell tax (items changed)");
+                        auctionEconomy.deposit(player.getUniqueId(), taxResult.taxAmount(), "Refund sell tax (items changed)");
                     }
                     resultFuture.complete(SellResult.failure("Items changed", SellFailReason.ITEMS_CHANGED));
                     return;
@@ -114,7 +114,7 @@ public class SellService extends ZUtils implements AuctionSellService {
                     }
                     // Refund the tax if the sale failed
                     if (taxResult.hasTax()) {
-                        auctionEconomy.deposit(player, taxResult.taxAmount(), "Refund sell tax (sale failed)");
+                        auctionEconomy.deposit(player.getUniqueId(), taxResult.taxAmount(), "Refund sell tax (sale failed)");
                     }
                     resultFuture.complete(SellResult.failure("Database error", SellFailReason.DATABASE_ERROR));
                     return null;
@@ -318,7 +318,7 @@ public class SellService extends ZUtils implements AuctionSellService {
         }
 
         // Check if player has enough money to pay the tax asynchronously
-        return auctionEconomy.has(player, taxResult.taxAmount()).thenApply(hasMoney -> {
+        return auctionEconomy.has(player.getUniqueId(), taxResult.taxAmount()).thenApply(hasMoney -> {
             if (!hasMoney) {
                 // Send message on main thread
                 this.plugin.getScheduler().runNextTick(task -> {
@@ -328,7 +328,7 @@ public class SellService extends ZUtils implements AuctionSellService {
             }
 
             // Withdraw the tax
-            auctionEconomy.withdraw(player, taxResult.taxAmount(), "Sell tax (zAuctionHouse)");
+            auctionEconomy.withdraw(player.getUniqueId(), taxResult.taxAmount(), "Sell tax (zAuctionHouse)");
 
             // Send appropriate messages on main thread
             this.plugin.getScheduler().runNextTick(task -> {
