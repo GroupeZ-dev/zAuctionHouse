@@ -25,6 +25,7 @@ public class ExpiredItemsButton extends PaginateButton {
         var items = manager.getExpiredItems(player);
 
         if (items.isEmpty()) {
+            if (this.emptySlot == -1) return;
             inventoryEngine.addItem(this.emptySlot, getCustomItemStack(player, false, new Placeholders()));
             return;
         }
