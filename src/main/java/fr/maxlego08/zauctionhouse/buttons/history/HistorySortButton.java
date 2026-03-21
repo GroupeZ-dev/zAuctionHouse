@@ -26,8 +26,7 @@ public class HistorySortButton extends Button {
     private final List<HistorySortType> sortTypes;
     private final Map<HistorySortType, String> sortNames;
 
-    public HistorySortButton(AuctionPlugin plugin, String enableText, String disableText,
-                             List<HistorySortType> sortTypes, Map<HistorySortType, String> sortNames) {
+    public HistorySortButton(AuctionPlugin plugin, String enableText, String disableText, List<HistorySortType> sortTypes, Map<HistorySortType, String> sortNames) {
         this.plugin = plugin;
         this.enableText = enableText;
         this.disableText = disableText;
