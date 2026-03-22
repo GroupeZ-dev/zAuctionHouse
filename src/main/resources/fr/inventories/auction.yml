@@ -42,6 +42,8 @@ size: 54
 patterns:
   # Ajoute des bordures décoratives en vitres (rangées du haut et du bas)
   - 'zauctionhouse-decoration'
+  # Ajoute les boutons de pagination (page précédente/suivante)
+  - 'zauctionhouse-pagination'
 
 #=============================================================================
 # ITEMS
@@ -205,62 +207,6 @@ items:
         name: "#2CCED2<bold>ᴠᴏs ɪᴛᴇᴍs"
         lore:
           - "#ff3535Vous n'avez pas d'items en vente."
-
-  #---------------------------------------------------------------------------
-  # BOUTON PAGE PRÉCÉDENTE
-  #---------------------------------------------------------------------------
-  # Navigue vers la page précédente d'items.
-
-  previous:
-    is-permanent: true
-
-    # Type de bouton - PREVIOUS est un type intégré de zMenu.
-    type: PREVIOUS
-
-    # Position du slot - à gauche du centre dans la rangée du bas.
-    slot: 48
-
-    # Item affiché quand IL Y A une page précédente.
-    item:
-      # Texture flèche gauche.
-      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjllYTFkODYyNDdmNGFmMzUxZWQxODY2YmNhNmEzMDQwYTA2YzY4MTc3Yzc4ZTQyMzE2YTEwOThlNjBmYjdkMyJ9fX0="
-      name: "#2CCED2<bold>ᴘᴀɢᴇ ᴘʀᴇᴄᴇᴅᴇɴᴛᴇ"
-      lore:
-        - "#92ffffAller à la page précédente."
-        - ""
-        - "#8c8c8c• #2CCED2Cliquez #92ffffpour ouvrir"
-
-    # Item affiché quand sur la première page (pas de précédent).
-    else:
-      item:
-        material: LIGHT_BLUE_STAINED_GLASS_PANE
-        name: "<white>"
-
-  #---------------------------------------------------------------------------
-  # BOUTON PAGE SUIVANTE
-  #---------------------------------------------------------------------------
-  # Navigue vers la page suivante d'items.
-
-  next:
-    is-permanent: true
-    type: NEXT
-    slot: 50
-
-    # Item affiché quand IL Y A une page suivante.
-    item:
-      # Texture flèche droite.
-      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODI3MWE0NzEwNDQ5NWUzNTdjM2U4ZTgwZjUxMWE5ZjEwMmIwNzAwY2E5Yjg4ZTg4Yjc5NWQzM2ZmMjAxMDVlYiJ9fX0="
-      name: "#2CCED2<bold>ᴘᴀɢᴇ sᴜɪᴠᴀɴᴛᴇ"
-      lore:
-        - "#92ffffAller à la page suivante."
-        - ""
-        - "#8c8c8c• #2CCED2Cliquez #92ffffpour ouvrir"
-
-    # Item affiché quand sur la dernière page (pas de suivant).
-    else:
-      item:
-        material: LIGHT_BLUE_STAINED_GLASS_PANE
-        name: "<white>"
 
   #---------------------------------------------------------------------------
   # BOUTON RAFRAICHISSEMENT

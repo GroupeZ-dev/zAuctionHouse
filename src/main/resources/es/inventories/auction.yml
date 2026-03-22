@@ -42,6 +42,8 @@ size: 54
 patterns:
   # Agrega bordes decorativos de vidrio (filas superior e inferior)
   - 'zauctionhouse-decoration'
+  # Agrega botones de navegacion (pagina anterior/siguiente)
+  - 'zauctionhouse-pagination'
 
 #=============================================================================
 # OBJETOS
@@ -205,62 +207,6 @@ items:
         name: "#2CCED2<bold>TUS OBJETOS"
         lore:
           - "#ff3535No tienes objetos en venta."
-
-  #---------------------------------------------------------------------------
-  # BOTON PAGINA ANTERIOR
-  #---------------------------------------------------------------------------
-  # Navega a la pagina anterior de objetos.
-
-  previous:
-    is-permanent: true
-
-    # Tipo de boton - PREVIOUS es un tipo integrado de zMenu.
-    type: PREVIOUS
-
-    # Posicion del slot - a la izquierda del centro en la fila inferior.
-    slot: 48
-
-    # Objeto mostrado cuando HAY una pagina anterior.
-    item:
-      # Textura flecha izquierda.
-      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjllYTFkODYyNDdmNGFmMzUxZWQxODY2YmNhNmEzMDQwYTA2YzY4MTc3Yzc4ZTQyMzE2YTEwOThlNjBmYjdkMyJ9fX0="
-      name: "#2CCED2<bold>PAGINA ANTERIOR"
-      lore:
-        - "#92ffffIr a la pagina anterior."
-        - ""
-        - "#8c8c8c* #2CCED2Clic #92ffffpara abrir"
-
-    # Objeto mostrado cuando estamos en la primera pagina (sin anterior).
-    else:
-      item:
-        material: LIGHT_BLUE_STAINED_GLASS_PANE
-        name: "<white>"
-
-  #---------------------------------------------------------------------------
-  # BOTON PAGINA SIGUIENTE
-  #---------------------------------------------------------------------------
-  # Navega a la pagina siguiente de objetos.
-
-  next:
-    is-permanent: true
-    type: NEXT
-    slot: 50
-
-    # Objeto mostrado cuando HAY una pagina siguiente.
-    item:
-      # Textura flecha derecha.
-      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODI3MWE0NzEwNDQ5NWUzNTdjM2U4ZTgwZjUxMWE5ZjEwMmIwNzAwY2E5Yjg4ZTg4Yjc5NWQzM2ZmMjAxMDVlYiJ9fX0="
-      name: "#2CCED2<bold>PAGINA SIGUIENTE"
-      lore:
-        - "#92ffffIr a la pagina siguiente."
-        - ""
-        - "#8c8c8c* #2CCED2Clic #92ffffpara abrir"
-
-    # Objeto mostrado cuando estamos en la ultima pagina (sin siguiente).
-    else:
-      item:
-        material: LIGHT_BLUE_STAINED_GLASS_PANE
-        name: "<white>"
 
   #---------------------------------------------------------------------------
   # BOTON ACTUALIZAR
