@@ -45,6 +45,7 @@ public class ListedItemsButton extends PaginateButton {
         IntList itemIds = manager.getItemIdsListedForSale(player);
 
         if (itemIds.isEmpty()) {
+            if (this.emptySlot == -1) return;
             inventoryEngine.addItem(this.emptySlot, getCustomItemStack(player, false, new Placeholders()));
             return;
         }
@@ -171,7 +172,7 @@ public class ListedItemsButton extends PaginateButton {
             return;
         }
 
-        economy.has(player, item.getPrice()).whenComplete((hasMoney, throwable) -> {
+        economy.has(player.getUniqueId(), item.getPrice()).whenComplete((hasMoney, throwable) -> {
 
             if (throwable != null) {
                 this.plugin.getLogger().log(Level.WARNING, "Cannot verify the balance of " + player.getName(), throwable);

@@ -39,6 +39,18 @@ public class PlayerPlaceholders implements PlaceholderRegister {
             return plugin.getCategoryManager().getAllCategoryName();
         }, "Returns the name of the current category for the player");
 
+        placeholder.register("category_id", player -> {
+
+            var cache = manager.getCache(player);
+
+            if (cache.has(PlayerCacheKey.CURRENT_CATEGORY)) {
+                Category category = cache.get(PlayerCacheKey.CURRENT_CATEGORY);
+                return category.getId();
+            }
+
+            return "main";
+        }, "Returns the id of the current category for the player (main for auction house)");
+
         // Pending money placeholders
         placeholder.register("pending_money", player -> {
             var cache = manager.getCache(player);

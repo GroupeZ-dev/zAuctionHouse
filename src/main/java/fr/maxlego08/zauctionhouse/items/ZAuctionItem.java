@@ -45,6 +45,7 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
             var itemMeta = itemStack.getItemMeta();
 
             Placeholders placeholders = createPlaceholders(player);
+            placeholders.register("item_count", this.itemStacks.stream().map(ItemStack::getAmount).reduce(0, Integer::sum).toString());
 
             meta.updateLore(itemMeta, lore.stream().map(placeholders::parse).toList(), LoreType.APPEND);
             itemStack.setItemMeta(itemMeta);
@@ -53,7 +54,14 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
     }
 
     private ItemStack getItemStack(Player player) {
-        return this.itemStacks.size() == 1 ? this.itemStacks.getFirst().clone() : this.plugin.getConfiguration().getSpecialItems().auctionItem().build(player).clone();
+        if (this.itemStacks.size() == 1) {
+            var itemStack = this.itemStacks.getFirst().clone();
+            if (this.plugin.getConfiguration().getItemLore().forceAmountOne()) {
+                itemStack.setAmount(1);
+            }
+            return itemStack;
+        }
+        return this.plugin.getConfiguration().getSpecialItems().auctionItem().build(player).clone();
     }
 
     @Override

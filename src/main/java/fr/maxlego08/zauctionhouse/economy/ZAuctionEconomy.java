@@ -7,11 +7,11 @@ import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.tax.TaxConfiguration;
 import fr.maxlego08.zauctionhouse.tax.ZTaxConfiguration;
 import fr.traqueur.currencies.CurrencyProvider;
-import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.util.EnumMap;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class ZAuctionEconomy implements AuctionEconomy {
@@ -74,23 +74,23 @@ public class ZAuctionEconomy implements AuctionEconomy {
     }
 
     @Override
-    public CompletableFuture<BigDecimal> get(OfflinePlayer offlinePlayer) {
-        return CompletableFuture.completedFuture(this.currencyProvider.getBalance(offlinePlayer));
+    public CompletableFuture<BigDecimal> get(UUID playerId) {
+        return CompletableFuture.completedFuture(this.currencyProvider.getBalance(playerId));
     }
 
     @Override
-    public CompletableFuture<Boolean> has(OfflinePlayer offlinePlayer, BigDecimal price) {
-        return get(offlinePlayer).thenApply(balance -> balance.compareTo(price) >= 0);
+    public CompletableFuture<Boolean> has(UUID playerId, BigDecimal price) {
+        return get(playerId).thenApply(balance -> balance.compareTo(price) >= 0);
     }
 
     @Override
-    public void deposit(OfflinePlayer offlinePlayer, BigDecimal value, String reason) {
-        this.currencyProvider.deposit(offlinePlayer, value, reason);
+    public void deposit(UUID playerId, BigDecimal value, String reason) {
+        this.currencyProvider.deposit(playerId, value, reason);
     }
 
     @Override
-    public void withdraw(OfflinePlayer offlinePlayer, BigDecimal value, String reason) {
-        this.currencyProvider.withdraw(offlinePlayer, value, reason);
+    public void withdraw(UUID playerId, BigDecimal value, String reason) {
+        this.currencyProvider.withdraw(playerId, value, reason);
     }
 
     @Override

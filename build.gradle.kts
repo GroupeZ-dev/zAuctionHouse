@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "fr.maxlego08.zauctionhouse"
-version = "4.0.0.1"
+version = "4.0.0.2"
 
 extra.set("targetFolder", file("target/"))
 extra.set("apiFolder", file("target-api/"))
@@ -69,7 +69,7 @@ allprojects {
 
         implementation("fr.maxlego08.sarah:sarah:1.23")
         implementation("com.tcoded:FoliaLib:0.5.1")
-        implementation("fr.traqueur.currencies:currenciesapi:1.0.12")
+        implementation("fr.traqueur.currencies:currenciesapi:1.0.13")
     }
 }
 

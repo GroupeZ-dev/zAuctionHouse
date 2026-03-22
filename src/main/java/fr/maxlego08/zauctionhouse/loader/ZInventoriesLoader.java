@@ -17,6 +17,7 @@ import fr.maxlego08.zauctionhouse.buttons.confirm.ConfirmPurchaseButton;
 import fr.maxlego08.zauctionhouse.buttons.confirm.ConfirmRemoveListedButton;
 import fr.maxlego08.zauctionhouse.buttons.history.HistoryItemsButton;
 import fr.maxlego08.zauctionhouse.buttons.inventory.ExpiredInventoryButton;
+import fr.maxlego08.zauctionhouse.buttons.inventory.HistoryInventoryButton;
 import fr.maxlego08.zauctionhouse.buttons.inventory.PurchasedInventoryButton;
 import fr.maxlego08.zauctionhouse.buttons.inventory.SellingInventoryButton;
 import fr.maxlego08.zauctionhouse.buttons.list.ExpiredItemsButton;
@@ -29,6 +30,7 @@ import fr.maxlego08.zauctionhouse.buttons.sell.SellEconomyButton;
 import fr.maxlego08.zauctionhouse.buttons.shulker.ShulkerInfoButton;
 import fr.maxlego08.zauctionhouse.buttons.shulker.ShulkerOpenButton;
 import fr.maxlego08.zauctionhouse.loader.buttons.*;
+import fr.maxlego08.zauctionhouse.loader.permissibles.CategoryPermissibleLoader;
 import fr.maxlego08.zauctionhouse.utils.PerformanceDebug;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import org.bukkit.entity.Player;
@@ -109,6 +111,9 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
 
         this.buttonManager.unregisters(this.plugin);
 
+        // Permissibles
+        this.buttonManager.registerPermissible(new CategoryPermissibleLoader(this.plugin));
+
         // Player
         this.buttonManager.register(new EmptySlotLoader(this.plugin, ListedItemsButton.class, "ZAUCTIONHOUSE_LISTED_ITEMS"));
         this.buttonManager.register(new EmptySlotLoader(this.plugin, ExpiredItemsButton.class, "ZAUCTIONHOUSE_EXPIRED_ITEMS"));
@@ -119,6 +124,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new NoneLoader(this.plugin, ExpiredInventoryButton.class, "ZAUCTIONHOUSE_EXPIRED_INVENTORY"));
         this.buttonManager.register(new NoneLoader(this.plugin, SellingInventoryButton.class, "ZAUCTIONHOUSE_SELLING_INVENTORY"));
         this.buttonManager.register(new NoneLoader(this.plugin, PurchasedInventoryButton.class, "ZAUCTIONHOUSE_PURCHASED_INVENTORY"));
+        this.buttonManager.register(new NoneLoader(this.plugin, HistoryInventoryButton.class, "ZAUCTIONHOUSE_HISTORY_INVENTORY"));
 
         this.buttonManager.register(new NoneLoader(this.plugin, ShowButton.class, "ZAUCTIONHOUSE_SHOW"));
         this.buttonManager.register(new NoneLoader(this.plugin, ConfirmRemoveListedButton.class, "ZAUCTIONHOUSE_CONFIRM_REMOVE_LISTED"));
@@ -152,6 +158,7 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new SortLoader(this.plugin, this.inventoryManager));
         this.buttonManager.register(new RefreshLoader(this.plugin, this.inventoryManager));
         this.buttonManager.register(new CategoryButtonLoader(this.plugin));
+        this.buttonManager.register(new CategorySwitcherLoader(this.plugin));
 
         // Shulker
         this.buttonManager.register(new NoneLoader(this.plugin, ShulkerOpenButton.class, "ZAUCTIONHOUSE_SHULKER_OPEN"));

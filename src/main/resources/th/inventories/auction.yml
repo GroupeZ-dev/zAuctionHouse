@@ -42,6 +42,8 @@ size: 54
 patterns:
   # เติมกรอบกระจกตกแต่ง (ด้านบนและด้านล่าง)
   - 'zauctionhouse-decoration'
+  #
+  - "zauctionhouse-pagination"
 
 #=============================================================================
 # ITEMS
@@ -204,62 +206,6 @@ items:
         name: "#2CCED2<bold>ไอเทมของคุณ"
         lore:
           - "#ff3535คุณไม่มีไอเทมที่กำลังลงขายอยู่"
-
-  #---------------------------------------------------------------------------
-  # ปุ่มย้อนหน้า (PREVIOUS PAGE BUTTON)
-  #---------------------------------------------------------------------------
-  # ใช้เลื่อนไปหน้าก่อนหน้าของรายการไอเทม
-
-  previous:
-    is-permanent: true
-
-    # ประเภทปุ่ม - PREVIOUS เป็น type มาตรฐานของ zMenu
-    type: PREVIOUS
-
-    # ตำแหน่งช่อง - ด้านซ้ายของกึ่งกลางแถวล่าง
-    slot: 48
-
-    # ไอเทมที่ใช้แสดงเมื่อ "มี" หน้าก่อนหน้าให้เลื่อนไป
-    item:
-      # เท็กซ์เจอร์ลูกศรซ้าย
-      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjllYTFkODYyNDdmNGFmMzUxZWQxODY2YmNhNmEzMDQwYTA2YzY4MTc3Yzc4ZTQyMzE2YTEwOThlNjBmYjdkMyJ9fX0="
-      name: "#2CCED2<bold>หน้าก่อนหน้า"
-      lore:
-        - "#92ffffไปยังหน้าก่อนหน้า"
-        - ""
-        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเลื่อนไปหน้าก่อน"
-
-    # ไอเทมที่ใช้แสดงเมื่ออยู่หน้าแรก (ไม่มีหน้าก่อนหน้า)
-    else:
-      item:
-        material: LIGHT_BLUE_STAINED_GLASS_PANE
-        name: "<white>"
-
-  #---------------------------------------------------------------------------
-  # ปุ่มหน้าถัดไป (NEXT PAGE BUTTON)
-  #---------------------------------------------------------------------------
-  # ใช้เลื่อนไปหน้าถัดไปของรายการไอเทม
-
-  next:
-    is-permanent: true
-    type: NEXT
-    slot: 50
-
-    # ไอเทมที่ใช้แสดงเมื่อ "มี" หน้าถัดไป
-    item:
-      # เท็กซ์เจอร์ลูกศรขวา
-      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODI3MWE0NzEwNDQ5NWUzNTdjM2U4ZTgwZjUxMWE5ZjEwMmIwNzAwY2E5Yjg4ZTg4Yjc5NWQzM2ZmMjAxMDVlYiJ9fX0="
-      name: "#2CCED2<bold>หน้าถัดไป"
-      lore:
-        - "#92ffffไปยังหน้าถัดไป"
-        - ""
-        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อเลื่อนไปหน้าถัดไป"
-
-    # ไอเทมที่ใช้แสดงเมื่ออยู่หน้าสุดท้าย (ไม่มีหน้าถัดไป)
-    else:
-      item:
-        material: LIGHT_BLUE_STAINED_GLASS_PANE
-        name: "<white>"
 
   #---------------------------------------------------------------------------
   # ปุ่มรีเฟรช (REFRESH BUTTON)

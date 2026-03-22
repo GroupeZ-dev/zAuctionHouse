@@ -521,6 +521,11 @@ banned-worlds:
 #   %target%         - Joueur cible (pour les opérations admin)
 
 item-lore:
+  # Force la quantité affichée des items à 1 dans l'inventaire d'enchères.
+  # La quantité réelle est conservée en interne et donnée à l'acheteur lors de l'achat.
+  # Utile pour garder un affichage propre et uniforme.
+  force-amount-one: false
+
   # Lore pour les items affichés dans la liste d'enchères principale (ventes unitaires)
   listed-auction-item:
     - ""

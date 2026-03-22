@@ -26,6 +26,7 @@ public class SellingItemsButton extends PaginateButton {
         var items = manager.getPlayerSellingItems(player);
 
         if (items.isEmpty()) {
+            if (this.emptySlot == -1) return;
             inventoryEngine.addItem(this.emptySlot, getCustomItemStack(player, false, new Placeholders()));
             return;
         }

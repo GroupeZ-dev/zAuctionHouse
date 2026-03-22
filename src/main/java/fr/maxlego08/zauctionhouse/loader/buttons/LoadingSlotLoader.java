@@ -23,6 +23,10 @@ public class LoadingSlotLoader extends ButtonLoader {
     public Button load(@NonNull YamlConfiguration configuration, @NonNull String path, @NonNull DefaultButtonValue defaultButtonValue) {
         try {
             int slot = configuration.getInt(path + "loading-slot", 0);
+            if (slot < 0 && slot > defaultButtonValue.getInventorySize() && slot != -1) {
+                this.plugin.getLogger().severe("Invalid slot for loading button " + this.clazz.getSimpleName() + ": " + slot + ". It must be a multiple of 9 or -1");
+                return null;
+            }
             return this.clazz.getConstructor(Plugin.class, int.class).newInstance(this.plugin, slot);
         } catch (Exception exception) {
             try {

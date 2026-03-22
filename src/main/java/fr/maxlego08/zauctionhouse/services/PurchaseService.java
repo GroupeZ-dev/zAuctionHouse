@@ -95,7 +95,7 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
             item.setStatus(ItemStatus.IS_BEING_PURCHASED);
             return clusterBridge.notifyItemStatusChange(item, previousStatusHolder.get(), ItemStatus.IS_BEING_PURCHASED)
                     .orTimeout(performanceConfig.notifyStatusChangeTimeoutMs(), TimeUnit.MILLISECONDS)
-                    .thenCompose(v -> auctionEconomy.has(player, item.getPrice()));
+                    .thenCompose(v -> auctionEconomy.has(player.getUniqueId(), item.getPrice()));
 
         }).thenCompose(hasMoney -> {
 

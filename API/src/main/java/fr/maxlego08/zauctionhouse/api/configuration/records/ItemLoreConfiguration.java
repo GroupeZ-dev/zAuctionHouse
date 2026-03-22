@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 public record ItemLoreConfiguration(
+        boolean forceAmountOne,
         List<String> listedAuctionLore,
         List<String> multipleListedAuctionLore,
         List<String> purchasedLore,
@@ -29,6 +30,7 @@ public record ItemLoreConfiguration(
 
     public static ItemLoreConfiguration of(AuctionPlugin plugin, FileConfiguration config) {
         return new ItemLoreConfiguration(
+                config.getBoolean("item-lore.force-amount-one", false),
                 config.getStringList("item-lore.listed-auction-item"),
                 config.getStringList("item-lore.multiple-listed-auction-item"),
                 config.getStringList("item-lore.purchased-item"),

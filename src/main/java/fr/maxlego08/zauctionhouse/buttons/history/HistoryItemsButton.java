@@ -34,7 +34,9 @@ public class HistoryItemsButton extends LoadingButton {
         var cache = manager.getCache(player);
         if (!cache.has(PlayerCacheKey.HISTORY_DATA)) {
 
-            inventoryEngine.addItem(this.loadingSlot, getCustomItemStack(player, false, new Placeholders()));
+            if (this.loadingSlot != -1) {
+                inventoryEngine.addItem(this.loadingSlot, getCustomItemStack(player, false, new Placeholders()));
+            }
             Boolean isLoading = cache.get(PlayerCacheKey.HISTORY_LOADING, false);
 
             if (!isLoading) {
@@ -75,9 +77,7 @@ public class HistoryItemsButton extends LoadingButton {
         // Apply sorting
         var cache = this.plugin.getAuctionManager().getCache(player);
         HistorySortType sortType = cache.get(PlayerCacheKey.HISTORY_SORT, HistorySortType.DATE_DESC);
-        List<ItemLog> sortedHistory = history.stream()
-                .sorted(sortType.getComparator())
-                .toList();
+        List<ItemLog> sortedHistory = history.stream().sorted(sortType.getComparator()).toList();
 
         paginate(sortedHistory, inventoryEngine, (slot, log) -> {
             ItemStack displayItem = createDisplayItem(log, dateFormat, loreConfig);

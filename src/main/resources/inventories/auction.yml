@@ -42,6 +42,8 @@ size: 54
 patterns:
   # Adds decorative glass pane borders (top and bottom rows)
   - 'zauctionhouse-decoration'
+  # Adds pagination buttons (previous/next page)
+  - 'zauctionhouse-pagination'
 
 #=============================================================================
 # ITEMS
@@ -205,62 +207,6 @@ items:
         name: "#2CCED2<bold>ʏᴏᴜʀ ɪᴛᴇᴍs"
         lore:
           - "#ff3535You have no items for sale."
-
-  #---------------------------------------------------------------------------
-  # PREVIOUS PAGE BUTTON
-  #---------------------------------------------------------------------------
-  # Navigates to the previous page of items.
-
-  previous:
-    is-permanent: true
-
-    # Button type - PREVIOUS is a zMenu built-in type.
-    type: PREVIOUS
-
-    # Slot position - left of center in bottom row.
-    slot: 48
-
-    # Item shown when there IS a previous page.
-    item:
-      # Left arrow texture.
-      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjllYTFkODYyNDdmNGFmMzUxZWQxODY2YmNhNmEzMDQwYTA2YzY4MTc3Yzc4ZTQyMzE2YTEwOThlNjBmYjdkMyJ9fX0="
-      name: "#2CCED2<bold>ᴘʀᴇᴠɪᴏᴜs ᴘᴀɢᴇ"
-      lore:
-        - "#92ffffGo to the previous page."
-        - ""
-        - "#8c8c8c• #2CCED2Click #92ffffto open"
-
-    # Item shown when on first page (no previous).
-    else:
-      item:
-        material: LIGHT_BLUE_STAINED_GLASS_PANE
-        name: "<white>"
-
-  #---------------------------------------------------------------------------
-  # NEXT PAGE BUTTON
-  #---------------------------------------------------------------------------
-  # Navigates to the next page of items.
-
-  next:
-    is-permanent: true
-    type: NEXT
-    slot: 50
-
-    # Item shown when there IS a next page.
-    item:
-      # Right arrow texture.
-      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODI3MWE0NzEwNDQ5NWUzNTdjM2U4ZTgwZjUxMWE5ZjEwMmIwNzAwY2E5Yjg4ZTg4Yjc5NWQzM2ZmMjAxMDVlYiJ9fX0="
-      name: "#2CCED2<bold>ɴᴇxᴛ ᴘᴀɢᴇ"
-      lore:
-        - "#92ffffGo to the next page."
-        - ""
-        - "#8c8c8c• #2CCED2Click #92ffffto open"
-
-    # Item shown when on last page (no next).
-    else:
-      item:
-        material: LIGHT_BLUE_STAINED_GLASS_PANE
-        name: "<white>"
 
   #---------------------------------------------------------------------------
   # REFRESH BUTTON

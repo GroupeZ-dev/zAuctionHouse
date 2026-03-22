@@ -522,6 +522,11 @@ banned-worlds:
 #   %target%         - Giocatore target (per le operazioni admin)
 
 item-lore:
+  # Forza la quantità visualizzata degli oggetti a 1 nell'inventario delle aste.
+  # La quantità reale viene conservata internamente e consegnata all'acquirente all'acquisto.
+  # Utile per mantenere una visualizzazione pulita e uniforme.
+  force-amount-one: false
+
   # Lore per gli oggetti visualizzati nella lista principale delle aste (vendite singole)
   listed-auction-item:
     - ""

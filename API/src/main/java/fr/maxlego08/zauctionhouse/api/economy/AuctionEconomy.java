@@ -3,12 +3,12 @@ package fr.maxlego08.zauctionhouse.api.economy;
 import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.tax.TaxConfiguration;
 import fr.maxlego08.zauctionhouse.api.tax.TaxResult;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public interface AuctionEconomy {
@@ -55,19 +55,19 @@ public interface AuctionEconomy {
     /**
      * Retrieves the current balance of the specified player asynchronously.
      *
-     * @param offlinePlayer The player to retrieve the balance for.
+     * @param playerId The player to retrieve the balance for.
      * @return A CompletableFuture containing the player's current balance.
      */
-    CompletableFuture<BigDecimal> get(OfflinePlayer offlinePlayer);
+    CompletableFuture<BigDecimal> get(UUID playerId);
 
     /**
      * Retrieves a boolean indicating whether the player has the specified amount of money asynchronously.
      *
-     * @param offlinePlayer The player to check the balance for.
-     * @param price         The amount of money to check for.
+     * @param playerId The player to check the balance for.
+     * @param price    The amount of money to check for.
      * @return A CompletableFuture containing a boolean indicating whether the player has the specified amount of money.
      */
-    CompletableFuture<Boolean> has(OfflinePlayer offlinePlayer, BigDecimal price);
+    CompletableFuture<Boolean> has(UUID playerId, BigDecimal price);
 
     /**
      * Synchronously checks if the player has at least the specified amount of money.
@@ -81,26 +81,26 @@ public interface AuctionEconomy {
      * @return true if the player has at least the specified amount, false otherwise.
      */
     default boolean hasSync(Player player, BigDecimal price) {
-        return has(player, price).join();
+        return has(player.getUniqueId(), price).join();
     }
 
     /**
      * Deposits the specified amount of money into the player's economy account.
      *
-     * @param offlinePlayer The player to deposit money into.
-     * @param value         The amount of money to deposit.
-     * @param reason        The reason for the deposit.
+     * @param playerId The player to deposit money into.
+     * @param value    The amount of money to deposit.
+     * @param reason   The reason for the deposit.
      */
-    void deposit(OfflinePlayer offlinePlayer, BigDecimal value, String reason);
+    void deposit(UUID playerId, BigDecimal value, String reason);
 
     /**
      * Withdraws the specified amount of money from the player's economy account.
      *
-     * @param offlinePlayer The player to withdraw money from.
-     * @param value         The amount of money to withdraw.
-     * @param reason        The reason for the withdrawal.
+     * @param playerId The player to withdraw money from.
+     * @param value    The amount of money to withdraw.
+     * @param reason   The reason for the withdrawal.
      */
-    void withdraw(OfflinePlayer offlinePlayer, BigDecimal value, String reason);
+    void withdraw(UUID playerId, BigDecimal value, String reason);
 
     /**
      * Gets the reason for depositing money into an account.
