@@ -42,6 +42,8 @@ size: 54
 patterns:
   # Aggiunge bordi decorativi in vetro (righe superiore e inferiore)
   - 'zauctionhouse-decoration'
+  # Aggiunge i pulsanti di navigazione (pagina precedente/successiva)
+  - "zauctionhouse-pagination"
 
 #=============================================================================
 # OGGETTI
@@ -205,62 +207,6 @@ items:
         name: "#2CCED2<bold>ɪ ᴛᴜᴏɪ ᴏɢɢᴇᴛᴛɪ"
         lore:
           - "#ff3535Non hai oggetti in vendita."
-
-  #---------------------------------------------------------------------------
-  # PULSANTE PAGINA PRECEDENTE
-  #---------------------------------------------------------------------------
-  # Naviga alla pagina precedente di oggetti.
-
-  previous:
-    is-permanent: true
-
-    # Tipo di pulsante - PREVIOUS è un tipo integrato di zMenu.
-    type: PREVIOUS
-
-    # Posizione dello slot - a sinistra del centro nella riga inferiore.
-    slot: 48
-
-    # Oggetto mostrato quando C'È una pagina precedente.
-    item:
-      # Texture freccia sinistra.
-      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjllYTFkODYyNDdmNGFmMzUxZWQxODY2YmNhNmEzMDQwYTA2YzY4MTc3Yzc4ZTQyMzE2YTEwOThlNjBmYjdkMyJ9fX0="
-      name: "#2CCED2<bold>ᴘᴀɢɪɴᴀ ᴘʀᴇᴄᴇᴅᴇɴᴛᴇ"
-      lore:
-        - "#92ffffVai alla pagina precedente."
-        - ""
-        - "#8c8c8c• #2CCED2Clicca #92ffffper aprire"
-
-    # Oggetto mostrato quando siamo sulla prima pagina (nessun precedente).
-    else:
-      item:
-        material: LIGHT_BLUE_STAINED_GLASS_PANE
-        name: "<white>"
-
-  #---------------------------------------------------------------------------
-  # PULSANTE PAGINA SUCCESSIVA
-  #---------------------------------------------------------------------------
-  # Naviga alla pagina successiva di oggetti.
-
-  next:
-    is-permanent: true
-    type: NEXT
-    slot: 50
-
-    # Oggetto mostrato quando C'È una pagina successiva.
-    item:
-      # Texture freccia destra.
-      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODI3MWE0NzEwNDQ5NWUzNTdjM2U4ZTgwZjUxMWE5ZjEwMmIwNzAwY2E5Yjg4ZTg4Yjc5NWQzM2ZmMjAxMDVlYiJ9fX0="
-      name: "#2CCED2<bold>ᴘᴀɢɪɴᴀ sᴜᴄᴄᴇssɪᴠᴀ"
-      lore:
-        - "#92ffffVai alla pagina successiva."
-        - ""
-        - "#8c8c8c• #2CCED2Clicca #92ffffper aprire"
-
-    # Oggetto mostrato quando siamo sull'ultima pagina (nessun successivo).
-    else:
-      item:
-        material: LIGHT_BLUE_STAINED_GLASS_PANE
-        name: "<white>"
 
   #---------------------------------------------------------------------------
   # PULSANTE AGGIORNA
