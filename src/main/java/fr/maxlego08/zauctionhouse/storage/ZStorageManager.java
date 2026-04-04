@@ -25,12 +25,20 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
+
+    private static final String SQLITE_DATABASE_FILE = "database.db";
+    private static final String SQLITE_LEGACY_DATABASE_FILE = "storage.db";
 
     private final AuctionPlugin plugin;
     private AuctionLoader auctionLoader;
@@ -48,6 +56,9 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
         var databaseConfiguration = this.getDatabaseConfiguration();
         var isSqlite = databaseConfiguration.getDatabaseType() == DatabaseType.SQLITE;
         this.databaseConnection = isSqlite ? new SqliteConnection(databaseConfiguration, this.plugin.getDataFolder(), sarahLogger) : new HikariDatabaseConnection(databaseConfiguration, sarahLogger);
+        if (isSqlite && this.databaseConnection instanceof SqliteConnection sqliteConnection) {
+            configureSqliteFile(sqliteConnection);
+        }
 
         if (!databaseConnection.isValid()) {
 
@@ -58,7 +69,7 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
             this.plugin.getLogger().info("The database connection is valid !");
         }
 
-        MigrationManager.setMigrationTableName("zauctionhousev4_migrations");
+        MigrationManager.setMigrationTableName(resolveMigrationTableName(databaseConfiguration.getTablePrefix()));
         MigrationManager.setDatabaseConfiguration(databaseConfiguration);
 
         MigrationManager.registerMigration(new CreatePlayerMigration());
@@ -77,6 +88,7 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
         this.repositories.register(TransactionRepository.class);
 
         MigrationManager.execute(this.databaseConnection, sarahLogger);
+        ensureRequiredTablesExist(sarahLogger);
 
         return true;
     }
@@ -238,5 +250,64 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
     @Override
     public Map<UUID, String> selectPlayers(List<String> uuids) {
         return with(PlayerRepository.class).select(uuids).stream().collect(Collectors.toMap(PlayerDTO::unique_id, PlayerDTO::name));
+    }
+
+    private void configureSqliteFile(SqliteConnection sqliteConnection) {
+        File dataFolder = this.plugin.getDataFolder();
+        File currentFile = new File(dataFolder, SQLITE_DATABASE_FILE);
+        File legacyFile = new File(dataFolder, SQLITE_LEGACY_DATABASE_FILE);
+
+        if (legacyFile.exists() && !currentFile.exists()) {
+            sqliteConnection.setFileName(SQLITE_LEGACY_DATABASE_FILE);
+            this.plugin.getLogger().info("Using legacy SQLite database file: " + SQLITE_LEGACY_DATABASE_FILE);
+            return;
+        }
+
+        sqliteConnection.setFileName(SQLITE_DATABASE_FILE);
+    }
+
+    private String resolveMigrationTableName(String tablePrefix) {
+        return (tablePrefix == null ? "" : tablePrefix) + "migrations";
+    }
+
+    private void ensureRequiredTablesExist(fr.maxlego08.sarah.logger.Logger logger) {
+        StorageSchemaDefinitions.requiredTables().forEach((tableName, definition) -> {
+            if (tableExists(tableName)) {
+                return;
+            }
+
+            String resolvedTableName = this.databaseConnection.getDatabaseConfiguration().replacePrefix(tableName);
+            this.plugin.getLogger().warning("Missing required table '" + resolvedTableName + "'. Recreating it now.");
+            try {
+                SchemaBuilder.create(null, tableName, definition).execute(this.databaseConnection, logger);
+            } catch (SQLException exception) {
+                throw new IllegalStateException("Failed to recreate missing table '" + resolvedTableName + "'", exception);
+            }
+        });
+    }
+
+    private boolean tableExists(String tableName) {
+        String resolvedTableName = this.databaseConnection.getDatabaseConfiguration().replacePrefix(tableName);
+        try (Connection connection = this.databaseConnection.getConnection()) {
+            DatabaseMetaData metaData = connection.getMetaData();
+            if (metaData == null) {
+                return false;
+            }
+
+            if (hasTable(metaData, connection, resolvedTableName)) {
+                return true;
+            }
+
+            return hasTable(metaData, connection, resolvedTableName.toUpperCase(Locale.ROOT));
+        } catch (SQLException exception) {
+            this.plugin.getLogger().warning("Failed to inspect table '" + resolvedTableName + "': " + exception.getMessage());
+            return false;
+        }
+    }
+
+    private boolean hasTable(DatabaseMetaData metaData, Connection connection, String tableName) throws SQLException {
+        try (ResultSet resultSet = metaData.getTables(connection.getCatalog(), null, tableName, new String[]{"TABLE"})) {
+            return resultSet.next();
+        }
     }
 }
