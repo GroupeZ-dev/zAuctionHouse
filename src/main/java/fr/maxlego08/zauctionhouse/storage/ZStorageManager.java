@@ -39,6 +39,7 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
 
     private static final String SQLITE_DATABASE_FILE = "database.db";
     private static final String SQLITE_LEGACY_DATABASE_FILE = "storage.db";
+    private static final String LEGACY_MIGRATION_TABLE = "zauctionhousev4_migrations";
 
     private final AuctionPlugin plugin;
     private AuctionLoader auctionLoader;
@@ -267,27 +268,72 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
     }
 
     private String resolveMigrationTableName(String tablePrefix) {
-        return (tablePrefix == null ? "" : tablePrefix) + "migrations";
+        String newName = (tablePrefix == null ? "" : tablePrefix) + "migrations";
+
+        // If the legacy table still exists but the new prefix-derived table does not,
+        // keep using the legacy name so existing migration history is preserved.
+        if (rawTableExists(LEGACY_MIGRATION_TABLE) && !rawTableExists(newName)) {
+            this.plugin.getLogger().info(
+                    "Found legacy migration table '" + LEGACY_MIGRATION_TABLE
+                            + "'. Continuing to use it for backward compatibility.");
+            return LEGACY_MIGRATION_TABLE;
+        }
+
+        return newName;
     }
 
     private void ensureRequiredTablesExist(fr.maxlego08.sarah.logger.Logger logger) {
-        StorageSchemaDefinitions.requiredTables().forEach((tableName, definition) -> {
-            if (tableExists(tableName)) {
+        try (Connection connection = this.databaseConnection.getConnection()) {
+            DatabaseMetaData metaData = connection.getMetaData();
+            if (metaData == null) {
+                this.plugin.getLogger().warning("Database metadata is unavailable. Skipping table verification.");
                 return;
             }
 
-            String resolvedTableName = this.databaseConnection.getDatabaseConfiguration().replacePrefix(tableName);
-            this.plugin.getLogger().warning("Missing required table '" + resolvedTableName + "'. Recreating it now.");
-            try {
-                SchemaBuilder.create(null, tableName, definition).execute(this.databaseConnection, logger);
-            } catch (SQLException exception) {
-                throw new IllegalStateException("Failed to recreate missing table '" + resolvedTableName + "'", exception);
-            }
-        });
+            StorageSchemaDefinitions.requiredTables().forEach((tableName, definition) -> {
+                String resolvedTableName = this.databaseConnection.getDatabaseConfiguration().replacePrefix(tableName);
+
+                boolean exists;
+                try {
+                    exists = hasTable(metaData, connection, resolvedTableName)
+                            || hasTable(metaData, connection, resolvedTableName.toUpperCase(Locale.ROOT));
+                } catch (SQLException exception) {
+                    throw new IllegalStateException(
+                            "Cannot determine existence of table '" + resolvedTableName + "'. Aborting to prevent data corruption.",
+                            exception);
+                }
+
+                if (exists) {
+                    return;
+                }
+
+                this.plugin.getLogger().warning("Missing required table '" + resolvedTableName + "'. Recreating it now.");
+                try {
+                    SchemaBuilder.create(null, tableName, definition).execute(this.databaseConnection, logger);
+                } catch (SQLException exception) {
+                    throw new IllegalStateException("Failed to recreate missing table '" + resolvedTableName + "'", exception);
+                }
+            });
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to obtain database connection for table verification", exception);
+        }
     }
 
+    /**
+     * Checks whether a table exists using the configured table prefix to resolve the name.
+     * Throws on inspection failure to prevent accidental table recreation.
+     */
     private boolean tableExists(String tableName) {
         String resolvedTableName = this.databaseConnection.getDatabaseConfiguration().replacePrefix(tableName);
+        return rawTableExists(resolvedTableName);
+    }
+
+    /**
+     * Checks whether a table exists using the exact name provided (no prefix resolution).
+     * Used by the migration fallback where the table name is already fully qualified.
+     * Returns false on inspection failure (non-destructive context) with a warning log.
+     */
+    private boolean rawTableExists(String resolvedTableName) {
         try (Connection connection = this.databaseConnection.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
             if (metaData == null) {
