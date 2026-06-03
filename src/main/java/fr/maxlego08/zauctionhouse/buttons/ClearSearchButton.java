@@ -5,6 +5,7 @@ import fr.maxlego08.menu.api.engine.InventoryEngine;
 import fr.maxlego08.menu.api.utils.Placeholders;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
+import fr.maxlego08.zauctionhouse.api.filter.SearchQueryFormatter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -46,7 +47,7 @@ public class ClearSearchButton extends Button {
             return null;
         }
 
-        placeholders.register("search_query", query);
+        placeholders.register("search_query", SearchQueryFormatter.format(query, this.plugin.getConfiguration().getSearchFilter()));
         return this.getItemStack().build(player, false, placeholders);
     }
 

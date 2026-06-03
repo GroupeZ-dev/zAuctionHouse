@@ -47,7 +47,7 @@ import fr.maxlego08.zauctionhouse.placeholder.placeholders.PlayerPlaceholders;
 import fr.maxlego08.zauctionhouse.services.BroadcastService;
 import fr.maxlego08.zauctionhouse.rule.ZItemRuleManager;
 import fr.maxlego08.zauctionhouse.rule.ZRuleLoaderRegistry;
-import fr.maxlego08.zauctionhouse.search.ChatSearchListener;
+import fr.maxlego08.zauctionhouse.search.SearchDialogService;
 import fr.maxlego08.zauctionhouse.storage.ZStorageManager;
 import fr.maxlego08.zauctionhouse.utils.LocaleHelper;
 import fr.maxlego08.zauctionhouse.utils.Metrics;
@@ -90,7 +90,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     private final MessageHelper messageHelper = new MessageHelper();
     private LocaleHelper localeHelper;
     private InventoriesLoader inventoriesLoader;
-    private ChatSearchListener chatSearchListener;
+    private SearchDialogService searchDialogService;
     private BroadcastService broadcastService;
     private DiscordWebhookService discordWebhookService;
     private VersionChecker versionChecker;
@@ -137,9 +137,9 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         this.broadcastService = new BroadcastService(this);
         this.discordWebhookService = new DiscordWebhookService(this);
 
-        this.chatSearchListener = new ChatSearchListener(this);
+        this.searchDialogService = new SearchDialogService(this);
         this.addListener(new PlayerListener(this));
-        this.addListener(this.chatSearchListener);
+        this.addListener(this.searchDialogService);
 
         java.util.List<String> aliases = new java.util.ArrayList<>(getConfig().getStringList("commands.main-command.aliases"));
         String primaryCommand;
@@ -453,8 +453,8 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         return this.placeholder;
     }
 
-    public ChatSearchListener getChatSearchListener() {
-        return this.chatSearchListener;
+    public SearchDialogService getSearchDialogService() {
+        return this.searchDialogService;
     }
 
     public BroadcastService getBroadcastService() {

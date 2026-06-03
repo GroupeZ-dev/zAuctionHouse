@@ -252,7 +252,7 @@ commands:
     arguments:
       - name: query
         display-name: query
-        required: true
+        required: false
         auto-completion: []
 
   # คำสั่งเปิดหน้า: /zauctionhouse page <number>

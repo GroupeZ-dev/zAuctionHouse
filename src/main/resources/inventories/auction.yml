@@ -211,7 +211,7 @@ items:
   #---------------------------------------------------------------------------
   # SEARCH BUTTON
   #---------------------------------------------------------------------------
-  # Opens the chat search input for filtering items.
+  # Opens the search dialog for filtering items.
 
   search:
     type: ZAUCTIONHOUSE_SEARCH
@@ -224,19 +224,10 @@ items:
         - ""
         - "#92ffffCurrent search#8c8c8c: #2CCED2%search_query%"
         - ""
-        - "#92ffffFilters#8c8c8c:"
-        - "#8c8c8c  name #76CDCD~ #8c8c8cvalue    #555555(contains)"
-        - "#8c8c8c  name #76CDCD= #8c8c8cvalue    #555555(exact)"
-        - "#8c8c8c  name #76CDCD~= #8c8c8cvalue   #555555(contains, ignore case)"
-        - "#8c8c8c  name #76CDCD== #8c8c8cvalue   #555555(exact, ignore case)"
+        - "#92ffffDialog options#8c8c8c: #76CDCDall#8c8c8c, #76CDCDname#8c8c8c, #76CDCDlore#8c8c8c, #76CDCDmaterial#8c8c8c, #76CDCDseller"
+        - "#92ffffMatch modes#8c8c8c: #76CDCDcontains#8c8c8c, #76CDCDexact"
         - ""
-        - "#92ffffFields#8c8c8c: #76CDCDname#8c8c8c, #76CDCDmaterial#8c8c8c, #76CDCDlore#8c8c8c, #76CDCDseller"
-        - ""
-        - "#92ffffExamples#8c8c8c:"
-        - "#8c8c8c  seller #76CDCD= #8c8c8cNotch"
-        - "#8c8c8c  name #76CDCD~ #8c8c8cDiamond"
-        - ""
-        - "#8c8c8c- #2CCED2Left-click #92ffffto search"
+        - "#8c8c8c- #2CCED2Left-click #92ffffto open search dialog"
         - "#8c8c8c- #2CCED2Right-click #92ffffto reset search"
   #---------------------------------------------------------------------------
   # REFRESH BUTTON

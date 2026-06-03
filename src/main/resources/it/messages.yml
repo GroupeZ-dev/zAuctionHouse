@@ -573,7 +573,7 @@ migration-failed: "<error>La migrazione è fallita: <white>%error%"
 # MESSAGGI DI RICERCA
 #=============================================================================
 
-search-start: "<#8a8a8a>Scrivi la tua ricerca nella chat."
+search-start: "<#8a8a8a>Apertura del dialogo di ricerca."
 search-cleared: "<#8a8a8a>Ricerca cancellata."
 search-no-results: "<#8a8a8a>Nessun oggetto trovato per <#ffffff>%query%<#8a8a8a>."
 search-searching: "<#8a8a8a>Ricerca di <#ffffff>%query%<#8a8a8a>..."

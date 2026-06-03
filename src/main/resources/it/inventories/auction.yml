@@ -211,7 +211,7 @@ items:
   #---------------------------------------------------------------------------
   # PULSANTE CERCA
   #---------------------------------------------------------------------------
-  # Apre l'input di ricerca nella chat per filtrare gli oggetti.
+  # Apre il dialogo di ricerca per filtrare gli oggetti.
 
   search:
     type: ZAUCTIONHOUSE_SEARCH
@@ -224,19 +224,10 @@ items:
         - ""
         - "#92ffffRicerca attuale#8c8c8c: #2CCED2%search_query%"
         - ""
-        - "#92ffffFiltri#8c8c8c:"
-        - "#8c8c8c  name #76CDCD~ #8c8c8cvalore    #555555(contiene)"
-        - "#8c8c8c  name #76CDCD= #8c8c8cvalore    #555555(esatto)"
-        - "#8c8c8c  name #76CDCD~= #8c8c8cvalore   #555555(contiene, ignora maiuscole)"
-        - "#8c8c8c  name #76CDCD== #8c8c8cvalore   #555555(esatto, ignora maiuscole)"
+        - "#92ffffOpzioni#8c8c8c: #76CDCDall#8c8c8c, #76CDCDname#8c8c8c, #76CDCDlore#8c8c8c, #76CDCDmaterial#8c8c8c, #76CDCDseller"
+        - "#92ffffModalita#8c8c8c: #76CDCDcontiene#8c8c8c, #76CDCDesatto"
         - ""
-        - "#92ffffCampi#8c8c8c: #76CDCDname#8c8c8c, #76CDCDmaterial#8c8c8c, #76CDCDlore#8c8c8c, #76CDCDseller"
-        - ""
-        - "#92ffffEsempi#8c8c8c:"
-        - "#8c8c8c  seller #76CDCD= #8c8c8cNotch"
-        - "#8c8c8c  name #76CDCD~ #8c8c8cDiamond"
-        - ""
-        - "#8c8c8c- #2CCED2Clic sinistro #92ffffper cercare"
+        - "#8c8c8c- #2CCED2Clic sinistro #92ffffper aprire il dialogo"
         - "#8c8c8c- #2CCED2Clic destro #92ffffper cancellare la ricerca"
 
   #---------------------------------------------------------------------------

@@ -6,6 +6,7 @@ import fr.maxlego08.menu.api.utils.Placeholders;
 import fr.maxlego08.zauctionhouse.ZAuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
+import fr.maxlego08.zauctionhouse.api.filter.SearchQueryFormatter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -31,7 +32,7 @@ public class SearchButton extends Button {
         String query = cache.get(PlayerCacheKey.SEARCH_QUERY);
         boolean hasActiveQuery = query != null && !query.isBlank();
 
-        placeholders.register("search_query", hasActiveQuery ? query : "None");
+        placeholders.register("search_query", hasActiveQuery ? SearchQueryFormatter.format(query, this.plugin.getConfiguration().getSearchFilter()) : "None");
         placeholders.register("search_active", hasActiveQuery ? "true" : "false");
 
         return this.getItemStack().build(player, false, placeholders);
@@ -53,7 +54,7 @@ public class SearchButton extends Button {
         }
 
         if (this.plugin instanceof ZAuctionPlugin zAuctionPlugin) {
-            zAuctionPlugin.getChatSearchListener().startSearch(player);
+            zAuctionPlugin.getSearchDialogService().openSearchDialog(player);
         }
     }
 }

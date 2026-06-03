@@ -1,4 +1,5 @@
 import org.gradle.kotlin.dsl.invoke
+import org.gradle.api.tasks.testing.Test
 
 plugins {
     `java-library`
@@ -63,13 +64,19 @@ allprojects {
     }
 
     dependencies {
-        compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
+        compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
         compileOnly("me.clip:placeholderapi:2.11.6")
         compileOnly("fr.maxlego08.menu:zmenu-api:1.1.1.0")
 
         implementation("fr.maxlego08.sarah:sarah:1.23")
         implementation("com.tcoded:FoliaLib:0.5.1")
         implementation("fr.traqueur.currencies:currenciesapi:1.0.13")
+
+        testImplementation("org.junit.jupiter:junit-jupiter:5.10.3")
+    }
+
+    tasks.withType<Test>().configureEach {
+        useJUnitPlatform()
     }
 }
 

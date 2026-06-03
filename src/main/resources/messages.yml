@@ -573,8 +573,8 @@ migration-failed: "<error>Migration failed: <white>%error%"
 # SEARCH MESSAGES
 #=============================================================================
 
-# Shown when the player starts a search via chat.
-search-start: "<#8a8a8a>Please type your search in the chat."
+# Shown when the player opens the search dialog.
+search-start: "<#8a8a8a>Opening search dialog."
 
 # Shown when the search is cleared.
 search-cleared: "<#8a8a8a>Search cleared."
