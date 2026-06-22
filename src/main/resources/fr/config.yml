@@ -883,6 +883,23 @@ auto-claim:
   deposit-reason: "Argent d'enchères réclamé"
 
 #=============================================================================
+# CONFIGURATION DE L'HISTORIQUE
+#=============================================================================
+
+# Contrôle l'historique des ventes affiché aux joueurs via /ah history.
+# Utile pour limiter la charge de la base de données sur les serveurs avec beaucoup de transactions.
+
+history:
+  # Nombre maximum d'entrées d'historique affichées par joueur.
+  # Mettre à 0 pour illimité (non recommandé pour les gros serveurs).
+  max-entries: 500
+
+  # Nombre de jours après lesquels les entrées d'historique ne sont plus affichées.
+  # Mettre à 0 pour conserver tout l'historique indéfiniment.
+  # Exemple : 90 = n'afficher que les ventes des 3 derniers mois.
+  expire-after-days: 0
+
+#=============================================================================
 # NOTIFICATION DE VENTES
 #=============================================================================
 

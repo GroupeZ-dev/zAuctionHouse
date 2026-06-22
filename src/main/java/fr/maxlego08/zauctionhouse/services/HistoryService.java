@@ -29,16 +29,21 @@ public class HistoryService extends AuctionService implements AuctionHistoryServ
         var storageManager = this.plugin.getStorageManager();
         var economyManager = this.plugin.getEconomyManager();
 
+        var historyConfig = this.plugin.getConfiguration().getHistory();
+        long expireAfterMs = historyConfig.expireAfterDays() > 0 ? historyConfig.expireAfterDays() * 86_400_000L : 0;
+        int maxEntries = historyConfig.maxEntries();
+
         return CompletableFuture.supplyAsync(() -> {
 
-            var logs = storageManager.selectSalesHistory(playerUniqueId);
-            var items = storageManager.selectItems(logs.stream().map(LogDTO::item_id).toList());
+            var logs = storageManager.selectSalesHistory(playerUniqueId, expireAfterMs);
+            var limitedLogs = maxEntries > 0 && logs.size() > maxEntries ? logs.subList(0, maxEntries) : logs;
+            var items = storageManager.selectItems(limitedLogs.stream().map(LogDTO::item_id).toList());
 
             List<ItemLog> itemLogs = new ArrayList<>();
-            logs.forEach(dto -> {
+            for (var dto : limitedLogs) {
                 var optional = items.stream().filter(e -> e.getId() == dto.item_id()).findFirst();
-                optional.ifPresentOrElse(item -> itemLogs.add(new ItemLog(dto, item)), () -> plugin.getLogger().warning("Item not found for log ID: " + dto.id()));
-            });
+                optional.ifPresent(item -> itemLogs.add(new ItemLog(dto, item)));
+            }
 
             return itemLogs;
         }, this.plugin.getExecutorService());

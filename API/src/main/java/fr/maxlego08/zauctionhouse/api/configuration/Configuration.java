@@ -8,6 +8,7 @@ import fr.maxlego08.zauctionhouse.api.configuration.records.AutoClaimConfigurati
 import fr.maxlego08.zauctionhouse.api.configuration.records.BroadcastConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.CooldownConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ExpirationConfiguration;
+import fr.maxlego08.zauctionhouse.api.configuration.records.HistoryConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.SalesNotificationConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ItemDisplayConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ItemLoreConfiguration;
@@ -227,6 +228,13 @@ public interface Configuration extends ConfigurationFile {
      * @return list of inventory command configurations
      */
     List<InventoryCommandConfiguration> getInventoryCommands();
+
+    /**
+     * Gets the history configuration.
+     *
+     * @return the history configuration
+     */
+    HistoryConfiguration getHistory();
 
     /**
      * Gets the command cooldown configuration.

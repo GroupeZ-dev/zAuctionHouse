@@ -35,7 +35,7 @@ public class ZMigrationRegistry implements MigrationRegistry {
         }
 
         providers.put(id, provider);
-        plugin.getLogger().info("Registered migration provider: " + provider.getDisplayName() + " (" + id + ")");
+        // this.plugin.getLogger().info("Registered migration provider: " + provider.getDisplayName() + " (" + id + ")");
     }
 
     @Override
@@ -46,7 +46,7 @@ public class ZMigrationRegistry implements MigrationRegistry {
 
         MigrationProvider removed = providers.remove(providerId.toLowerCase());
         if (removed != null) {
-            plugin.getLogger().info("Unregistered migration provider: " + removed.getDisplayName());
+            this.plugin.getLogger().info("Unregistered migration provider: " + removed.getDisplayName());
             return true;
         }
         return false;

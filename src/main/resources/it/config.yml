@@ -884,6 +884,23 @@ auto-claim:
   deposit-reason: "Denaro delle aste riscosso"
 
 #=============================================================================
+# CONFIGURAZIONE CRONOLOGIA
+#=============================================================================
+
+# Controlla la cronologia delle vendite mostrata ai giocatori tramite /ah history.
+# Utile per limitare il carico del database su server con molte transazioni.
+
+history:
+  # Numero massimo di voci della cronologia mostrate per giocatore.
+  # Impostare a 0 per illimitato (non consigliato per server grandi).
+  max-entries: 500
+
+  # Numero di giorni dopo i quali le voci della cronologia non vengono piu mostrate.
+  # Impostare a 0 per mantenere tutta la cronologia indefinitamente.
+  # Esempio: 90 = mostrare solo le vendite degli ultimi 3 mesi.
+  expire-after-days: 0
+
+#=============================================================================
 # NOTIFICA DI VENDITA
 #=============================================================================
 

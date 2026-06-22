@@ -174,9 +174,10 @@ public interface StorageManager {
      * Retrieves the sales history for a player.
      *
      * @param playerUniqueId the player's UUID
+     * @param expireAfterMs  only return logs created after this duration in ms (0 = no filter)
      * @return list of log entries for the player's sales
      */
-    List<LogDTO> selectSalesHistory(UUID playerUniqueId);
+    List<LogDTO> selectSalesHistory(UUID playerUniqueId, long expireAfterMs);
 
     /**
      * Retrieves multiple items by their IDs.

@@ -59,6 +59,46 @@ extract-dominant-color: false
 default-color: "#5865F2"
 
 #=============================================================================
+# IMAGENES PERSONALIZADAS POR OBJETO
+#=============================================================================
+# Reemplaza la imagen (%item_image_url%) para objetos especificos.
+# Perfecto para objetos custom (ItemsAdder, Oraxen, Nexo, MMOItems, ...) cuya
+# imagen basada en el material de arriba no representa el objeto real.
+#
+# Cada entrada asocia una 'rule' (como reconocer el objeto) con una 'image' (URL).
+# Las reglas usan el MISMO formato que categories.yml / rules.yml. Gana la PRIMERA
+# regla que coincide, asi que pon las reglas mas especificas primero.
+# Los objetos que no coinciden con ninguna regla usan el patron 'item-image-url' de arriba.
+#
+# TIPOS DE REGLAS COMUNES:
+#   type: material           ->  materials: [DIAMOND_SWORD, NETHERITE_SWORD]
+#   type: name               ->  mode: CONTAINS|EQUALS   values: ["Excalibur"]
+#   type: lore               ->  mode: CONTAINS|EQUALS   values: ["Legendario"]
+#   type: custom-model-data  ->  values: [10001]   (o ranges: [{min: 10000, max: 10999}])
+#   type: oraxen             ->  items: [ruby_sword]
+#   type: itemsadder         ->  items: ["mynamespace:ruby_sword"]
+#   type: nexo               ->  items: [ruby_sword]
+#   type: mmoitems           ->  items: ["SWORD:EXCALIBUR"]
+#
+# Deja la lista vacia ([]) para desactivar esta funcionalidad.
+custom-images: []
+#  - rule:
+#      type: oraxen
+#      items:
+#        - ruby_sword
+#    image: "https://example.com/images/ruby_sword.png"
+#  - rule:
+#      type: material
+#      materials:
+#        - DIAMOND_SWORD
+#    image: "https://example.com/images/diamond_sword.png"
+#  - rule:
+#      type: custom-model-data
+#      values:
+#        - 10001
+#    image: "https://example.com/images/legendary.png"
+
+#=============================================================================
 # CONFIGURACIONES DE WEBHOOKS
 #=============================================================================
 
@@ -236,7 +276,7 @@ webhooks:
 #   %item_enchantments%    - Lista de encantamientos
 #   %item_custom_model_data% - Valor CustomModelData (para resource packs)
 #   %item_dominant_color%  - Color dominante extraido (requiere extract-dominant-color: true)
-#   %item_image_url%       - URL completa a la imagen del objeto
+#   %item_image_url%       - URL completa a la imagen del objeto (usa el override 'custom-images' si el objeto coincide con una regla)
 #
 # PLACEHOLDERS DE JUGADOR:
 #   %seller_name%          - Nombre de usuario del vendedor
@@ -252,7 +292,7 @@ webhooks:
 #
 # PLACEHOLDERS DE TIEMPO:
 #   %created_at%           - Cuando se creo el listado
-#   %expires_at%           - Cuando expira el listado
+#   %expires_at%           - Cuando expira el listado (marca de tiempo dinamica de Discord, mostrada en la zona horaria de cada usuario)
 #   %remaining_time%       - Tiempo antes de la expiracion
 #   %timestamp%            - Marca de tiempo actual
 #

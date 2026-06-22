@@ -884,6 +884,23 @@ auto-claim:
   deposit-reason: "Dinero de subastas reclamado"
 
 #=============================================================================
+# CONFIGURACION DEL HISTORIAL
+#=============================================================================
+
+# Controla el historial de ventas mostrado a los jugadores via /ah history.
+# Util para limitar la carga de la base de datos en servidores con muchas transacciones.
+
+history:
+  # Numero maximo de entradas de historial mostradas por jugador.
+  # Establecer a 0 para ilimitado (no recomendado para servidores grandes).
+  max-entries: 500
+
+  # Numero de dias despues de los cuales las entradas del historial ya no se muestran.
+  # Establecer a 0 para mantener todo el historial indefinidamente.
+  # Ejemplo: 90 = solo mostrar ventas de los ultimos 3 meses.
+  expire-after-days: 0
+
+#=============================================================================
 # NOTIFICACION DE VENTA
 #=============================================================================
 

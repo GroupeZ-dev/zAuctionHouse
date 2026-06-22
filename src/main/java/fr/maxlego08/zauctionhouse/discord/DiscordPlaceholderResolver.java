@@ -1,7 +1,10 @@
 package fr.maxlego08.zauctionhouse.discord;
 
 import fr.maxlego08.zauctionhouse.api.category.Category;
+import fr.maxlego08.zauctionhouse.api.configuration.discord.DiscordConfiguration;
 import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
+import fr.maxlego08.zauctionhouse.api.rules.ItemRuleContext;
+import fr.maxlego08.zauctionhouse.rule.ZItemRuleContext;
 import fr.maxlego08.zauctionhouse.utils.component.ComponentMessageHelper;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -10,6 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -21,7 +25,7 @@ public class DiscordPlaceholderResolver {
     private String cachedImageUrl;
     private String cachedDominantColor;
 
-    public DiscordPlaceholderResolver(String serverName, AuctionItem auctionItem, Player seller, Player buyer, String itemImageUrlPattern, boolean extractDominantColor, String defaultColor, ColorExtractor colorExtractor) {
+    public DiscordPlaceholderResolver(String serverName, AuctionItem auctionItem, Player seller, Player buyer, String itemImageUrlPattern, boolean extractDominantColor, String defaultColor, ColorExtractor colorExtractor, List<DiscordConfiguration.CustomImageRule> customImages) {
         registerItemPlaceholders(auctionItem);
         registerSellerPlaceholders(auctionItem, seller);
         registerBuyerPlaceholders(auctionItem, buyer);
@@ -29,7 +33,7 @@ public class DiscordPlaceholderResolver {
         registerTimePlaceholders(auctionItem);
         registerServerPlaceholders(serverName);
         registerCategoryPlaceholders(auctionItem);
-        registerImagePlaceholders(auctionItem, itemImageUrlPattern, extractDominantColor, defaultColor, colorExtractor);
+        registerImagePlaceholders(auctionItem, itemImageUrlPattern, extractDominantColor, defaultColor, colorExtractor, customImages);
     }
 
     /**
@@ -158,7 +162,15 @@ public class DiscordPlaceholderResolver {
             return createdAt != null ? createdAt.toString() : "";
         });
 
-        placeholders.put("%expires_at%", auctionItem::getFormattedExpireDate);
+        placeholders.put("%expires_at%", () -> {
+            var expiredAt = auctionItem.getExpiredAt();
+            if (expiredAt == null || expiredAt.getTime() == 0) {
+                return auctionItem.getFormattedExpireDate();
+            }
+            // Discord dynamic timestamp: rendered by Discord in each viewer's local timezone (e.g. "12 June 2026 18:55").
+            // The value is in seconds since epoch, not milliseconds. The ":f" style is "short date/time".
+            return "<t:" + (expiredAt.getTime() / 1000L) + ":f>";
+        });
         placeholders.put("%remaining_time%", auctionItem::getRemainingTime);
         placeholders.put("%timestamp%", () -> Instant.now().toString());
     }
@@ -194,34 +206,70 @@ public class DiscordPlaceholderResolver {
 
     /**
      * Registers placeholders related to the item image.
+     * <p>
+     * A custom image rule (see {@code custom-images} in discord.yml) takes precedence: if the
+     * item matches one, its image is used. Otherwise the URL is built from the material-based
+     * pattern. The resolved value is exposed via {@code %item_image_url%}.
      *
      * @param auctionItem          the auction item to register placeholders for
      * @param itemImageUrlPattern  the pattern to use for building the item image URL
      * @param extractDominantColor whether to extract the dominant color from the item image
      * @param defaultColor         the default color to use if the dominant color extraction fails
      * @param colorExtractor       the color extractor to use for extracting the dominant color
+     * @param customImages         the per-item custom image rules, checked before the pattern
      */
-    private void registerImagePlaceholders(AuctionItem auctionItem, String itemImageUrlPattern, boolean extractDominantColor, String defaultColor, ColorExtractor colorExtractor) {
-        // Build the image URL from the pattern
+    private void registerImagePlaceholders(AuctionItem auctionItem, String itemImageUrlPattern, boolean extractDominantColor, String defaultColor, ColorExtractor colorExtractor, List<DiscordConfiguration.CustomImageRule> customImages) {
         ItemStack itemStack = auctionItem.getItemStack();
         String material = itemStack != null ? itemStack.getType().name() : "UNKNOWN";
 
-        if (itemImageUrlPattern != null && !itemImageUrlPattern.isEmpty()) {
+        // A custom image rule overrides the material-based pattern when the item matches.
+        String customImage = resolveCustomImage(itemStack, customImages);
+        String colorCacheKey;
+
+        if (customImage != null && !customImage.isEmpty()) {
+            cachedImageUrl = customImage;
+            // Cache the extracted color by URL: custom items can share a material (e.g. PAPER)
+            // while having different images, so the material alone is not a unique key.
+            colorCacheKey = customImage;
+        } else if (itemImageUrlPattern != null && !itemImageUrlPattern.isEmpty()) {
             cachedImageUrl = itemImageUrlPattern.replace("%item_material%", material).replace("%ITEM_MATERIAL%", material);
+            colorCacheKey = material;
         } else {
             cachedImageUrl = "";
+            colorCacheKey = material;
         }
 
         placeholders.put("%item_image_url%", () -> cachedImageUrl);
 
         if (extractDominantColor && colorExtractor != null && !cachedImageUrl.isEmpty()) {
-            // Use material-based caching
-            cachedDominantColor = colorExtractor.getColorForMaterial(material, cachedImageUrl);
+            cachedDominantColor = colorExtractor.getColorForMaterial(colorCacheKey, cachedImageUrl);
         } else {
             cachedDominantColor = defaultColor;
         }
 
         placeholders.put("%item_dominant_color%", () -> cachedDominantColor);
+    }
+
+    /**
+     * Finds the first custom image whose rule matches the given item.
+     *
+     * @param itemStack    the item stack to match against, or null
+     * @param customImages the configured custom image rules
+     * @return the matching image URL, or null if none matches
+     */
+    private String resolveCustomImage(ItemStack itemStack, List<DiscordConfiguration.CustomImageRule> customImages) {
+        if (itemStack == null || customImages == null || customImages.isEmpty()) {
+            return null;
+        }
+
+        ItemRuleContext context = new ZItemRuleContext(itemStack);
+        for (DiscordConfiguration.CustomImageRule customImage : customImages) {
+            if (customImage.rule().matches(context)) {
+                return customImage.image();
+            }
+        }
+
+        return null;
     }
 
     /**

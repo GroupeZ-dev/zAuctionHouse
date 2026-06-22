@@ -879,6 +879,23 @@ auto-claim:
   deposit-reason: "Claimed pending auction money"
 
 #=============================================================================
+# HISTORY CONFIGURATION
+#=============================================================================
+
+# Controls the sales history displayed to players via /ah history.
+# Useful for limiting database load on servers with many transactions.
+
+history:
+  # Maximum number of history entries displayed per player.
+  # Set to 0 for unlimited (not recommended for large servers).
+  max-entries: 500
+
+  # Number of days after which history entries are no longer displayed.
+  # Set to 0 to keep all history entries forever.
+  # Example: 90 = only show sales from the last 3 months.
+  expire-after-days: 0
+
+#=============================================================================
 # SALES NOTIFICATION
 #=============================================================================
 

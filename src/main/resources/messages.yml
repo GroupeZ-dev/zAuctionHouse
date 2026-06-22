@@ -671,3 +671,32 @@ admin-option-list-header: "<primary>Options for <white>%player%<primary>:"
 # Available placeholders:
 #   %amount% - Number of items retrieved
 remove-all-items: "#e6fff3You have retrieved <white>%amount%<#e6fff3> item(s)."
+
+#=============================================================================
+# ADMIN LOGS MESSAGES
+#=============================================================================
+
+command-description-auction-admin-logs: "Manage auction logs"
+command-description-auction-admin-logs-purge: "Delete logs older than X days"
+command-description-auction-admin-logs-player: "Delete all logs for a player"
+command-description-auction-admin-logs-clear-migrated: "Delete logs migrated from V3"
+
+# Shown when logs are purged by age.
+# Available placeholders:
+#   %amount% - Number of logs deleted
+#   %days% - Number of days threshold
+admin-logs-purge-success: "<success>Deleted <white>%amount%<success> logs older than <white>%days%<success> days."
+
+# Shown when logs are deleted for a specific player.
+# Available placeholders:
+#   %amount% - Number of logs deleted
+#   %player% - Target player name
+admin-logs-player-success: "<success>Deleted <white>%amount%<success> logs for player <white>%player%<success>."
+
+# Shown when migrated V3 logs are cleared.
+# Available placeholders:
+#   %amount% - Number of logs deleted
+admin-logs-clear-migrated-success: "<success>Deleted <white>%amount%<success> migrated V3 logs."
+
+# Shown when an invalid number of days is provided.
+admin-logs-invalid-days: "<error>Please specify a valid number of days (greater than 0)."

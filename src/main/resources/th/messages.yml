@@ -599,3 +599,16 @@ admin-option-reset: "<success>ตัวเลือกทั้งหมดข�
 admin-option-list-header: "<primary>ตัวเลือกสำหรับ <white>%player%<primary>:"
 
 remove-all-items: "#e6fff3คุณได้รับไอเทมคืนจำนวน <white>%amount%<#e6fff3> ชิ้น"
+#=============================================================================
+# ADMIN LOGS MESSAGES
+#=============================================================================
+
+command-description-auction-admin-logs: "จัดการบันทึกการประมูล"
+command-description-auction-admin-logs-purge: "ลบบันทึกที่เก่ากว่า X วัน"
+command-description-auction-admin-logs-player: "ลบบันทึกทั้งหมดของผู้เล่น"
+command-description-auction-admin-logs-clear-migrated: "ลบบันทึกที่ย้ายมาจาก V3"
+
+admin-logs-purge-success: "<success>ลบ <white>%amount%<success> บันทึกที่เก่ากว่า <white>%days%<success> วัน"
+admin-logs-player-success: "<success>ลบ <white>%amount%<success> บันทึกของผู้เล่น <white>%player%<success>"
+admin-logs-clear-migrated-success: "<success>ลบ <white>%amount%<success> บันทึกที่ย้ายมาจาก V3"
+admin-logs-invalid-days: "<error>กรุณาระบุจำนวนวันที่ถูกต้อง (มากกว่า 0)"

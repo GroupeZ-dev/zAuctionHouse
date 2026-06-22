@@ -350,7 +350,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
             Class<?> clazz = Class.forName(className);
             MigrationProvider provider = (MigrationProvider) clazz.getDeclaredConstructor().newInstance();
             this.migrationRegistry.register(provider);
-            this.getLogger().info(displayName + " migration provider registered.");
+            // this.getLogger().info(displayName + " migration provider registered.");
         } catch (ClassNotFoundException ignored) {
             // Hook not included in build, skip silently
         } catch (Exception exception) {

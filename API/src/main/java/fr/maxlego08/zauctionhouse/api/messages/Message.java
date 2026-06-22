@@ -183,7 +183,16 @@ public enum Message {
     ADMIN_OPTION_RESET("<success>All options for <white>%player%<success> have been reset to defaults."),
     ADMIN_OPTION_LIST_HEADER("<primary>Options for <white>%player%<primary>:"),
 
-    REMOVE_ALL_ITEMS("#e6fff3You have retrieved <white>%amount%<#e6fff3> item(s).");
+    REMOVE_ALL_ITEMS("#e6fff3You have retrieved <white>%amount%<#e6fff3> item(s)."),
+
+    COMMAND_DESCRIPTION_AUCTION_ADMIN_LOGS("Manage auction logs"),
+    COMMAND_DESCRIPTION_AUCTION_ADMIN_LOGS_PURGE("Delete logs older than X days"),
+    COMMAND_DESCRIPTION_AUCTION_ADMIN_LOGS_PLAYER("Delete all logs for a player"),
+    COMMAND_DESCRIPTION_AUCTION_ADMIN_LOGS_CLEAR_MIGRATED("Delete logs migrated from V3"),
+    ADMIN_LOGS_PURGE_SUCCESS("<success>Deleted <white>%amount%<success> logs older than <white>%days%<success> days."),
+    ADMIN_LOGS_PLAYER_SUCCESS("<success>Deleted <white>%amount%<success> logs for player <white>%player%<success>."),
+    ADMIN_LOGS_CLEAR_MIGRATED_SUCCESS("<success>Deleted <white>%amount%<success> migrated V3 logs."),
+    ADMIN_LOGS_INVALID_DAYS("<error>Please specify a valid number of days (greater than 0).");
 
     private AuctionPlugin plugin;
     private List<AuctionMessage> messages = new ArrayList<>();

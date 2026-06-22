@@ -59,6 +59,46 @@ extract-dominant-color: false
 default-color: "#5865F2"
 
 #=============================================================================
+# รูปภาพที่กำหนดเองต่อไอเท็ม
+#=============================================================================
+# แทนที่รูปภาพ (%item_image_url%) สำหรับไอเท็มที่ระบุ
+# เหมาะสำหรับไอเท็มที่กำหนดเอง (ItemsAdder, Oraxen, Nexo, MMOItems, ...) ที่
+# รูปภาพตามวัสดุด้านบนไม่ได้แสดงถึงไอเท็มจริง
+#
+# แต่ละรายการจับคู่ 'rule' (วิธีจดจำไอเท็ม) กับ 'image' (URL)
+# กฎใช้รูปแบบเดียวกับ categories.yml / rules.yml กฎแรกที่ตรงกันจะถูกใช้
+# ดังนั้นให้วางกฎที่เจาะจงที่สุดไว้ก่อน
+# ไอเท็มที่ไม่ตรงกับกฎใดเลยจะใช้รูปแบบ 'item-image-url' ด้านบน
+#
+# ประเภทกฎที่ใช้บ่อย:
+#   type: material           ->  materials: [DIAMOND_SWORD, NETHERITE_SWORD]
+#   type: name               ->  mode: CONTAINS|EQUALS   values: ["Excalibur"]
+#   type: lore               ->  mode: CONTAINS|EQUALS   values: ["Legendary"]
+#   type: custom-model-data  ->  values: [10001]   (หรือ ranges: [{min: 10000, max: 10999}])
+#   type: oraxen             ->  items: [ruby_sword]
+#   type: itemsadder         ->  items: ["mynamespace:ruby_sword"]
+#   type: nexo               ->  items: [ruby_sword]
+#   type: mmoitems           ->  items: ["SWORD:EXCALIBUR"]
+#
+# ปล่อยลิสต์ว่าง ([]) เพื่อปิดฟีเจอร์นี้
+custom-images: []
+#  - rule:
+#      type: oraxen
+#      items:
+#        - ruby_sword
+#    image: "https://example.com/images/ruby_sword.png"
+#  - rule:
+#      type: material
+#      materials:
+#        - DIAMOND_SWORD
+#    image: "https://example.com/images/diamond_sword.png"
+#  - rule:
+#      type: custom-model-data
+#      values:
+#        - 10001
+#    image: "https://example.com/images/legendary.png"
+
+#=============================================================================
 # การตั้งค่า WEBHOOK
 #=============================================================================
 
@@ -236,7 +276,7 @@ webhooks:
 #   %item_enchantments%    - รายการ enchantment
 #   %item_custom_model_data% - ค่า CustomModelData (สำหรับ resource pack)
 #   %item_dominant_color%  - สีหลักที่ดึงออกมา (ต้องเปิด extract-dominant-color: true)
-#   %item_image_url%       - URL เต็มไปยังรูปภาพไอเท็ม
+#   %item_image_url%       - URL เต็มไปยังรูปภาพไอเท็ม (ใช้การแทนที่ 'custom-images' เมื่อไอเท็มตรงกับกฎ)
 #
 # PLACEHOLDER ผู้เล่น:
 #   %seller_name%          - ชื่อผู้ใช้ของผู้ขาย
@@ -252,7 +292,7 @@ webhooks:
 #
 # PLACEHOLDER เวลา:
 #   %created_at%           - เมื่อสร้างรายการลงขาย
-#   %expires_at%           - เมื่อรายการลงขายหมดอายุ
+#   %expires_at%           - เมื่อรายการลงขายหมดอายุ (Discord dynamic timestamp แสดงตามเขตเวลาของผู้ใช้แต่ละคน)
 #   %remaining_time%       - เวลาที่เหลือก่อนหมดอายุ
 #   %timestamp%            - Timestamp ปัจจุบัน
 #

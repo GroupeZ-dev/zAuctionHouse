@@ -308,13 +308,13 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public List<Item> getPlayerSellingItems(Player player) {
-        IntList ids = getCache(player).getOrCompute(PlayerCacheKey.ITEMS_SELLING, () -> getItemIds(StorageType.LISTED, item -> item.getSellerUniqueId().equals(player.getUniqueId()), Comparator.comparing(Item::getExpiredAt)));
+        IntList ids = getCache(player).getOrCompute(PlayerCacheKey.ITEMS_SELLING, () -> getItemIds(StorageType.LISTED, item -> item.getSellerUniqueId().equals(player.getUniqueId()) && item.getStatus() != ItemStatus.DELETED, Comparator.comparing(Item::getExpiredAt)));
         return resolveItems(StorageType.LISTED, ids);
     }
 
     @Override
     public List<Item> getPlayerSellingItems(UUID uniqueId) {
-        return resolveItems(StorageType.LISTED, getItemIds(StorageType.LISTED, item -> item.getSellerUniqueId().equals(uniqueId), Comparator.comparing(Item::getExpiredAt)));
+        return resolveItems(StorageType.LISTED, getItemIds(StorageType.LISTED, item -> item.getSellerUniqueId().equals(uniqueId) && item.getStatus() != ItemStatus.DELETED, Comparator.comparing(Item::getExpiredAt)));
     }
 
     @Override
@@ -663,7 +663,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             if (!available) {
                 this.plugin.getLogger().info("Item is not available");
                 inventoryManager.updateInventory(admin);
-                return failedFuture(new IllegalStateException("Item introuvable"));
+                return failedFuture(new IllegalStateException("Item indisponible"));
             }
 
             return clusterBridge.lockItem(item, admin.getUniqueId(), storageType);

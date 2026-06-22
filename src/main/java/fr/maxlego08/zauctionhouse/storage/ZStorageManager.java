@@ -221,8 +221,8 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
     }
 
     @Override
-    public List<LogDTO> selectSalesHistory(UUID playerUniqueId) {
-        return this.plugin.getStorageManager().with(LogRepository.class).selectSalesHistory(playerUniqueId);
+    public List<LogDTO> selectSalesHistory(UUID playerUniqueId, long expireAfterMs) {
+        return this.plugin.getStorageManager().with(LogRepository.class).selectSalesHistory(playerUniqueId, expireAfterMs);
     }
 
     @Override

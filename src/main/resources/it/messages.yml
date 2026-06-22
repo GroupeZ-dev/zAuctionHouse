@@ -599,3 +599,17 @@ admin-option-reset: "<success>Tutte le opzioni di <white>%player%<success> sono 
 admin-option-list-header: "<primary>Opzioni per <white>%player%<primary>:"
 
 remove-all-items: "#e6fff3Hai ritirato <white>%amount%<#e6fff3> oggetto/i."
+
+#=============================================================================
+# ADMIN LOGS MESSAGES
+#=============================================================================
+
+command-description-auction-admin-logs: "Gestisci i log delle aste"
+command-description-auction-admin-logs-purge: "Elimina i log piu vecchi di X giorni"
+command-description-auction-admin-logs-player: "Elimina tutti i log di un giocatore"
+command-description-auction-admin-logs-clear-migrated: "Elimina i log migrati dalla V3"
+
+admin-logs-purge-success: "<success>Eliminati <white>%amount%<success> log piu vecchi di <white>%days%<success> giorni."
+admin-logs-player-success: "<success>Eliminati <white>%amount%<success> log per il giocatore <white>%player%<success>."
+admin-logs-clear-migrated-success: "<success>Eliminati <white>%amount%<success> log migrati dalla V3."
+admin-logs-invalid-days: "<error>Specificare un numero di giorni valido (maggiore di 0)."

@@ -117,7 +117,7 @@ public class DiscordWebhookService {
     private CompletableFuture<Void> sendWebhook(DiscordConfiguration.WebhookConfiguration webhook, AuctionItem auctionItem, Player seller, Player buyer) {
         return CompletableFuture.runAsync(() -> {
             try {
-                var resolver = new DiscordPlaceholderResolver(configuration.serverName(), auctionItem, seller, buyer, configuration.itemImageUrl(), configuration.extractDominantColor(), configuration.defaultColor(), colorExtractor);
+                var resolver = new DiscordPlaceholderResolver(configuration.serverName(), auctionItem, seller, buyer, configuration.itemImageUrl(), configuration.extractDominantColor(), configuration.defaultColor(), colorExtractor, configuration.customImages());
 
                 String json = buildWebhookJson(webhook, resolver);
 

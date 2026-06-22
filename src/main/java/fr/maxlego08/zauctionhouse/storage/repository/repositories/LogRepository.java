@@ -82,8 +82,16 @@ public class LogRepository extends Repository {
      * @param sellerUniqueId the seller's UUID
      * @return list of purchase logs for this seller
      */
-    public List<LogDTO> selectSalesHistory(UUID sellerUniqueId) {
-        return select(LogDTO.class, schema -> schema.where("target_unique_id", sellerUniqueId.toString()).where("log_type", LogType.PURCHASE.name()).orderByDesc("created_at"));
+    public List<LogDTO> selectSalesHistory(UUID sellerUniqueId, long expireAfterMs) {
+        return select(LogDTO.class, schema -> {
+            schema.where("target_unique_id", sellerUniqueId.toString());
+            schema.where("log_type", LogType.PURCHASE.name());
+            schema.where("item_id", ">", 0);
+            if (expireAfterMs > 0) {
+                schema.where("created_at", ">", new java.util.Date(System.currentTimeMillis() - expireAfterMs));
+            }
+            schema.orderByDesc("created_at");
+        });
     }
 
     /**
@@ -130,5 +138,24 @@ public class LogRepository extends Repository {
             schema.whereNull("readed_at");
             schema.object("readed_at", new Date());
         });
+    }
+
+    public long deleteByPlayer(UUID playerUniqueId) {
+        long count = select(LogDTO.class, schema -> schema.where("player_unique_id", playerUniqueId.toString())).size();
+        delete(schema -> schema.where("player_unique_id", playerUniqueId.toString()));
+        return count;
+    }
+
+    public long deleteOlderThan(long olderThanMs) {
+        Date cutoff = new Date(System.currentTimeMillis() - olderThanMs);
+        long count = select(LogDTO.class, schema -> schema.where("created_at", "<", cutoff)).size();
+        delete(schema -> schema.where("created_at", "<", cutoff));
+        return count;
+    }
+
+    public long deleteMigrated() {
+        long count = select(LogDTO.class, schema -> schema.where("item_id", 0)).size();
+        delete(schema -> schema.where("item_id", 0));
+        return count;
     }
 }

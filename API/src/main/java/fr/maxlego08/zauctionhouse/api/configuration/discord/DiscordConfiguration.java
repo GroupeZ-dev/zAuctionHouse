@@ -1,6 +1,8 @@
 package fr.maxlego08.zauctionhouse.api.configuration.discord;
 
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
+import fr.maxlego08.zauctionhouse.api.rules.Rule;
+import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoaderRegistry;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
@@ -10,6 +12,7 @@ import java.util.Map;
 
 public record DiscordConfiguration(boolean enabled, String serverName, String itemImageUrl,
                                    boolean extractDominantColor, String defaultColor,
+                                   List<CustomImageRule> customImages,
                                    WebhookConfiguration sellWebhook, WebhookConfiguration purchaseWebhook) {
 
     public static DiscordConfiguration of(AuctionPlugin plugin) {
@@ -26,10 +29,62 @@ public record DiscordConfiguration(boolean enabled, String serverName, String it
         boolean extractDominantColor = config.getBoolean("extract-dominant-color", true);
         String defaultColor = config.getString("default-color", "#5865F2");
 
+        List<CustomImageRule> customImages = loadCustomImages(config, plugin.getRuleLoaderRegistry());
+
         WebhookConfiguration sellWebhook = WebhookConfiguration.of(config, "webhooks.sell");
         WebhookConfiguration purchaseWebhook = WebhookConfiguration.of(config, "webhooks.purchase");
 
-        return new DiscordConfiguration(enabled, serverName, itemImageUrl, extractDominantColor, defaultColor, sellWebhook, purchaseWebhook);
+        return new DiscordConfiguration(enabled, serverName, itemImageUrl, extractDominantColor, defaultColor, customImages, sellWebhook, purchaseWebhook);
+    }
+
+    /**
+     * Loads the per-item custom image rules from the {@code custom-images} section.
+     * <p>
+     * Each entry pairs a {@code rule} block (using the same format as category/blacklist
+     * rules, e.g. {@code type: material}, {@code type: oraxen}) with an {@code image} URL.
+     * When an auction item matches a rule, its image is used instead of the default
+     * material-based {@code item-image-url} pattern.
+     *
+     * @param config              the loaded discord.yml configuration
+     * @param ruleLoaderRegistry  the registry used to build rules from their configuration
+     * @return the list of valid custom image rules, in declaration order (never null)
+     */
+    private static List<CustomImageRule> loadCustomImages(YamlConfiguration config, RuleLoaderRegistry ruleLoaderRegistry) {
+        List<CustomImageRule> customImages = new ArrayList<>();
+        if (ruleLoaderRegistry == null) {
+            return customImages;
+        }
+
+        for (Map<?, ?> entry : config.getMapList("custom-images")) {
+            Object ruleObject = entry.get("rule");
+            Object imageObject = entry.get("image");
+
+            if (!(ruleObject instanceof Map<?, ?> ruleMap) || imageObject == null) {
+                continue;
+            }
+
+            String image = String.valueOf(imageObject);
+            if (image.isEmpty()) {
+                continue;
+            }
+
+            Rule rule = ruleLoaderRegistry.loadRule(ruleMap);
+            if (rule != null && rule.isValid()) {
+                customImages.add(new CustomImageRule(rule, image));
+            }
+        }
+
+        return customImages;
+    }
+
+    /**
+     * Associates an item-matching {@link Rule} with a custom image URL.
+     * Used to override the Discord webhook image for specific items.
+     *
+     * @param rule  the rule an item must match for this image to apply
+     * @param image the image URL to use when the rule matches
+     */
+    public record CustomImageRule(Rule rule, String image) {
     }
 
     public record WebhookConfiguration(boolean enabled, String url, String username, String avatarUrl, String content, EmbedConfiguration embed) {

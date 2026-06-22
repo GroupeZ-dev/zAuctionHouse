@@ -74,7 +74,7 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
                     if (!available) {
                         inventoryManager.updateInventory(player);
                         resultHolder.set(PurchaseResult.failure("Item not available", PurchaseFailReason.ITEM_NOT_AVAILABLE));
-                        return failedFuture(new IllegalStateException("Item introuvable"));
+                        return failedFuture(new IllegalStateException("Item indisponible"));
                     }
 
                     return clusterBridge.lockItem(item, player.getUniqueId(), StorageType.LISTED)
@@ -124,6 +124,8 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
                     // Handle timeout exceptions specifically
                     if (e.getCause() instanceof TimeoutException) {
                         logger.warning("Purchase operation timed out for item " + item.getId());
+                    } else if (e.getCause() instanceof IllegalStateException) {
+                        logger.warning("Purchase unavailable for item " + item.getId() + ": " + e.getMessage());
                     } else {
                         logger.severe("Error during purchase for item " + item.getId() + ": " + e.getMessage());
                     }
