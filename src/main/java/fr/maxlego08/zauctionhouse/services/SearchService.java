@@ -5,6 +5,8 @@ import fr.maxlego08.zauctionhouse.api.category.Category;
 import fr.maxlego08.zauctionhouse.api.filter.SearchField;
 import fr.maxlego08.zauctionhouse.api.filter.SearchFilterType;
 import fr.maxlego08.zauctionhouse.api.filter.SearchQuery;
+import fr.maxlego08.zauctionhouse.api.filter.SearchTextMatcher;
+import fr.maxlego08.zauctionhouse.api.filter.SearchTextNormalizer;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.SortItem;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
@@ -51,14 +53,12 @@ public class SearchService {
             itemMap.put(item.getId(), item);
         }
 
-        String lowerValue = parsedQuery.value().toLowerCase();
-
         for (int id : allIds) {
             Item item = itemMap.get(id);
             if (item == null) continue;
 
             if (parsedQuery.isDefault()) {
-                if (matchDefault(item, lowerValue)) {
+                if (matchDefault(item, parsedQuery.value())) {
                     results.add(id);
                 }
             } else {
@@ -74,23 +74,25 @@ public class SearchService {
     /**
      * Default match: substring case-insensitive on material name, display name, lore, and seller name.
      */
-    private boolean matchDefault(Item item, String lowerQuery) {
+    private boolean matchDefault(Item item, String query) {
+        String normalizedQuery = SearchTextNormalizer.normalize(query);
+
         // Material name
-        if (item.getTranslationKey() != null && item.getTranslationKey().toLowerCase().contains(lowerQuery)) {
+        if (item.getTranslationKey() != null && SearchTextNormalizer.normalize(item.getTranslationKey()).contains(normalizedQuery)) {
             return true;
         }
 
         // Check material type name
         if (item instanceof AuctionItem auctionItem) {
             ItemStack itemStack = auctionItem.getItemStack();
-            if (itemStack != null && itemStack.getType().name().toLowerCase().contains(lowerQuery)) {
+            if (itemStack != null && SearchTextNormalizer.normalize(itemStack.getType().name()).contains(normalizedQuery)) {
                 return true;
             }
         }
 
         // Display name
         String displayName = getDisplayName(item);
-        if (displayName != null && displayName.toLowerCase().contains(lowerQuery)) {
+        if (displayName != null && SearchTextNormalizer.normalize(displayName).contains(normalizedQuery)) {
             return true;
         }
 
@@ -98,14 +100,14 @@ public class SearchService {
         List<String> lore = getLore(item);
         if (lore != null) {
             for (String line : lore) {
-                if (line.toLowerCase().contains(lowerQuery)) {
+                if (SearchTextNormalizer.normalize(line).contains(normalizedQuery)) {
                     return true;
                 }
             }
         }
 
         // Seller name (exact case-insensitive)
-        if (item.getSellerName() != null && item.getSellerName().equalsIgnoreCase(lowerQuery)) {
+        if (item.getSellerName() != null && SearchTextNormalizer.normalize(item.getSellerName()).equals(normalizedQuery)) {
             return true;
         }
 
@@ -116,6 +118,10 @@ public class SearchService {
      * Targeted match with a specific field and filter type.
      */
     private boolean matchWithFilter(Item item, SearchField field, SearchFilterType type, String value) {
+        if (field == SearchField.ALL) {
+            return matchAllFields(item, type, value);
+        }
+
         String fieldValue = getFieldValue(item, field);
         if (fieldValue == null) {
             // For the LORE field, check all lines
@@ -134,16 +140,47 @@ public class SearchService {
     }
 
     private boolean matchValue(String fieldValue, SearchFilterType type, String queryValue) {
-        return switch (type) {
-            case CONTAINS -> fieldValue.contains(queryValue);
-            case EQUALS -> fieldValue.equals(queryValue);
-            case CONTAINS_IGNORE_CASE -> fieldValue.toLowerCase().contains(queryValue.toLowerCase());
-            case EQUALS_IGNORE_CASE -> fieldValue.equalsIgnoreCase(queryValue);
-        };
+        return SearchTextMatcher.matches(fieldValue, type, queryValue);
+    }
+
+    private boolean matchAllFields(Item item, SearchFilterType type, String value) {
+        String displayName = getDisplayName(item);
+        if (displayName != null && matchValue(displayName, type, value)) {
+            return true;
+        }
+
+        if (item.getSellerName() != null && matchValue(item.getSellerName(), type, value)) {
+            return true;
+        }
+
+        String translationKey = item.getTranslationKey();
+        if (translationKey != null && matchValue(translationKey, type, value)) {
+            return true;
+        }
+
+        if (item instanceof AuctionItem auctionItem) {
+            ItemStack itemStack = auctionItem.getItemStack();
+            if (itemStack != null && matchValue(itemStack.getType().name(), type, value)) {
+                return true;
+            }
+        }
+
+        List<String> lore = getLore(item);
+        if (lore == null) {
+            return false;
+        }
+
+        for (String line : lore) {
+            if (matchValue(line, type, value)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getFieldValue(Item item, SearchField field) {
         return switch (field) {
+            case ALL -> null;
             case NAME -> getDisplayName(item);
             case MATERIAL -> {
                 if (item instanceof AuctionItem auctionItem) {

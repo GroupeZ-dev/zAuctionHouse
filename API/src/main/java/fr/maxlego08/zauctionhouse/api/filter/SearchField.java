@@ -5,6 +5,7 @@ package fr.maxlego08.zauctionhouse.api.filter;
  */
 public enum SearchField {
 
+    ALL("all"),
     NAME("name"),
     MATERIAL("material"),
     LORE("lore"),

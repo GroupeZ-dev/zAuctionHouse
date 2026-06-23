@@ -573,7 +573,7 @@ migration-failed: "<error>การย้ายข้อมูลล้มเห
 # ข้อความค้นหา
 #=============================================================================
 
-search-start: "<#8a8a8a>กรุณาพิมพ์คำค้นหาในแชท"
+search-start: "<#8a8a8a>Opening search dialog."
 search-cleared: "<#8a8a8a>ล้างการค้นหาแล้ว"
 search-no-results: "<#8a8a8a>ไม่พบไอเทมสำหรับ <#ffffff>%query%<#8a8a8a>"
 search-searching: "<#8a8a8a>กำลังค้นหา <#ffffff>%query%<#8a8a8a>..."
@@ -599,7 +599,6 @@ admin-option-reset: "<success>ตัวเลือกทั้งหมดข�
 admin-option-list-header: "<primary>ตัวเลือกสำหรับ <white>%player%<primary>:"
 
 remove-all-items: "#e6fff3คุณได้รับไอเทมคืนจำนวน <white>%amount%<#e6fff3> ชิ้น"
-
 #=============================================================================
 # ADMIN LOGS MESSAGES
 #=============================================================================

@@ -157,7 +157,7 @@ public enum Message {
     MIGRATION_FAILED("<error>Migration failed: <white>%error%"),
 
     // Search messages
-    SEARCH_START("<#8a8a8a>Please type your search in the chat."),
+    SEARCH_START("<#8a8a8a>Opening search dialog."),
     SEARCH_CLEARED("<#8a8a8a>Search cleared."),
     SEARCH_NO_RESULTS("<#8a8a8a>No items found for <#ffffff>%query%<#8a8a8a>."),
     SEARCH_SEARCHING("<#8a8a8a>Searching for <#ffffff>%query%<#8a8a8a>..."),

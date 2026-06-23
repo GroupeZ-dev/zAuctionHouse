@@ -281,7 +281,7 @@ commands:
     arguments:
       - name: query
         display-name: ricerca
-        required: true
+        required: false
         auto-completion: []
 
   # Comando page: /zauctionhouse page <numero>

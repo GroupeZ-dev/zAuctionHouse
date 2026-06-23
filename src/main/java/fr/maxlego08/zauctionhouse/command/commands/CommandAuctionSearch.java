@@ -1,5 +1,6 @@
 package fr.maxlego08.zauctionhouse.command.commands;
 
+import fr.maxlego08.zauctionhouse.ZAuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.utils.Permission;
@@ -31,10 +32,6 @@ public class CommandAuctionSearch extends VCommand {
     @Override
     protected CommandType perform(AuctionPlugin plugin) {
 
-        if (this.args.length < 2) {
-            return CommandType.SYNTAX_ERROR;
-        }
-
         StringBuilder queryBuilder = new StringBuilder();
         for (int i = 1; i < this.args.length; i++) {
             if (i > 1) queryBuilder.append(" ");
@@ -42,7 +39,9 @@ public class CommandAuctionSearch extends VCommand {
         }
 
         String query = queryBuilder.toString();
-        plugin.getAuctionManager().startSearch(this.player, query);
+        if (plugin instanceof ZAuctionPlugin zAuctionPlugin) {
+            zAuctionPlugin.getSearchDialogService().openSearchDialog(this.player, query);
+        }
         return CommandType.SUCCESS;
     }
 }

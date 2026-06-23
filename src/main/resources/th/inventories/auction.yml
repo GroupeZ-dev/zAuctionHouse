@@ -222,19 +222,10 @@ items:
         - ""
         - "#92ffffค้นหาปัจจุบัน#8c8c8c: #2CCED2%search_query%"
         - ""
-        - "#92ffffตัวกรอง#8c8c8c:"
-        - "#8c8c8c  name #76CDCD~ #8c8c8cค่า    #555555(มีคำนี้)"
-        - "#8c8c8c  name #76CDCD= #8c8c8cค่า    #555555(ตรงทั้งหมด)"
-        - "#8c8c8c  name #76CDCD~= #8c8c8cค่า   #555555(มีคำนี้, ไม่สนตัวพิมพ์)"
-        - "#8c8c8c  name #76CDCD== #8c8c8cค่า   #555555(ตรงทั้งหมด, ไม่สนตัวพิมพ์)"
+        - "#92ffffOptions#8c8c8c: #76CDCDall#8c8c8c, #76CDCDname#8c8c8c, #76CDCDlore#8c8c8c, #76CDCDmaterial#8c8c8c, #76CDCDseller"
+        - "#92ffffModes#8c8c8c: #76CDCDcontains#8c8c8c, #76CDCDexact"
         - ""
-        - "#92ffffฟิลด์#8c8c8c: #76CDCDname#8c8c8c, #76CDCDmaterial#8c8c8c, #76CDCDlore#8c8c8c, #76CDCDseller"
-        - ""
-        - "#92ffffตัวอย่าง#8c8c8c:"
-        - "#8c8c8c  seller #76CDCD= #8c8c8cNotch"
-        - "#8c8c8c  name #76CDCD~ #8c8c8cDiamond"
-        - ""
-        - "#8c8c8c• #2CCED2คลิก #92ffffเพื่อค้นหา"
+        - "#8c8c8c• #2CCED2Click #92ffffto open search dialog"
 
   #---------------------------------------------------------------------------
   # ปุ่มรีเฟรช (REFRESH BUTTON)
