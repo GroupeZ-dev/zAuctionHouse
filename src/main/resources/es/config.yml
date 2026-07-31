@@ -414,6 +414,11 @@ number-sell-multiplication:
     - format: TR         # Septillones
       multiplication: 1000000000000000000000000000000000000000000
 
+# Si se establece en false, los jugadores no pueden poner objetos a la venta con
+# un precio que contenga decimales (p. ej. 10.5); solo se permiten números enteros.
+# Ponlo en true para permitir precios decimales.
+allow-decimal-prices: true
+
 #=============================================================================
 # AJUSTES DE CADUCIDAD
 #=============================================================================

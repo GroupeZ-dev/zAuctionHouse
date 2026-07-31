@@ -1,3 +1,7 @@
+# Unreleased
+
+- **Added** `allow-decimal-prices` option in `config.yml` (default `true`) - when set to `false`, players can no longer list items for a price containing decimals (e.g. `10.5`); only whole-number prices are accepted. Enforced on every sell path (the `/ah sell` command and the sell-inventory confirm button) via `SellService`, and shows the new `price-decimal-not-allowed` message. Option and message synced across all language files (en/fr/es/it/th)
+
 # 4.0.1.0
 
 - **Fixed** Critical cross-server duplication where a sold item reappeared in the seller's items (multi-server / Redis). When `purchased-item.give-item: true`, a purchase set the database row to `DELETED` before broadcasting the `ItemBought` event; on every other server the `ItemBoughtListener` re-fetched the item via `selectItem` (which filters out `DELETED` rows), got `null`, and bailed out **before** removing the listing from its in-memory store. The ghost listing therefore survived on all non-buyer servers and the seller still saw it in `/ah selling`. The listener now removes the listing from in-memory storage **unconditionally** (mirroring `ItemRemovedListener`), independently of the database lookup. `ItemBoughtMessage` was enriched with the seller UUID/name, item display, price and buyer name so the real-time seller notification (including `%buyer%`, which was already broken on remote servers) works without a database round-trip

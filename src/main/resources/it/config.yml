@@ -414,6 +414,11 @@ number-sell-multiplication:
     - format: TR         # Settilioni
       multiplication: 1000000000000000000000000000000000000000000
 
+# Se impostato su false, i giocatori non possono mettere in vendita oggetti a un
+# prezzo con decimali (es. 10.5); sono consentiti solo numeri interi.
+# Imposta su true per consentire i prezzi con decimali.
+allow-decimal-prices: true
+
 #=============================================================================
 # IMPOSTAZIONI DI SCADENZA
 #=============================================================================

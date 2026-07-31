@@ -273,6 +273,10 @@ price-too-high: "<error>You cannot sell for more than <white>%max-price%<error>.
 #   %min-price% - Minimum required price
 price-too-low: "<error>You cannot sell for less than <white>%min-price%<error>."
 
+# Shown when a player tries to list an item for a price with decimals
+# while decimal prices are disabled (allow-decimal-prices: false in config.yml).
+price-decimal-not-allowed: "<error>You cannot list items for a price with decimals, please use a whole number."
+
 # Shown when player has reached their listing limit.
 # Available placeholders:
 #   %max-items% - Maximum items allowed
