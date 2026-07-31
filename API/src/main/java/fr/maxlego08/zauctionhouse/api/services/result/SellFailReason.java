@@ -36,6 +36,11 @@ public enum SellFailReason {
     PRICE_TOO_LOW,
 
     /**
+     * The price contains decimals while decimal prices are disabled.
+     */
+    PRICE_DECIMAL_NOT_ALLOWED,
+
+    /**
      * The player has reached their maximum listing limit.
      */
     LISTING_LIMIT_REACHED,

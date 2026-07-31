@@ -70,6 +70,7 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     private CooldownConfiguration cooldownConfiguration;
     private List<InventoryCommandConfiguration> inventoryCommandConfigurations;
     private boolean sellInventoryEnabled;
+    private boolean allowDecimalPrices;
 
     public MainConfiguration(AuctionPlugin plugin) {
         this.plugin = plugin;
@@ -109,6 +110,7 @@ public class MainConfiguration extends YamlLoader implements Configuration {
             this.dateFormat.setTimeZone(TimeZone.getTimeZone(timezone));
         }
         this.sellInventoryEnabled = config.getBoolean("commands.sell.enable-sell-inventory", false);
+        this.allowDecimalPrices = config.getBoolean("allow-decimal-prices", true);
 
         // Validate critical configurations
         validateConfigurations();
@@ -275,6 +277,11 @@ public class MainConfiguration extends YamlLoader implements Configuration {
     @Override
     public boolean isSellInventoryEnabled() {
         return this.sellInventoryEnabled;
+    }
+
+    @Override
+    public boolean isAllowDecimalPrices() {
+        return this.allowDecimalPrices;
     }
 
     @Override

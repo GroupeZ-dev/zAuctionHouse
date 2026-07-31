@@ -86,6 +86,7 @@ public enum Message {
 
     PRICE_TOO_HIGH("<error>You cannot sell for more than <white>%max-price%<error>."),
     PRICE_TOO_LOW("<error>You cannot sell for less than <white>%min-price%<error>."),
+    PRICE_DECIMAL_NOT_ALLOWED("<error>You cannot list items for a price with decimals, please use a whole number."),
 
     LISTED_ITEMS_LIMIT("<error>You cannot sell more than <white>%max-items%<error> items<error>. &8(&7Did you set the zauctionhouse.<number in config.yml> ?&8)"),
     WORLD_BANNED("<error>You cannot sell items in this world."),

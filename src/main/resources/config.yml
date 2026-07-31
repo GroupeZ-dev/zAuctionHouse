@@ -409,6 +409,11 @@ number-sell-multiplication:
     - format: TR         # Tredecillion
       multiplication: 1000000000000000000000000000000000000000000
 
+# When set to false, players cannot list items for a price that contains
+# decimals (e.g. 10.5); only whole numbers are allowed.
+# Set to true to allow decimal prices.
+allow-decimal-prices: true
+
 #=============================================================================
 # EXPIRATION SETTINGS
 #=============================================================================

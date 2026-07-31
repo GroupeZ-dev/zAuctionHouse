@@ -223,6 +223,15 @@ public interface Configuration extends ConfigurationFile {
     boolean isSellInventoryEnabled();
 
     /**
+     * Checks if players are allowed to list items for a price that contains decimals.
+     * When disabled, prices with a fractional part (e.g. 10.5) are rejected and only
+     * whole numbers can be used.
+     *
+     * @return true if decimal prices are allowed, false to force whole-number prices
+     */
+    boolean isAllowDecimalPrices();
+
+    /**
      * Gets the list of inventory-based command configurations.
      *
      * @return list of inventory command configurations

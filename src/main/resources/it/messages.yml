@@ -273,6 +273,10 @@ price-too-high: "<error>Non puoi vendere per più di <white>%max-price%<error>."
 #   %min-price% - Prezzo minimo richiesto
 price-too-low: "<error>Non puoi vendere per meno di <white>%min-price%<error>."
 
+# Mostrato quando un giocatore prova a mettere in vendita un oggetto a un prezzo con
+# decimali mentre i prezzi con decimali sono disabilitati (allow-decimal-prices: false in config.yml).
+price-decimal-not-allowed: "<error>Non puoi mettere in vendita oggetti a un prezzo con decimali, usa un numero intero."
+
 # Mostrato quando il giocatore ha raggiunto il suo limite di annunci.
 # Placeholder disponibili:
 #   %max-items% - Numero massimo di oggetti consentiti

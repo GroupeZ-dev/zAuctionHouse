@@ -247,6 +247,12 @@ public class SellService extends ZUtils implements AuctionSellService {
             return SellFailReason.PRICE_TOO_LOW;
         }
 
+        // Reject prices containing decimals when whole-number prices are enforced
+        if (!configuration.isAllowDecimalPrices() && price.stripTrailingZeros().scale() > 0) {
+            message(plugin, player, Message.PRICE_DECIMAL_NOT_ALLOWED);
+            return SellFailReason.PRICE_DECIMAL_NOT_ALLOWED;
+        }
+
         long listedItems = manager.getPlayerSellingItems(player).size();
         long maxSellPermission = configuration.getPermission().getLimit(ItemType.AUCTION, player);
         if (listedItems >= maxSellPermission) {
