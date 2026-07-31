@@ -1,6 +1,9 @@
 # Unreleased
 
+# 4.0.1.1
+
 - **Added** `allow-decimal-prices` option in `config.yml` (default `true`) - when set to `false`, players can no longer list items for a price containing decimals (e.g. `10.5`); only whole-number prices are accepted. Enforced on every sell path (the `/ah sell` command and the sell-inventory confirm button) via `SellService`, and shows the new `price-decimal-not-allowed` message. Option and message synced across all language files (en/fr/es/it/th)
+- **Added** CrazyAuction migration.
 
 # 4.0.1.0
 
