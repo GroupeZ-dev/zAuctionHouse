@@ -130,7 +130,6 @@ public class ListedItemsButton extends PaginateButton {
                     this.plugin.getAuctionClusterBridge().notifyItemStatusChange(item, ItemStatus.AVAILABLE, ItemStatus.IS_REMOVE_CONFIRM)
                             .thenRun(() -> {
                                 item.setStatus(ItemStatus.IS_REMOVE_CONFIRM);
-                                manager.updateListedItems(item, false, null);
                                 this.plugin.getInventoriesLoader().openInventory(player, isMultipleAuctionItem ? Inventories.REMOVE_INVENTORY_CONFIRM : Inventories.REMOVE_CONFIRM);
                             });
                 } else {
