@@ -96,12 +96,13 @@ public class ListedItemsButton extends PaginateButton {
 
         return event -> {
 
-            // An item can still be AVAILABLE while its listing has already expired (expiration is processed lazily).
-            // Acting on such an item must never open a confirm inventory: move it to the expired list and refresh.
-            if (!item.isActivelyListed()) {
-                if (item.isExpired() && item.getStatus() != ItemStatus.REMOVED && item.getStatus() != ItemStatus.DELETED) {
-                    manager.getExpireService().processExpiredItem(item, StorageType.LISTED);
-                }
+            // A listing may have expired while the player was browsing (expiration is processed lazily).
+            // When the listing has genuinely expired, redirect it to the expired list and refresh.
+            // We specifically check isExpired() instead of the broader isActivelyListed() here:
+            // newly created items may transiently have a non-AVAILABLE status due to async DB ops
+            // and isActivelyListed() would block the confirm inventory for those valid items.
+            if (item.isExpired() && item.getStatus() != ItemStatus.REMOVED && item.getStatus() != ItemStatus.DELETED) {
+                manager.getExpireService().processExpiredItem(item, StorageType.LISTED);
                 manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_LISTED);
                 manager.updateInventory(player);
                 return;
