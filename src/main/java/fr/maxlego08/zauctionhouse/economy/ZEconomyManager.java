@@ -334,7 +334,7 @@ public class ZEconomyManager implements EconomyManager {
                 var menuItemStack = this.plugin.getInventoriesLoader().getInventoryManager().loadItemStack(file, "economies", (Map<String, Object>) itemStackMap);
                 yield new ZMenuItemProvider(plugin, menuItemStack);
             }
-            case ZESSENTIALS, ECOBITS, COINSENGINE, REDISECONOMY, EXCELLENTEECONOMY -> {
+            case ZESSENTIALS, ECOBITS, COINSENGINE, REDISECONOMY, EXCELLENTECONOMY, EXCELLENTEECONOMY -> {
                 String currencyName = accessor.getString("currency-name", null);
                 if (currencyName == null) {
                     this.plugin.getLogger().severe("Economy '" + name + "' is active but doesn’t have a currency name, please correct that!");

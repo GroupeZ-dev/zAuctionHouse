@@ -1,6 +1,5 @@
 package fr.maxlego08.zauctionhouse.buttons.admin.history;
 
-import fr.maxlego08.menu.api.button.Button;
 import fr.maxlego08.menu.api.engine.InventoryEngine;
 import fr.maxlego08.menu.api.utils.Placeholders;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
@@ -36,5 +35,4 @@ public class AdminHistoryMainPurchasedButton extends TargetHelper {
     public void onClick(@NotNull Player player, @NotNull InventoryClickEvent event, @NotNull InventoryEngine inventory, int slot, @NotNull Placeholders placeholders) {
         this.plugin.getInventoriesLoader().openInventory(player, Inventories.ADMIN_PURCHASED_ITEMS);
     }
-
 }

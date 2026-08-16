@@ -1,5 +1,12 @@
 # Unreleased
 
+- **Updated** CurrenciesAPI dependency from 1.0.13 to 1.0.14 - the misspelled ExcellentEconomy economy type is renamed from `EXCELLENTEECONOMY` to `EXCELLENTECONOMY`. Both spellings are now accepted as a `type` in `economies.yml`; the old one is deprecated and will be removed in a future CurrenciesAPI release
+- **Added** Permission for admin button:
+   - `admin_expired_items_remove`, allow players to remove expired items from the auction house
+   - `admin_logs_give_item_to_player`, allow players to give items to other players from the auction house logs
+   - `admin_purchased_items_remove`, allow players to remove purchased items from the auction house
+   - `admin_listed_items_remov`, allow players to remove listed items from the auction house
+
 # 4.0.1.1
 
 - **Added** `allow-decimal-prices` option in `config.yml` (default `true`) - when set to `false`, players can no longer list items for a price containing decimals (e.g. `10.5`); only whole-number prices are accepted. Enforced on every sell path (the `/ah sell` command and the sell-inventory confirm button) via `SellService`, and shows the new `price-decimal-not-allowed` message. Option and message synced across all language files (en/fr/es/it/th)

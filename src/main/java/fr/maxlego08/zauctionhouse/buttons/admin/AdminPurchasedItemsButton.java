@@ -6,6 +6,7 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
+import fr.maxlego08.zauctionhouse.api.utils.Permission;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jspecify.annotations.NonNull;
@@ -33,6 +34,9 @@ public class AdminPurchasedItemsButton extends PaginateButton {
         var items = manager.getPurchasedItems(target.get());
         paginate(items, inventoryEngine, (slot, item) -> inventoryEngine.addItem(slot, item.buildItemStack(player)).setClick(event -> {
             // adminRemoveItem handles inventory update internally
+
+            if (!player.hasPermission(Permission.ADMIN_PURCHASED_ITEMS_REMOVE.asPermission())) return;
+
             manager.adminRemoveItem(player, target.get(), item, StorageType.PURCHASED);
         }));
     }
