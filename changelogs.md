@@ -1,5 +1,7 @@
 # Unreleased
 
+# 4.0.1.2
+
 - **Updated** CurrenciesAPI dependency from 1.0.13 to 1.0.14 - the misspelled ExcellentEconomy economy type is renamed from `EXCELLENTEECONOMY` to `EXCELLENTECONOMY`. Both spellings are now accepted as a `type` in `economies.yml`; the old one is deprecated and will be removed in a future CurrenciesAPI release
 - **Added** Permission for admin button:
    - `admin_expired_items_remove`, allow players to remove expired items from the auction house
