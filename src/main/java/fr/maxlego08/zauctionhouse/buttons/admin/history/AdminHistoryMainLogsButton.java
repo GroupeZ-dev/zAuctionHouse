@@ -10,7 +10,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 
 public class AdminHistoryMainLogsButton extends TargetHelper {
 
@@ -19,7 +19,7 @@ public class AdminHistoryMainLogsButton extends TargetHelper {
     }
 
     @Override
-    public @Nullable ItemStack getCustomItemStack(@NotNull Player player, boolean useCache, @NotNull Placeholders placeholders) {
+    public @NonNull ItemStack getCustomItemStack(@NotNull Player player, boolean useCache, @NotNull Placeholders placeholders) {
         getTargetName(player).ifPresent(target -> placeholders.register("target", target));
         return super.getCustomItemStack(player, useCache, placeholders);
     }

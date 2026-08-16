@@ -6,6 +6,7 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
+import fr.maxlego08.zauctionhouse.api.utils.Permission;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -34,6 +35,9 @@ public class AdminExpiredItemsButton extends PaginateButton {
         paginate(items, inventoryEngine, (slot, item) -> {
             inventoryEngine.addItem(slot, item.buildItemStack(player)).setClick(event -> {
                 // adminRemoveItem handles inventory update internally
+
+                if (!player.hasPermission(Permission.ADMIN_EXPIRED_ITEMS_REMOVE.asPermission())) return;
+
                 manager.adminRemoveItem(player, target.get(), item, StorageType.EXPIRED);
             });
         });

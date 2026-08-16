@@ -14,6 +14,7 @@ import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.storage.dto.LogDTO;
 import fr.maxlego08.zauctionhouse.api.utils.Base64ItemStack;
+import fr.maxlego08.zauctionhouse.api.utils.Permission;
 import fr.maxlego08.zauctionhouse.storage.repository.repositories.LogRepository;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -81,9 +82,7 @@ public class AdminLogsButton extends LoadingButton {
 
             ItemStack displayItem = createDisplayItem(adminLogItem, dateFormat, lore);
             var button = inventoryEngine.addItem(slot, displayItem);
-            if (button != null) {
-                button.setClick(event -> handleClick(player, event.getClick(), adminLogItem));
-            }
+            button.setClick(event -> handleClick(player, event.getClick(), adminLogItem));
         });
     }
 
@@ -197,6 +196,9 @@ public class AdminLogsButton extends LoadingButton {
 
         if (clickType == ClickType.LEFT || clickType == ClickType.SHIFT_LEFT) {
             // Left click - retrieve the item
+
+            if (!player.hasPermission(Permission.ADMIN_LOGS_GIVE_ITEM_TO_PLAYER.asPermission())) return;
+
             giveItemsToPlayer(player, adminLogItem);
         } else if (clickType == ClickType.RIGHT || clickType == ClickType.SHIFT_RIGHT) {
             // Right click - view all items if multiple
@@ -205,6 +207,9 @@ public class AdminLogsButton extends LoadingButton {
                 cache.set(PlayerCacheKey.CURRENT_PAGE, this.plugin.getInventoriesLoader().getInventoryManager().getPage(player));
                 this.plugin.getInventoriesLoader().openInventory(player, Inventories.PURCHASE_INVENTORY_CONFIRM);
             } else {
+
+                if (!player.hasPermission(Permission.ADMIN_LOGS_GIVE_ITEM_TO_PLAYER.asPermission())) return;
+
                 // If single item, just retrieve it
                 giveItemsToPlayer(player, adminLogItem);
             }

@@ -11,7 +11,14 @@ public enum Permission {
 
     ZAUCTIONHOUSE_ADMIN,
     ZAUCTIONHOUSE_ADMIN_ITEMS,
-    ZAUCTIONHOUSE_OPTION;
+    ZAUCTIONHOUSE_OPTION,
+
+    ADMIN_EXPIRED_ITEMS_REMOVE,
+    ADMIN_LOGS_GIVE_ITEM_TO_PLAYER,
+    ADMIN_PURCHASED_ITEMS_REMOVE,
+    ADMIN_LISTED_ITEMS_REMOVE
+
+    ;
 
     private final String description;
     private final String[] args;

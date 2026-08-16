@@ -1,23 +1,16 @@
 package fr.maxlego08.zauctionhouse.api;
 
+import fr.maxlego08.zauctionhouse.api.cache.PlayerCache;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
-import fr.maxlego08.zauctionhouse.api.services.AuctionClaimService;
-import fr.maxlego08.zauctionhouse.api.services.AuctionExpireService;
-import fr.maxlego08.zauctionhouse.api.services.AuctionHistoryService;
-import fr.maxlego08.zauctionhouse.api.services.AuctionOptionService;
-import fr.maxlego08.zauctionhouse.api.services.AuctionPurchaseService;
-import fr.maxlego08.zauctionhouse.api.services.AuctionRemoveService;
-import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
-import fr.maxlego08.zauctionhouse.api.cache.PlayerCache;
+import fr.maxlego08.zauctionhouse.api.services.*;
 import fr.maxlego08.zauctionhouse.api.utils.IntList;
 import org.bukkit.entity.Player;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
@@ -309,10 +302,10 @@ public interface AuctionManager {
      * Allows an administrator to remove an item that belongs to another player from any storage
      * type. Implementations should log the action and respect configured permissions.
      *
-     * @param admin            administrator performing the removal
-     * @param targetUniqueId   owner of the item
-     * @param item             item to remove
-     * @param storageType      storage bucket the item currently resides in
+     * @param admin          administrator performing the removal
+     * @param targetUniqueId owner of the item
+     * @param item           item to remove
+     * @param storageType    storage bucket the item currently resides in
      */
     void adminRemoveItem(Player admin, java.util.UUID targetUniqueId, Item item, StorageType storageType);
 
@@ -329,7 +322,7 @@ public interface AuctionManager {
     /**
      * Sends a localized or parameterized message to the player using the plugin's messaging system.
      *
-     * @param player recipient of the message
+     * @param player  recipient of the message
      * @param message message descriptor to send
      * @param args    optional parameters inserted into the message template
      */
