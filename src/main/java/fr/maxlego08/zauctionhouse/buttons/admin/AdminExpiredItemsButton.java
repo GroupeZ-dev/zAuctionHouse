@@ -2,6 +2,7 @@ package fr.maxlego08.zauctionhouse.buttons.admin;
 
 import fr.maxlego08.menu.api.button.PaginateButton;
 import fr.maxlego08.menu.api.engine.InventoryEngine;
+import fr.maxlego08.menu.api.utils.Placeholders;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
@@ -31,6 +32,11 @@ public class AdminExpiredItemsButton extends PaginateButton {
 
         var manager = this.plugin.getAuctionManager();
         var items = manager.getExpiredItems(target.get());
+
+        if (items.isEmpty()) {
+            inventoryEngine.buildButton(this.getElseButton(), new Placeholders());
+            return;
+        }
 
         paginate(items, inventoryEngine, (slot, item) -> {
             inventoryEngine.addItem(slot, item.buildItemStack(player)).setClick(event -> {
