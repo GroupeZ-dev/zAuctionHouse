@@ -1,0 +1,239 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Kategori
+#
+#   Menu ini nampilin pilihan kategori barang.
+#   Player bisa milih kategori buat nyaring barang di rumah lelang.
+#
+#   KATEGORI DIATUR DI:
+#   - categories.yml - Nentuin barang apa aja yang masuk ke tiap kategori
+#   - File ini - Ngatur tombol GUI buat masing-masing kategori
+#
+#   NAMBAHIN KATEGORI BARU:
+#   1. Tambahin pengaturan kategorinya di categories.yml (lengkap sama aturannya)
+#   2. Tambahin tombol di sini pake tipe: ZAUCTIONHOUSE_CATEGORY dan category: <nama>
+#   3. Pake placeholder %zauctionhouse_category_count_<nama>% buat nampilin jumlah barangnya
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+# Judul menu - tulisan biasa buat menu kategori.
+name: "#0c1719Kategori"
+
+# Ukuran menu - 6 baris (54 slot).
+size: 54
+
+#=============================================================================
+# POLA MENU
+#=============================================================================
+
+patterns:
+  # Nambahin hiasan kaca di pinggiran.
+  - 'zauctionhouse-decoration'
+  # Tombol kembali ke rumah lelang.
+  - 'zauctionhouse-back'
+
+#=============================================================================
+# TOMBOL KATEGORI
+#=============================================================================
+# Tiap tombol bakal ngebuka rumah lelang yang udah disaring sesuai kategorinya.
+# Tipe tombol pake ZAUCTIONHOUSE_CATEGORY dengan kolom 'category'.
+# Nilai 'category' harus sama kayak nama kategori di categories.yml.
+
+items:
+
+  #---------------------------------------------------------------------------
+  # KATEGORI SEMUA BARANG
+  #---------------------------------------------------------------------------
+  # Nampilin semua barang tanpa peduli jenisnya (gak disaring).
+  # Ini tampilan bawaan pas pertama kali ngebuka lelang.
+
+  all-items:
+    # Tipe tombol buat milih kategori.
+    type: ZAUCTIONHOUSE_CATEGORY
+
+    # Nama kategori - 'all' itu kategori khusus yang nampilin semuanya.
+    category: all
+
+    # Posisi slot - tengah di baris atas (di luar hiasan kaca).
+    slot: 4
+
+    item:
+      material: CHEST
+      name: "#2CCED2<bold>SEMUA BARANG"
+      lore:
+        - "#92ffffLiat semua barang jualan"
+        - ""
+        # %zauctionhouse_category_count_all% nampilin total semua barang.
+        - "#92ffffTotal jualan#8c8c8c: #2CCED2%zauctionhouse_category_count_all%"
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngecek"
+
+  #---------------------------------------------------------------------------
+  # KATEGORI BLOK
+  #---------------------------------------------------------------------------
+  # Cuma nampilin barang blok yang bisa ditaruh.
+
+  blocks:
+    type: ZAUCTIONHOUSE_CATEGORY
+    # Harus sama kayak nama di categories.yml
+    category: blocks
+    slot: 19
+
+    item:
+      # Barang perwakilan buat kategori ini.
+      material: GRASS_BLOCK
+      name: "#7a7a7a<bold>BLOK"
+      lore:
+        - "#92ffffSemua jenis blok bangunan"
+        - ""
+        # Jumlah barang dinamis buat kategori ini.
+        - "#92ffffJualan#8c8c8c: #2CCED2%zauctionhouse_category_count_blocks%"
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngecek"
+
+  #---------------------------------------------------------------------------
+  # KATEGORI SENJATA
+  #---------------------------------------------------------------------------
+  # Nampilin pedang, panah, crossbow, dan senjata lainnya.
+
+  weapons:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: weapons
+    slot: 20
+
+    item:
+      material: DIAMOND_SWORD
+      name: "#ff5555<bold>SENJATA"
+      lore:
+        - "#92ffffAlat bertarung"
+        - "#92ffffPedang, panah, crossbow..."
+        - ""
+        - "#92ffffJualan#8c8c8c: #2CCED2%zauctionhouse_category_count_weapons%"
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngecek"
+
+  #---------------------------------------------------------------------------
+  # KATEGORI ARMOR
+  #---------------------------------------------------------------------------
+  # Nampilin helm, baju, celana, sepatu, dan tameng.
+
+  armor:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: armor
+    slot: 21
+
+    item:
+      material: DIAMOND_CHESTPLATE
+      name: "#55ffff<bold>ARMOR"
+      lore:
+        - "#92ffffPerlengkapan perlindungan"
+        - ""
+        - "#92ffffJualan#8c8c8c: #2CCED2%zauctionhouse_category_count_armor%"
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngecek"
+
+  #---------------------------------------------------------------------------
+  # KATEGORI PERALATAN
+  #---------------------------------------------------------------------------
+  # Nampilin pickaxe, kapak, sekop, cangkul, dan alat lainnya.
+
+  tools:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: tools
+    slot: 22
+    item:
+      material: DIAMOND_PICKAXE
+      name: "#ffff55<bold>PERALATAN"
+      lore:
+        - "#92ffffAlat nambang dan bertani"
+        - ""
+        - "#92ffffJualan#8c8c8c: #2CCED2%zauctionhouse_category_count_tools%"
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngecek"
+
+  #---------------------------------------------------------------------------
+  # KATEGORI BARANG KONSUMSI
+  #---------------------------------------------------------------------------
+  # Nampilin ramuan, makanan, dan barang yang bisa dipake lainnya.
+
+  consumables:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: consumables
+    slot: 23
+
+    item:
+      material: GOLDEN_APPLE
+      name: "#55ff55<bold>KONSUMSI"
+      lore:
+        - "#92ffffMakanan dan ramuan"
+        - ""
+        - "#92ffffJualan#8c8c8c: #2CCED2%zauctionhouse_category_count_consumables%"
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngecek"
+
+  #---------------------------------------------------------------------------
+  # KATEGORI SUMBER DAYA
+  #---------------------------------------------------------------------------
+  # Nampilin bijih, ingot, dan bahan crafting.
+
+  resources:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: resources
+    slot: 24
+
+    item:
+      material: DIAMOND
+      name: "#ffaa00<bold>BAHAN"
+      lore:
+        - "#92ffffBiji-bijian dan bahan baku"
+        - ""
+        - "#92ffffJualan#8c8c8c: #2CCED2%zauctionhouse_category_count_resources%"
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngecek"
+
+  #---------------------------------------------------------------------------
+  # KATEGORI BUKU ENCHANT
+  #---------------------------------------------------------------------------
+  # Cuma nampilin buku enchant doang.
+
+  enchanted-books:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: enchanted-books
+    slot: 25
+
+    item:
+      material: ENCHANTED_BOOK
+      name: "#ff55ff<bold>BUKU ENCHANT"
+      lore:
+        - "#92ffffBuku sihir enchant"
+        - ""
+        - "#92ffffJualan#8c8c8c: #2CCED2%zauctionhouse_category_count_enchanted-books%"
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngecek"
+
+  #---------------------------------------------------------------------------
+  # KATEGORI LAIN-LAIN
+  #---------------------------------------------------------------------------
+  # Nampilin barang yang gak masuk di kategori lain.
+
+  misc:
+    type: ZAUCTIONHOUSE_CATEGORY
+    category: misc
+    slot: 31
+
+    item:
+      material: CHEST
+      name: "#555555<bold>LAINNYA"
+      lore:
+        - "#92ffffBarang lain-lain"
+        - ""
+        - "#92ffffJualan#8c8c8c: #2CCED2%zauctionhouse_category_count_misc%"
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngecek"

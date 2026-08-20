@@ -1,0 +1,269 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Konfigurasi Ekonomi
+#
+#   File ini buat ngatur mata uang apa aja yang bisa dipake di lelang.
+#   Kamu bisa nyalain beberapa jenis ekonomi sekaligus biar player bisa transaksi pake beda mata uang.
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENYEDIA EKONOMI (ECONOMY PROVIDERS)
+#=============================================================================
+# List sistem ekonomi yang aktif.
+# Tiap ekonomi ngizinin player buat beli dan jual barang pake mata uang itu.
+# Kamu bisa nyalain lebih dari satu biar player punya banyak pilihan.
+#
+# JENIS EKONOMI YANG DIDUKUNG:
+#   - VAULT        : Ekonomi standar Vault (jalan sama plugin ekonomi apa aja yang dukung Vault)
+#   - PLAYERPOINTS : Mata uang dari plugin PlayerPoints
+#   - COINSENGINE  : Mata uang dari plugin CoinsEngine
+#   - REDIRECT     : Ngoper ke ekonomi lain berdasarkan nama
+#   - ITEM         : Ekonomi berbasis barang (barter pake item tertentu)
+#   - LEVEL        : Level EXP sebagai mata uang
+#   - EXPERIENCE   : Poin EXP sebagai mata uang
+#
+# Tiap ekonomi punya pengaturan masing-masing buat:
+#   - Batas harga minimal/maksimal
+#   - Pengaturan Pajak
+#   - Format tampilan
+#   - Aturan auto-claim
+
+economies:
+
+  #---------------------------------------------------------------------------
+  # EKONOMI VAULT
+  #---------------------------------------------------------------------------
+  # Ekonomi standar yang pake API Vault.
+  # Jalan lancar bareng: EssentialsX Economy, CMI, DeluxeCoins, dll.
+  - type: VAULT
+
+    # Nyalain atau matiin ekonomi ini.
+    # Kalau dimatiin, player gak bisa transaksi pake mata uang ini.
+    is-enable: true
+
+    # Nama identifier internal buat ekonomi ini (harus unik gak boleh kembar).
+    # Dipake di command: /ah sell <harga> <jumlah> <ekonomi>
+    # Dipake juga di config dan penyimpanan database.
+    # PENTING: Jangan diubah kalau udah ada player yang jualan pake ekonomi ini.
+    name: vault
+
+    # Nama yang ditampilin di menu GUI dan pesan chat.
+    # Mendukung format warna MiniMessage.
+    display-name: "Vault"
+
+    # Format tampilan harga di menu lelang.
+    # %price% bakal diganti sama angka harganya yang udah diformat.
+    # Contoh:
+    #   "%price%$"      → "1,000$"
+    #   "$%price%"      → "$1,000"
+    #   "%price% koin"  → "1,000 koin"
+    format: "$%price%"
+
+    # Simbol pendek buat tampilan ringkas (misal di tab completion).
+    symbol: "v"
+
+    # Kalau true, duit hasil jualan bakal langsung masuk ke kantong penjual.
+    # Kalau false, penjual harus ngetik /ah claim dulu buat ngambil duit pending mereka.
+    # Disaranin: true buat setup simple, false kalau pake ekonomi antar-server (cross-server).
+    auto-claim: true
+
+    # Kalau true, duit cuma dikasih pas penjual lagi online.
+    # Kalau false, duit tetep dikasih biarpun penjual lagi offline.
+    # Berguna buat plugin ekonomi yang gak dukung transaksi offline.
+    must-be-online: false
+
+    # Permission opsional yang dibutuhin buat pake ekonomi ini.
+    # Biarin dikasih tanda pagar biar semua orang bebas pake.
+    # permission: "zauctionhouse.economy.vault"
+
+    # Alasan narik duit (keliatan di log plugin ekonomi kamu).
+    # Placeholder yang bisa dipake: %items% (nampilin nama barangnya)
+    withdraw-reason: "Beli %items% di zAuctionHouse"
+
+    # Alasan nambah duit (keliatan di log plugin ekonomi kamu).
+    deposit-reason: "Jual %items% di zAuctionHouse"
+
+    # Mode format angka harga.
+    # Pilihan:
+    #   - PRICE_WITH_DECIMAL_FORMAT : Pake settingan 'price-decimal-format' di bawah
+    #   - PRICE_WITHOUT_DECIMAL     : Gak pake desimal (angka bulat aja)
+    #   - PRICE_WITH_REDUCTION      : Pake settingan singkatan angka 'price-reductions' di bawah
+    price-format: PRICE_WITH_DECIMAL_FORMAT
+
+    # Batas harga minimal buat jenis jualan yang beda-beda.
+    # Player gak bisa jual barang di bawah harga ini.
+    # Mencegah player nyepam jualan dan ngelindungin kestabilan ekonomi.
+    min-prices:
+      auction: 10       # Harga minimal lelang biasa
+      rent: 500         # Harga minimal nyewa (fitur masa depan)
+      bid: 500          # Harga minimal buka tawaran/bid (fitur masa depan)
+
+    # Batas harga maksimal buat semua jualan.
+    # Player gak bisa jual barang di atas harga ini.
+    # Mencegah player ngerusak ekonomi pake harga yang gak ngotak.
+    max-prices: 10000000000  # 10 Milyar
+
+    #-------------------------------------------------------------------------
+    # PENGATURAN PAJAK
+    #-------------------------------------------------------------------------
+    # Sistem pajak buat transaksi lelang.
+    # Berguna buat ngurangin peredaran uang (money sink) atau ngisi bank server.
+    tax:
+      # Nyalain atau matiin pajak buat ekonomi ini
+      enabled: false
+
+      # Tipe pajak nentuin kapan dan gimana pajak diambil:
+      #
+      # SELL:       Pajak dibayar PENJUAL pas naruh barang.
+      #             Contoh: Jual barang $1000, pajak 5% → Penjual bayar biaya taruh $50.
+      #             Pembeli bayar: $1000 | Penjual dapet: $1000
+      #
+      # PURCHASE:   Pajak dipotong dari hasil jualan PENJUAL pas barang laku.
+      #             Contoh: Barang laku $1000, pajak 5% → Penjual cuma dapet $950.
+      #             Pembeli bayar: $1000 | Penjual dapet: $950
+      #
+      # BOTH:       Pajak kena dua-duanya pas ditaruh DAN pas laku.
+      #             Contoh: Pajak 5% buat naruh dan laku.
+      #             Listing: Penjual bayar $50 | Sale: Penjual dapet $950
+      #
+      # CAPITALISM: Gaya pajak PPN dimana PEMBELI bayar lebih, penjual dapet harga utuh.
+      #             Contoh: Jual barang $1000, PPN 5% → Pembeli bayar $1050.
+      #             Pembeli bayar: $1050 | Penjual dapet: $1000
+      type: SELL
+
+      # Metode itung pajak:
+      # - PERCENTAGE : Pajak ngambil dari persenan harga (paling sering dipake)
+      # - FIXED      : Harga pajak tetap berapapun harga barangnya
+      amount-type: PERCENTAGE
+
+      # Jumlah pajak (Persenan atau Nilai tetap, tergantung amount-type)
+      # Contoh: 5 = Pajak 5% (Kalo PERCENTAGE) atau Pajak $5 (Kalo FIXED)
+      amount: 5
+
+      # Permission buat bebas pajak seutuhnya
+      # Player yang punya permission ini gak bakal kena pajak apapun.
+      bypass-permission: "zauctionhouse.tax.bypass"
+
+      # Diskon pajak pake permission.
+      # Player yang punya permission ini pajaknya dipotong.
+      # Dicek sesuai urutan - permission pertama yang cocok bakal dipake.
+      # Diskonnya itu motong persenan dari persentase pajak awal.
+      reductions:
+        - permission: "zauctionhouse.tax.vip"
+          percentage: 50  # Diskon 50% (Pajak 5% → sisa 2.5% doang)
+        - permission: "zauctionhouse.tax.premium"
+          percentage: 25  # Diskon 25% (Pajak 5% → sisa 3.75%)
+        - permission: "zauctionhouse.tax.member"
+          percentage: 10  # Diskon 10% (Pajak 5% → sisa 4.5%)
+
+      #-----------------------------------------------------------------------
+      # ATURAN PAJAK SPESIFIK BARANG
+      #-----------------------------------------------------------------------
+      # Timpa pajak bawaan buat ngatur pajak khusus ke barang tertentu.
+      # Berguna banget buat naikin pajak barang mahal dibanding barang biasa.
+      item-rules:
+        # Nyalain atau matiin aturan pajak per-barang
+        enabled: false
+
+        # Daftar aturan pajak buat barang spesifik.
+        # Aturan dengan 'priority' tinggi bakal dicek duluan.
+        # Aturan pertama yang cocok bakal diterapin; kalo gak ada, pake pajak default.
+        rules: []
+
+        # CONTOH ATURAN (Hapus tanda pagar buat ngetes):
+        #
+        # - name: "diamond_tax"           # Nama aturan yang unik
+        #   priority: 100                 # Makin tinggi = dicek duluan
+        #   type: PURCHASE                # Tipe pajak buat aturan ini
+        #   amount-type: PERCENTAGE
+        #   amount: 10                    # Pajak 10% khusus berlian
+        #   rule:
+        #     type: material              # Tipe aturan: material, lore, name, dll.
+        #     materials:
+        #       - DIAMOND
+        #       - DIAMOND_BLOCK
+        #
+        # - name: "rare_items"
+        #   priority: 90
+        #   type: CAPITALISM
+        #   amount-type: PERCENTAGE
+        #   amount: 15                    # PPN 15% buat barang langka
+        #   rule:
+        #     type: and                   # Gabungin banyak kondisi
+        #     rules:
+        #       - type: lore
+        #         mode: CONTAINS
+        #         values:
+        #           - "Langka"
+
+#=============================================================================
+# EKONOMI BAWAAN (DEFAULT)
+#=============================================================================
+# Ekonomi yang dipake kalau player gak nyebutin ekonomi spesifik.
+# Namanya harus sesuai sama 'name' dari ekonomi yang dinyalain di atas.
+
+default-economy:
+  auction: vault   # Bawaan buat jualan lelang biasa
+  rent: vault      # Bawaan buat nyewa (fitur masa depan)
+  bid: vault       # Bawaan buat bid (fitur masa depan)
+
+#=============================================================================
+# FORMAT HARGA
+#=============================================================================
+
+# Format desimal buat nampilin angka harga.
+# Pake patokan pola Java DecimalFormat.
+# Contoh:
+#   "#,###.#"   → "1,234.5"
+#   "#,###.##"  → "1,234.56"
+#   "#,###"     → "1,234" (gak pake desimal)
+# Koma (,) dipake buat pemisah ribuan.
+price-decimal-format: '#,###.#'
+
+#=============================================================================
+# SINGKATAN HARGA (Tampilan Ringkas)
+#=============================================================================
+# Nyingkat angka-angka gede biar keliatan lebih rapi.
+# Cuma jalan kalo 'price-format' diatur jadi PRICE_WITH_REDUCTION.
+#
+# Format ini pake pola printf:
+#   "#.#"    → Angka biasa dengan 1 desimal
+#   "%.1fK"  → Angka dengan 1 desimal ditambahin huruf "K"
+#   "%.2fM"  → Angka dengan 2 desimal ditambahin huruf "M"
+#
+# max-amount: Angka SAMPAI SEGINI bakal pake format yang ditentukan.
+# display: (Opsional) Pola tampilan custom. %amount% itu angka singkatnya.
+
+price-reductions:
+  # 0 - 999: Tampilin biasa pake 1 desimal
+  - format: "#.#"
+    max-amount: 1000
+
+  # 1,000 - 999,999: Tampilin pake K (ribuan)
+  # Contoh: 1500 → "1.5K"
+  - format: "%.1fK"
+    max-amount: 1000000
+
+  # 1,000,000 - 999,999,999: Tampilin pake M (jutaan)
+  # Contoh: 1500000 → "1.5M"
+  - format: "%.1fM"
+    max-amount: 1000000000
+
+  # 1,000,000,000 - 999,999,999,999: Tampilin pake B (miliaran)
+  # Contoh: 1500000000 → "1.5B"
+  - format: "%.1fB"
+    max-amount: 1000000000000
+
+  # 1 Triliun+: Tampilin pake T (triliunan) warnanya ijo
+  - format: "%.2fT"
+    max-amount: 1000000000000000
+    display: "<green>%amount%"
+
+  # Angka super duper gede: Tampilin pake Q (quadrillion) warnanya merah
+  - format: "%.2fQ"
+    max-amount: 100000000000000000
+    display: "<red>%amount%"

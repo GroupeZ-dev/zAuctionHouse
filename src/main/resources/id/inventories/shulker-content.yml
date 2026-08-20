@@ -1,0 +1,143 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Isi Shulker
+#
+#   Menu ini nampilin isi dari kotak shulker yang lagi dijual.
+#   Ngasih kesempatan pembeli buat ngintip isinya sebelum beli.
+#
+#   FITUR:
+#   - Ngintip semua barang di dalam kotak shulker
+#   - Pindah-pindah antar shulker (kalo belinya borongan banyak)
+#   - Mode liat doang - barangnya gak bisa diambil
+#
+#   CARA BUKA:
+#   - Klik tombol "Liat Isi Shulker" pas lagi mau konfirmasi beli/narik barang
+#   - Cuma muncul kalo barang yang dijual itu bentuknya kotak shulker
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+# Judul menu dengan placeholder navigasi shulker.
+# %shulker-current% = nomor shulker yang lagi diliat (mulai dari 1)
+# %shulker-total% = total shulker yang dijual
+name: "#0c1719Isi Shulker (%shulker-current%/%shulker-total%)"
+
+# Ukuran menu - 6 baris.
+size: 54
+
+#=============================================================================
+# POLA MENU
+#=============================================================================
+
+patterns:
+  # Nambahin hiasan kaca di pinggiran.
+  - 'zauctionhouse-decoration'
+  # Tombol kembali ke menu konfirmasi.
+  - 'zauctionhouse-back'
+
+#=============================================================================
+# TOMBOL & TAMPILAN
+#=============================================================================
+
+items:
+
+  #---------------------------------------------------------------------------
+  # TAMPILAN ISI SHULKER
+  #---------------------------------------------------------------------------
+  # Nampilin isi dari shulker yang lagi dipilih.
+  # Barang ditampilin dalam ukuran 7x4 buat niru ukuran shulker.
+
+  content:
+    # Tipe tombol - nampilin isi shulker.
+    type: ZAUCTIONHOUSE_SHULKER_CONTENT
+
+    # Slot buat nampilin isi shulker.
+    # 4 baris × 7 kolom = 28 slot (isi shulker ada 27 barang).
+    slots:
+      - 9-17    # Baris 2
+      - 18-26   # Baris 3
+      - 27-35   # Baris 4
+      - 36-44   # Baris 5
+
+    # Slot buat nampilin tulisan pas shulkernya kosong.
+    empty-slot: 22
+
+    # Tampilan pas kotak shulkernya kosong.
+    item:
+      material: BARRIER
+      name: "#2CCED2<bold>SHULKER KOSONG"
+      lore:
+        - "#92ffffKotak shulker ini gak ada isinya sama sekali."
+
+  #---------------------------------------------------------------------------
+  # TAMPILAN INFO SHULKER
+  #---------------------------------------------------------------------------
+  # Nampilin info soal shulker yang lagi diliat.
+
+  shulker-info:
+    # Tipe tombol - nampilin info shulker.
+    type: ZAUCTIONHOUSE_SHULKER_INFO
+
+    # Posisi slot - tengah di baris atas.
+    slot: 4
+
+    item:
+      material: SHULKER_BOX
+      name: "#2CCED2<bold>KOTAK SHULKER"
+      lore:
+        # Nampilin urutan shulker dari semua shulker yang ada.
+        - "#92ffffLagi liat shulker ke-#2CCED2%shulker_current% #92ffffdari #2CCED2%shulker_total%"
+        - ""
+        - "#8c8c8c• Pake tombol panah buat ganti shulker"
+
+  #---------------------------------------------------------------------------
+  # TOMBOL SHULKER SEBELUMNYA
+  #---------------------------------------------------------------------------
+  # Geser ke shulker sebelumnya (kalo belinya banyak).
+
+  previous:
+    # Tipe tombol - ngatur ganti shulker.
+    type: ZAUCTIONHOUSE_SHULKER_NAVIGATION
+
+    # Arah gesernya.
+    direction: previous
+
+    # Posisi slot - kiri tengah di baris bawah.
+    slot: 48
+
+    item:
+      material: ARROW
+      name: "#2CCED2<bold>SHULKER SEBELUMNYA"
+      lore:
+        - "#92ffffLiat kotak shulker sebelumnya."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngecek"
+
+  #---------------------------------------------------------------------------
+  # TOMBOL SHULKER SELANJUTNYA
+  #---------------------------------------------------------------------------
+  # Geser ke shulker selanjutnya (kalo belinya banyak).
+
+  next:
+    # Tipe tombol - ngatur ganti shulker.
+    type: ZAUCTIONHOUSE_SHULKER_NAVIGATION
+
+    # Arah gesernya.
+    direction: next
+
+    # Posisi slot - kanan tengah di baris bawah.
+    slot: 50
+
+    item:
+      material: ARROW
+      name: "#2CCED2<bold>SHULKER SELANJUTNYA"
+      lore:
+        - "#92ffffLiat kotak shulker selanjutnya."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngecek"

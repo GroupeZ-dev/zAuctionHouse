@@ -1,0 +1,90 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Belanjaan
+#
+#   Menu ini nampilin barang yang udah dibeli player dari rumah lelang.
+#   Player bisa ngambil balik barang belian ini ke tas mereka dari sini.
+#
+#   PENGIRIMAN BARANG:
+#   - Kalo 'give-item' dimatiin (false) di config.yml, barang belian bakal masuk sini
+#   - Kalo 'give-item' dinyalain (true), barang langsung masuk tas (kalo tasnya muat)
+#   - Barang di sini juga ada batas waktunya (bawaan: 1 minggu) sebelum akhirnya dihapus permanen
+#
+#   CARA BUKA:
+#   - /ah purchased
+#   - Klik tombol "Barang Dibeli" di menu lelang utama
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+# Judul menu dengan placeholder halaman.
+name: '#0c1719Barang Dibeli (%page%/%max-page%)'
+
+# Ukuran menu - 6 baris.
+size: 54
+
+#=============================================================================
+# POLA MENU
+#=============================================================================
+
+patterns:
+  # Nambahin hiasan kaca di pinggiran.
+  - 'zauctionhouse-decoration'
+  # Tombol halaman sebelumnya/selanjutnya.
+  - 'zauctionhouse-pagination'
+  # Tombol kembali ke rumah lelang.
+  - 'zauctionhouse-back'
+
+#=============================================================================
+# TOMBOL & TAMPILAN
+#=============================================================================
+
+items:
+
+  #---------------------------------------------------------------------------
+  # TAMPILAN BELANJAAN
+  #---------------------------------------------------------------------------
+  # Nampilin semua barang yang udah dibeli sama player yang lagi liat.
+  # Klik barang buat ngambil.
+
+  items:
+    # Tipe tombol - nampilin dan ngurusin barang belian.
+    type: ZAUCTIONHOUSE_PURCHASED_ITEMS
+
+    # Slot buat tulisan kosong pas lagi gak ada barang.
+    empty-slot: 22
+
+    # Slot buat nampilin barang belian (4 baris × 9 kolom = 36 slot).
+    slots:
+      - 9-17    # Baris 2
+      - 18-26   # Baris 3
+      - 27-35   # Baris 4
+      - 36-44   # Baris 5
+
+    # Tampilan pas gak ada barang belian sama sekali.
+    item:
+      material: BARRIER
+      name: '#ff0000&nBelum Ada Belanjaan'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL AMBIL SEMUA
+  #---------------------------------------------------------------------------
+  # Ngambil semua barang belian sekaligus (kalo tasnya muat).
+
+  remove-all:
+    type: ZAUCTIONHOUSE_REMOVE_ALL_PURCHASED
+    is-permanent: true
+    slot: 47
+    item:
+      material: CHEST
+      name: "#2CCED2<bold>Ambil Semua"
+      lore:
+        - "#92ffffAmbil semua belanjaan."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ambil semua"

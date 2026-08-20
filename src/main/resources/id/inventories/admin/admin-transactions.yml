@@ -1,0 +1,174 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Transaksi Admin
+#
+#   Menu ini nampilin riwayat transaksi buat seorang player.
+#   Transaksi itu catatan jualan yang udah beres lengkap sama rincian keuangannya.
+#
+#   STATUS TRANSAKSI:
+#   - PENDING: Uangnya belum diambil sama si penjual
+#   - RETRIEVED: Uangnya udah diambil/masuk ke si penjual
+#
+#   FITUR:
+#   - Liat semua transaksi yang udah beres
+#   - Saring berdasarkan status transaksi
+#   - Saring berdasarkan rentang tanggal
+#   - Liat info pembeli/penjual
+#
+#   CARA BUKA:
+#   - Dari menu utama riwayat admin → Tombol Transaksi
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+# Judul menu dengan placeholder halaman.
+name: '#0c1719Transaksi Admin (%page%/%max-page%)'
+
+# Ukuran menu - 6 baris.
+size: 54
+
+#=============================================================================
+# POLA MENU
+#=============================================================================
+
+patterns:
+  # Nambahin hiasan kaca di pinggiran.
+  - 'zauctionhouse-decoration'
+  # Tombol halaman sebelumnya/selanjutnya.
+  - 'zauctionhouse-pagination'
+  # Tombol kembali ke menu utama riwayat admin.
+  - 'zauctionhouse-back'
+
+#=============================================================================
+# TOMBOL & TAMPILAN
+#=============================================================================
+
+items:
+
+  #---------------------------------------------------------------------------
+  # TAMPILAN DAFTAR TRANSAKSI
+  #---------------------------------------------------------------------------
+  # Nampilin semua catatan transaksi buat player yang dituju.
+
+  items:
+    # Tipe tombol - nampilin catatan transaksi.
+    type: ZAUCTIONHOUSE_ADMIN_TRANSACTIONS
+
+    # Slot buat animasi loading.
+    loading-slot: 22
+
+    # Slot buat nampilin transaksi (4 baris × 9 kolom = 36 slot).
+    slots:
+      - 9-17    # Baris 2
+      - 18-26   # Baris 3
+      - 27-35   # Baris 4
+      - 36-44   # Baris 5
+
+    # Tampilan pas lagi dimuat.
+    item:
+      material: BARRIER
+      name: "#ff0000Lagi narik data..."
+
+    # Tampilan pas gak ada transaksi.
+    else:
+      slots:
+        - 22
+      item:
+        material: BARRIER
+        name: '#ff0000&nBelum Ada Jualan Laku'
+        lore:
+          - ''
+          - '&7Player ini belum pernah jualan.'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL SARING STATUS
+  #---------------------------------------------------------------------------
+  # Puter-puter pilihan status transaksi buat disaring.
+
+  filter-status:
+    # Tipe tombol - ngatur saringan status.
+    type: ZAUCTIONHOUSE_ADMIN_TRANSACTIONS_FILTER_STATUS
+
+    slot: 47
+
+    # Format tulisan buat status yang LAGI DIPILIH.
+    enable-text: ' #F27438➜ %status%'
+
+    # Format tulisan buat status yang GAK DIPILIH.
+    disable-text: ' #76CDCD➜ %status%'
+
+    # Nama tampilan buat milih "semua status".
+    all-statuses-name: "Semuanya"
+
+    # Pilihan status transaksi yang bisa disaring.
+    statuses:
+      - PENDING    # Uangnya belum diambil
+      - RETRIEVED  # Uangnya udah diambil
+
+    # Nama tampilan buat masing-masing status.
+    status-names:
+      PENDING: "Belum Diambil"
+      RETRIEVED: "Udah Diambil"
+
+    item:
+      material: HOPPER
+      name: '#2CCED2<bold>SARING STATUS'
+      lore:
+        - '#92ffffPilihan status:'
+        - '%ALL%'
+        - '%PENDING%'
+        - '%RETRIEVED%'
+        - ''
+        - '#8c8c8c• #2CCED2Klik #92ffffbuat ganti saringan status'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL SARING TANGGAL
+  #---------------------------------------------------------------------------
+  # Puter-puter pilihan rentang tanggal buat disaring.
+
+  filter-date:
+    # Tipe tombol - ngatur saringan tanggal.
+    type: ZAUCTIONHOUSE_ADMIN_TRANSACTIONS_FILTER_DATE
+
+    slot: 51
+
+    # Format tulisan buat rentang tanggal yang LAGI DIPILIH.
+    enable-text: ' #F27438➜ %date%'
+
+    # Format tulisan buat rentang tanggal yang GAK DIPILIH.
+    disable-text: ' #76CDCD➜ %date%'
+
+    # Pilihan saringan tanggal yang tersedia.
+    filters:
+      - ALL         # Kapan aja
+      - TODAY       # Hari ini doang
+      - THIS_WEEK   # 7 hari terakhir
+      - THIS_MONTH  # 30 hari terakhir
+      - THIS_YEAR   # 365 hari terakhir
+
+    # Nama tampilan buat masing-masing pilihan tanggal.
+    filter-names:
+      ALL: "Kapan Aja"
+      TODAY: "Hari Ini"
+      THIS_WEEK: "Minggu Ini"
+      THIS_MONTH: "Bulan Ini"
+      THIS_YEAR: "Tahun Ini"
+
+    item:
+      material: CLOCK
+      name: '#2CCED2<bold>SARING TANGGAL'
+      lore:
+        - '#92ffffPilihan tanggal:'
+        - '%ALL%'
+        - '%TODAY%'
+        - '%THIS_WEEK%'
+        - '%THIS_MONTH%'
+        - '%THIS_YEAR%'
+        - ''
+        - '#8c8c8c• #2CCED2Klik #92ffffbuat ganti saringan tanggal'

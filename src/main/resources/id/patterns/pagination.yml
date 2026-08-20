@@ -1,0 +1,105 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Pola Halaman (Pagination)
+#
+#   Pola ini nyediain tombol halaman sebelumnya/selanjutnya buat menu berhalaman.
+#   Dipake di semua menu yang punya banyak halaman barang.
+#
+#   CARA KERJA:
+#   - Tombol SEBELUMNYA nongol kalo ada halaman sebelumnya
+#   - Tombol SELANJUTNYA nongol kalo ada halaman berikutnya
+#   - Kalo halamannya udah abis (mentok), tombolnya diganti jadi kaca hiasan
+#
+#   CARA PAKE:
+#   Masukin pola ini di file menu yang berhalaman:
+#     patterns:
+#       - 'zauctionhouse-pagination'
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+# Nama pola - dipanggil di file menu lain.
+name: "zauctionhouse-pagination"
+
+# Ukuran menu (harus sama kayak menu yang make pola ini).
+# Didesain buat menu 6 baris (54 slot).
+size: 54
+
+# Item tombol halaman.
+items:
+
+  #---------------------------------------------------------------------------
+  # TOMBOL HALAMAN SEBELUMNYA
+  #---------------------------------------------------------------------------
+  previous:
+    # Tipe tombol - PREVIOUS itu bawaan zMenu.
+    # Otomatis ngatur pindah halaman dan kapan harus nongol.
+    type: PREVIOUS
+
+    # Barang permanen gak bisa dipindah/diambil player.
+    is-permanent: true
+
+    # Posisi - baris paling bawah sebelah kiri.
+    # Slot 48 itu letaknya ke-4 dari kiri di baris bawah.
+    slot: 48
+
+    # Tampilan pas ADA halaman sebelumnya (halaman > 1)
+    item:
+      # Kepala player pake tekstur khusus.
+      # 'url' nerima data tekstur Base64.
+      # Ini bikin kepala bentuk panah ke kiri.
+      # Dapetin tekstur dari: minecraft-heads.com, freshcoal.com
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjllYTFkODYyNDdmNGFmMzUxZWQxODY2YmNhNmEzMDQwYTA2YzY4MTc3Yzc4ZTQyMzE2YTEwOThlNjBmYjdkMyJ9fX0="
+
+      # Nama tampilan (mendukung MiniMessage).
+      # <bold> bikin tulisannya tebel.
+      name: "#2CCED2<bold>HALAMAN SEBELUMNYA"
+
+      # Deskripsi fungsi tombol.
+      lore:
+        - "#92ffffBalik ke halaman sebelumnya."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat balik"
+
+    # Tampilan pas GAK ADA halaman sebelumnya (halaman = 1)
+    # 'else' ngasih barang ganti pas syarat tombolnya gak terpenuhi.
+    else:
+      item:
+        # Kaca biasa biar tampilannya nyambung sama pinggiran.
+        material: LIGHT_BLUE_STAINED_GLASS_PANE
+        name: "<white>"
+
+  #---------------------------------------------------------------------------
+  # TOMBOL HALAMAN SELANJUTNYA
+  #---------------------------------------------------------------------------
+  next:
+    # Tipe tombol - NEXT itu bawaan zMenu.
+    # Otomatis ngatur pindah halaman dan kapan harus nongol.
+    type: NEXT
+
+    # Barang permanen gak bisa dipindah/diambil player.
+    is-permanent: true
+
+    # Posisi - baris paling bawah sebelah kanan.
+    # Slot 50 itu letaknya ke-6 dari kiri di baris bawah.
+    slot: 50
+
+    # Tampilan pas ADA halaman selanjutnya
+    item:
+      # Kepala bentuk panah ke kanan.
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODI3MWE0NzEwNDQ5NWUzNTdjM2U4ZTgwZjUxMWE5ZjEwMmIwNzAwY2E5Yjg4ZTg4Yjc5NWQzM2ZmMjAxMDVlYiJ9fX0="
+
+      name: "#2CCED2<bold>HALAMAN SELANJUTNYA"
+
+      lore:
+        - "#92ffffLanjut ke halaman berikutnya."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat lanjut"
+
+    # Tampilan pas GAK ADA halaman selanjutnya (halaman terakhir)
+    else:
+      item:
+        material: LIGHT_BLUE_STAINED_GLASS_PANE
+        name: "<white>"

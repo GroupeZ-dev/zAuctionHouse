@@ -1,0 +1,62 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Pola Tombol Kembali (Back Button)
+#
+#   Pola ini nyediain tombol kembali buat balik ke menu sebelumnya.
+#   Dipake di sub-menu dan tampilan detail buat navigasi.
+#
+#   CARA KERJA:
+#   - Ngeklik tombol ini bakal balikin player ke menu yang dibuka sebelumnya
+#   - Pake tipe tombol bawaan zMenu: BACK
+#   - Riwayat menu otomatis kesimpen
+#
+#   CARA PAKE:
+#   Masukin pola ini di file menu yang butuh tombol kembali:
+#     patterns:
+#       - 'zauctionhouse-back'
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+# Nama pola - dipanggil di file menu lain.
+name: "zauctionhouse-back"
+
+# Ukuran menu (harus sama kayak menu yang make pola ini).
+# Didesain buat menu 6 baris (54 slot).
+size: 54
+
+# Item tombol kembali.
+items:
+
+  #---------------------------------------------------------------------------
+  # TOMBOL KEMBALI
+  #---------------------------------------------------------------------------
+  previous:
+    # Tipe tombol - BACK itu bawaan zMenu.
+    # Buat balikin player ke menu darimana dia dateng.
+    # Jalan mulus sama sistem riwayat menu zMenu.
+    type: BACK
+
+    # Barang permanen gak bisa dipindah/diambil player.
+    is-permanent: true
+
+    # Posisi - tengah bawah.
+    # Slot 49 itu slot tengah di baris paling bawah dari 54 slot menu.
+    slot: 49
+
+    # Pengaturan barang
+    item:
+      # Barrier (tanda larangan) biasa dipake buat aksi "tutup" atau "kembali".
+      # Tanda X merah ngasih tau jelas kalo ini buat keluar.
+      material: BARRIER
+
+      # Nama tampilan (mendukung MiniMessage).
+      name: "#2CCED2<bold>KEMBALI"
+
+      # Deskripsi fungsi tombol.
+      lore:
+        - "#92ffffBalik ke menu sebelumnya."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat balik"
