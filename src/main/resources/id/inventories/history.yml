@@ -1,0 +1,136 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Riwayat Jualan
+#
+#   Menu ini nampilin riwayat jualan si player - barang apa aja yang udah laku.
+#   Ngasih liat transaksi yang udah beres lengkap sama info pembeli dan harga lakunya.
+#
+#   FITUR:
+#   - Liat semua barang yang udah berhasil kamu jual
+#   - Ngecek siapa yang beli barangnya dan kapan
+#   - Urutin berdasarkan tanggal, harga, atau nama pembeli
+#   - Data riwayat disimpen terus (bisa diatur)
+#
+#   CARA BUKA:
+#   - /ah history
+#   - Klik pesan notif pas baru login kalo ada barang laku pas lagi offline
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+# Judul menu dengan placeholder halaman.
+name: '#0c1719Riwayat Jualan (%page%/%max-page%)'
+
+# Ukuran menu - 6 baris.
+size: 54
+
+#=============================================================================
+# POLA MENU
+#=============================================================================
+
+patterns:
+  # Nambahin hiasan kaca di pinggiran.
+  - 'zauctionhouse-decoration'
+  # Tombol halaman sebelumnya/selanjutnya.
+  - 'zauctionhouse-pagination'
+  # Tombol kembali ke rumah lelang.
+  - 'zauctionhouse-back'
+
+#=============================================================================
+# TOMBOL & TAMPILAN
+#=============================================================================
+
+items:
+
+  #---------------------------------------------------------------------------
+  # TAMPILAN BARANG LAKU
+  #---------------------------------------------------------------------------
+  # Nampilin semua barang laku beserta rincian transaksinya.
+  # Cuma buat diliat aja - barang gak bisa diambil lagi.
+
+  items:
+    # Tipe tombol - nampilin riwayat jualan.
+    type: ZAUCTIONHOUSE_HISTORY_ITEMS
+
+    # Slot buat muterin animasi loading pas lagi narik data riwayat.
+    loading-slot: 22
+
+    # Slot buat nampilin riwayat barang (4 baris × 9 kolom = 36 slot).
+    slots:
+      - 9-17    # Baris 2
+      - 18-26   # Baris 3
+      - 27-35   # Baris 4
+      - 36-44   # Baris 5
+
+    # Tampilan pas lagi narik riwayat dari database.
+    item:
+      material: BARRIER
+      name: "#ff0000Lagi narik data..."
+
+    # Tampilan pas belum ada jualan yang laku.
+    else:
+      slots:
+        - 22
+      item:
+        material: BARRIER
+        name: '#ff0000&nBelum Ada Jualan Laku'
+        lore:
+          - ''
+          - '&7Kamu belum pernah berhasil jual barang.'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL URUTAN
+  #---------------------------------------------------------------------------
+  # Ganti urutan tampilan daftar riwayat.
+
+  sort:
+    # Tipe tombol - ngatur siklus urutan buat riwayat.
+    type: ZAUCTIONHOUSE_HISTORY_SORT
+
+    # Posisi slot.
+    slot: 51
+
+    # Format tulisan buat pilihan urutan yang LAGI DIPILIH.
+    enable-text: ' #F27438➜ %sorting%'
+
+    # Format tulisan buat pilihan urutan yang GAK DIPILIH.
+    disable-text: ' #76CDCD➜ %sorting%'
+
+    # Pilihan urutan yang tersedia (bakal diputer sesuai urutan ini).
+    sorts:
+      - DATE_DESC    # Paling baru (bawaan)
+      - DATE_ASC     # Paling lama
+      - PRICE_DESC   # Harga paling tinggi
+      - PRICE_ASC    # Harga paling rendah
+      - BUYER_ASC    # Nama pembeli A-Z
+      - BUYER_DESC   # Nama pembeli Z-A
+
+    # Nama tampilan buat masing-masing pilihan urutan.
+    sort-names:
+      DATE_DESC: "Paling Baru"
+      DATE_ASC: "Paling Lama"
+      PRICE_DESC: "Harga Paling Tinggi"
+      PRICE_ASC: "Harga Paling Rendah"
+      BUYER_ASC: "Pembeli A-Z"
+      BUYER_DESC: "Pembeli Z-A"
+
+    item:
+      material: HOPPER
+      name: "#2CCED2<bold>URUTAN"
+      lore:
+        - "#92ffffPilihan urutan:"
+        # Placeholder buat tiap opsi (ngikutin format tulisan enable/disable-text).
+        - "%DATE_DESC%"
+        - "%DATE_ASC%"
+        - "%PRICE_DESC%"
+        - "%PRICE_ASC%"
+        - "%BUYER_ASC%"
+        - "%BUYER_DESC%"
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ganti urutan"

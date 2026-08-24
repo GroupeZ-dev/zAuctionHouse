@@ -1,0 +1,192 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Log Admin
+#
+#   Menu ini nampilin semua catatan aktivitas (log) dari seorang player.
+#   Log nyatet setiap tindakan di lelang: naruh jualan, beli barang, dan narik barang.
+#
+#   JENIS LOG:
+#   - SALE: Barang ditaruh buat dijual
+#   - PURCHASE: Barang udah dibeli
+#   - REMOVE_LISTED: Barang jualan ditarik pas masih tayang
+#   - REMOVE_SELLING: Barang ditarik dari daftar jualan
+#   - REMOVE_EXPIRED: Barang ditarik dari daftar barang kadaluarsa
+#   - REMOVE_PURCHASED: Barang diambil dari daftar belanjaan
+#
+#   FITUR:
+#   - Saring berdasarkan jenis aktivitas
+#   - Saring berdasarkan rentang tanggal
+#   - Balikin barang dari riwayat log (buat admin kalo ada masalah)
+#
+#   CARA BUKA:
+#   - Dari menu utama riwayat admin → Tombol Log
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+# Judul menu dengan placeholder halaman.
+name: '#0c1719Log Admin (%page%/%max-page%)'
+
+# Ukuran menu - 6 baris.
+size: 54
+
+#=============================================================================
+# POLA MENU
+#=============================================================================
+
+patterns:
+  # Nambahin hiasan kaca di pinggiran.
+  - 'zauctionhouse-decoration'
+  # Tombol halaman sebelumnya/selanjutnya.
+  - 'zauctionhouse-pagination'
+  # Tombol kembali ke menu utama riwayat admin.
+  - 'zauctionhouse-back'
+
+#=============================================================================
+# TOMBOL & TAMPILAN
+#=============================================================================
+
+items:
+
+  #---------------------------------------------------------------------------
+  # TAMPILAN DAFTAR LOG
+  #---------------------------------------------------------------------------
+  # Nampilin semua catatan log buat player yang dituju.
+  # Tiap catatan nunjukin jenis aktivitas, barangnya, dan kapan kejadiannya.
+
+  items:
+    # Tipe tombol - nampilin catatan log.
+    type: ZAUCTIONHOUSE_ADMIN_LOGS
+
+    # Slot buat animasi loading.
+    loading-slot: 22
+
+    # Slot buat nampilin catatan log (4 baris × 9 kolom = 36 slot).
+    slots:
+      - 9-17    # Baris 2
+      - 18-26   # Baris 3
+      - 27-35   # Baris 4
+      - 36-44   # Baris 5
+
+    # Tampilan pas lagi muat log.
+    item:
+      material: BARRIER
+      name: "#ff0000Lagi narik data..."
+
+    # Tampilan pas gak ada log sama sekali.
+    else:
+      slots:
+        - 22
+      item:
+        material: BARRIER
+        name: '#ff0000&nBelum Ada Log'
+        lore:
+          - ''
+          - '&7Player ini belum ada aktivitas jualan.'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL SARING JENIS AKTIVITAS
+  #---------------------------------------------------------------------------
+  # Puter-puter pilihan jenis aktivitas buat disaring.
+
+  filter-type:
+    # Tipe tombol - ngatur saringan jenis aktivitas.
+    type: ZAUCTIONHOUSE_ADMIN_LOGS_FILTER_TYPE
+
+    # Posisi slot.
+    slot: 47
+
+    # Format tulisan buat pilihan yang LAGI DIPILIH.
+    enable-text: ' #F27438➜ %type%'
+
+    # Format tulisan buat pilihan yang GAK DIPILIH.
+    disable-text: ' #76CDCD➜ %type%'
+
+    # Nama tampilan buat milih "semua jenis".
+    all-types-name: "Semuanya"
+
+    # Pilihan jenis log yang bisa disaring.
+    types:
+      - SALE              # Barang ditaruh jualan
+      - PURCHASE          # Barang dibeli
+      - REMOVE_LISTED     # Barang ditarik pas masih tayang
+      - REMOVE_SELLING    # Barang ditarik dari daftar jualan
+      - REMOVE_EXPIRED    # Barang ditarik dari daftar kadaluarsa
+      - REMOVE_PURCHASED  # Barang diambil dari daftar belanjaan
+
+    # Nama tampilan buat masing-masing jenis.
+    type-names:
+      SALE: "Jualan"
+      PURCHASE: "Dibeli"
+      REMOVE_LISTED: "Narik Jualan Tayang"
+      REMOVE_SELLING: "Narik Jualan"
+      REMOVE_EXPIRED: "Narik Kadaluarsa"
+      REMOVE_PURCHASED: "Narik Belanjaan"
+
+    item:
+      material: HOPPER
+      name: '#2CCED2<bold>SARING JENIS'
+      lore:
+        - '#92ffffPilihan jenis:'
+        # Placeholder buat tiap jenis (ngikutin format tulisan enable/disable-text).
+        - '%ALL%'
+        - '%SALE%'
+        - '%PURCHASE%'
+        - '%REMOVE_LISTED%'
+        - '%REMOVE_SELLING%'
+        - '%REMOVE_EXPIRED%'
+        - '%REMOVE_PURCHASED%'
+        - ''
+        - '#8c8c8c• #2CCED2Klik #92ffffbuat ganti saringan jenis'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL SARING TANGGAL
+  #---------------------------------------------------------------------------
+  # Puter-puter pilihan rentang tanggal buat disaring.
+
+  filter-date:
+    # Tipe tombol - ngatur saringan tanggal.
+    type: ZAUCTIONHOUSE_ADMIN_LOGS_FILTER_DATE
+
+    slot: 51
+
+    # Format tulisan buat rentang tanggal yang LAGI DIPILIH.
+    enable-text: ' #F27438➜ %date%'
+
+    # Format tulisan buat rentang tanggal yang GAK DIPILIH.
+    disable-text: ' #76CDCD➜ %date%'
+
+    # Pilihan saringan tanggal yang tersedia.
+    filters:
+      - ALL         # Kapan aja
+      - TODAY       # Hari ini doang
+      - THIS_WEEK   # 7 hari terakhir
+      - THIS_MONTH  # 30 hari terakhir
+      - THIS_YEAR   # 365 hari terakhir
+
+    # Nama tampilan buat masing-masing pilihan tanggal.
+    filter-names:
+      ALL: "Kapan Aja"
+      TODAY: "Hari Ini"
+      THIS_WEEK: "Minggu Ini"
+      THIS_MONTH: "Bulan Ini"
+      THIS_YEAR: "Tahun Ini"
+
+    item:
+      material: CLOCK
+      name: '#2CCED2<bold>SARING TANGGAL'
+      lore:
+        - '#92ffffPilihan tanggal:'
+        - '%ALL%'
+        - '%TODAY%'
+        - '%THIS_WEEK%'
+        - '%THIS_MONTH%'
+        - '%THIS_YEAR%'
+        - ''
+        - '#8c8c8c• #2CCED2Klik #92ffffbuat ganti saringan tanggal'

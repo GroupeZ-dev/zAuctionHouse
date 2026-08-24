@@ -31,6 +31,7 @@
 #   - es   : Spanish (Espanol)
 #   - it   : Italian (Italiano)
 #   - th   : Thailand (ภาษาไทย)
+#   - id   : Indonesian (Bahasa Indonesia)
 #
 language: auto
 
@@ -76,6 +77,7 @@ language: auto
 #   - Spanish: src/main/resources/es/
 #   - Italian: src/main/resources/it/
 #   - Thailand: src/main/resources/th/
+#   - Indonesian: src/main/resources/id/
 #
 # If you need to reset a specific file to its default, you can:
 # 1. Delete the file from your server
@@ -107,6 +109,9 @@ language: auto
 #
 # Thailand (th):
 #   Thailand
+#
+# Indonesian (id):
+#   Indonesia
 #
 # English (en):
 #   All other countries (default fallback)

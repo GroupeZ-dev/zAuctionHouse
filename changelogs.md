@@ -1,5 +1,12 @@
 # Unreleased
 
+# 4.0.1.3
+
+- **Added** FastStats metrics integration alongside the existing bStats reporting. The FastStats client is bundled and relocated in the final JAR, starts after plugin initialization, and shuts down cleanly with the plugin
+- **Fixed** The final plugin JAR containing three duplicate `META-INF/faststats.properties` entries. FastStats is now scoped to the root plugin module, and Shadow keeps a single copy of its identical version metadata
+- **Added** Indonesian (`id`) locale with translated configuration, messages, rules, categories, Discord settings, inventories, and patterns. Automatic language detection now selects Indonesian for servers located in Indonesia
+- **Fixed** Admin expired, purchased, and selling item inventories not displaying their YAML-configured empty-state item when the selected player had no matching items
+
 # 4.0.1.2
 
 - **Updated** CurrenciesAPI dependency from 1.0.13 to 1.0.14 - the misspelled ExcellentEconomy economy type is renamed from `EXCELLENTEECONOMY` to `EXCELLENTECONOMY`. Both spellings are now accepted as a `type` in `economies.yml`; the old one is deprecated and will be removed in a future CurrenciesAPI release

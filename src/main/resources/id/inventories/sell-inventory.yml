@@ -1,0 +1,204 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Jualan
+#
+#   Menu ini ngasih kesempatan player buat naruh barang jualan lewat tampilan GUI.
+#   Bisa dibuka lewat /ah sell (kalo pengaturan enable-sell-inventory nyala di config.yml).
+#
+#   FITUR:
+#   - Pilih barang dari tas buat dijual
+#   - Atur harga pake tombol nambah/ngurangin
+#   - Pilih pake jenis uang apa (kalo pake lebih dari satu sistem ekonomi)
+#   - Yakin jual atau batalin
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+# Judul menu.
+name: "#0c1719Jual Barang"
+
+# Ukuran menu - 6 baris.
+size: 54
+
+#=============================================================================
+# POLA MENU
+#=============================================================================
+
+patterns:
+  # Nambahin hiasan kaca di pinggiran.
+  - 'zauctionhouse-decoration'
+
+#=============================================================================
+# TOMBOL & TAMPILAN
+#=============================================================================
+
+items:
+
+  #---------------------------------------------------------------------------
+  # TEMPAT TAMPILAN BARANG
+  #---------------------------------------------------------------------------
+  # Nampilin barang yang lagi dipilih buat dijual.
+  # Player bisa ngeklik barang di tas mereka buat dimasukin ke sini.
+
+  show-item:
+    # Tipe tombol - ngatur milih barang dan nampilinnya.
+    type: ZAUCTIONHOUSE_SELL_SHOW_ITEM
+
+    # Slot buat nampilin barang yang dipilih.
+    # Nutupin semua area tengah (36 slot).
+    slots:
+      - 9-44
+
+    # Slot buat nampilin tulisan "belum milih barang".
+    empty-slot: 22
+
+    # Tampilan pas belum ada barang yang dipilih.
+    item:
+      material: BARRIER
+      name: "#ff0000<bold>Belum Milih Barang"
+      lore:
+        - ""
+        - "#8c8c8cPegang barang di tangan"
+        - "#8c8c8catau pilih dari tas kamu"
+
+  #---------------------------------------------------------------------------
+  # TOMBOL BATAL
+  #---------------------------------------------------------------------------
+  # Batalin jualan dan balikin barang ke player.
+
+  cancel:
+    # Tipe tombol - ngatur batalin dan balikin barang.
+    type: ZAUCTIONHOUSE_SELL_CANCEL
+
+    # Posisi slot - pojok kiri di baris bawah.
+    slot: 45
+
+    item:
+      # Kaca merah nunjukin batal/bahaya.
+      material: RED_STAINED_GLASS_PANE
+      name: "#ff0000<bold>BATAL"
+      lore:
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat batalin dan narik barang"
+
+  #---------------------------------------------------------------------------
+  # TOMBOL TURUNIN HARGA
+  #---------------------------------------------------------------------------
+  # Nurunin harga jualan dengan jumlah beda tergantung cara ngekliknya.
+
+  private-decrease:
+    # Tipe tombol - ngatur ngubah harga.
+    type: ZAUCTIONHOUSE_SELL_PRICE
+
+    # Posisi slot.
+    slot: 48
+
+    # Jumlah potongan harga per tipe klik.
+    # Angka minus ngurangin harga.
+    amounts:
+      left-click: -500        # Klik biasa: -500
+      right-click: -100       # Klik kanan: -100
+      shift-left-click: -1000 # Shift + klik kiri: -1000
+      shift-right-click: -2500 # Shift + klik kanan: -2500
+
+    item:
+      # Tekstur tanda minus merah.
+      url: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTM1ZTRlMjZlYWZjMTFiNTJjMTE2NjhlMWQ2NjM0ZTdkMWQwZDIxYzQxMWNiMDg1ZjkzOTQyNjhlYjRjZGZiYSJ9fX0=
+      name: "#ff3333-1,000"
+      lore:
+        - ""
+        # %price% nunjukin harga yang sekarang.
+        - "<white>Harga sekarang#8c8c8c: #2CCED2%price%"
+        - ""
+        - "#8c8c8c• #92ffffKlik Kiri#8c8c8c: -500"
+        - "#8c8c8c• #92ffffKlik Kanan#8c8c8c: -100"
+        - "#8c8c8c• #92ffffShift+Kiri#8c8c8c: -1,000"
+        - "#8c8c8c• #92ffffShift+Kanan#8c8c8c: -2,500"
+
+  #---------------------------------------------------------------------------
+  # PILIH JENIS UANG
+  #---------------------------------------------------------------------------
+  # Ganti-ganti jenis uang.
+  # Cuma kepake kalo kamu nyalain banyak sistem ekonomi.
+
+  select-economy:
+    # Tipe tombol - ngatur gonta-ganti jenis uang.
+    type: ZAUCTIONHOUSE_SELL_ECONOMY
+
+    # Posisi slot - tengah di baris bawah.
+    slot: 49
+
+    item:
+      # Tekstur koin emas.
+      url: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGU3NGQ2NDcyZjgxMWVlN2U1ZTgwNWVhOTNkN2I0Yzc2MWM2NmE2NGU1OTM3MDJmYzgwNzNkYjM1N2YwNDY0ZCJ9fX0=
+      name: "#ffd700<bold>Jenis Uang"
+      lore:
+        - ""
+        # %economy% nunjukin jenis uang yang lagi dipilih.
+        - "<white>Sekarang pakai#8c8c8c: #2CCED2%economy%"
+        - ""
+        - "#8c8c8c• #92ffffKlik Kiri#8c8c8c: Uang selanjutnya"
+        - "#8c8c8c• #92ffffKlik Kanan#8c8c8c: Uang sebelumnya"
+
+  #---------------------------------------------------------------------------
+  # TOMBOL NAIKIN HARGA
+  #---------------------------------------------------------------------------
+  # Naikin harga jualan dengan jumlah beda tergantung cara ngekliknya.
+
+  price-increase:
+    # Tipe tombol - ngatur ngubah harga.
+    type: ZAUCTIONHOUSE_SELL_PRICE
+
+    # Jumlah kenaikan harga per tipe klik.
+    # Angka plus nambahin harga.
+    amounts:
+      left-click: 500         # Klik biasa: +500
+      right-click: 100        # Klik kanan: +100
+      shift-left-click: 1000  # Shift + klik kiri: +1000
+      shift-right-click: 2500 # Shift + klik kanan: +2500
+
+    # Posisi slot.
+    slot: 50
+
+    item:
+      # Tekstur tanda plus hijau.
+      url: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWEyZDg5MWM2YWU5ZjZiYWEwNDBkNzM2YWI4NGQ0ODM0NGJiNmI3MGQ3ZjFhMjgwZGQxMmNiYWM0ZDc3NyJ9fX0=
+      name: '#00cc00+1,000'
+      lore:
+        - '<white>Harga sekarang#8c8c8c: #2CCED2%price%'
+        - ''
+        - '#8c8c8c• #92ffffKlik Kiri#8c8c8c: +500'
+        - '#8c8c8c• #92ffffKlik Kanan#8c8c8c: +100'
+        - '#8c8c8c• #92ffffShift+Kiri#8c8c8c: +1,000'
+        - '#8c8c8c• #92ffffShift+Kanan#8c8c8c: +2,500'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL YAKIN JUAL
+  #---------------------------------------------------------------------------
+  # Konfirmasi jualan dan naruh barangnya di lelang.
+
+  confirm:
+    # Tipe tombol - ngatur konfirmasi jualan.
+    type: ZAUCTIONHOUSE_SELL_CONFIRM
+
+    # Posisi slot - pojok kanan di baris bawah.
+    slot: 53
+
+    item:
+      # Kaca hijau nunjukin konfirmasi/aman.
+      material: LIME_STAINED_GLASS_PANE
+      name: "#00ff00<bold>YAKIN JUAL"
+      lore:
+        - ""
+        # Rincian jualan.
+        - "<white>Jenis Uang#8c8c8c: #2CCED2%economy%"
+        - "<white>Harga#8c8c8c: #2CCED2%price%"
+        - "<white>Barang#8c8c8c: #2CCED2%item_count%"
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngeyakinin jualan"

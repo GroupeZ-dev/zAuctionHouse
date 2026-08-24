@@ -1,0 +1,66 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Pola Dekorasi (Decoration)
+#
+#   File pola ini isinya kaca hiasan buat pinggiran menu.
+#   Bisa dipake ulang di berbagai menu biar tampilannya seragam.
+#
+#   CARA KERJA POLA:
+#   - Pola itu kayak template menu yang bisa dipake ulang
+#   - Bisa dimasukin ke menu mana aja pake daftar 'patterns'
+#   - Beberapa pola bisa digabungin di satu menu
+#   - Kalo ada barang dari pola yang nabrak sama barang di menu, barang di menu yang menang
+#
+#   CARA PAKE:
+#   Masukin pola ini di file menu kamu:
+#     patterns:
+#       - 'zauctionhouse-decoration'
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+# Nama pola - harus unik dan gak boleh sama kayak pola lain.
+name: "zauctionhouse-decoration"
+
+# Ukuran menu (harus sama kayak menu yang make pola ini).
+# Ukuran standar: 9, 18, 27, 36, 45, 54
+# Pola ini dibikin khusus buat menu 6 baris (54 slot).
+size: 54
+
+# Barang-barang di pola ini.
+# Bakal ditampilin di menu pas polanya dipake.
+items:
+
+  # Kaca hiasan pinggiran
+  decoration:
+    # Kalo true, barang ini gak bisa dipindahin atau diambil player.
+    # Selalu pake is-permanent: true buat barang hiasan.
+    is-permanent: true
+
+    # Posisi slot buat hiasan ini.
+    # Format rentang: '0-8' artinya slot 0, 1, 2, 3, 4, 5, 6, 7, 8
+    # Ini bikin hiasan di baris paling atas sama paling bawah.
+    #
+    # PETA SLOT (buat menu ukuran 54 slot):
+    # Baris 1 (atas):   0  1  2  3  4  5  6  7  8
+    # Baris 2:          9 10 11 12 13 14 15 16 17
+    # Baris 3:         18 19 20 21 22 23 24 25 26
+    # Baris 4:         27 28 29 30 31 32 33 34 35
+    # Baris 5:         36 37 38 39 40 41 42 43 44
+    # Baris 6 (bawah): 45 46 47 48 49 50 51 52 53
+    slots:
+      - '0-8'     # Baris paling atas (9 slot)
+      - '45-53'   # Baris paling bawah (9 slot)
+
+    # Pengaturan barang
+    item:
+      # Jenis barang - pake kaca warna (STAINED_GLASS_PANE) buat hiasan.
+      # Pilihan warna: WHITE, ORANGE, MAGENTA, LIGHT_BLUE, YELLOW, LIME,
+      # PINK, GRAY, LIGHT_GRAY, CYAN, PURPLE, BLUE, BROWN, GREEN, RED, BLACK
+      material: LIGHT_BLUE_STAINED_GLASS_PANE
+
+      # Nama barang - kasih kode warna aja biar kosong tanpa ngilangin namanya.
+      # Pake "<white>" biar gak muncul tulisan "Light Blue Stained Glass Pane".
+      name: "<white>"

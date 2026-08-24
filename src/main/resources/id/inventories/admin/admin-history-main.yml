@@ -1,0 +1,162 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Utama Riwayat Admin
+#
+#   Ini adalah pusat admin buat ngeliat riwayat lelang seorang player.
+#   Dari sini, admin bisa ngecek semua hal soal aktivitas lelang si player.
+#
+#   FITUR:
+#   - Liat barang kadaluarsa punya si player
+#   - Liat barang yang udah dibeli si player
+#   - Liat barang yang lagi dijual si player
+#   - Cek catatan aktivitas (log)
+#   - Cek riwayat transaksi
+#
+#   CARA BUKA:
+#   - /ah admin history <player>
+#   - Harus punya izin/permission admin
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+# Judul menu pake placeholder nama playernya.
+# %target% = nama player yang lagi di cek
+name: '#0c1719Riwayat admin global (%target%)'
+
+# Ukuran menu - 6 baris.
+size: 54
+
+#=============================================================================
+# TOMBOL & TAMPILAN
+#=============================================================================
+
+items:
+
+  #---------------------------------------------------------------------------
+  # KEPALA PLAYER TARGET
+  #---------------------------------------------------------------------------
+  # Nampilin kepala player dari orang yang lagi di cek.
+
+  target:
+    # Tipe tombol - nampilin info player yang dituju.
+    type: ZAUCTIONHOUSE_ADMIN_HISTORY_MAIN
+
+    # Posisi slot - atas tengah.
+    slot: 13
+
+    item:
+      # Nampilin kepala playernya.
+      # %target% bakal diganti sama nama playernya.
+      player-head: '%target%'
+      name: '#2CCED2<bold>%target%'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL BARANG KADALUARSA
+  #---------------------------------------------------------------------------
+  # Buka menu barang kadaluarsa punya si player.
+
+  expired:
+    # Tipe tombol - buka tampilan admin barang kadaluarsa.
+    type: ZAUCTIONHOUSE_ADMIN_HISTORY_EXPIRED
+
+    # Posisi slot.
+    slot: 28
+
+    item:
+      # Tekstur jam pasir.
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjdhYWRmZjlkZGM1NDZmZGNlYzZlZDU5MTljYzM5ZGZhOGQwYzA3ZmY0YmM2MTNhMTlmMmU2ZDdmMjU5MyJ9fX0="
+      name: '#2CCED2<bold>BARANG KADALUARSA'
+      lore:
+        # %expired-items% = jumlah barang kadaluarsa playernya
+        # %s% = akhiran jamak (kalo ada)
+        - '#92ffff%target% punya #2CCED2%expired-items% #92ffffbarang kadaluarsa.'
+        - ''
+        - '#8c8c8c• #2CCED2Klik #92ffffbuat ngecek'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL BARANG DIBELI
+  #---------------------------------------------------------------------------
+  # Buka menu barang belanjaan si player.
+
+  purchased:
+    # Tipe tombol - buka tampilan admin barang yang dibeli.
+    type: ZAUCTIONHOUSE_ADMIN_HISTORY_PURCHASED
+
+    slot: 29
+
+    item:
+      # Tekstur peti.
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjM3Y2FlNWM1MWViMTU1OGVhODI4ZjU4ZTBkZmY4ZTZiN2IwYjFhMTgzZDczN2VlY2Y3MTQ2NjE3NjEifX19"
+      name: '#2CCED2<bold>BARANG DIBELI'
+      lore:
+        # %purchased-items% = jumlah barang yang udah dibeli
+        # %s% = akhiran jamak (kalo ada)
+        - '#92ffff%target% punya #2CCED2%purchased-items% #92ffffbelanjaan.'
+        - ''
+        - '#8c8c8c• #2CCED2Klik #92ffffbuat ngecek'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL BARANG DIJUAL
+  #---------------------------------------------------------------------------
+  # Buka menu barang yang lagi dijual si player.
+
+  selling:
+    # Tipe tombol - buka tampilan admin barang yang dijual.
+    type: ZAUCTIONHOUSE_ADMIN_HISTORY_SELLING
+
+    slot: 30
+
+    item:
+      # Tekstur profil orang.
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjU4MDdjYzRjM2I2OTU4YWVhNjE1NmU4NDUxOGQ5MWE0OWM1ZjMyOTcxZTZlYjI2OWEyM2EyNWEyNzE0NSJ9fX0="
+      name: '#2CCED2<bold>BARANG DIJUAL'
+      lore:
+        # %selling-items% = jumlah barang yang lagi dijual
+        # %s% = akhiran jamak (kalo ada)
+        - '#92ffff%target% lagi jualan #2CCED2%selling-items% #92ffffbarang.'
+        - ''
+        - '#8c8c8c• #2CCED2Klik #92ffffbuat ngecek'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL LOG AKTIVITAS
+  #---------------------------------------------------------------------------
+  # Buka catatan log si player.
+  # Log nampilin semua tindakan di lelang: naruh jualan, beli, ditarik.
+
+  logs:
+    # Tipe tombol - buka tampilan admin log.
+    type: ZAUCTIONHOUSE_ADMIN_HISTORY_LOGS
+
+    slot: 33
+
+    item:
+      material: SUNFLOWER
+      name: '#2CCED2<bold>LOG AKTIVITAS'
+      lore:
+        - ''
+        - '#8c8c8c• #2CCED2Klik #92ffffbuat ngecek'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL TRANSAKSI
+  #---------------------------------------------------------------------------
+  # Buka riwayat transaksi si player.
+  # Transaksi nampilin jualan yang beres sama info duitnya.
+
+  transactions:
+    # Tipe tombol - buka tampilan admin transaksi.
+    type: ZAUCTIONHOUSE_ADMIN_HISTORY_TRANSACTIONS
+
+    slot: 34
+
+    item:
+      material: NETHER_STAR
+      name: '#2CCED2<bold>TRANSAKSI'
+      lore:
+        - ''
+        - '#8c8c8c• #2CCED2Klik #92ffffbuat ngecek'

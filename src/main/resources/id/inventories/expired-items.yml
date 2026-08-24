@@ -1,0 +1,91 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Barang Kadaluarsa
+#
+#   Menu ini nampilin barang jualan yang waktunya udah abis dan gak laku.
+#   Player bisa ngambil balik barang ini ke tas mereka.
+#
+#   KADALUARSA:
+#   - Barang bakal kadaluarsa sesuai waktu di config.yml (bawaan: 2 hari)
+#   - Barang yang udah lewat batas waktu bakal pindah dari menu lelang ke menu ini
+#   - Barang di sini juga ada batas waktunya (bawaan: 1 minggu) sebelum akhirnya dihapus permanen
+#
+#   CARA BUKA:
+#   - /ah expired
+#   - Klik tombol "Barang Kadaluarsa" di menu lelang utama
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+# Judul menu dengan placeholder halaman.
+# %page% = halaman saat ini, %max-page% = total halaman
+name: '#0c1719Barang Kadaluarsa (%page%/%max-page%)'
+
+# Ukuran menu - 6 baris.
+size: 54
+
+#=============================================================================
+# POLA MENU
+#=============================================================================
+
+patterns:
+  # Nambahin hiasan kaca di pinggiran.
+  - 'zauctionhouse-decoration'
+  # Tombol halaman sebelumnya/selanjutnya.
+  - 'zauctionhouse-pagination'
+  # Tombol kembali ke rumah lelang.
+  - 'zauctionhouse-back'
+
+#=============================================================================
+# TOMBOL & TAMPILAN
+#=============================================================================
+
+items:
+
+  #---------------------------------------------------------------------------
+  # TAMPILAN BARANG KADALUARSA
+  #---------------------------------------------------------------------------
+  # Nampilin semua barang kadaluarsa punya player yang lagi liat.
+  # Klik barang buat narik balik.
+
+  items:
+    # Tipe tombol - nampilin dan ngurusin barang kadaluarsa.
+    type: ZAUCTIONHOUSE_EXPIRED_ITEMS
+
+    # Slot buat tulisan kosong pas lagi gak ada barang.
+    empty-slot: 22
+
+    # Slot buat nampilin barang kadaluarsa (4 baris × 9 kolom = 36 slot).
+    slots:
+      - 9-17    # Baris 2
+      - 18-26   # Baris 3
+      - 27-35   # Baris 4
+      - 36-44   # Baris 5
+
+    # Tampilan pas gak ada barang kadaluarsa sama sekali.
+    item:
+      material: BARRIER
+      name: '#ff0000&nBelum Ada Barang Kadaluarsa'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL TARIK SEMUA
+  #---------------------------------------------------------------------------
+  # Tarik semua barang kadaluarsa sekaligus (kalo tasnya muat).
+
+  remove-all:
+    type: ZAUCTIONHOUSE_REMOVE_ALL_EXPIRED
+    is-permanent: true
+    slot: 47
+    item:
+      material: CHEST
+      name: "#2CCED2<bold>Tarik Semua"
+      lore:
+        - "#92ffffTarik semua barang kadaluarsa."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat narik semua"

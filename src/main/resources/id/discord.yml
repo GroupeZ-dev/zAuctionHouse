@@ -1,0 +1,309 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Konfigurasi Discord Webhook
+#
+#   File ini ngatur notifikasi Discord buat aktivitas lelang kamu.
+#   Kirim notifikasi ke server Discord kamu pas ada barang yang dijual atau dibeli.
+#
+#   CARA PASANG:
+#   1. Di Discord, buka Server Settings → Integrations → Webhooks
+#   2. Bikin webhook baru terus copy URL-nya
+#   3. Paste URL-nya di bagian 'url' di bawah
+#   4. Nyalain webhook-nya terus atur tampilan pesannya
+#
+#   FORMAT WEBHOOK URL:
+#   https://discord.com/api/webhooks/WEBHOOK_ID/WEBHOOK_TOKEN
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN UMUM
+#=============================================================================
+
+# Nyalain atau matiin semua notif Discord webhook.
+# Kalau dimatiin, gak ada satupun notif yang bakal kekirim walaupun webhook satuan nyala.
+enabled: false
+
+# Nama server yang dipake di pesan webhook.
+# Muncul di bagian bawah pesan (footer) biar tau notif ini dari server mana.
+# Berguna banget kalau kamu punya beberapa server yang nyambung ke 1 channel Discord.
+server-name: "Server Ku"
+
+#=============================================================================
+# PENGATURAN GAMBAR BARANG
+#=============================================================================
+
+# Pola URL buat ngambil gambar barang.
+# Dipake buat nampilin icon barang di pesan Discord.
+# Fitur ekstrak warna bakal ngambil warna dominan dari gambar ini.
+#
+# Defaultnya pake API gambar Minecraft publik.
+# Kamu bisa pake host sendiri atau API lain.
+item-image-url: "https://img.groupez.dev/minecraft/%item_material%.png"
+
+# Nyalain fitur ekstrak warna dominan dari gambar barang.
+# Kalau nyala, plugin bakal download gambar barang dan nyari warna utamanya.
+# Warna ini bisa dipake di pesan via placeholder %item_dominant_color%.
+# PERHATIAN: Ini bikin request HTTP tambahan yang mungkin naikin latensi/lag.
+# Saran: Matiin aja kecuali kamu emang butuh banget warna pesan yang dinamis.
+extract-dominant-color: false
+
+# Warna default buat pesan (embed) kalau:
+# - Fitur ekstrak warna dimatiin
+# - Gagal ekstrak warna (error jaringan, gambar rusak)
+# Pakai format hex: "#RRGGBB"
+# Warna biru khas Discord itu #5865F2 (Blurple)
+default-color: "#5865F2"
+
+#=============================================================================
+# GAMBAR BARANG CUSTOM
+#=============================================================================
+# Timpa gambar default (%item_image_url%) buat barang-barang tertentu.
+# Cocok banget buat barang custom (ItemsAdder, Oraxen, Nexo, MMOItems, dll)
+# yang gambar material bawaannya gak sesuai sama barang aslinya.
+#
+# Tiap entri itu ada 'rule' (buat ngenalin barang) sama 'image' (URL).
+# Aturan (rule) pake format yang SAMA kayak di categories.yml / rules.yml. Aturan
+# PERTAMA yang cocok bakal dipake, jadi taro yang spesifik di paling atas.
+# Kalo barang gak cocok aturan apa-apa, bakal balik pake 'item-image-url' di atas.
+#
+# TIPE ATURAN UMUM:
+#   type: material           ->  materials: [DIAMOND_SWORD, NETHERITE_SWORD]
+#   type: name               ->  mode: CONTAINS|EQUALS   values: ["Excalibur"]
+#   type: lore               ->  mode: CONTAINS|EQUALS   values: ["Legendary"]
+#   type: custom-model-data  ->  values: [10001]   (atau ranges: [{min: 10000, max: 10999}])
+#   type: oraxen             ->  items: [ruby_sword]
+#   type: itemsadder         ->  items: ["mynamespace:ruby_sword"]
+#   type: nexo               ->  items: [ruby_sword]
+#   type: mmoitems           ->  items: ["SWORD:EXCALIBUR"]
+#
+# Biarin daftarnya kosong ([]) buat matiin fitur ini.
+custom-images: []
+#  - rule:
+#      type: oraxen
+#      items:
+#        - ruby_sword
+#    image: "https://example.com/images/ruby_sword.png"
+#  - rule:
+#      type: material
+#      materials:
+#        - DIAMOND_SWORD
+#    image: "https://example.com/images/diamond_sword.png"
+#  - rule:
+#      type: custom-model-data
+#      values:
+#        - 10001
+#    image: "https://example.com/images/legendary.png"
+
+#=============================================================================
+# PENGATURAN WEBHOOK
+#=============================================================================
+
+webhooks:
+
+  #---------------------------------------------------------------------------
+  # NOTIF JUALAN (SELL)
+  #---------------------------------------------------------------------------
+  # Dikirim pas ada player naruh barang baru di lelang.
+
+  sell:
+    # Nyalain atau matiin webhook spesifik ini.
+    enabled: false
+
+    # URL Discord webhook buat notif jualan.
+    # Dapet dari Discord: Server Settings → Integrations → Webhooks
+    # PENTING: Jaga rahasia URL ini! Siapapun yang punya URL ini bisa post di channel kamu.
+    url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
+
+    # Nama custom buat bot webhook.
+    # Bakal nimpa nama default yang diatur di Discord.
+    # Kosongin aja kalo mau pake nama bawaan Discord.
+    username: "zAuctionHouse"
+
+    # URL Avatar custom buat bot.
+    # Harus berupa URL gambar yang valid (PNG, JPG, GIF).
+    # Kosongin aja kalo mau pake bawaan Discord.
+    avatar-url: ""
+
+    # Isi pesan yang muncul DI ATAS kotak pesan (embed).
+    # Ini teks biasa, bukan bagian dari embed.
+    # Bisa dipake buat nge-tag orang Discord: <@USER_ID>, <@&ROLE_ID>, @everyone, @here
+    # Kosongin kalau gak mau ada pesannya.
+    content: ""
+
+    # Pengaturan kotak pesan (Embed)
+    embed:
+      # Judul pesan - tulisan tebal paling atas.
+      # Mendukung placeholder.
+      title: "Barang Baru di Lelang!"
+
+      # Deskripsi pesan - isi teks utama.
+      # Mendukung placeholder dan markdown Discord.
+      # Pake ** buat tebal, * buat miring, ` buat teks kode.
+      description: "**%seller_name%** baru aja nambahin barang buat dijual"
+
+      # Warna garis samping pesan format hex.
+      # Pake "#RRGGBB" atau %item_dominant_color% biar warnanya ngikutin gambar dinamis.
+      color: "#00FF00"
+
+      # Kolom data (fields) - nampilin data terstruktur di kolom.
+      # Setiap kolom punya:
+      #   name: Judul kolom (ditampilin tebal)
+      #   value: Isi kolom
+      #   inline: true = sebelahan, false = lebar penuh kebawah
+      # Maksimal 25 kolom, nama kolom max 256 huruf, isi max 1024 huruf.
+      fields:
+        - name: "Barang"
+          value: "%item_display%"
+          inline: true
+        - name: "Harga"
+          value: "%formatted_price%"
+          inline: true
+        - name: "Jumlah"
+          value: "%item_amount%"
+          inline: true
+        - name: "Ekonomi"
+          value: "%economy_display_name%"
+          inline: true
+
+      # Pengaturan teks bagian bawah (footer)
+      footer:
+        # Teks footer (maksimal 2048 huruf)
+        text: "Server: %server_name%"
+        # Icon kecil di sebelah teks footer (harus URL gambar valid)
+        icon-url: ""
+
+      # Pengaturan penulis (author, muncul di atas judul plus icon)
+      author:
+        # Nama penulis (maksimal 256 huruf)
+        name: "%seller_name%"
+        # URL kalo nama penulisnya diklik (kosongin buat matiin)
+        url: ""
+        # Icon penulis (biasanya kepala player)
+        # mc-heads.net nyediain avatar player Minecraft berdasarkan UUID
+        icon-url: "https://mc-heads.net/avatar/%seller_uuid%"
+
+      # Gambar kecil di sebelah kanan kotak pesan (Thumbnail)
+      thumbnail:
+        # URL gambar (icon barang pake pola yang diatur di atas)
+        url: "%item_image_url%"
+
+      # Gambar gede di bagian bawah kotak pesan
+      image:
+        # Kosongin buat dimatiin
+        url: ""
+
+      # Nambahin waktu pesannya (nampilin waktu saat ini di zona waktu user)
+      timestamp: true
+
+  #---------------------------------------------------------------------------
+  # NOTIF PEMBELIAN (PURCHASE)
+  #---------------------------------------------------------------------------
+  # Dikirim pas ada player ngebeli barang dari lelang.
+
+  purchase:
+    # Nyalain atau matiin webhook spesifik ini.
+    enabled: false
+
+    # URL Discord webhook buat notif beli.
+    # Boleh disamain atau dibedain dari webhook jualan.
+    url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
+
+    # Nama custom buat bot webhook.
+    username: "zAuctionHouse"
+
+    # URL Avatar custom buat bot.
+    avatar-url: ""
+
+    # Pesan konten di atas embed.
+    content: ""
+
+    # Pengaturan kotak pesan (Embed)
+    embed:
+      title: "Barang Terjual!"
+      description: "**%buyer_name%** baru aja ngebeli barang dari **%seller_name%**"
+
+      # Warna emas buat pembelian
+      color: "#FFD700"
+
+      fields:
+        - name: "Barang"
+          value: "%item_display%"
+          inline: true
+        - name: "Harga"
+          value: "%formatted_price%"
+          inline: true
+        - name: "Pembeli"
+          value: "%buyer_name%"
+          inline: true
+        - name: "Penjual"
+          value: "%seller_name%"
+          inline: true
+
+      footer:
+        text: "Server: %server_name%"
+        icon-url: ""
+
+      # Author di sini nampilin pembeli buat notif pembelian
+      author:
+        name: "%buyer_name%"
+        url: ""
+        icon-url: "https://mc-heads.net/avatar/%buyer_uuid%"
+
+      thumbnail:
+        url: "%item_image_url%"
+
+      image:
+        url: ""
+
+      timestamp: true
+
+#=============================================================================
+# DAFTAR PLACEHOLDER YANG TERSEDIA
+#=============================================================================
+# Bisa dipake di teks mana aja di atas.
+# Placeholder bakal diganti sama nilai aslinya pas webhook dikirim.
+#
+# PLACEHOLDER BARANG:
+#   %item_id%              - ID internal barang
+#   %item_material%        - Nama material (huruf kecil, misal "diamond_sword")
+#   %item_display%         - Nama tampilan barang sama warnanya
+#   %item_amount%          - Ukuran tumpukan (stack)
+#   %item_lore%            - Lore barang (bisa panjang, pake ati-ati)
+#   %item_enchantments%    - Daftar enchant
+#   %item_custom_model_data% - Nilai CustomModelData (buat resource pack)
+#   %item_dominant_color%  - Warna dominan yang diambil (butuh extract-dominant-color: true)
+#   %item_image_url%       - URL lengkap ke gambar barang (bakal make override 'custom-images' kalo cocok aturannya)
+#
+# PLACEHOLDER PLAYER:
+#   %seller_name%          - Nama penjual
+#   %seller_uuid%          - UUID penjual (buat URL avatar)
+#   %buyer_name%           - Nama pembeli (cuma di webhook pembelian)
+#   %buyer_uuid%           - UUID pembeli (cuma di webhook pembelian)
+#
+# PLACEHOLDER HARGA:
+#   %price%                - Angka harga mentah
+#   %formatted_price%      - Harga pake format ekonomi (misal "1,000$")
+#   %economy_name%         - Nama internal ekonomi
+#   %economy_display_name% - Nama tampilan ekonomi
+#
+# PLACEHOLDER WAKTU:
+#   %created_at%           - Kapan barang ditaruh di lelang
+#   %expires_at%           - Kapan lelangnya kadaluarsa (Discord dynamic timestamp, tampil sesuai zona waktu yang ngeliat)
+#   %remaining_time%       - Waktu sisa sebelum kadaluarsa
+#   %timestamp%            - Timestamp waktu saat ini
+#
+# PLACEHOLDER SERVER:
+#   %server_name%          - Nama server (dari config di atas)
+#
+# PLACEHOLDER KATEGORI:
+#   %category_names%       - Daftar nama kategori dipisah koma
+#   %category_count%       - Jumlah kategori yang cocok
+#
+# TIPS:
+# - Pake %item_dominant_color% buat warna kotak pesannya (embed color) biar tiap barang unik warnanya
+# - Jangan terlalu panjang ngisi kolom field biar gak kena limit huruf Discord
+# - Tes konfigurasi webhook kamu di channel tertutup dulu

@@ -1,0 +1,73 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Admin Belanjaan
+#
+#   Menu ini ngasih admin akses buat ngecek dan ngurusin barang belanjaan seorang player.
+#   Admin bisa narik balik barang buat dibalikin ke player kalo misal ada masalah.
+#
+#   TINDAKAN ADMIN:
+#   - Liat semua barang yang dibeli si player
+#   - Tarik barang buat dibalikin ke player
+#   - Kepake banget buat balikin barang kalo ada laporan dari player
+#
+#   CARA BUKA:
+#   - Dari menu utama riwayat admin → Tombol Barang Dibeli
+#   - /ah admin open purchased <player>
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+# Judul menu dengan placeholder halaman.
+name: '#0c1719Admin barang dibeli (%page%/%max-page%)'
+
+# Ukuran menu - 6 baris.
+size: 54
+
+#=============================================================================
+# POLA MENU
+#=============================================================================
+
+patterns:
+  # Nambahin hiasan kaca di pinggiran.
+  - 'zauctionhouse-decoration'
+  # Tombol halaman sebelumnya/selanjutnya.
+  - 'zauctionhouse-pagination'
+  # Tombol kembali ke menu utama riwayat admin.
+  - 'zauctionhouse-back'
+
+#=============================================================================
+# TOMBOL & TAMPILAN
+#=============================================================================
+
+items:
+
+  #---------------------------------------------------------------------------
+  # TAMPILAN BARANG DIBELI
+  #---------------------------------------------------------------------------
+  # Nampilin semua barang belanjaan punya player yang dituju.
+  # Klik barangnya buat narik barang itu (tindakan admin).
+
+  items:
+    # Tipe tombol - nampilin barang belanjaan admin yang bisa ditarik.
+    type: ZAUCTIONHOUSE_ADMIN_PURCHASED_ITEMS
+
+    # Slot buat nampilin barang belanjaan (4 baris × 9 kolom = 36 slot).
+    slots:
+      - 9-17    # Baris 2
+      - 18-26   # Baris 3
+      - 27-35   # Baris 4
+      - 36-44   # Baris 5
+
+    # Tampilan pas gak ada belanjaan sama sekali.
+    else:
+      slots:
+        - 22
+      item:
+        material: BARRIER
+        name: '#ff0000&nBelum Ada Barang'

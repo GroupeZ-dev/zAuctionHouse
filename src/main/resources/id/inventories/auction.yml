@@ -1,0 +1,329 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Lelang Utama
+#
+#   Ini adalah menu utama lelang tempat semua barang jualan ditampilin.
+#   Player bisa buka menu ini lewat perintah /ah atau dengan klik NPC lelang.
+#
+#   Menu ini nampilin:
+#   - Semua barang yang lagi dijual saat ini
+#   - Tombol navigasi ke kategori, barang kadaluarsa, sama barang yang dibeli
+#   - Pilihan buat ngurutin barang
+#   - Halaman buat ngecek barang yang halamannya banyak
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+# Judul menu yang ditampilin di bagian atas GUI.
+# Mendukung placeholder dan format tulisan MiniMessage.
+# Placeholder yang tersedia:
+#   %page%                        - Nomor halaman saat ini
+#   %max-page%                    - Total jumlah halaman
+#   %zauctionhouse_category_name% - Nama kategori saat ini
+name: "%zauctionhouse_category_name% (%page%/%max-page%)"
+
+# Ukuran menu dalam bentuk slot (kelipatan 9).
+# Pilihan: 9, 18, 27, 36, 45, 54 (1-6 baris)
+# 54 slot (6 baris) itu disaranin banget buat menu lelang.
+size: 54
+
+#=============================================================================
+# POLA MENU
+#=============================================================================
+# Pola itu kayak template yang bisa dipake ulang buat nambahin elemen yang sering dipake.
+# Diterapin sesuai urutan; pola yang bawah bisa nimpa pola yang atas.
+
+patterns:
+  # Nambahin hiasan kaca di pinggiran (baris atas dan bawah)
+  - 'zauctionhouse-decoration'
+  # Nambahin tombol halaman (halaman sebelumnya/selanjutnya)
+  - 'zauctionhouse-pagination'
+
+#=============================================================================
+# TOMBOL & TAMPILAN
+#=============================================================================
+# Bagian items ini nentuin tombol dan tampilan di menu ini.
+# Tiap tombol punya kunci unik (contohnya, 'display-items', 'categories').
+
+items:
+
+  #---------------------------------------------------------------------------
+  # TAMPILAN BARANG JUALAN UTAMA
+  #---------------------------------------------------------------------------
+  # Ini tampilan inti yang nunjukin semua barang yang lagi dilelang.
+  # Barangnya dibagi per halaman dan bisa difilter pake kategori.
+
+  display-items:
+    # Tipe tombol - ZAUCTIONHOUSE_LISTED_ITEMS itu tipe khusus dari pluginnya.
+    # Bakal otomatis ngatur:
+    # - Muat dan nampilin barang jualan
+    # - Nyaring kategori
+    # - Ngurutin barang
+    # - Aksi klik (beli/narik barang)
+    type: ZAUCTIONHOUSE_LISTED_ITEMS
+
+    # Slot buat nampilin tulisan "kosong" pas gak ada barang.
+    # Slot ini dipake pas rumah lelangnya lagi gak ada jualan.
+    empty-slot: 22
+
+    # Slot tempat barang jualan ditampilin.
+    # Ini harus ditaruh di baris tengah (sisain baris atas/bawah buat tombol menu).
+    # Format rentang slot: '9-17' artinya dari slot 9 sampe 17 (9 barang sebaris).
+    # Total: 36 slot barang (4 baris × 9 kolom)
+    slots:
+      - 9-17    # Baris 2
+      - 18-26   # Baris 3
+      - 27-35   # Baris 4
+      - 36-44   # Baris 5
+
+    # Tampilan yang muncul pas gak ada barang jualan (lelang kosong).
+    item:
+      material: BARRIER
+      # &n bikin garis bawah di tulisannya
+      name: '#ff0000&nBelum Ada Jualan'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL KATEGORI
+  #---------------------------------------------------------------------------
+  # Buka menu milih kategori biar gampang nyari dan nyaring barang.
+
+  categories:
+    # Posisi slot - tengah di baris paling atas.
+    slot: 4
+
+    # Tipe tombol - 'inventory' buat ngebuka menu zMenu lainnya.
+    type: inventory
+
+    # Plugin pemilik menu tujuannya.
+    plugin: "zAuctionHouse"
+
+    # File menu yang bakal dibuka (inventories/categories.yml).
+    inventory: "categories"
+    is-permanent: true
+
+    # Tampilan tombolnya
+    item:
+      material: CHEST
+      name: "#2CCED2<bold>KATEGORI"
+      lore:
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat milih"
+
+  #---------------------------------------------------------------------------
+  # TOMBOL BARANG KADALUARSA
+  #---------------------------------------------------------------------------
+  # Nampilin barang jualan kamu yang waktunya abis karena belum laku.
+  # Tampilan tombol bakal berubah sesuai ada apa nggaknya barang.
+
+  expired-items:
+    # Tipe tombol - buka menu barang kadaluarsa kalo ada barangnya.
+    type: ZAUCTIONHOUSE_EXPIRED_INVENTORY
+
+    # Posisi slot - pojok kiri di baris bawah.
+    slot: 45
+
+    # Tampilan tombol pas kamu PUNYA barang kadaluarsa.
+    item:
+      # Kepala player pake tekstur khusus gambar jam pasir.
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjdhYWRmZjlkZGM1NDZmZGNlYzZlZDU5MTljYzM5ZGZhOGQwYzA3ZmY0YmM2MTNhMTlmMmU2ZDdmMjU5MyJ9fX0="
+      name: "#2CCED2<bold>BARANG KADALUARSA"
+      lore:
+        # %expired-items% = jumlah barang kadaluarsa
+        - "#92ffffKamu punya #2CCED2%expired-items% #92ffffbarang kadaluarsa."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat buka"
+
+    # Tampilan tombol pas kamu GAK PUNYA barang kadaluarsa.
+    else:
+      item:
+        url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjdhYWRmZjlkZGM1NDZmZGNlYzZlZDU5MTljYzM5ZGZhOGQwYzA3ZmY0YmM2MTNhMTlmMmU2ZDdmMjU5MyJ9fX0="
+        name: "#2CCED2<bold>BARANG KADALUARSA"
+        lore:
+          - "#ff3535Gak ada barang kadaluarsa."
+
+  #---------------------------------------------------------------------------
+  # TOMBOL BARANG DIBELI
+  #---------------------------------------------------------------------------
+  # Nampilin barang yang udah dibeli tapi belum diambil.
+
+  purchased-items:
+    # Tipe tombol - buka menu barang yang dibeli kalo ada barangnya.
+    type: ZAUCTIONHOUSE_PURCHASED_INVENTORY
+
+    # Posisi slot - kedua dari kiri di baris bawah.
+    slot: 46
+
+    # Tampilan tombol pas kamu PUNYA belanjaan yang belum diambil.
+    item:
+      # Kepala player pake tekstur peti.
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjM3Y2FlNWM1MWViMTU1OGVhODI4ZjU4ZTBkZmY4ZTZiN2IwYjFhMTgzZDczN2VlY2Y3MTQ2NjE3NjEifX19"
+      name: "#2CCED2<bold>BARANG DIBELI"
+      lore:
+        - "#92ffffKamu punya #2CCED2%purchased-items% #92ffffbelanjaan."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat buka"
+
+    # Tampilan tombol pas kamu GAK PUNYA belanjaan.
+    else:
+      item:
+        url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjM3Y2FlNWM1MWViMTU1OGVhODI4ZjU4ZTBkZmY4ZTZiN2IwYjFhMTgzZDczN2VlY2Y3MTQ2NjE3NjEifX19"
+        name: "#2CCED2<bold>BARANG DIBELI"
+        lore:
+          - "#ff3535Gak ada belanjaan yang belum diambil."
+
+  #---------------------------------------------------------------------------
+  # TOMBOL JUALAN SAYA
+  #---------------------------------------------------------------------------
+  # Nampilin barang yang lagi kamu jual saat ini.
+
+  selling-items:
+    # Tipe tombol - buka menu barang jualan saya kalo ada barangnya.
+    type: ZAUCTIONHOUSE_SELLING_INVENTORY
+
+    # Posisi slot - pojok kanan di baris bawah.
+    slot: 53
+
+    # Tampilan tombol pas kamu PUNYA barang yang lagi dijual.
+    item:
+      # Kepala player pake tekstur profil.
+      url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjU4MDdjYzRjM2I2OTU4YWVhNjE1NmU4NDUxOGQ5MWE0OWM1ZjMyOTcxZTZlYjI2OWEyM2EyNWEyNzE0NSJ9fX0="
+      name: "#2CCED2<bold>JUALAN SAYA"
+      lore:
+        - "#92ffffKamu lagi jual #2CCED2%selling-items% #92ffffbarang."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngecek"
+
+    # Tampilan tombol pas kamu GAK PUNYA barang yang dijual.
+    else:
+      item:
+        url: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjU4MDdjYzRjM2I2OTU4YWVhNjE1NmU4NDUxOGQ5MWE0OWM1ZjMyOTcxZTZlYjI2OWEyM2EyNWEyNzE0NSJ9fX0="
+        name: "#2CCED2<bold>JUALAN SAYA"
+        lore:
+          - "#ff3535Kamu lagi gak jualan apapun."
+
+  #---------------------------------------------------------------------------
+  # TOMBOL PENCARIAN
+  #---------------------------------------------------------------------------
+  # Buka masukan chat buat nyaring barang.
+
+  search:
+    type: ZAUCTIONHOUSE_SEARCH
+    slot: 47
+    is-permanent: true
+    # Nilai yang ditampilin di %search_query% pas gak ada pencarian.
+    none-value: "Gak Ada"
+    # Nilai yang ditampilin di %search_active% pas pencarian nyala.
+    active-value: "true"
+    # Nilai yang ditampilin di %search_active% pas pencarian mati.
+    inactive-value: "false"
+    item:
+      material: COMPASS
+      name: "#2CCED2<bold>CARI BARANG"
+      lore:
+        - ""
+        - "#92ffffLagi nyari#8c8c8c: #2CCED2%search_query%"
+        - ""
+        - "#92ffffCara Nyaring#8c8c8c:"
+        - "#8c8c8c  name #76CDCD~ #8c8c8cnilai    #555555(ngandung kata)"
+        - "#8c8c8c  name #76CDCD= #8c8c8cnilai    #555555(sama persis)"
+        - "#8c8c8c  name #76CDCD~= #8c8c8cnilai   #555555(ngandung kata, bebas kapital)"
+        - "#8c8c8c  name #76CDCD== #8c8c8cnilai   #555555(sama persis, bebas kapital)"
+        - ""
+        - "#92ffffTarget#8c8c8c: #76CDCDname#8c8c8c, #76CDCDmaterial#8c8c8c, #76CDCDlore#8c8c8c, #76CDCDseller"
+        - ""
+        - "#92ffffContoh#8c8c8c:"
+        - "#8c8c8c  seller #76CDCD= #8c8c8cNotch"
+        - "#8c8c8c  name #76CDCD~ #8c8c8cDiamond"
+        - ""
+        - "#8c8c8c- #2CCED2Klik Kiri #92ffffbuat nyari"
+        - "#8c8c8c- #2CCED2Klik Kanan #92ffffbuat ulang pencarian"
+
+  #---------------------------------------------------------------------------
+  # TOMBOL REFRESH / INFO LELANG
+  #---------------------------------------------------------------------------
+  # Nampilin informasi lelang dan segarkan daftar barangnya.
+
+  refresh:
+    # Tipe tombol - ZAUCTIONHOUSE_REFRESH ngatur refresh secara langsung.
+    type: ZAUCTIONHOUSE_REFRESH
+
+    # Posisi slot - tengah di baris bawah.
+    slot: 49
+
+    # Tampilan pas lagi dimuat/refresh (biar gak diklik berkali-kali).
+    loading-item:
+      material: CLOCK
+      name: "#2CCED2<bold>LAGI REFRESH..."
+      lore:
+        - "#8c8c8c• #ff3535Tunggu bentar yak..."
+
+    # Tampilan tombol refresh normal.
+    item:
+      material: BELL
+      name: "#2CCED2<bold>INFO LELANG"
+      lore:
+        - "#92ffffSelamat datang di menu lelang."
+        - "#92ffffTempat dagang barang sama player lain."
+        - ""
+        - "#92ffffCara Jualan#8c8c8c:"
+        - "#2CCED2/ah sell #92ffff<harga> [<jumlah>]"
+        - ""
+        # PlaceholderAPI buat liat statistik langsung.
+        - "#92ffffJumlah jualan#8c8c8c: #2CCED2%zauctionhouse_listed_items%"
+        - "#92ffffUrutan saat ini#8c8c8c: #2CCED2%zauctionhouse_sorting_name%"
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat refresh daftar barang"
+
+  #---------------------------------------------------------------------------
+  # TOMBOL URUTAN BARANG
+  #---------------------------------------------------------------------------
+  # Ngerubah cara ngurutin barang jualan.
+
+  change-sort:
+    # Tipe tombol - ngatur siklus urutan.
+    type: ZAUCTIONHOUSE_CHANGE_SORT
+
+    # Pilihan urutan yang tersedia (bakal diputer sesuai urutan ini).
+    # Pilihan: DECREASING_DATE, DECREASING_PRICE, ASCENDING_DATE, ASCENDING_PRICE
+    sorts:
+      - DECREASING_DATE   # Paling baru (bawaan)
+      - DECREASING_PRICE  # Paling mahal
+      - ASCENDING_DATE    # Paling lama
+      - ASCENDING_PRICE   # Paling murah
+
+    # Format tulisan buat pilihan urutan yang LAGI DIPILIH di lore.
+    # %sorting% bakal diganti sama nama urutan dari config.yml.
+    enable-text: ' #F27438➜ %sorting%'
+
+    # Format tulisan buat pilihan urutan yang GAK DIPILIH di lore.
+    disable-text: ' #76CDCD➜ %sorting%'
+
+    # Tampilan pas lagi muat/ngurutin (biar gak diklik berkali-kali).
+    loading-item:
+      material: HOPPER
+      name: "#2CCED2<bold>URUTAN BARANG"
+      lore:
+        - "#8c8c8c• #ff3535Tunggu bentar yak"
+
+    # Posisi slot - sebelah kanan di baris bawah.
+    slot: 52
+
+    # Tampilan tombol urutan normal.
+    item:
+      material: HOPPER
+      name: "#2CCED2<bold>URUTAN BARANG"
+      lore:
+        - "#92ffffPilihan urutan:"
+        # Placeholder buat tiap opsi (ngikutin format tulisan enable/disable-text).
+        - "%DECREASING_DATE%"
+        - "%DECREASING_PRICE%"
+        - "%ASCENDING_DATE%"
+        - "%ASCENDING_PRICE%"
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ganti urutan"

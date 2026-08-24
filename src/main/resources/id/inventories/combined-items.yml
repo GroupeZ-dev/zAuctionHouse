@@ -1,0 +1,79 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Gabungan Barang
+#
+#   Menu ini nggabungin banyak tampilan barang (jualan, kadaluarsa, belanjaan)
+#   jadi satu daftar yang ada halamannya. Kamu bisa atur jenis barang apa aja yang mau dimasukin.
+#
+#   FITUR:
+#   - Nggabungin barang yang lagi dijual, kadaluarsa, dan dibeli di satu tampilan
+#   - Tiap jenis barang punya pengaturan tulisannya sendiri (dari config.yml bagian item-lore)
+#   - Aksi kliknya bakal nyesuain sama jenis barang aslinya:
+#     - Barang jualan: narik/batalin barangnya
+#     - Barang kadaluarsa: ngambil barangnya balik
+#     - Barang dibeli: ngambil barang beliannya
+#
+#   PENGATURAN:
+#   - include-selling: true/false - masukin barang yang lagi tayang buat dijual
+#   - include-expired: true/false - masukin barang kadaluarsa
+#   - include-purchased: true/false - masukin barang yang udah dibeli
+#
+#   CARA BUKA:
+#   - Pasangin menu ini ke perintah atau tombol di pengaturan kamu
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+name: '#0c1719Barang Saya (%page%/%max-page%)'
+
+size: 54
+
+#=============================================================================
+# POLA MENU
+#=============================================================================
+
+patterns:
+  - 'zauctionhouse-decoration'
+  - 'zauctionhouse-pagination'
+  - 'zauctionhouse-back'
+
+#=============================================================================
+# TOMBOL & TAMPILAN
+#=============================================================================
+
+items:
+
+  #---------------------------------------------------------------------------
+  # TAMPILAN BARANG GABUNGAN
+  #---------------------------------------------------------------------------
+  # Nampilin barang jualan, kadaluarsa, dan belanjaan di satu daftar.
+  # Aksi kliknya otomatis nyesuain jenis barang aslinya.
+
+  items:
+    type: ZAUCTIONHOUSE_COMBINED_ITEMS
+
+    # Slot buat tulisan kosong pas lagi gak ada barang.
+    empty-slot: 22
+
+    # Atur jenis barang apa aja yang mau dimasukin.
+    include-selling: true
+    include-expired: true
+    include-purchased: true
+
+    # Slot buat nampilin barang (4 baris x 9 kolom = 36 slot).
+    slots:
+      - 9-17    # Baris 2
+      - 18-26   # Baris 3
+      - 27-35   # Baris 4
+      - 36-44   # Baris 5
+
+    # Tampilan pas gak ada barang sama sekali.
+    item:
+      material: BARRIER
+      name: '#ff0000&nBelum Ada Barang'

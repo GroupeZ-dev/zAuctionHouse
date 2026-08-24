@@ -1,3 +1,4 @@
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.kotlin.dsl.invoke
 
 plugins {
@@ -7,7 +8,7 @@ plugins {
 }
 
 group = "fr.maxlego08.zauctionhouse"
-version = "4.0.1.2"
+version = "4.0.1.3"
 
 extra.set("targetFolder", file("target/"))
 extra.set("apiFolder", file("target-api/"))
@@ -37,6 +38,10 @@ allprojects {
         maven {
             name = "tcoded-releases"
             url = uri("https://repo.extendedclip.com/releases/")
+        }
+        maven {
+            name = "faststatsReleases"
+            url = uri("https://repo.faststats.dev/releases")
         }
     }
 
@@ -81,6 +86,7 @@ repositories {
 dependencies {
     api(projects.api)
     api(projects.hooks)
+    implementation("dev.faststats.metrics:bukkit:0.29.4")
 }
 
 tasks {
@@ -88,6 +94,11 @@ tasks {
         relocate("fr.maxlego08.sarah", "fr.maxlego08.zauctionhouse.libs.sarah")
         relocate("com.tcoded.folialib", "fr.maxlego08.zauctionhouse.libs.folialib")
         relocate("fr.traqueur.currencies", "fr.maxlego08.zauctionhouse.libs.currencies")
+        relocate("dev.faststats", "fr.maxlego08.zauctionhouse.libs.faststats")
+
+        filesMatching("META-INF/faststats.properties") {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        }
 
         rootProject.extra.properties["sha"]?.let { sha ->
             archiveClassifier.set("${rootProject.extra.properties["classifier"]}-${sha}")

@@ -1,0 +1,134 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Konfirmasi Tarik Barang
+#
+#   Menu ini nanya ke penjual apa mereka yakin mau narik barangnya dari lelang.
+#   Barang yang ditarik bakal masuk ke tempat barang kadaluarsa si player.
+#
+#   FITUR:
+#   - Liat barangnya sebelum beneran ditarik
+#   - Liat isi kotak shulker (kalo ada)
+#   - Yakin narik atau batalin tindakannya
+#
+#   CARA BUKA:
+#   - Otomatis kebuka pas penjual ngeklik barang mereka sendiri yang lagi dijual
+#   - Cuma muncul kalo open-confirm-inventory nyala di config.yml
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+# Judul menu - bentuk pertanyaan.
+name: "#0c1719Tarik barang ini?"
+
+# Ukuran menu - 3 baris (27 slot) biar ringkas buat konfirmasi.
+size: 27
+
+#=============================================================================
+# TOMBOL & TAMPILAN
+#=============================================================================
+
+items:
+
+  #---------------------------------------------------------------------------
+  # TOMBOL YAKIN TARIK
+  #---------------------------------------------------------------------------
+  # Narik barang dari lelang dan mindahin ke barang kadaluarsa.
+
+  remove:
+    # Tipe tombol - ngatur narik barang dari jualan.
+    type: ZAUCTIONHOUSE_CONFIRM_REMOVE_LISTED
+
+    item:
+      # Kaca hijau buat tindakan yakin/aman.
+      material: GREEN_STAINED_GLASS_PANE
+      name: "#2CCED2<bold>TARIK"
+      lore:
+        - "#92ffffTarik barang ini."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat narik"
+
+    # Bagian kiri menu (kotak 3x3).
+    slots:
+      - 0-2     # Baris atas kiri
+      - 9-11    # Baris tengah kiri
+      - 18-20   # Baris bawah kiri
+
+  #---------------------------------------------------------------------------
+  # TOMBOL BATAL/KEMBALI
+  #---------------------------------------------------------------------------
+  # Batalin penarikan dan balik ke rumah lelang.
+
+  deny:
+    # Tipe tombol - balik ke menu sebelumnya.
+    type: BACK
+
+    item:
+      # Kaca merah buat tindakan batal.
+      material: RED_STAINED_GLASS_PANE
+      name: "#2CCED2<bold>KEMBALI"
+      lore:
+        - "#92ffffKembali."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat kembali"
+
+    # Bagian kanan menu (kotak 3x3).
+    slots:
+      - 6-8     # Baris atas kanan
+      - 15-17   # Baris tengah kanan
+      - 24-26   # Baris bawah kanan
+
+  #---------------------------------------------------------------------------
+  # HIASAN
+  #---------------------------------------------------------------------------
+  # Ngisi kolom tengah pake kaca.
+
+  decoration:
+    item:
+      material: LIGHT_BLUE_STAINED_GLASS_PANE
+      name: "#2CCED2"
+
+    # Kolom tengah sama slot sekitarnya.
+    slots:
+      - 3-5     # Tengah atas
+      - 12      # Tengah kiri dari pusat
+      - 14      # Tengah kanan dari pusat
+      - 21-23   # Tengah bawah
+
+  #---------------------------------------------------------------------------
+  # TAMPILAN BARANG
+  #---------------------------------------------------------------------------
+  # Nampilin barang yang mau ditarik di tengah.
+
+  show:
+    # Tipe tombol - nampilin barang lelang.
+    type: ZAUCTIONHOUSE_SHOW
+
+    # Posisi tengah.
+    slot: 13
+
+  #---------------------------------------------------------------------------
+  # TOMBOL ISI SHULKER
+  #---------------------------------------------------------------------------
+  # Buka tampilan isi shulker (cuma muncul buat barang shulker).
+
+  shulker:
+    # Tipe tombol - buka ngintip isi shulker.
+    # Cuma nongol pas barangnya ada kotak shulkernya.
+    # Posisi slot.
+    type: ZAUCTIONHOUSE_SHULKER_OPEN
+
+    slot: 4
+
+    item:
+      material: SHULKER_BOX
+      name: "#2CCED2<bold>LIAT ISI SHULKER"
+      lore:
+        - "#92ffffLiat barang apa aja di dalem shulker."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngintip isinya"

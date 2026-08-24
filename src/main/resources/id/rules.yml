@@ -1,0 +1,454 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Konfigurasi Aturan Barang (Item Rules)
+#
+#   File ini ngatur barang apa aja yang bisa atau gak bisa dijual di lelang.
+#   Pake blacklist buat ngeblokir barang spesifik, atau whitelist buat ngizinin barang spesifik doang.
+#
+#   TIPS: Kamu bisa nyimpen barang dalam format Base64 pake command /zmenu save <nama barang>
+#         Terus panggil diaturan kamu biar cocok 100% sama barangnya.
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# REFERENSI TIPE ATURAN (RULE TYPES)
+#=============================================================================
+#
+# ATURAN MATERIAL:
+#   type: material
+#   materials:
+#     - DIAMOND
+#     - EMERALD
+#   Penjelasan: Nyocokin barang berdasarkan tipe material Minecraft-nya.
+#
+# ATURAN AKHIRAN MATERIAL (SUFFIX):
+#   type: material-suffix
+#   suffixes:
+#     - "_SWORD"
+#     - "_HELMET"
+#   Penjelasan: Nyocokin material yang berakhiran dengan kata yang disebutin.
+#
+# ATURAN NAMA:
+#   type: name
+#   mode: CONTAINS | EQUALS | STARTS_WITH | ENDS_WITH | REGEX
+#   values:
+#     - "Special"
+#   Penjelasan: Nyocokin barang dari nama tampilannya (Display name).
+#
+# ATURAN LORE (DESKRIPSI):
+#   type: lore
+#   mode: CONTAINS | EQUALS | STARTS_WITH | ENDS_WITH | REGEX
+#   values:
+#     - "Soulbound"
+#   Penjelasan: Nyocokin barang yang punya teks tertentu di lore-nya.
+#
+# ATURAN CUSTOM MODEL DATA:
+#   type: custom-model-data
+#   values:
+#     - 1001
+#     - 1002
+#   Penjelasan: Nyocokin barang dengan nilai CustomModelData tertentu.
+#
+# ATURAN TAG:
+#   type: tag
+#   tags:
+#     - BLOCKS
+#     - ITEMS
+#   Penjelasan: Nyocokin barang pake sistem tag item bawaan Bukkit/Paper.
+#
+# ATURAN NBT:
+#   type: nbt
+#   path: "custom.data.key"
+#   value: "expected_value"
+#   Penjelasan: Nyocokin barang dengan data NBT spesifik.
+#
+# ATURAN GABUNGAN:
+#   type: and
+#   rules:
+#     - <rule1>
+#     - <rule2>
+#   Penjelasan: SEMUA aturan harus cocok (Logika AND).
+#
+#   type: or
+#   rules:
+#     - <rule1>
+#     - <rule2>
+#   Penjelasan: SALAH SATU aturan bebas yang penting cocok (Logika OR).
+#
+#=============================================================================
+# ATURAN BARANG PLUGIN LAIN (CUSTOM ITEM PLUGINS)
+#=============================================================================
+#
+# Tipe aturan ini terhubung ke plugin barang custom populer lainnya.
+# Barang bakal dicocokin dari pengenal spesifik (identifier) dari pluginnya.
+# Bisa pake bintang (*) buat milih dengan pola.
+#
+# ITEMSADDER:
+#   type: itemsadder
+#   items:
+#     - "namespace:item_id"      # Cocok pas
+#     - "namespace:*"            # Semua barang dari namespace ini
+#
+# ORAXEN:
+#   type: oraxen
+#   items:
+#     - "custom_sword"           # Cocok pas
+#     - "*_armor"                # Nyocokin semua pola ini
+#
+# NEXO:
+#   type: nexo
+#   items:
+#     - "mythic_blade"
+#     - "special_*"
+#
+# MMOITEMS:
+#   type: mmoitems
+#   items:
+#     - "SWORD:CUTLASS"          # Format TIPE:ID
+#     - "SWORD:*"                # Semua barang dari tipe SWORD
+#     - "*:LEGENDARY_ITEM"       # Semua tipe dari ID ini
+#
+# EXECUTABLEITEMS:
+#   type: executableitems
+#   items:
+#     - "custom_wand"
+#
+# ECOITEMS:
+#   type: ecoitems
+#   items:
+#     - "packmaster_tear"
+#
+# CRUCIBLE (MythicCrucible):
+#   type: crucible
+#   items:
+#     - "mythic_blade"
+#
+# SLIMEFUN:
+#   type: slimefun
+#   items:
+#     - "ELECTRIC_MOTOR"
+#
+# HEADDATABASE:
+#   type: headdatabase
+#   items:
+#     - "12345"
+#
+# NOVA:
+#   type: nova
+#   items:
+#     - "machines:electric_furnace"
+#
+# DENIZEN:
+#   type: denizen
+#   items:
+#     - "my_custom_script"
+#
+# ADVANCEDITEMS:
+#   type: advanceditems
+#   items:
+#     - "magic_staff"
+#
+# CUSTOMCRAFTING (WolfyUtilities):
+#   type: customcrafting
+#   items:
+#     - "mynamespace:custom_item"
+#
+# ZHEAD:
+#   type: zhead
+#   items:
+#     - "custom_head_id"
+#
+# MAGICCOSMETICS:
+#   type: magiccosmetics
+#   items:
+#     - "hat_crown"
+#
+# HMCCOSMETICS:
+#   type: hmccosmetics
+#   items:
+#     - "golden_wings"
+#
+# ZITEMS:
+#   type: zitems
+#   items:
+#     - "custom_gem"
+#
+# CRAFTENGINE:
+#   type: craftengine
+#   items:
+#     - "namespace:custom_block"
+#
+# EXECUTABLEBLOCKS:
+#   type: executableblocks
+#   items:
+#     - "magic_chest"
+#
+#=============================================================================
+
+#=============================================================================
+# PENGATURAN BLACKLIST (DAFTAR HITAM)
+#=============================================================================
+# Barang yang cocok sama SALAH SATU aturan ini GAK BISA dijual di lelang.
+# Blacklist selalu di cek SEBELUM whitelist.
+# Kalo barang masuk aturan blacklist, langsung diblokir walaupun masuk whitelist.
+
+blacklist:
+  # Nyalain atau matiin sistem blacklist
+  # Kalau dimatiin, gak ada barang yang diblokir (kecuali whitelist nyala).
+  enabled: true
+
+  # Daftar aturan buat blokir barang
+  # Kalo barang cocok di SALAH SATU aja aturan ini, bakal dilarang dijual.
+  rules:
+
+    #-------------------------------------------------------------------------
+    # CONTOH: Ngeblokir Bedrock (biar barang admin gak dijual)
+    #-------------------------------------------------------------------------
+    - type: material
+      materials:
+        - BEDROCK
+
+    #-------------------------------------------------------------------------
+    # CONTOH: Ngeblokir barang dengan lore "Untradeable" DAN CustomModelData tertentu
+    # Ini ngasih unjuk cara gabungin aturan pake 'and'.
+    #-------------------------------------------------------------------------
+    - type: and
+      rules:
+        # Kondisi 1: Barangnya harus ada kata "Untradeable" di lore-nya
+        - type: lore
+          mode: CONTAINS
+          values:
+            - "Untradeable"
+        # Kondisi 2: Barangnya harus punya CustomModelData 1001
+        - type: custom-model-data
+          values:
+            - 1001
+
+    #=========================================================================
+    # CONTOH PLUGIN BARANG CUSTOM (CUSTOM ITEM PLUGINS)
+    #=========================================================================
+    # Hapus tanda pagar (#) buat make contoh-contoh dari plugin custom lu.
+    # Setiap contoh ini nampilin nama plugin dan gimana pola umumnya.
+
+    #-------------------------------------------------------------------------
+    # ItemsAdder - Ngeblokir barang ItemsAdder tertentu
+    #-------------------------------------------------------------------------
+    # - type: itemsadder
+    #   items:
+    #     - "namespace:item_id"       # Blokir barang spesifik
+    #     - "namespace:*"             # Blokir SEMUA barang di namespace ini
+    #     - "mynamespace:rare_*"      # Blokir barang yang diawali "rare_"
+
+    #-------------------------------------------------------------------------
+    # Oraxen - Ngeblokir barang Oraxen tertentu
+    #-------------------------------------------------------------------------
+    # - type: oraxen
+    #   items:
+    #     - "custom_sword"            # Blokir barang spesifik
+    #     - "*_armor"                 # Blokir semua barang berakhiran "_armor"
+    #     - "event_*"                 # Blokir semua barang dari event
+
+    #-------------------------------------------------------------------------
+    # Nexo - Ngeblokir barang Nexo tertentu
+    #-------------------------------------------------------------------------
+    # - type: nexo
+    #   items:
+    #     - "mythic_blade"
+    #     - "special_*"               # Blokir semua barang diawali "special_"
+    #     - "*_soulbound"             # Blokir semua barang soulbound
+
+    #-------------------------------------------------------------------------
+    # MMOItems - Ngeblokir barang MMOItems tertentu (Format TIPE:ID)
+    #-------------------------------------------------------------------------
+    # - type: mmoitems
+    #   items:
+    #     - "SWORD:CUTLASS"           # Blokir pedang spesifik
+    #     - "SWORD:*"                 # Blokir SEMUA pedang
+    #     - "*:LEGENDARY_ITEM"        # Blokir ID ini walaupun tipenya beda-beda
+    #     - "TOOL:*"                  # Blokir semua tools
+
+    #-------------------------------------------------------------------------
+    # ExecutableItems - Ngeblokir ExecutableItems tertentu
+    #-------------------------------------------------------------------------
+    # - type: executableitems
+    #   items:
+    #     - "custom_wand"
+    #     - "voucher_*"               # Blokir semua voucher
+    #     - "admin_*"                 # Blokir barang admin
+
+    #-------------------------------------------------------------------------
+    # EcoItems - Ngeblokir EcoItems tertentu
+    #-------------------------------------------------------------------------
+    # - type: ecoitems
+    #   items:
+    #     - "packmaster_tear"
+    #     - "charm_*"                 # Blokir semua charm
+
+    #-------------------------------------------------------------------------
+    # MythicCrucible - Ngeblokir barang Crucible tertentu
+    #-------------------------------------------------------------------------
+    # - type: crucible
+    #   items:
+    #     - "mythic_blade"
+    #     - "dungeon_*"               # Blokir hadiah dungeon
+
+    #-------------------------------------------------------------------------
+    # Slimefun - Ngeblokir barang Slimefun tertentu
+    #-------------------------------------------------------------------------
+    # - type: slimefun
+    #   items:
+    #     - "ELECTRIC_MOTOR"
+    #     - "*_INGOT"                 # Blokir semua ingot custom
+    #     - "CARGO_*"                 # Blokir barang cargo
+
+    #-------------------------------------------------------------------------
+    # HeadDatabase - Ngeblokir kepala dari HeadDatabase tertentu
+    #-------------------------------------------------------------------------
+    # - type: headdatabase
+    #   items:
+    #     - "12345"                   # Blokir dari ID
+    #     - "123*"                    # Blokir semua ID yang depannya 123
+
+    #-------------------------------------------------------------------------
+    # Nova - Ngeblokir barang Nova tertentu
+    #-------------------------------------------------------------------------
+    # - type: nova
+    #   items:
+    #     - "machines:electric_furnace"
+    #     - "machines:*"              # Blokir semua dari addon machines
+    #     - "*:solar_panel"           # Blokir solar panel dari addon apapun
+
+    #-------------------------------------------------------------------------
+    # Denizen - Ngeblokir barang berbasis script Denizen tertentu
+    #-------------------------------------------------------------------------
+    # - type: denizen
+    #   items:
+    #     - "my_custom_script"
+    #     - "*_weapon"                # Blokir script weapon
+
+    #-------------------------------------------------------------------------
+    # AdvancedItems - Ngeblokir AdvancedItems tertentu
+    #-------------------------------------------------------------------------
+    # - type: advanceditems
+    #   items:
+    #     - "magic_staff"
+    #     - "rpg_*"                   # Blokir barang RPG
+
+    #-------------------------------------------------------------------------
+    # CustomCrafting/WolfyUtilities - Ngeblokir barang custom tertentu
+    #-------------------------------------------------------------------------
+    # - type: customcrafting
+    #   items:
+    #     - "mynamespace:custom_item"
+    #     - "mynamespace:*"           # Blokir semua dari namespace
+
+    #-------------------------------------------------------------------------
+    # zHead - Ngeblokir kepala zHead tertentu
+    #-------------------------------------------------------------------------
+    # - type: zhead
+    #   items:
+    #     - "custom_head_id"
+    #     - "category_*"              # Blokir 1 kategori full
+
+    #-------------------------------------------------------------------------
+    # MagicCosmetics - Ngeblokir kosmetik MagicCosmetics tertentu
+    #-------------------------------------------------------------------------
+    # - type: magiccosmetics
+    #   items:
+    #     - "hat_crown"
+    #     - "backpack_*"              # Blokir semua tas
+
+    #-------------------------------------------------------------------------
+    # HMCCosmetics - Ngeblokir kosmetik HMCCosmetics tertentu
+    #-------------------------------------------------------------------------
+    # - type: hmccosmetics
+    #   items:
+    #     - "golden_wings"
+    #     - "aura_*"                  # Blokir semua aura
+
+    #-------------------------------------------------------------------------
+    # zItems - Ngeblokir barang zItems tertentu
+    #-------------------------------------------------------------------------
+    # - type: zitems
+    #   items:
+    #     - "custom_gem"
+    #     - "upgrade_*"               # Blokir barang upgrade
+
+    #-------------------------------------------------------------------------
+    # CraftEngine - Ngeblokir barang CraftEngine tertentu
+    #-------------------------------------------------------------------------
+    # - type: craftengine
+    #   items:
+    #     - "namespace:custom_block"
+    #     - "namespace:*"             # Blokir semua dari namespace
+
+    #-------------------------------------------------------------------------
+    # ExecutableBlocks - Ngeblokir blok ExecutableBlocks tertentu
+    #-------------------------------------------------------------------------
+    # - type: executableblocks
+    #   items:
+    #     - "magic_chest"
+    #     - "teleporter_*"            # Blokir blok teleporter
+
+#=============================================================================
+# PENGATURAN WHITELIST (DAFTAR PUTIH)
+#=============================================================================
+# Kalo dinyalain, CUMA barang yang cocok sama aturan di sini yang boleh dijual.
+# Semua barang lainnya otomatis diblokir.
+# Whitelist selalu di cek SETELAH blacklist.
+#
+# CONTOH PEMAKAIAN:
+# - Bikin lelang khusus spesifik (misal: lelang isinya cuma buku sihir)
+# - Ngebatesin barang yang bisa dijual buat server event
+# - Bikin batasan ekonomi khusus cuma buat tipe-tipe barang tertentu
+
+whitelist:
+  # Nyalain atau matiin sistem whitelist
+  # Kalau dimatiin, semua barang boleh dijual (kecuali yang diblokir blacklist).
+  # Kalau dinyalain, CUMA barang yang cocok aturan ini doang yang boleh dijual.
+  enabled: false
+
+  # Daftar aturan buat ngebolehin jualan barang
+  # Barang harus cocok MINIMAL SATU aturan biar bisa dijual.
+  rules:
+
+    #-------------------------------------------------------------------------
+    # CONTOH: Cuma ngizinin Nether Star yang ada kata "Voucher"
+    # Ini bakal bikin lelang khusus jual beli Voucher doang.
+    #-------------------------------------------------------------------------
+    - type: and
+      rules:
+        # Kondisi 1: Harus berjenis Nether Star
+        - type: material
+          materials:
+            - NETHER_STAR
+        # Kondisi 2: Harus ada kata "Voucher" di nama barangnya
+        - type: name
+          mode: CONTAINS
+          values:
+            - "Voucher"
+
+    #-------------------------------------------------------------------------
+    # Contoh whitelist tambahan (Hapus tanda pagar buat make):
+    #-------------------------------------------------------------------------
+
+    # Cuma ngizinin senjata
+    # - type: material-suffix
+    #   suffixes:
+    #     - "_SWORD"
+    #     - "_AXE"
+
+    # Cuma ngizinin barang yang punya tulisan spesifik (misal: "Tradeable")
+    # - type: lore
+    #   mode: CONTAINS
+    #   values:
+    #     - "Tradeable"
+
+    # Cuma ngizinin barang MMOItems tipe ini aja
+    # - type: mmoitems
+    #   items:
+    #     - "WEAPON:*"
+    #     - "ARMOR:*"

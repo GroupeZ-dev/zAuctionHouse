@@ -1,0 +1,82 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Pilihan Player
+#
+#   Menu ini ngasih kesempatan player buat nyalain atau matiin pengaturan pribadi mereka.
+#   Saat ini dukung buat milih mau terima notifikasi pengumuman atau nggak.
+#
+#   CARA BUKA:
+#   - /ah option
+#   - /ah options
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+name: '#0c1719Pengaturan'
+size: 27
+
+#=============================================================================
+# POLA MENU
+#=============================================================================
+
+patterns:
+  - 'zauctionhouse-decoration'
+  - 'zauctionhouse-back'
+
+#=============================================================================
+# TOMBOL & TAMPILAN
+#=============================================================================
+
+items:
+
+  #---------------------------------------------------------------------------
+  # TOMBOL PENGUMUMAN JUALAN
+  #---------------------------------------------------------------------------
+
+  broadcast-sell:
+    type: ZAUCTIONHOUSE_OPTION_TOGGLE
+    slot: 11
+    option-name: broadcast_sell
+    enable-text: '<green>Nyala'
+    disable-text: '<red>Mati'
+    item:
+      material: OAK_SIGN
+      name: '#2CCED2<bold>Pengumuman Jualan'
+      lore:
+        - ''
+        - '#92ffffNyalain/matiin pesan pengumuman jualan.'
+        - '#92ffffKalo nyala, kamu bakal ngeliat pesan'
+        - '#92ffffpas ada player yang naruh barang lelang.'
+        - ''
+        - '#8c8c8cStatus: %option_status%'
+        - ''
+        - '#8c8c8c• #2CCED2Klik #92ffffbuat ngeganti'
+
+  #---------------------------------------------------------------------------
+  # TOMBOL PENGUMUMAN PEMBELIAN
+  #---------------------------------------------------------------------------
+
+  broadcast-purchase:
+    type: ZAUCTIONHOUSE_OPTION_TOGGLE
+    slot: 15
+    option-name: broadcast_purchase
+    enable-text: '<green>Nyala'
+    disable-text: '<red>Mati'
+    item:
+      material: GOLD_INGOT
+      name: '#2CCED2<bold>Pengumuman Belanjaan'
+      lore:
+        - ''
+        - '#92ffffNyalain/matiin pesan pengumuman pembelian.'
+        - '#92ffffKalo nyala, kamu bakal ngeliat pesan'
+        - '#92ffffpas ada player yang belanja barang.'
+        - ''
+        - '#8c8c8cStatus: %option_status%'
+        - ''
+        - '#8c8c8c• #2CCED2Klik #92ffffbuat ngeganti'
