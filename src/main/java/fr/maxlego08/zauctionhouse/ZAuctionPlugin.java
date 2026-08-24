@@ -2,6 +2,7 @@ package fr.maxlego08.zauctionhouse;
 
 import com.tcoded.folialib.FoliaLib;
 import com.tcoded.folialib.impl.PlatformScheduler;
+import dev.faststats.bukkit.BukkitContext;
 import fr.maxlego08.zauctionhouse.api.AuctionManager;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.InventoriesLoader;
@@ -98,6 +99,9 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     private PlatformScheduler platformScheduler;
     private AuctionClusterBridge auctionClusterBridge = new LocalAuctionClusterBridge();
     private OfflinePermission offlinePermission = new EmptyOfflinePermission();
+    private final BukkitContext context = new BukkitContext.Factory(this, "3854068cfb5b22b58f2ae87e2c84062a")
+            .metrics(dev.faststats.Metrics.Factory::create)
+            .create();
 
     @Override
     public void onEnable() {
@@ -159,6 +163,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         this.registerHooks();
 
         new Metrics(this, 5326);
+        context.ready();
 
         if (getConfig().getBoolean("enable-version-checker", true)) {
             this.versionChecker = new VersionChecker(this, 1);
@@ -202,6 +207,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         }
 
         this.storageManager.onDisable();
+        context.shutdown();
     }
 
     @Override

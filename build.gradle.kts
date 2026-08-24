@@ -38,6 +38,10 @@ allprojects {
             name = "tcoded-releases"
             url = uri("https://repo.extendedclip.com/releases/")
         }
+        maven {
+            name = "faststatsReleases"
+            url = uri("https://repo.faststats.dev/releases")
+        }
     }
 
     java {
@@ -71,6 +75,7 @@ allprojects {
         implementation("fr.maxlego08.sarah:sarah:1.23")
         implementation("com.tcoded:FoliaLib:0.5.1")
         implementation("fr.traqueur.currencies:currenciesapi:1.0.14")
+        implementation("dev.faststats.metrics:bukkit:0.29.4")
     }
 }
 
@@ -88,6 +93,7 @@ tasks {
         relocate("fr.maxlego08.sarah", "fr.maxlego08.zauctionhouse.libs.sarah")
         relocate("com.tcoded.folialib", "fr.maxlego08.zauctionhouse.libs.folialib")
         relocate("fr.traqueur.currencies", "fr.maxlego08.zauctionhouse.libs.currencies")
+        relocate("dev.faststats", "fr.maxlego08.zauctionhouse.libs.faststats")
 
         rootProject.extra.properties["sha"]?.let { sha ->
             archiveClassifier.set("${rootProject.extra.properties["classifier"]}-${sha}")
