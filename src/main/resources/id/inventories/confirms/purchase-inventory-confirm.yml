@@ -1,0 +1,117 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Menu Konfirmasi Pembelian Borongan
+#
+#   Menu ini buat konfirmasi beli banyak barang sekaligus (borongan).
+#   Nampilin semua barang yang mau dibeli sebelum transaksinya diproses.
+#
+#   FITUR:
+#   - Liat semua barang yang masuk di jualan borongan
+#   - Liat isi kotak shulker (kalo ada)
+#   - Sekali klik langsung beli semua barangnya
+#
+#   CARA BUKA:
+#   - Otomatis kebuka pas ngeklik jualan borongan
+#   - Jualan borongan ditandain pake ikon peti di rumah lelang
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN MENU
+#=============================================================================
+
+# Judul menu - bentuk pertanyaan.
+name: "#0c1719Beli semua barang ini?"
+
+# Ukuran menu - 6 baris biar muat nampilin semua barang borongan.
+size: 54
+
+#=============================================================================
+# POLA MENU
+#=============================================================================
+
+patterns:
+  # Nambahin hiasan kaca di pinggiran.
+  - 'zauctionhouse-decoration'
+
+#=============================================================================
+# TOMBOL & TAMPILAN
+#=============================================================================
+
+items:
+
+  #---------------------------------------------------------------------------
+  # TAMPILAN ISI BARANG BORONGAN
+  #---------------------------------------------------------------------------
+  # Nampilin semua barang yang masuk di paket jualan ini.
+  # Barangnya cuma bisa diliat (gak bisa diambil satu-satu).
+
+  item-content:
+    # Tipe tombol - nampilin semua barang yang dijual.
+    type: ZAUCTIONHOUSE_ITEM_CONTENT
+
+    # Slot buat nampilin barang (4 baris × 9 kolom = 36 slot).
+    slots:
+      - 9-44
+
+  #---------------------------------------------------------------------------
+  # TOMBOL YAKIN
+  #---------------------------------------------------------------------------
+  # Nyelesaiin pembelian buat semua barangnya.
+
+  confirm:
+    type: ZAUCTIONHOUSE_CONFIRM_PURCHASE
+
+    item:
+      material: GREEN_STAINED_GLASS_PANE
+      name: "#2CCED2<bold>BELI"
+      lore:
+        - "#92ffffBeli semua barang ini."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat beli"
+
+    # Bagian kiri bawah (3 slot).
+    slots:
+      - 46-48
+
+  #---------------------------------------------------------------------------
+  # TOMBOL BATAL/KEMBALI
+  #---------------------------------------------------------------------------
+  # Batalin dan balik ke rumah lelang.
+
+  deny:
+    type: BACK
+
+    item:
+      material: RED_STAINED_GLASS_PANE
+      name: "#2CCED2<bold>KEMBALI"
+      lore:
+        - "#92ffffKembali."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat kembali"
+
+    # Bagian kanan bawah (3 slot).
+    slots:
+      - 50-52
+
+  #---------------------------------------------------------------------------
+  # TOMBOL ISI SHULKER
+  #---------------------------------------------------------------------------
+  # Buka tampilan isi shulker.
+
+  shulker:
+    type: ZAUCTIONHOUSE_SHULKER_OPEN
+
+    # Tengah di baris paling bawah.
+    slot: 49
+
+    item:
+      material: SHULKER_BOX
+      name: "#2CCED2<bold>LIAT ISI SHULKER"
+      lore:
+        - "#92ffffLiat barang apa aja di dalem shulker."
+        - ""
+        - "#8c8c8c• #2CCED2Klik #92ffffbuat ngintip isinya"

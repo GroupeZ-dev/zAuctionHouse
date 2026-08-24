@@ -129,6 +129,9 @@ public class LocaleHelper {
         // Thailand
         COUNTRY_TO_LANGUAGE.put("TH", "th"); // Thailand
 
+        // Indonesia
+        COUNTRY_TO_LANGUAGE.put("ID", "id"); // Indonesia
+
     }
 
     private final Logger logger;

@@ -1,0 +1,299 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Messages Configuration
+#
+#   File ini berisi semua pesan yang akan dilihat oleh player dari plugin.
+#   Sesuaikan pesan-pesan ini dengan gaya bahasa server kamu.
+#
+#   FORMATTING:
+#   - Mendukung format MiniMessage: <red>, <bold>, <gradient:red:blue>, dsb.
+#   - Mendukung warna hex: #RRGGBB atau #RGB
+#   - Mendukung kode warna lama: &c, &l, dsb. (tidak disarankan, pakai MiniMessage aja)
+#   - Gunakan shortcut warna kustom yang ada di config.yml: <primary>, <secondary>, <error>, <success>
+#
+#   PLACEHOLDERS:
+#   - Format %placeholder% digunakan untuk nilai yang dinamis
+#   - Placeholder yang tersedia berbeda-beda tiap pesan (dijelaskan di bawah)
+#
+################################################################################################################################
+
+#=============================================================================
+# GENERAL MESSAGES
+#=============================================================================
+
+# Prefix yang ditambahkan di awal setiap pesan plugin.
+# Kosongkan "" jika tidak ingin pakai prefix.
+prefix: "<primary>zAuctionHouse <secondary>• "
+
+#=============================================================================
+# VERSION & UPDATE MESSAGES
+#=============================================================================
+
+# Muncul ketika ada versi plugin baru (jika version-checker aktif).
+version-available: "<#ff0000>Ada versi terbaru zAuctionHouse lho! <gray>(<white>sekarang: <#ff9900>%version% <gray>| <white>terbaru: <#00ff00>%latest%<gray>)"
+
+#=============================================================================
+# COMMAND MESSAGES
+#=============================================================================
+
+# Muncul ketika player salah menggunakan command.
+command-syntax-error: "<error>Cara pakainya gini nih<gray>: <success>%syntax%"
+
+# Muncul ketika player tidak punya permission.
+command-no-permission: "<error>Waduh, kamu gak punya akses buat pakai command ini."
+
+# Muncul ketika command player-only dijalankan dari console.
+command-no-console: "<error>Command ini cuma bisa dipakai oleh player di dalam game."
+
+# Muncul ketika argumen command tidak dikenali.
+command-no-arg: "<error>Gagal nemuin command yang kamu maksud nih."
+
+# Muncul ketika command dibatasi (misal di world tertentu).
+command-restricted: "<error>Kamu gak bisa pakai command ini di sini."
+
+# Muncul ketika player spam command (cooldown).
+command-cooldown: "<error>Sabar ya, tunggu sebentar sebelum pakai command ini lagi."
+
+# Format bantuan command.
+command-syntax-help: "<white>%syntax% <dark_gray>» <gray>%description%"
+
+#=============================================================================
+# COMMAND DESCRIPTIONS
+#=============================================================================
+
+command-description-auction: "Buka menu utama lelang"
+command-description-auction-sell: "Jual barang kamu di lelang"
+command-description-auction-rent: "Sewakan barang kamu"
+command-description-auction-bid: "Lelang barang kamu (sistem tawar/bid)"
+command-description-auction-reload: "Reload ulang file konfigurasi"
+command-description-auction-admin: "Buka menu alat admin lelang"
+command-description-auction-admin-generate: "Buat barang lelang palsu untuk testing"
+command-description-auction-admin-open: "Buka daftar barang lelang saat ini"
+command-description-auction-admin-forceopen: "Paksa buka inventori milik player lain"
+command-description-auction-admin-history: "Cek riwayat lelang milik player"
+command-description-auction-admin-add: "Tambahkan barang ke menu lelang"
+command-description-auction-admin-cache: "Kelola cache player"
+command-description-auction-admin-cache-set: "Atur nilai di cache player"
+command-description-auction-admin-cache-clear: "Hapus cache player"
+command-description-auction-admin-cache-show: "Tampilkan cache player"
+command-description-auction-claim: "Klaim uang penjualan yang tertunda"
+command-description-auction-page: "Buka menu lelang di halaman tertentu"
+command-description-auction-migrate: "Migrasi data dari plugin lelang lain"
+
+#=============================================================================
+# INVENTORY MESSAGES
+#=============================================================================
+
+inventory-not-found: "<error>Gagal nemuin menu inventori <white>%inventory-name%<error>."
+
+#=============================================================================
+# SELL MESSAGES
+#=============================================================================
+
+sell-error-air: "<error>Lah, masa jual angin? Pegang barangnya dulu dong!"
+sell-error-change: "<error>Barang di tangan kamu berubah, penjualan dibatalkan."
+sell-error-economy: "<error>Gagal nemuin sistem ekonomi <white>%name%<error>."
+sell-error-default-economy: "<error>Ekonomi default belum diatur. Coba lapor ke admin ya."
+sell-inventory-empty: "<error>Taruh barangnya dulu di inventori sebelum konfirmasi."
+sell-inventory-cancelled: "<error>Penjualan dibatalkan, barang kamu udah dibalikin."
+sell-items-cleared: "<success>Barang yang dipilih berhasil dibersihkan."
+sell-item-added: "<success>Barang berhasil ditambahkan ke daftar jual."
+sell-item-removed: "<success>Barang berhasil dihapus dari daftar jual."
+
+#=============================================================================
+# ADMIN MESSAGES
+#=============================================================================
+
+admin-target-required: "<error>Kamu harus sebutin nama playernya."
+admin-target-not-found: "<error>Gagal nemuin player bernama <white>%target%<error>."
+admin-open-inventory: "<success>Membuka barang %type% milik <white>%target%<success>."
+admin-forceopen-inventory: "<success>Membuka inventori <white>%inventory%<success> milik <white>%target%<success> di halaman <white>%page%<success>."
+admin-open-history: "<success>Membuka riwayat milik <white>%target%<success>."
+admin-item-removed: "<success>Kamu mengambil <white>%items%<success> dari <white>%target%<success>."
+admin-item-added: "<success>Kamu menambahkan <white>%items%<success> ke <white>%target%<success> di bagian <white>%type%<success>."
+admin-item-retrieved: "<success>Barang berhasil diambil kembali."
+admin-no-item-to-retrieve: "<error>Gak ada barang yang bisa diambil dari log ini."
+
+#=============================================================================
+# RELOAD MESSAGES
+#=============================================================================
+
+reload-success: "<success>Plugin berhasil di-reload mantap!"
+
+#=============================================================================
+# ITEM REMOVAL MESSAGES
+#=============================================================================
+
+item-remove-listed: "#e6fff3Kamu baru aja narik %items% #e6fff3dari daftar jual."
+item-remove-expired: "#e6fff3Kamu narik %items% #e6fff3dari daftar barang kadaluarsa."
+item-remove-purchased: "#e6fff3Kamu ngambil %items% #e6fff3yang habis kamu beli."
+item-remove-selling: "#e6fff3Kamu membatalkan penjualan %items% #e6fff3."
+
+#=============================================================================
+# TRANSACTION MESSAGES
+#=============================================================================
+
+item-sold: "#e6fff3Kamu berhasil naruh %items% #e6fff3ke lelang seharga #92bed8%price%#e6fff3."
+item-bought-seller: "#ffacd5%buyer% #e6fff3baru aja beli %items% #e6fff3milikmu seharga #92bed8%price%#e6fff3. Cuan!"
+item-bought-buyer: "#e6fff3Kamu sukses ngebeli %items% #e6fff3seharga #92bed8%price%#e6fff3."
+
+#=============================================================================
+# ERROR MESSAGES
+#=============================================================================
+
+not-enough-money: "<error>Duit kamu gak cukup buat beli ini."
+not-enough-space: "<error>Tas kamu penuh nih, kosongin dulu tempatnya."
+price-too-high: "<error>Harganya kemahalan, maksimal jual itu <white>%max-price%<error>."
+price-too-low: "<error>Harganya terlalu murah, minimal jual itu <white>%min-price%<error>."
+listed-items-limit: "<error>Kamu udah gak bisa jual barang lagi, maksimal cuma <white>%max-items%<error> barang<error>."
+world-banned: "<error>Kamu gak diizinin buka lelang di world ini."
+item-blacklisted: "<error>Barang ini masuk daftar hitam dan gak boleh dijual."
+item-whitelisted: "<error>Barang ini gak ada di daftar putih, jadi gak bisa dijual."
+
+#=============================================================================
+# ADMIN GENERATE MESSAGES
+#=============================================================================
+
+admin-generate-warning:
+  - "<error>⚠ PERINGATAN ⚠"
+  - "<error>Command ini bakal bikin <white>%amount%<error> barang lelang palsu buat ngetes performa."
+  - "<error>Data ini sepenuhnya <white>PALSU<error> dan harus di-reset setelah testing selesai."
+  - "<error>Ketik command ini lagi dalam <white>30 detik<error> untuk konfirmasi."
+
+admin-generate-confirmed: "<success>Sip, konfirmasi diterima! Lagi bikin <white>%amount%<success> barang lelang nih..."
+admin-generate-progress: "<gray>Progres: <white>%current%<gray>/<white>%total%<gray> barang berhasil dibuat..."
+admin-generate-complete: "<success>Berhasil bikin <white>%amount%<success> barang lelang palsu dalam waktu <white>%time%ms<success>."
+admin-generate-no-materials: "<error>Gak nemu material yang pas di kategori. Pastiin kamu punya kategori selain 'misc'."
+admin-generate-invalid-amount: "<error>Jumlah salah. Tolong masukin angka dari <white>1<error> sampai <white>100000<error>."
+admin-generate-players-start: "<gray>Mendaftarkan <white>%total%<gray> player palsu..."
+admin-generate-players-progress: "<gray>Player terdaftar: <white>%current%<gray>/<white>%total%<gray>..."
+admin-generate-players-complete: "<success>Sukses mendaftarkan <white>%amount%<success> player palsu."
+admin-generate-items-start: "<gray>Bikin <white>%total%<gray> barang lelang..."
+
+#=============================================================================
+# ADMIN CACHE MESSAGES
+#=============================================================================
+
+admin-cache-show-header: "<primary>Cache milik <white>%player%<primary>:"
+admin-cache-show-entry: "<gray>  %key% <dark_gray>» <white>%value%"
+admin-cache-show-empty: "<gray>  Gak ada cache yang disimpen."
+admin-cache-cleared: "<success>Cache <white>%key%<success> berhasil dihapus buat <white>%player%<success>."
+admin-cache-cleared-all: "<success>Semua cache milik <white>%player%<success> berhasil dihapus."
+admin-cache-cleared-all-players: "<success>Cache <white>%key%<success> berhasil dihapus buat <white>%count%<success> player."
+admin-cache-cleared-all-players-all: "<success>Semua cache berhasil dihapus buat <white>%count%<success> player."
+admin-cache-set: "<success>Ubah <white>%key%<success> jadi <white>%value%<success> buat <white>%player%<success>."
+admin-cache-set-all-players: "<success>Ubah <white>%key%<success> jadi <white>%value%<success> buat <white>%count%<success> player."
+admin-cache-invalid-key: "<error>Cache key <white>%key%<error> gak bener. Pakai fitur tab buat liat yang valid."
+admin-cache-invalid-value: "<error>Value <white>%value%<error> gak bener buat key <white>%key%<error>."
+admin-cache-key-not-settable: "<error>Cache <white>%key%<error> gak bisa diubah dari command."
+admin-cache-player-not-online: "<error>Player <white>%player%<error> lagi offline."
+
+#=============================================================================
+# CLAIM MESSAGES
+#=============================================================================
+
+claim-no-pending: "<error>Kamu gak punya uang penjualan yang tertunda buat diklaim."
+claim-success: "<success>Asik, uang penjualan kamu berhasil masuk ke kantong!"
+claim-economy-success: "<success>Kamu dapet <white>%amount%<success> dari <white>%economy%<success>."
+claim-pending-notify: "#e6fff3Hei, ada uang penjualan kamu yang belum diambil! Ketik <white>/ah claim<#e6fff3> buat narik <white>%amount%<#e6fff3>."
+
+#=============================================================================
+# SALES NOTIFICATION
+#=============================================================================
+
+sales-notification:
+  - "<click:run_command:/ah history>#e6fff3Pas kamu lagi offline, ada <white>%count%<#e6fff3> barang kamu yang laku total <white>%total%<#e6fff3>!"
+  - "<click:run_command:/ah history>#8c8c8c• #2CCED2Klik di sini<#92ffff> buat liat riwayat jualanmu</click>"
+
+#=============================================================================
+# TAX MESSAGES
+#=============================================================================
+
+tax-sell-applied: "<gray>Pajak sebesar <white>%tax%<gray> (%percentage%%) udah dipotong dari penjualan ini."
+tax-purchase-applied: "<gray>Pajak sebesar <white>%tax%<gray> (%percentage%%) dipotong dari hasil pembelian ini."
+tax-capitalism-info: "<gray>Harga ini udah termasuk pajak sebesar <white>%tax%<gray> (%percentage%%)."
+tax-exempt: "<green>Wih, kamu bebas pajak!"
+tax-reduced: "<green>Kamu dapet diskon potongan pajak jadi sisa (%percentage%%) aja."
+tax-insufficient-funds: "<error>Duit kamu gak cukup buat bayar pajaknya yang seharga <white>%tax%<error>."
+
+#=============================================================================
+# MIGRATION MESSAGES
+#=============================================================================
+
+migration-not-configured: "<error>Migrasi buat <white>%source%<error> belum diatur. Cek bagian <white>migration<error> di config.yml ya."
+migration-invalid-source: "<error>Sumber migrasi gak dikenal: <white>%source%"
+migration-available-sources: "<gray>Sumber yang tersedia: %sources%"
+migration-info:
+  - "<primary>Migrasi dari <white>%source%"
+  - "<gray>Info Lengkap: <white>%details%"
+migration-confirm:
+  - "<gray>Ketik <white>/ah admin migrate %source% confirm<gray> buat mulai migrasi."
+  - "<error>⚠ PERINGATAN: Ini bakal masukin data ke sistem V4. Jangan lupa backup data lama kamu!"
+migration-started: "<success>Migrasi dari <white>%source%<success> udah dimulai... Santai dulu, ini butuh waktu."
+migration-progress: "<gray>[Migrasi] %progress%"
+migration-success:
+  - "<success>Migrasi dari <white>%source%<success> selesai tanpa masalah!"
+  - "<gray>  Player: <white>%players%"
+  - "<gray>  Barang: <white>%items%"
+  - "<gray>  Transaksi: <white>%transactions%"
+  - "<gray>  Error: <white>%errors%"
+  - "<gray>  Waktu: <white>%duration%ms"
+migration-failed: "<error>Migrasinya gagal bro: <white>%error%"
+
+#=============================================================================
+# SEARCH MESSAGES
+#=============================================================================
+
+search-start: "<#8a8a8a>Ayo ketik nama barang yang mau dicari di chat."
+search-cleared: "<#8a8a8a>Pencarian dibersihkan."
+search-no-results: "<#8a8a8a>Gak nemu barang dengan nama <#ffffff>%query%<#8a8a8a>."
+search-searching: "<#8a8a8a>Lagi nyari barang <#ffffff>%query%<#8a8a8a>..."
+command-description-auction-search: "Cari barang yang kamu mau di lelang"
+
+#=============================================================================
+# BROADCAST MESSAGES
+#=============================================================================
+
+broadcast-sell: "#e6fff3<white>%seller% <#e6fff3>baru aja masukin %items% <#e6fff3>ke lelang seharga <#92bed8>%price%<#e6fff3>."
+broadcast-purchase: "#e6fff3<white>%buyer% <#e6fff3>barusan borong %items% <#e6fff3>seharga <#92bed8>%price%<#e6fff3>."
+
+#=============================================================================
+# OPTION MESSAGES
+#=============================================================================
+
+command-description-auction-option: "Atur pilihan fitur lelang kamu"
+option-broadcast-sell-enabled: "<success>Notif orang jualan sekarang <white>aktif<success>."
+option-broadcast-sell-disabled: "<success>Notif orang jualan sekarang <white>dimatikan<success>."
+option-broadcast-purchase-enabled: "<success>Notif orang beli barang sekarang <white>aktif<success>."
+option-broadcast-purchase-disabled: "<success>Notif orang beli barang sekarang <white>dimatikan<success>."
+option-list-header: "<primary>Pengaturan kamu saat ini:"
+option-list-entry: "<gray>  %option% <dark_gray>> <white>%value%"
+
+command-description-auction-admin-option: "Atur fitur lelang milik player"
+command-description-auction-admin-option-set: "Ubah pengaturan player"
+command-description-auction-admin-option-list: "Liat daftar pengaturan player"
+command-description-auction-admin-option-reset: "Reset pengaturan player ke default"
+
+admin-option-set: "<success>Ubah fitur <white>%option%<success> jadi <white>%value%<success> buat <white>%player%<success>."
+admin-option-reset: "<success>Semua fitur buat <white>%player%<success> udah di-reset balik ke default."
+admin-option-list-header: "<primary>Pengaturan buat <white>%player%<primary>:"
+
+#=============================================================================
+# REMOVE ALL MESSAGES
+#=============================================================================
+
+remove-all-items: "#e6fff3Kamu narik semua <white>%amount%<#e6fff3> barang sekaligus."
+
+#=============================================================================
+# ADMIN LOGS MESSAGES
+#=============================================================================
+
+command-description-auction-admin-logs: "Kelola riwayat log lelang"
+command-description-auction-admin-logs-purge: "Hapus log yang usianya lebih dari X hari"
+command-description-auction-admin-logs-player: "Hapus semua log milik seorang player"
+command-description-auction-admin-logs-clear-migrated: "Hapus log hasil migrasi dari V3"
+
+admin-logs-purge-success: "<success>Berhasil ngehapus <white>%amount%<success> log yang umurnya lebih dari <white>%days%<success> hari."
+admin-logs-player-success: "<success>Berhasil ngehapus <white>%amount%<success> log punya si <white>%player%<success>."
+admin-logs-clear-migrated-success: "<success>Berhasil ngehapus <white>%amount%<success> log sisa migrasi dari V3."
+admin-logs-invalid-days: "<error>Masukin angka hari yang bener dong (harus lebih dari 0)."

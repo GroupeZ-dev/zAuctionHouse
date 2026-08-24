@@ -1,0 +1,303 @@
+################################################################################################################################
+#
+#   zAuctionHouse V4 - Konfigurasi Kategori
+#
+#   File ini buat ngatur kategori barang di lelang.
+#   Kategori ngebantu player buat nyari barang sesuai tipenya dengan lebih gampang.
+#
+#   CARA KERJA KATEGORI:
+#   - Tiap kategori punya ID unik (kunci YAML, misal "weapons", "armor")
+#   - Kategori pake 'rules' (aturan) buat nentuin barang apa aja yang masuk ke situ
+#   - Barang otomatis masuk ke kategori berdasarkan aturan tersebut
+#   - Satu barang bisa masuk ke banyak kategori kalau aturannya cocok
+#   - Kategori "misc" (atau yang gak punya aturan) jadi kategori tampungan
+#
+#   URUTAN KATEGORI:
+#   - Kategori muncul di menu sesuai urutan di file inventories/categories.yml
+#   - File ini cuma ngatur aturan barangnya, bukan urutan tampilannya
+#
+#   TIPE ATURAN (liat rules.yml buat lebih lengkapnya):
+#   - material        : Nyocokin dari nama material Minecraft
+#   - material-suffix : Nyocokin material yang punya akhiran spesifik
+#   - tag             : Nyocokin pake tag item Bukkit/Paper
+#   - name            : Nyocokin dari nama tampilan barang
+#   - lore            : Nyocokin dari teks deskripsi barang
+#   - custom-model-data: Nyocokin dari angka CustomModelData
+#   - and/or          : Gabungin beberapa aturan sekaligus
+#   - Aturan buat plugin barang custom (itemsadder, oraxen, mmoitems, dll)
+#
+#   ATURAN BLACKLIST (PENGECUALIAN):
+#   - Kamu bisa nambahin list "banned-rules" ke kategori mana aja
+#   - Barang yang cocok di aturan ini BAKAL DILARANG masuk ke kategori itu,
+#     walaupun cocok di aturan utama
+#   - Pake tipe aturan yang sama kayak biasanya
+#   - Berguna buat ngeblokir barang custom (misal, barang dengan CustomModelData tertentu)
+#
+#   Dokumentasi: https://docs.groupez.dev/zauctionhouse/introduction
+#   Discord: https://discord.groupez.dev/
+#
+################################################################################################################################
+
+#=============================================================================
+# PENGATURAN KATEGORI
+#=============================================================================
+
+settings:
+  # Nyalain atau matiin sistem kategori secara penuh.
+  # Kalau dimatiin, semua barang ditampilin nyampur tanpa bisa difilter.
+  # Cuma kategori "Semua" yang bisa dipake.
+  enabled: true
+
+  # Nama tampilan buat kategori "Semua" (nampilin semua barang tanpa filter).
+  # Kategori ini selalu ada dan isinya semua barang yang dijual.
+  # Mendukung format warna MiniMessage.
+  all-category-name: "Lelang"
+
+#=============================================================================
+# DAFTAR KATEGORI
+#=============================================================================
+# Setiap kategori diatur pakai:
+#   - Key (ID Unik, misal "weapons") - dipake di file menu inventori
+#   - display-name: Nama yang tampil di GUI (Mendukung warna MiniMessage)
+#   - rules: Daftar aturan buat nentuin barang apa aja yang masuk sini
+#   - banned-rules: (opsional) Daftar aturan buat DILARANG masuk sini
+#
+# PENTING: Key kategori harus sama persis kayak kolom 'category' di inventories/categories.yml
+
+#-----------------------------------------------------------------------------
+# KATEGORI BLOK
+#-----------------------------------------------------------------------------
+# Isinya semua blok yang bisa dipasang di Minecraft.
+# Pake sistem tag BLOCKS bawaan Bukkit biar lebih gampang.
+
+blocks:
+  # Nama tampilan yang muncul di menu kategori.
+  display-name: "Blok"
+
+  # Aturan buat nyocokin barang di kategori ini.
+  # Kalo cocok SALAH SATU aja aturan ini, barang bakal masuk sini.
+  rules:
+    # Nyocokin semua material blok pake sistem tag item Bukkit.
+    # Tag BLOCKS mencakup semua blok Minecraft yang bisa dipasang.
+    # Ini jauh lebih aman dibanding nulisin tipe material satu-satu.
+    - type: tag
+      tags:
+        - BLOCKS    # Tag bawaan buat semua blok Minecraft
+
+#-----------------------------------------------------------------------------
+# KATEGORI SENJATA
+#-----------------------------------------------------------------------------
+# Isinya senjata buat berantem: pedang, panah, crossbow, trident.
+
+weapons:
+  display-name: "Senjata"
+
+  rules:
+    # Nyocokin semua jenis pedang dari akhiran namanya.
+    # Ini bakal nangkap: WOODEN_SWORD, STONE_SWORD, IRON_SWORD, GOLDEN_SWORD,
+    # DIAMOND_SWORD, NETHERITE_SWORD, dan pedang modifikasi lain.
+    - type: material-suffix
+      suffixes:
+        - "_SWORD"
+
+    # Nyocokin senjata jarak jauh atau yang gak pake akhiran pedang.
+    # Karena gak punya pola akhiran yang sama, ditulis satu-satu.
+    - type: material
+      materials:
+        - BOW         # Panah biasa
+        - CROSSBOW    # Panah otomatis
+        - TRIDENT     # Trisula lempar/tusuk
+
+#-----------------------------------------------------------------------------
+# KATEGORI ARMOR
+#-----------------------------------------------------------------------------
+# Isinya perlengkapan pelindung: helm, baju besi, celana, sepatu, perisai.
+
+armor:
+  display-name: "Armor"
+
+  rules:
+    # Nyocokin semua jenis armor pake akhiran nama.
+    # Bakal nangkap tipe kulit, besi, emas, berlian, netherite.
+    - type: material-suffix
+      suffixes:
+        - "_HELMET"
+        - "_CHESTPLATE"
+        - "_LEGGINGS"
+        - "_BOOTS"
+
+    # Nyocokin pelindung khusus yang gak punya pola akhiran di atas.
+    - type: material
+      materials:
+        - ELYTRA        # Sayap buat terbang
+        - SHIELD        # Perisai
+        - TURTLE_HELMET # Helm khusus dari kura-kura
+
+#-----------------------------------------------------------------------------
+# KATEGORI PERALATAN
+#-----------------------------------------------------------------------------
+# Isinya perkakas buat kerja: beliung, kapak, sekop, cangkul, dll.
+
+tools:
+  display-name: "Peralatan"
+
+  rules:
+    # Nyocokin perkakas dari akhiran namanya.
+    # Bakal nangkap tipe kayu, batu, besi, emas, berlian, netherite.
+    - type: material-suffix
+      suffixes:
+        - "_PICKAXE"
+        - "_AXE"
+        - "_SHOVEL"
+        - "_HOE"
+
+    # Nyocokin peralatan lain yang gak ada di pola akhiran.
+    - type: material
+      materials:
+        - SHEARS          # Gunting domba
+        - FLINT_AND_STEEL # Korek api
+        - FISHING_ROD     # Pancingan ikan
+
+#-----------------------------------------------------------------------------
+# KATEGORI KONSUMSI (MAKANAN & RAMUAN)
+#-----------------------------------------------------------------------------
+# Isinya barang-barang yang bisa dimakan atau diminum.
+
+consumables:
+  display-name: "Konsumsi"
+
+  rules:
+    # Cuma masukin ramuan dan makanan berharga mahal aja.
+    # Sengaja cuma makanan berharga biar kategorinya rapi gak kepenuhan
+    # sama makanan-makanan receh yang jarang di jual beli.
+    - type: material
+      materials:
+        # Ramuan (Potions)
+        - POTION           # Ramuan minum
+        - SPLASH_POTION    # Ramuan lempar
+        - LINGERING_POTION # Ramuan area
+
+        # Makanan mahal
+        - GOLDEN_APPLE           # Apel emas biasa
+        - ENCHANTED_GOLDEN_APPLE # Apel dewa / apel notch
+
+        # Makanan olahan yang sering ditransaksikan
+        - COOKED_BEEF     # Daging sapi matang (Steak)
+        - COOKED_PORKCHOP # Daging babi matang
+        - BREAD           # Roti gandum
+        - CAKE            # Kue ulang tahun
+        - COOKIE          # Biskuit
+        - PUMPKIN_PIE     # Kue pai labu
+
+#-----------------------------------------------------------------------------
+# KATEGORI BAHAN ALAM
+#-----------------------------------------------------------------------------
+# Isinya barang-barang bijih, batangan, dan bahan rakit.
+
+resources:
+  display-name: "Bahan Mentah"
+
+  rules:
+    # Milih bahan baku mentah yang harganya lumayan.
+    # Biasanya jadi bahan dasar buat crafting (bikin barang).
+    - type: material
+      materials:
+        # Bahan yang udah diproses (Batangan atau permata)
+        - COAL            # Batu bara
+        - IRON_INGOT      # Batangan besi
+        - GOLD_INGOT      # Batangan emas
+        - DIAMOND         # Berlian
+        - EMERALD         # Zamrud
+        - NETHERITE_INGOT # Batangan netherite
+        - LAPIS_LAZULI    # Lapis lazuli buat enchant
+        - REDSTONE        # Bubuk redstone
+        - COPPER_INGOT    # Batangan tembaga
+        - AMETHYST_SHARD  # Pecahan amethyst
+
+        # Bijih mentah (biasanya dapet pake silk touch)
+        - RAW_IRON        # Besi mentah
+        - RAW_GOLD        # Emas mentah
+        - RAW_COPPER      # Tembaga mentah
+
+#-----------------------------------------------------------------------------
+# KATEGORI BUKU SIHIR (ENCHANTED BOOKS)
+#-----------------------------------------------------------------------------
+# Isinya khusus buku sihir aja buat dibeli dan digabungin ke barang.
+# Buku sihir laku keras di lelang.
+
+enchanted-books:
+  display-name: "Buku Sihir"
+
+  rules:
+    # Nyocokin ke buku sihir doang.
+    # Catatan: Ini cuma cek nama materialnya.
+    # Buku biasa (BOOK) gak bakal masuk kategori ini.
+    - type: material
+      materials:
+        - ENCHANTED_BOOK
+
+#-----------------------------------------------------------------------------
+# KATEGORI LAIN-LAIN (TAMPUNGAN)
+#-----------------------------------------------------------------------------
+# Isinya barang sisa yang gak masuk ke kategori mana-mana.
+# Jadi kalau ada barang bingung mau masuk mana, bakal lari ke sini.
+#
+# PENTING: Kategori yang DIBIARKAN TANPA ATURAN ('rules') otomatis jadi tampungan.
+# Barang yang gak kecantol kategori manapun bakal tampil di sini.
+
+misc:
+  display-name: "Lain-lain"
+  # Gak ada aturan didefinisiin = jadi kategori fallback/tampungan buat barang nyasar.
+  # Apa aja yang bukan senjata, armor, alat, blok bakal nyangkut di sini.
+
+#=============================================================================
+# NAMBAHIN KATEGORI CUSTOM SENDIRI
+#=============================================================================
+# Kamu bisa nambahin kategori kamu sendiri dengan ngikutin format ini:
+#
+# kategori-keren-saya:
+#   display-name: "#ff5555Kategori Keren"
+#   rules:
+#     - type: material
+#       materials:
+#         - DIAMOND_BLOCK
+#         - EMERALD_BLOCK
+#
+# Jangan lupa juga buat masangin tombol GUI buat kategorinya di:
+# inventories/categories.yml
+#
+# CONTOH LAIN:
+#
+# # Kategori khusus buat barang-barang ItemsAdder
+# barang-custom:
+#   display-name: "#ffd700Barang Custom"
+#   rules:
+#     - type: itemsadder
+#       items:
+#         - "mynamespace:*"  # Semua barang dari namespace kamu
+#
+# # Kategori buat barang yang deskripsinya khusus
+# barang-spesial:
+#   display-name: "#ff00ffBarang Spesial"
+#   rules:
+#     - type: lore
+#       mode: CONTAINS
+#       values:
+#         - "Special Edition"
+#         - "Limited"
+#
+# # Kategori yang pake pengecualian aturan (banned-rules)
+# # Contoh: Masukin semua 'tools' tapi blokir yang CustomModelData-nya tertentu.
+# # Cangkul netherite dengan CustomModelData 300 GAK BAKAL tampil, 
+# # tapi cangkul netherite biasa bakal tetap tampil di kategori ini.
+# contoh-peralatan:
+#   display-name: "#aaffaaPeralatan"
+#   rules:
+#     - type: material-suffix
+#       suffixes:
+#         - "_HOE"
+#         - "_PICKAXE"
+#   banned-rules:
+#     - type: custom-model-data
+#       values:
+#         - 300
