@@ -1,3 +1,4 @@
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.kotlin.dsl.invoke
 
 plugins {
@@ -75,7 +76,6 @@ allprojects {
         implementation("fr.maxlego08.sarah:sarah:1.23")
         implementation("com.tcoded:FoliaLib:0.5.1")
         implementation("fr.traqueur.currencies:currenciesapi:1.0.14")
-        implementation("dev.faststats.metrics:bukkit:0.29.4")
     }
 }
 
@@ -86,6 +86,7 @@ repositories {
 dependencies {
     api(projects.api)
     api(projects.hooks)
+    implementation("dev.faststats.metrics:bukkit:0.29.4")
 }
 
 tasks {
@@ -94,6 +95,10 @@ tasks {
         relocate("com.tcoded.folialib", "fr.maxlego08.zauctionhouse.libs.folialib")
         relocate("fr.traqueur.currencies", "fr.maxlego08.zauctionhouse.libs.currencies")
         relocate("dev.faststats", "fr.maxlego08.zauctionhouse.libs.faststats")
+
+        filesMatching("META-INF/faststats.properties") {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        }
 
         rootProject.extra.properties["sha"]?.let { sha ->
             archiveClassifier.set("${rootProject.extra.properties["classifier"]}-${sha}")
