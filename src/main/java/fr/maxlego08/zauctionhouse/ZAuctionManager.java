@@ -20,6 +20,8 @@ import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.*;
 import fr.maxlego08.zauctionhouse.api.services.AuctionOptionService;
+import fr.maxlego08.zauctionhouse.api.services.result.RemoveFailReason;
+import fr.maxlego08.zauctionhouse.api.services.result.RemoveResult;
 import fr.maxlego08.zauctionhouse.api.tax.TaxResult;
 import fr.maxlego08.zauctionhouse.api.tax.TaxType;
 import fr.maxlego08.zauctionhouse.api.transaction.TransactionStatus;
@@ -40,6 +42,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -48,7 +51,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     private final AuctionPlugin plugin;
     private final AuctionPurchaseService auctionPurchaseService;
     private final AuctionSellService auctionSellService;
-    private final AuctionRemoveService auctionRemoveService;
+    private final RemoveService auctionRemoveService;
     private final AuctionExpireService auctionExpireService;
     private final AuctionClaimService auctionClaimService;
     private final AuctionHistoryService auctionHistoryService;
@@ -67,7 +70,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         this.plugin = plugin;
         this.auctionPurchaseService = new PurchaseService(plugin);
         this.auctionSellService = new SellService(plugin, this);
-        this.auctionRemoveService = new RemoveService(plugin);
+        this.auctionRemoveService = new RemoveService(plugin, this);
         this.auctionExpireService = new ExpireService(plugin, this);
         this.auctionClaimService = new ClaimService(plugin);
         this.auctionHistoryService = new HistoryService(plugin);
@@ -548,6 +551,10 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public CompletableFuture<Void> removeSellingItem(Player player, Item item) {
+        return removeSellingItem(player, item, true);
+    }
+
+    public CompletableFuture<Void> removeSellingItem(Player player, Item item, boolean updatePlayer) {
 
         var configuration = this.plugin.getConfiguration();
         var storageManager = this.plugin.getStorageManager();
@@ -556,30 +563,35 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         removeItem(StorageType.LISTED, item);
 
         this.updateListedItems(item, false, player);
-        clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED); // Suppression du cache du joueur
+        clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED);
 
         var updateFuture = storageManager.updateItem(item, StorageType.DELETED);
         giveItem(player, item);
 
-        message(this.plugin, player, Message.ITEM_REMOVE_SELLING, "%items%", item.getItemDisplay());
+        if (updatePlayer) {
+            message(this.plugin, player, Message.ITEM_REMOVE_SELLING, "%items%", item.getItemDisplay());
 
-        if (configuration.getActions().listed().openInventory()) {
-            this.updateInventory(player);
-        } else {
-            this.plugin.getScheduler().runAtEntity(player, w -> {
-                if (player.isOnline()) player.closeInventory();
-            });
+            if (configuration.getActions().listed().openInventory()) {
+                this.updateInventory(player);
+            } else {
+                this.plugin.getScheduler().runAtEntity(player, w -> {
+                    if (player.isOnline()) player.closeInventory();
+                });
+            }
         }
 
         callEvent(new AuctionRemoveListedItemEvent(item, player));
 
-        logItemAction(LogType.REMOVE_SELLING, item, player, null, "removed_selling_item");
+        logItemAction(LogType.REMOVE_SELLING, item, player, null, updatePlayer ? "removed_selling_item" : "removed_selling_item_bulk");
 
         return updateFuture;
     }
-
     @Override
     public CompletableFuture<Void> removeExpiredItem(Player player, Item item) {
+        return removeExpiredItem(player, item, true);
+    }
+
+    public CompletableFuture<Void> removeExpiredItem(Player player, Item item, boolean updatePlayer) {
 
         var configuration = this.plugin.getConfiguration();
         var storageManager = this.plugin.getStorageManager();
@@ -590,25 +602,30 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var updateFuture = storageManager.updateItem(item, StorageType.DELETED);
         giveItem(player, item);
 
-        message(this.plugin, player, Message.ITEM_REMOVE_EXPIRED, "%items%", item.getItemDisplay());
+        if (updatePlayer) {
+            message(this.plugin, player, Message.ITEM_REMOVE_EXPIRED, "%items%", item.getItemDisplay());
 
-        if (configuration.getActions().expired().openInventory()) {
-            this.updateInventory(player);
-        } else {
-            this.plugin.getScheduler().runAtEntity(player, w -> {
-                if (player.isOnline()) player.closeInventory();
-            });
+            if (configuration.getActions().expired().openInventory()) {
+                this.updateInventory(player);
+            } else {
+                this.plugin.getScheduler().runAtEntity(player, w -> {
+                    if (player.isOnline()) player.closeInventory();
+                });
+            }
         }
 
         callEvent(new AuctionRemoveExpiredItemEvent(item, player));
 
-        logItemAction(LogType.REMOVE_EXPIRED, item, player, null, "removed_expired_item");
+        logItemAction(LogType.REMOVE_EXPIRED, item, player, null, updatePlayer ? "removed_expired_item" : "removed_expired_item_bulk");
 
         return updateFuture;
     }
-
     @Override
     public CompletableFuture<Void> removePurchasedItem(Player player, Item item) {
+        return removePurchasedItem(player, item, true);
+    }
+
+    public CompletableFuture<Void> removePurchasedItem(Player player, Item item, boolean updatePlayer) {
 
         var configuration = this.plugin.getConfiguration();
         var storageManager = this.plugin.getStorageManager();
@@ -619,24 +636,25 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var updateFuture = storageManager.updateItem(item, StorageType.DELETED);
         giveItem(player, item);
 
-        message(this.plugin, player, Message.ITEM_REMOVE_PURCHASED, "%items%", item.getItemDisplay());
+        if (updatePlayer) {
+            message(this.plugin, player, Message.ITEM_REMOVE_PURCHASED, "%items%", item.getItemDisplay());
 
-        if (configuration.getActions().purchased().openInventory()) {
-            this.updateInventory(player);
-        } else {
-            this.plugin.getScheduler().runAtEntity(player, w -> {
-                if (player.isOnline()) player.closeInventory();
-            });
+            if (configuration.getActions().purchased().openInventory()) {
+                this.updateInventory(player);
+            } else {
+                this.plugin.getScheduler().runAtEntity(player, w -> {
+                    if (player.isOnline()) player.closeInventory();
+                });
+            }
         }
 
         callEvent(new AuctionRemovePurchasedItemEvent(item, player));
 
-        logItemAction(LogType.REMOVE_PURCHASED, item, player, item.getSellerUniqueId(), "removed_purchased_item");
+        logItemAction(LogType.REMOVE_PURCHASED, item, player, item.getSellerUniqueId(), updatePlayer ? "removed_purchased_item" : "removed_purchased_item_bulk");
 
         return updateFuture;
 
     }
-
     @Override
     public void adminRemoveItem(Player admin, UUID targetUniqueId, Item item, StorageType storageType) {
 
@@ -1068,105 +1086,100 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public void removeAllExpiredItems(Player player) {
-        var configuration = this.plugin.getConfiguration();
-        var storageManager = this.plugin.getStorageManager();
-        var freeSpace = configuration.getActions().expired().freeSpace();
-
         var items = new ArrayList<>(getExpiredItems(player));
         if (items.isEmpty()) return;
 
-        int given = 0;
-        for (Item item : items) {
-            if (freeSpace && !item.canReceiveItem(player)) break;
-
-            removeItem(StorageType.EXPIRED, item);
-            storageManager.updateItem(item, StorageType.DELETED);
-            giveItem(player, item);
-            callEvent(new AuctionRemoveExpiredItemEvent(item, player));
-            logItemAction(LogType.REMOVE_EXPIRED, item, player, null, "removed_expired_item_bulk");
-            given++;
-        }
-
-        if (given > 0) {
-            clearPlayerCache(player, PlayerCacheKey.ITEMS_EXPIRED);
-            message(this.plugin, player, Message.REMOVE_ALL_ITEMS, "%amount%", String.valueOf(given));
-        }
-
-        if (configuration.getActions().expired().openInventory()) {
-            updateInventory(player);
-        } else {
-            this.plugin.getScheduler().runAtEntity(player, w -> {
-                if (player.isOnline()) player.closeInventory();
-            });
-        }
+        processBulkItems(player, items, item -> this.auctionRemoveService.removeExpiredItem(player, item, false))
+                .thenAccept(given -> finishBulkRemoval(player, given, this.plugin.getConfiguration().getActions().expired().openInventory(), PlayerCacheKey.ITEMS_EXPIRED));
     }
 
     @Override
     public void removeAllSellingItems(Player player) {
-        var configuration = this.plugin.getConfiguration();
-        var storageManager = this.plugin.getStorageManager();
-        var freeSpace = configuration.getActions().selling().freeSpace();
-        var clusterBridge = this.plugin.getAuctionClusterBridge();
-
         var items = new ArrayList<>(getPlayerSellingItems(player));
         if (items.isEmpty()) return;
 
-        int given = 0;
-        for (Item item : items) {
-            if (item.getStatus() != ItemStatus.AVAILABLE) continue;
-            if (freeSpace && !item.canReceiveItem(player)) break;
-
-            item.setStatus(ItemStatus.DELETED);
-            removeItem(StorageType.LISTED, item);
-            updateListedItems(item, false, player);
-            storageManager.updateItem(item, StorageType.DELETED);
-            giveItem(player, item);
-            clusterBridge.removeItem(item, StorageType.LISTED);
-            callEvent(new AuctionRemoveListedItemEvent(item, player));
-            logItemAction(LogType.REMOVE_SELLING, item, player, null, "removed_selling_item_bulk");
-            given++;
-        }
-
-        if (given > 0) {
-            clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED);
-            message(this.plugin, player, Message.REMOVE_ALL_ITEMS, "%amount%", String.valueOf(given));
-        }
-
-        updateInventory(player);
+        processBulkItems(player, items, item -> this.auctionRemoveService.removeSellingItem(player, item, false))
+                .thenAccept(given -> finishBulkRemoval(player, given, true, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED));
     }
 
     @Override
     public void removeAllPurchasedItems(Player player) {
-        var configuration = this.plugin.getConfiguration();
-        var storageManager = this.plugin.getStorageManager();
-        var freeSpace = configuration.getActions().purchased().freeSpace();
-
         var items = new ArrayList<>(getPurchasedItems(player));
         if (items.isEmpty()) return;
 
-        int given = 0;
+        processBulkItems(player, items, item -> this.auctionRemoveService.removePurchasedItem(player, item, false))
+                .thenAccept(given -> finishBulkRemoval(player, given, this.plugin.getConfiguration().getActions().purchased().openInventory(), PlayerCacheKey.ITEMS_PURCHASED));
+    }
+
+    private CompletableFuture<Integer> processBulkItems(Player player, List<Item> items, Function<Item, CompletableFuture<RemoveResult>> removal) {
+        CompletableFuture<BulkRemovalProgress> future = CompletableFuture.completedFuture(new BulkRemovalProgress(0, false));
+
         for (Item item : items) {
-            if (freeSpace && !item.canReceiveItem(player)) break;
+            future = future.thenCompose(progress -> {
+                if (progress.stopped()) return CompletableFuture.completedFuture(progress);
 
-            removeItem(StorageType.PURCHASED, item);
-            storageManager.updateItem(item, StorageType.DELETED);
-            giveItem(player, item);
-            callEvent(new AuctionRemovePurchasedItemEvent(item, player));
-            logItemAction(LogType.REMOVE_PURCHASED, item, player, item.getSellerUniqueId(), "removed_purchased_item_bulk");
-            given++;
-        }
+                return runBulkRemovalOnPlayerThread(player, item, removal).handle((result, throwable) -> {
+                    if (throwable != null) {
+                        this.plugin.getLogger().severe("Bulk removal failed for item " + item.getId() + ": " + throwable.getMessage());
+                        return new BulkRemovalProgress(progress.given(), true);
+                    }
 
-        if (given > 0) {
-            clearPlayerCache(player, PlayerCacheKey.ITEMS_PURCHASED);
-            message(this.plugin, player, Message.REMOVE_ALL_ITEMS, "%amount%", String.valueOf(given));
-        }
-
-        if (configuration.getActions().purchased().openInventory()) {
-            updateInventory(player);
-        } else {
-            this.plugin.getScheduler().runAtEntity(player, w -> {
-                if (player.isOnline()) player.closeInventory();
+                    boolean success = result != null && result.isSuccess() && result.isItemGiven();
+                    boolean stopped = result == null || result.getFailReason() == RemoveFailReason.INSUFFICIENT_SPACE || result.getFailReason() == RemoveFailReason.INTERNAL_ERROR;
+                    return new BulkRemovalProgress(progress.given() + (success ? 1 : 0), stopped);
+                });
             });
         }
+
+        return future.thenApply(BulkRemovalProgress::given);
     }
+
+    private CompletableFuture<RemoveResult> runBulkRemovalOnPlayerThread(Player player, Item item, Function<Item, CompletableFuture<RemoveResult>> removal) {
+        var future = new CompletableFuture<RemoveResult>();
+
+        try {
+            this.plugin.getScheduler().runAtEntity(player, wrappedTask -> {
+                if (!player.isOnline()) {
+                    future.complete(RemoveResult.failure("Player is offline", RemoveFailReason.INTERNAL_ERROR));
+                    return;
+                }
+
+                try {
+                    removal.apply(item).whenComplete((result, throwable) -> {
+                        if (throwable == null) {
+                            future.complete(result);
+                        } else {
+                            future.completeExceptionally(throwable);
+                        }
+                    });
+                } catch (Throwable throwable) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+        } catch (Throwable throwable) {
+            future.completeExceptionally(throwable);
+        }
+
+        return future;
+    }
+
+    private void finishBulkRemoval(Player player, int given, boolean openInventory, PlayerCacheKey... cacheKeys) {
+        this.plugin.getScheduler().runAtEntity(player, wrappedTask -> {
+            clearPlayerCache(player, cacheKeys);
+
+            if (given > 0) {
+                message(this.plugin, player, Message.REMOVE_ALL_ITEMS, "%amount%", String.valueOf(given));
+            }
+
+            if (!player.isOnline()) return;
+
+            if (openInventory) {
+                updateInventory(player);
+            } else {
+                player.closeInventory();
+            }
+        });
+    }
+
+    private record BulkRemovalProgress(int given, boolean stopped) { }
 }

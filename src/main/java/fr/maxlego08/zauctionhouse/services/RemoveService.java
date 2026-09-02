@@ -1,5 +1,6 @@
 package fr.maxlego08.zauctionhouse.services;
 
+import fr.maxlego08.zauctionhouse.ZAuctionManager;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.cluster.AuctionClusterBridge;
@@ -26,9 +27,11 @@ import java.util.logging.Logger;
 public class RemoveService extends AuctionService implements AuctionRemoveService {
 
     private final AuctionPlugin plugin;
+    private final ZAuctionManager manager;
 
-    public RemoveService(AuctionPlugin plugin) {
+    public RemoveService(AuctionPlugin plugin, ZAuctionManager manager) {
         this.plugin = plugin;
+        this.manager = manager;
     }
 
     @Override
@@ -64,106 +67,118 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
 
     @Override
     public CompletableFuture<RemoveResult> removeSellingItem(Player player, Item item) {
+        return removeSellingItem(player, item, true);
+    }
+
+    public CompletableFuture<RemoveResult> removeSellingItem(Player player, Item item, boolean updatePlayer) {
 
         var event = new AuctionPreRemoveListedItemEvent(item, player);
         if (!event.callEvent()) {
             return CompletableFuture.completedFuture(RemoveResult.failure("Event cancelled", RemoveFailReason.EVENT_CANCELLED));
         }
 
-        var manager = this.plugin.getAuctionManager();
+        var manager = this.manager;
         var logger = this.plugin.getLogger();
 
         var sellingConfig = this.plugin.getConfiguration().getActions().selling();
         if (sellingConfig.freeSpace() && !item.canReceiveItem(player)) {
-            message(this.plugin, player, Message.NOT_ENOUGH_SPACE);
+            if (updatePlayer) message(this.plugin, player, Message.NOT_ENOUGH_SPACE);
             return CompletableFuture.completedFuture(RemoveResult.failure("Not enough space", RemoveFailReason.INSUFFICIENT_SPACE));
         }
 
         if (item.isExpired()) {
             logger.info("Item expired (Remove Selling)");
             manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_LISTED);
-            manager.updateInventory(player);
+            if (updatePlayer) manager.updateInventory(player);
             return CompletableFuture.completedFuture(RemoveResult.failure("Item expired", RemoveFailReason.ITEM_EXPIRED));
         }
 
         if (item.getStatus() != ItemStatus.AVAILABLE) {
             logger.info("Item not available (Remove Selling)");
             manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_LISTED);
-            manager.updateInventory(player);
+            if (updatePlayer) manager.updateInventory(player);
             return CompletableFuture.completedFuture(RemoveResult.failure("Item not available", RemoveFailReason.INVALID_ITEM_STATUS));
         }
 
-        return executeRemoval(ItemStatus.IS_BEING_REMOVED, player, item, () -> manager.updateInventory(player), () -> manager.removeSellingItem(player, item), StorageType.LISTED, StorageType.DELETED);
+        Runnable onUnavailable = updatePlayer ? () -> manager.updateInventory(player) : () -> { };
+        return executeRemoval(ItemStatus.IS_BEING_REMOVED, player, item, onUnavailable, () -> manager.removeSellingItem(player, item, updatePlayer), StorageType.LISTED, StorageType.DELETED);
     }
-
     @Override
     public CompletableFuture<RemoveResult> removeExpiredItem(Player player, Item item) {
+        return removeExpiredItem(player, item, true);
+    }
+
+    public CompletableFuture<RemoveResult> removeExpiredItem(Player player, Item item, boolean updatePlayer) {
 
         var event = new AuctionPreRemoveExpiredItemEvent(item, player);
         if (!event.callEvent()) {
             return CompletableFuture.completedFuture(RemoveResult.failure("Event cancelled", RemoveFailReason.EVENT_CANCELLED));
         }
 
-        var manager = this.plugin.getAuctionManager();
+        var manager = this.manager;
         var logger = this.plugin.getLogger();
 
         var expiredConfig = this.plugin.getConfiguration().getActions().expired();
         if (expiredConfig.freeSpace() && !item.canReceiveItem(player)) {
-            message(this.plugin, player, Message.NOT_ENOUGH_SPACE);
+            if (updatePlayer) message(this.plugin, player, Message.NOT_ENOUGH_SPACE);
             return CompletableFuture.completedFuture(RemoveResult.failure("Not enough space", RemoveFailReason.INSUFFICIENT_SPACE));
         }
 
         if (item.isExpired()) {
             logger.info("Item expired (Remove Expired)");
             manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_EXPIRED);
-            manager.updateInventory(player);
+            if (updatePlayer) manager.updateInventory(player);
             return CompletableFuture.completedFuture(RemoveResult.failure("Item expired", RemoveFailReason.ITEM_EXPIRED));
         }
 
         if (item.getStatus() != ItemStatus.REMOVED) {
             logger.info("Item not available (Remove Expired), Current status: " + item.getStatus());
             manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_EXPIRED);
-            manager.updateInventory(player);
+            if (updatePlayer) manager.updateInventory(player);
             return CompletableFuture.completedFuture(RemoveResult.failure("Item not in removed status", RemoveFailReason.INVALID_ITEM_STATUS));
         }
 
-        return executeRemoval(ItemStatus.DELETED, player, item, () -> manager.updateInventory(player), () -> this.plugin.getAuctionManager().removeExpiredItem(player, item), StorageType.EXPIRED, StorageType.DELETED);
+        Runnable onUnavailable = updatePlayer ? () -> manager.updateInventory(player) : () -> { };
+        return executeRemoval(ItemStatus.DELETED, player, item, onUnavailable, () -> manager.removeExpiredItem(player, item, updatePlayer), StorageType.EXPIRED, StorageType.DELETED);
     }
-
     @Override
     public CompletableFuture<RemoveResult> removePurchasedItem(Player player, Item item) {
+        return removePurchasedItem(player, item, true);
+    }
+
+    public CompletableFuture<RemoveResult> removePurchasedItem(Player player, Item item, boolean updatePlayer) {
 
         var event = new AuctionPreRemovePurchasedItemEvent(item, player);
         if (!event.callEvent()) {
             return CompletableFuture.completedFuture(RemoveResult.failure("Event cancelled", RemoveFailReason.EVENT_CANCELLED));
         }
 
-        var manager = this.plugin.getAuctionManager();
+        var manager = this.manager;
         var logger = this.plugin.getLogger();
 
         var purchasedConfig = this.plugin.getConfiguration().getActions().purchased();
         if (purchasedConfig.freeSpace() && !item.canReceiveItem(player)) {
-            message(this.plugin, player, Message.NOT_ENOUGH_SPACE);
+            if (updatePlayer) message(this.plugin, player, Message.NOT_ENOUGH_SPACE);
             return CompletableFuture.completedFuture(RemoveResult.failure("Not enough space", RemoveFailReason.INSUFFICIENT_SPACE));
         }
 
         if (item.isExpired()) {
             logger.info("Item expired (Remove Purchased)");
-            manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_EXPIRED);
-            manager.updateInventory(player);
+            manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_PURCHASED);
+            if (updatePlayer) manager.updateInventory(player);
             return CompletableFuture.completedFuture(RemoveResult.failure("Item expired", RemoveFailReason.ITEM_EXPIRED));
         }
 
         if (item.getStatus() != ItemStatus.PURCHASED) {
             logger.info("Item not available (Remove Purchased)");
-            manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_EXPIRED);
-            manager.updateInventory(player);
+            manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_PURCHASED);
+            if (updatePlayer) manager.updateInventory(player);
             return CompletableFuture.completedFuture(RemoveResult.failure("Item not in purchased status", RemoveFailReason.INVALID_ITEM_STATUS));
         }
 
-        return executeRemoval(ItemStatus.DELETED, player, item, () -> manager.updateInventory(player), () -> manager.removePurchasedItem(player, item), StorageType.PURCHASED, StorageType.DELETED);
+        Runnable onUnavailable = updatePlayer ? () -> manager.updateInventory(player) : () -> { };
+        return executeRemoval(ItemStatus.DELETED, player, item, onUnavailable, () -> manager.removePurchasedItem(player, item, updatePlayer), StorageType.PURCHASED, StorageType.DELETED);
     }
-
     /**
      * Executes the removal process with proper locking and cluster notification.
      * This method follows the sequence:
