@@ -73,7 +73,7 @@ allprojects {
         compileOnly("me.clip:placeholderapi:2.11.6")
         compileOnly("fr.maxlego08.menu:zmenu-api:1.1.1.7")
 
-        implementation("fr.maxlego08.sarah:sarah:1.24")
+        implementation("fr.maxlego08.sarah:sarah:1.25")
         implementation("com.tcoded:FoliaLib:0.5.1")
         implementation("fr.traqueur.currencies:currenciesapi:1.0.14")
     }
