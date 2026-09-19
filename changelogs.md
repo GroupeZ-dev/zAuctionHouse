@@ -1,105 +1,102 @@
 # Unreleased
 
-> **Read this section before updating a multi-server network.** Two configurations that used to start are now refused outright, and a number of operations that used to succeed silently by overwriting the database now fail with a message. That is the point of this release, but it is visible to your players and to your staff on day one.
+> **Read this before updating a network.** This release closes a long list of item and money duplication paths. Two setups that used to start are now refused, and operations that used to silently overwrite the database now fail with a message. That is intended, but your players and your staff will see it on day one.
 
-### Operational changes to read first
+### Before you update
 
-- **Changed** SQLite storage combined with the Redis multi-server addon is now refused explicitly on both sides at startup. Each server keeps its own SQLite file, so the cluster synchronised nothing while every node reported itself as clustered and held a divergent auction house. Networks in that state must move `storage-type` to `MYSQL` or `MARIADB` before updating; until they do, the addon refuses to install its cluster bridge and the console explains why
-- **Changed** A node that cannot reach Redis no longer falls back silently to single-server mode: the addon installs a fail-closed cluster bridge that refuses every sale, purchase and removal until the connection comes back, instead of letting each node operate on its own and duplicate items. Operators who run a single server with the addon installed "just in case" must now uninstall the addon rather than leave it in a failed state
-- **Changed** Every write to the items table is now a compare-and-set guarded by the row's current state. An operation that lost a race — against another server, or against a second click on the same listing — now fails with a message instead of succeeding by overwriting a row another node had already changed. This closes several duplication paths, but on a busy network players will start seeing an "item no longer available" message they had never seen before
-- **Changed** Item-specific tax rules (`tax.item-rules` in `economies.yml`) are now evaluated on purchase whatever the economy `type` is. A `PURCHASE` or `CAPITALISM` rule declared on a `type: SELL` economy used to be silently inert at purchase time and applies from now on, so review your item rules before updating or your buyers will suddenly start paying more. For a listing containing several stacks, the rule that yields the highest tax wins, which aligns purchases with the behaviour the selling side already had
-- **Changed** A listing whose serialised content can no longer be decoded — a Minecraft downgrade, a removed custom-item plugin, a corrupted row — is now quarantined at load time: logged as `SEVERE` and hidden from the auction house instead of being displayed as an empty or `BARRIER` stack that could still be bought. The database row is deliberately left untouched, so a node running an older Minecraft version can never destroy items that are perfectly valid for the other nodes
-- **Added** Four database indexes, created by schema migrations on the first start after the update: `items(storage_type)`, `transactions(player_unique_id)`, `logs(created_at)` and `players(name)`. None of them existed, and the queries that run on every connection were full table scans. On a MySQL installation whose tables already hold several hundred thousand rows, each `CREATE INDEX` can block the startup for minutes and they run one after the other: plan the maintenance window, or create the indexes by hand beforehand. If you restart a whole network at once, every node will try to create them simultaneously
-- **Added** Three nullable columns and one table, added by migration: `transactions.claim_token` and `transactions.claim_reserved_at` (the claim reservation), `items.pending_publish` (the listing milestone, see below) and a `migration_state` table (the migration idempotence marker). All of them are nullable and additive, so downgrading the jar simply ignores them — the schema is not a one-way door
-- **Added** A scheduled expiration sweep, **enabled by default** (`maintenance.expiration-sweep-interval-seconds: 60`, `maintenance.expiration-sweep-batch-size: 50`). Expiration used to be lazy and memory-driven, so a listing past its expiry date stayed on sale until a player happened to open a tab that iterated the store. On a server with a large backlog of listings that were never collected, hundreds of items will move to the expired tab in the minutes following the first restart and their sellers will receive a flood of items to claim; set the interval to `0` to disable the sweep. In multi-server setups each item is expired under the distributed lock, so two nodes can never expire it twice
+- **SQLite + the Redis addon is now refused at startup.** Each server kept its own SQLite file, so nothing was ever synchronised while every node claimed to be clustered. Switch `storage-type` to `MYSQL` or `MARIADB` first
+- **A server that loses Redis now blocks sales, purchases and removals** instead of quietly running on its own and duplicating items. If you run a single server with the addon installed "just in case", uninstall it
+- **Operations that lose a race now fail instead of overwriting.** Two servers, or two clicks on the same listing, can no longer both succeed. Players will start seeing an "item no longer available" message they had never seen
+- **Item tax rules now apply on purchase for every economy type.** A `PURCHASE` or `CAPITALISM` rule declared on a `type: SELL` economy used to do nothing at purchase time. Review `tax.item-rules` in `economies.yml` before updating, or your buyers will suddenly pay more
+- **Four database indexes are created on the first start.** On a MySQL database that already holds hundreds of thousands of rows this can block startup for several minutes, and every node of a network will try at once. Plan a maintenance window, or create them by hand beforehand
+- **Expired listings are now swept automatically**, every 60 seconds by default. If you have a large backlog of listings nobody ever collected, hundreds of them will move to the expired tab right after the restart and their sellers will get a flood of items to claim. Set `maintenance.expiration-sweep-interval-seconds` to `0` to disable it
+- **Keep `write-itemstack-format-marker` at `false`** until every server of the network runs this version. Items written with the marker cannot be read back by an older jar, so until you flip it you can still roll back
+- The update also adds a few nullable columns and one table. Downgrading the jar simply ignores them, the schema is not a one-way door
 
 ### Money
 
-- **Fixed** A purchase could withdraw more money than the amount that had been checked: the required balance was computed without the listing's real items, so item-specific tax rules were ignored by the check but applied by the debit. A single resolver now serves the button, the purchase service and the manager, so the amount verified and the amount taken can no longer diverge
-- **Fixed** A `CAPITALISM` item tax rule declared on a `PURCHASE` or `BOTH` economy credited the seller with `price + tax` while the buyer only paid `price`, creating money out of nothing on every sale. The tax result now carries the type that was really applied instead of being reinterpreted downstream with the economy's own type
-- **Fixed** `withdraw` and `deposit` results were never checked: a refused withdrawal still handed the item to the buyer, and a refused deposit silently destroyed the seller's payment. Both now report success or failure, and a purchase is aborted before any item movement when the payment is refused
-- **Fixed** Economies of type `LEVEL`, `EXPERIENCE`, `ITEM` and `ZMENUITEMS` silently destroyed the seller's payment when the seller was offline, because those providers are backed by the player entity and simply do nothing without one. Those payments become claimable pending transactions, and `must-be-online` is forced to `true` for them at startup with a console warning naming the economy
-- **Fixed** The sell tax could be reported as paid without ever being collected: the balance check and the withdrawal are now a single verified operation, and a tax refund that fails is logged as critical instead of vanishing
-- **Fixed** An exception raised by the economy plugin while writing the transaction history aborted the purchase *after* the buyer had been charged and the seller credited, leaving the listing on sale
-- **Fixed** Claiming pending money marked transactions as retrieved even when nothing had been paid: a missing economy, a failed deposit or an offline player each skipped the deposit but not the marking, destroying the money. Only the identifiers actually credited are closed now, and an economy removed from `economies.yml` leaves its rows pending with a warning in console
-- **Fixed** The same pending payment could be claimed twice by racing `/ah claim`, the claim button and the auto-claim on join. A claim now reserves its rows with a unique token before paying anything, so two concurrent claims can no longer see the same transaction, and an interrupted claim releases its reservation automatically
-- **Changed** For a listing containing several stacks, the purchase tax now uses the highest matching item rule instead of only the first stack, which aligns it with the selling side
+- **Fixed** A purchase could take more money than the amount that had been checked, because item tax rules were ignored by the check but applied by the payment
+- **Fixed** A `CAPITALISM` item tax rule on a `PURCHASE` or `BOTH` economy paid the seller more than the buyer spent, creating money out of nothing on every sale
+- **Fixed** A payment refused by the economy plugin was never checked: the buyer still received the item, or the seller's money silently disappeared
+- **Fixed** Sellers paid in `LEVEL`, `EXPERIENCE`, `ITEM` or `ZMENUITEMS` lost their money when they were offline. Those payments are now claimable, and `must-be-online` is forced on for those economies with a warning in console
+- **Fixed** The sell tax could be reported as paid without ever being taken
+- **Fixed** An error while writing the purchase history cancelled the purchase *after* the buyer had paid and the seller had been credited
+- **Fixed** Pending money could be marked as claimed without ever being paid — a missing economy, a failed deposit or an offline player each destroyed the money
+- **Fixed** The same pending payment could be claimed twice by racing `/ah claim`, the claim button and the auto-claim on join
+- **Changed** For a listing holding several stacks, the purchase tax now uses the highest matching item rule, like the selling side already did
 
-### Duplication, removal and purchase
+### Item duplication
 
-- **Fixed** Item duplication on the withdrawal path in clustered setups. Removing a listed, selling, expired or purchased item now re-reads the authoritative database row **while holding the cluster lock**, exactly like the purchase path already did, and aborts when another server already sold, claimed or removed it. The extra query runs only when a distributed cluster bridge is installed, so single-server installations are unaffected
-- **Fixed** A withdrawal could act on a stale item reference captured by an already-rendered inventory button (selling, expired, purchased, combined and admin views). Removal now refuses any reference that is no longer the one held by the in-memory store, and an item removed by identifier is marked terminal so that buttons still armed in an open GUI can no longer act on it
-- **Fixed** A purchase mutated memory, caches and the buyer's inventory before the database write was confirmed: if the write failed, the buyer kept the item and the row stayed listed — a plain duplication, reachable without any cluster at all. The row is now committed first and every memory mutation, cache invalidation and item handover is chained behind it
-- **Fixed** `adminRemoveItem` ignored a failed lock acquisition and removed the item anyway while another server held the lock, broadcast the removal *before* writing to the database and with a non-terminal destination (other servers reloaded the row, found it still listed and put the item back on sale), and never released the cluster lock when the operation failed
-- **Fixed** Removing a listed item evaluated the "give the item back" condition twice — once to pick the destination broadcast to the cluster, once to pick what was written to the database. With `action.remove-listed-item.give-item: true` and a nearly full inventory the two could disagree, leaving the item stored as expired locally while every other server saw it as deleted, making it permanently unclaimable
-- **Fixed** Bulk removal ("retrieve everything") abandoned the rest of the batch on the first internal error and said nothing about it; it now carries on through the batch and reports to the player how many listings were actually processed
-- **Changed** With `action.remove-listed-item.give-item: true`, an inventory that fills up between the click and the execution no longer silently sends the item to the expired tab: the item is handed back and the overflow drops on the ground
-- **Changed** Admin removal of an expired or purchased item now propagates a terminal state across the cluster, so other nodes no longer re-add the row. Networks that relied on that re-add to make the item claimable elsewhere will no longer see it — this is the intent, the admin physically took the item
+- **Fixed** Taking back a listed, selling, expired or purchased item could duplicate it on a network. The item is now re-checked against the database while the server holds the cluster lock, exactly like a purchase already did
+- **Fixed** A purchase handed the item over before the database confirmed it: if the write failed, the buyer kept the item and the listing stayed on sale. This one needed no cluster at all
+- **Fixed** Buttons still armed in an already-open interface could act on an item that had been sold or removed in the meantime
+- **Fixed** `/ah admin` removal ignored a lock held by another server, announced the removal before saving it — other servers then put the item back on sale — and never released its lock on failure
+- **Fixed** Taking back a listing with `give-item: true` and a nearly full inventory could store it as expired on one server and deleted on the others, making it impossible to claim anywhere
+- **Fixed** "Retrieve everything" abandoned the rest of the batch on the first error without a word. It now finishes and tells the player how many items were actually processed
+- **Changed** With `give-item: true`, an inventory that fills up between the click and the execution now drops the overflow on the ground instead of silently sending the item to the expired tab
+- **Changed** An admin removing an expired or purchased item is now final across the whole network, other servers no longer put the row back
 
-### Listing an item
+### Selling
 
-- **Fixed** Listing an item was not atomic: the stacks left the seller's inventory before the row and its serialised contents were durably written, so a crash in that window destroyed them. A listing is now reserved and its contents committed first, then published, and any failure refunds both the items and the sell tax on the seller's own thread
-- **Added** A startup sweep for listings left half-created by a crash, driven by the new `items.pending_publish` milestone. The milestone distinguishes the only two cases that matter: the stacks had **not** yet left the seller's inventory, or they had. In the first case the orphaned row and its contents are **deleted** — handing them back would give the seller a second copy of a lot they never lost. In the second the row is made claimable in the seller's expired items. Both outcomes are logged, the deletions as `SEVERE` with the item identifiers, because that branch destroys rows. Rows written by earlier versions carry no milestone and are left untouched
-- **Fixed** The sell selection is bounded to what the GUI can actually display and retrieve, instead of silently swallowing the surplus
+- **Fixed** A crash during a sale could destroy the items: the stacks left the seller's inventory before the listing was saved. The listing is now written first, and any failure refunds both the items and the sell tax
+- **Added** A startup check that cleans up listings left half-created by a crash. Either the seller never lost their items and the orphan row is deleted, or they did and the listing becomes claimable in their expired tab. Both cases are logged
+- **Fixed** The sell selection is limited to what the interface can actually display and give back, instead of silently swallowing the surplus
+- **Fixed** A listing whose content can no longer be read — a Minecraft downgrade, a removed custom-item plugin — is now hidden and logged instead of showing up as an empty or `BARRIER` item that could still be bought. The database row is left untouched, so an older server can never destroy items that are perfectly valid for the others
 
-### Frozen confirmations
+### Items stuck in a confirmation
 
-- **Added** A safety net for an item frozen in a confirmation screen: `maintenance.confirmation-timeout-seconds` (default 60, minimum 60) and `maintenance.confirmation-sweep-interval-seconds` (default 10). A player who disconnected, died, or lost their cache with a purchase or removal confirmation open used to leave the item locked and unbuyable on every server of the network. The status is now released explicitly on quit and on death, and any status older than the timeout is released by the sweep
-- **Fixed** The two exits of a confirmation screen (validate, cancel) went through different code paths and could leave the item locked on one of them; they are unified and hardened
-- **Fixed** `/ah admin cache clear` wiped the keys tracking operations in progress, releasing items that were legitimately locked inside a confirmation
+- **Added** An item left locked in a confirmation screen is now released automatically after `maintenance.confirmation-timeout-seconds` (60 by default). Quitting or dying releases it immediately. A player who disconnected with a confirmation open used to leave the item unbuyable on every server
+- **Fixed** Confirming and cancelling went through different code paths, and one of them could leave the item locked
+- **Fixed** `/ah admin cache clear` released items that were legitimately locked inside a confirmation
 
-### Item serialisation
+### Stability and performance
 
-- **Added** `write-itemstack-format-marker` (first-level key in `config.yml`, default `false`), phase two of the new item serialisation format. The plugin now reads both the marked and the unmarked format whatever the server version, so an item serialised by a newer server is no longer mis-decoded by an older one. Leave the key at `false` until every server of the network runs the updated jar: a payload written with the marker cannot be read back by an earlier jar, and until you flip it you can roll back without losing a single listing
+- **Fixed** Database writes that had already been decided could be dropped silently. They are now queued on a dedicated pool, drained on shutdown, and a refused write is logged loudly instead of vanishing
+- **Fixed** The per-player cache was not safe under concurrent access and could come back after the player had disconnected
+- **Fixed** The inventory refresh stopped at the first skipped player, so only a fraction of the connected players saw the auction house update after a sale or a removal
+- **Fixed** Category counters returned `0` for any category whose name in `categories.yml` contained uppercase letters
+- **Fixed** Search, sorting and category counters no longer copy the whole item list on every evaluation
+- **Fixed** Loading the auction house no longer half-loads on a database error, and reloading the items is a real reset instead of an additive load that resurrected ghosts
+- **Fixed** Admin logs handled multi-stack items and counted their deletions incorrectly
+- **Added** A `server-shutting-down` message, shown when a purchase or a sale is attempted while the server is stopping, instead of letting it start and be cut in half
 
-### Shutdown, concurrency and performance
+### Migration and admin commands
 
-- **Added** `server-shutting-down` message, shown when a purchase or a sale is attempted while the server is stopping, instead of letting the operation start and be cut in half
-- **Fixed** The storage executor silently dropped database writes that had already been decided. It is now a named, sized pool with an unbounded queue, drained on disable, and every JDBC call is routed through it. A write can still be refused in exactly two cases — the executor is already shutting down, or accepting it would run blocking JDBC on a tick thread — and a refusal is now logged as `SEVERE` with the stack trace of the submission site instead of vanishing
-- **Fixed** The per-player cache was not safe under concurrent access and could be resurrected after the player had disconnected; it is now keyed by UUID and its mutations are confined
-- **Fixed** The inventory refresh loop stopped at the first skipped player, so only a fraction of the connected players saw the auction house update after a sale or a removal. Every connected player is refreshed now — `action.update-inventory-on-action: false` remains the escape hatch for large servers
-- **Fixed** Category counters returned `0` for any category whose key in `categories.yml` contained uppercase letters, because the category was indexed lowercased but built with the raw key. A server that declared, for example, a `Weapons` category will suddenly see a real number where it saw zero
-- **Fixed** Search, sorting and the category counters no longer copy the whole item store on every evaluation, and the sorted cache uses a generation counter so an invalidation can no longer be swallowed by a rebuild that was already running
-- **Fixed** Admin logs re-split multi-stack payloads when they are read instead of when they are written, and log deletion uses the delete row count instead of pre-counting the rows
-- **Fixed** Loading the auction house pages its `IN` clauses, fails loudly instead of half-loading on a database error, and never publishes a listing with no content. Reloading the items in place — after a migration, for instance — is now a real reset instead of an additive load that resurrected ghosts and reset every status
+- **Fixed** `/ah admin migrate` announced a full success on a migration that had destroyed money: on MySQL, every seller's pending balance from V3 was refused by the database and the error was never seen. The command now reports the real result
+- **Fixed** Running the migration twice duplicated every item and every pending balance. It is now blocked once completed, and an explicit `force` argument is needed to override it
+- **Fixed** The migration now runs on its own thread, only one at a time, and refuses to start while players are connected
+- **Fixed** The migration overwrote the name of players who already existed in V4
+- **Fixed** `/ah admin logs clear-migrated` reported a success having purged nothing
+- **Fixed** `/ah admin add` destroyed the item held by the administrator when the write failed, created expired and purchased items that were immediately unclaimable, and never announced its listings to the other servers
+- **Fixed** `/ah admin generate` froze the main thread and could hand its generated listings to real players
+- **Fixed** The three log purge commands reported a success when the deletion had failed
 
-### V3 migration and admin commands
+### Multi-server (Redis addon)
 
-- **Fixed** `/ah admin migrate` reported a green success on a migration that had destroyed money. Under MySQL the pending balances of the V3 installation were written with a foreign key that could not exist, the insert was refused, and the exception was caught by a `catch` that could never see it: every seller's pending money was lost while the command announced a full import. Those rows now hang off a sentinel item and the command reports the real verdict
-- **Fixed** Replaying the migration duplicated every item and every pending balance. A marker is now written in the new `migration_state` table once a provider has completed, the command refuses to run twice, and an explicit `force` argument is required to override it
-- **Fixed** The migration ran on the executor shared with gameplay and nothing prevented two of them at once. It now runs on its own single thread, a second invocation is refused while one is running, and the command refuses to start at all while players are connected — reloading the items in place pulls the stores out from under them
-- **Fixed** The migration overwrote the name of players who already existed in V4 with a placeholder
-- **Fixed** `/ah admin logs clear-migrated` matched migrated log entries by an identifier that no longer identifies them, so it reported a success having purged nothing. It now matches on the migration marker
-- **Fixed** `/ah admin add` destroyed the item held by the administrator before writing anything to the database and never gave it back when the write failed, computed an expiry date in the past for `expired` and `purchased` — making the item immediately unclaimable — and never announced its listings to the cluster
-- **Fixed** `/ah admin generate` ran thousands of blocking queries on the main thread and could hand its generated listings to real players whose name the random generator happened to produce
-- **Fixed** The three log purge commands reported a success when the deletion had actually failed
-
-### Redis addon
-
-- **Added** Lock lease renewal: while a purchase or a removal is running, the lock is renewed every `redis-config.lock-ttl-seconds / 3`, and the plugin verifies that it still holds the lock before charging anyone. `redis-config.lock-ttl-seconds` is therefore a *lease*, not a deadline, and no longer needs to be oversized to survive a slow economy plugin or a slow database. The new `redis-config.lock-renew-enabled` (default `true`) turns the watchdog off for installations that would rather abort a too-long transaction than spend a Jedis connection on renewal
-- **Fixed** Every message published while the subscriber was reconnecting was lost for good, and the addon re-subscribed blindly, leaving items sold elsewhere as buyable ghosts. After each interruption of the bus, the listed store is reconciled against the authoritative item states held in Redis and terminal items are purged. Known limit: an item whose state key has already expired (`redis-config.item-state-ttl-seconds`, 24 h by default) is kept, so an outage longer than that TTL can still leave ghosts behind
-- **Fixed** Cluster messages could be applied out of order and a stale status could overwrite a newer one; messages are now ordered per item and a status change is applied by compare-and-swap instead of blindly
-- **Fixed** The addon's shutdown released nothing: the bridge now switches to fail-closed, releases the locks it still holds, and the subscriber thread really stops. The Jedis pool wait is bounded and nested connection borrows are gone, so a saturated pool can no longer deadlock the addon
-- **Changed** A node that cannot register its instance identity in Redis now refuses to start instead of joining the bus with an identity it cannot vouch for. The registration failure used to be a warning, and the heartbeat was a bare expiry refresh on a key that could have been evicted or lost to a Redis restart: the node believed itself registered for good, and a duplicate identity was never detected. The heartbeat now rewrites the key, and a collision with another node is caught
-- **Fixed** The addon started its subscriber thread and its listeners before the cluster bridge was installed, so incoming messages could mutate memory with no bridge in place. Listeners are registered and the subscription confirmed first, and a main plugin that is disabled is refused at the door
-- **Fixed** An item bought while its seller was connected to *another* node did not trigger that seller's auto-claim; the seller is credited on the node they are actually on, and the log entry is marked as read only after the credit has succeeded
-- **Fixed** An auction house already open on a remote node is now visually purged when an item is removed or bought there, instead of keeping a clickable ghost until the next refresh
-- **Fixed** A single unconvertible field no longer destroys an entire synchronisation message
-- **Fixed** The addon's version checker never reported anything
+- **Added** Locks are now renewed while a purchase or a removal is running, so `redis-config.lock-ttl-seconds` no longer needs to be oversized to survive a slow economy plugin or a slow database. Turn it off with `redis-config.lock-renew-enabled: false`
+- **Fixed** Every message published while a server was reconnecting was lost, leaving items sold elsewhere as buyable ghosts. Listings are now re-synchronised against Redis after each interruption
+- **Fixed** Messages could be applied out of order, an outdated status overwriting a newer one
+- **Fixed** Shutting the addon down released nothing: locks stayed held, the listener thread kept running, and a saturated connection pool could freeze it
+- **Fixed** The addon started listening to the network before the cluster was ready
+- **Fixed** A seller connected to another server was not paid by auto-claim when their item sold
+- **Fixed** An auction house left open on another server kept clickable ghosts after an item was bought or removed there
+- **Fixed** A single unreadable field no longer discards an entire synchronisation message
+- **Fixed** The addon's update checker never reported anything
+- **Changed** A server that cannot register itself in Redis now refuses to start instead of joining with an identity it cannot vouch for, and two servers sharing an identity are now detected
 
 ### Configuration and messages
 
-- **Added** New `maintenance` section in `config.yml` (`expiration-sweep-interval-seconds`, `expiration-sweep-batch-size`, `confirmation-timeout-seconds`, `confirmation-sweep-interval-seconds`) and the first-level `write-itemstack-format-marker` key, replicated across the six shipped languages (en/fr/es/it/id/th)
-- **Added** `action.save-profile-on-sell` in `config.yml` (default `true`), replicated across the six shipped languages. It forces the seller's profile to be written to disk immediately after their stacks have left their inventory: without it, a crash between the sale and the next periodic profile save hands the items back to a player who is already selling them. It is a synchronous disk write on every sale — turn it off on a heavily loaded server, or when an inventory synchronisation plugin already owns persistence
-- **Added** `admin-item-not-available`, `server-shutting-down`, `item-no-longer-available`, `sell-error-invalid-item`, `sell-inventory-full` and `remove-all-items-partial` messages, replicated across the six shipped languages
-- **Changed** `economies.yml` documents the two behaviour changes above in all six languages: the `must-be-online` block now names the economy types that cannot credit an offline player and explains that their sellers are paid through `/ah claim`, and the tax block explains that item rules apply on purchase even on a `type: SELL` economy
-- **Added** `redis-config.lock-renew-enabled` in the Redis addon's `config.yml`, and `redis-config.lock-ttl-seconds` is re-documented as a lease duration
+- **Added** A `maintenance` section in `config.yml` for the expiration sweep and the confirmation timeout, plus the `write-itemstack-format-marker` key, in all six languages (en/fr/es/it/id/th)
+- **Added** `action.save-profile-on-sell` (default `true`) — saves the seller's profile right after their items leave their inventory, so a crash cannot hand them back a copy of what they are already selling. It is a disk write on every sale: turn it off on a heavily loaded server, or when another plugin already handles inventory persistence
+- **Added** `admin-item-not-available`, `server-shutting-down`, `item-no-longer-available`, `sell-error-invalid-item`, `sell-inventory-full` and `remove-all-items-partial` messages, in all six languages
+- **Added** `redis-config.lock-renew-enabled` in the addon, and `lock-ttl-seconds` is re-documented as a renewable lease
+- **Changed** `economies.yml` now documents the offline payment and purchase tax changes above, in all six languages
 
-### Known limitations of this release
+### Known limitations
 
-- On a purchase, the money still moves before the item row is committed. If the database write loses the race — another node sold the same listing first — the buyer has been charged and the listing stays with its seller, who also keeps a claimable pending payment. The incident is logged as `SEVERE` with the identifiers needed to reconcile it by hand, but it is not compensated automatically. Reversing that order is the next piece of work and it is not in this release
-- The listing limit still counts listings and not stacks, so a rank limited to five listings can still hold thirty-six stacks in each of them, and the limit is evaluated once against the local cache rather than re-checked against the database
-- The addon is still compiled against a pinned API revision with no compatibility check at startup: update the plugin first and the addon second, never the reverse
+- On a purchase the money still moves before the listing is committed. If another server sold the same listing first, the buyer is charged and the seller keeps both the item and a claimable payment. The incident is logged with everything needed to fix it by hand, but it is not refunded automatically. That is the next piece of work
+- The listing limit counts listings, not stacks: a rank limited to five listings can still hold thirty-six stacks in each of them
+- The addon has no compatibility check at startup, so always update the plugin first and the addon second, never the reverse
 
 # 4.0.1.3
 
