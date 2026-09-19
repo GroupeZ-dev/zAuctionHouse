@@ -45,16 +45,14 @@ public class SearchService {
         IntList allIds = sortedItemsCache.getSortedIds(category, sort);
         IntList results = new IntArrayList();
 
-        var storage = this.plugin.getAuctionManager().getItems(StorageType.LISTED);
-        var itemMap = new java.util.HashMap<Integer, Item>(storage.size());
-        for (Item item : storage) {
-            itemMap.put(item.getId(), item);
-        }
-
+        // Acces O(1) direct dans le conteneur LISTED. L'ancien code copiait TOUT le store
+        // (getItems alloue une ArrayList complete) puis reconstruisait une HashMap de n
+        // entrees, a chaque frappe de recherche et pour chaque joueur (C-055).
+        var manager = this.plugin.getAuctionManager();
         String lowerValue = parsedQuery.value().toLowerCase();
 
         for (int id : allIds) {
-            Item item = itemMap.get(id);
+            Item item = manager.getItem(StorageType.LISTED, id);
             if (item == null) continue;
 
             if (parsedQuery.isDefault()) {

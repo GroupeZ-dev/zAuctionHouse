@@ -8,6 +8,7 @@ import fr.maxlego08.zauctionhouse.api.utils.Permission;
 import fr.maxlego08.zauctionhouse.storage.repository.repositories.LogRepository;
 
 import java.util.List;
+import java.util.logging.Level;
 
 public class CommandAuctionAdminLogsPurge extends VCommand {
 
@@ -33,7 +34,18 @@ public class CommandAuctionAdminLogsPurge extends VCommand {
         long olderThanMs = days * 86_400_000L;
 
         plugin.getScheduler().runAsync(wrappedTask -> {
-            long deleted = plugin.getStorageManager().with(LogRepository.class).deleteOlderThan(olderThanMs);
+            long deleted;
+            try {
+                deleted = plugin.getStorageManager().with(LogRepository.class).deleteOlderThan(olderThanMs);
+            } catch (RuntimeException exception) {
+                // Sarah leve une DatabaseException (RuntimeException) : sans ce catch,
+                // elle s'echapperait du bloc async et l'admin n'aurait AUCUN retour.
+                plugin.getLogger().log(Level.SEVERE, "Failed to purge logs older than " + days + " days", exception);
+                // Et sans ce retour a l'emetteur, une purge RATEE s'afficherait comme un succes
+                // a zero ligne : l'admin croirait la table deja propre.
+                this.sender.sendMessage("Failed to purge the logs: " + exception.getMessage() + ". See the server console for details.");
+                return;
+            }
             message(plugin, this.sender, Message.ADMIN_LOGS_PURGE_SUCCESS, "%amount%", String.valueOf(deleted), "%days%", String.valueOf(days));
         });
 

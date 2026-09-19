@@ -2,6 +2,7 @@ package fr.maxlego08.zauctionhouse.api;
 
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCache;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
+import fr.maxlego08.zauctionhouse.api.category.Category;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
@@ -90,6 +91,52 @@ public interface AuctionManager {
      * @return immutable or defensive copy list of items currently recorded for that storage type
      */
     List<Item> getItems(StorageType storageType);
+
+    /**
+     * Resolves a single item by its identifier inside the given bucket.
+     * <p>
+     * Declaree {@code default} pour rester source- ET binaire-compatible : les implementations
+     * tierces heritent d'un balayage lineaire, l'implementation du plugin la surcharge en O(1)
+     * sur le conteneur interne.
+     *
+     * @param storageType logical container to read from
+     * @param itemId      identifier to resolve
+     * @return the live item instance, or {@code null} when the bucket does not hold it
+     */
+    default Item getItem(StorageType storageType, int itemId) {
+        for (Item item : getItems(storageType)) {
+            if (item.getId() == itemId) return item;
+        }
+        return null;
+    }
+
+    /**
+     * Number of items actually displayed in the auction list: available for sale and not
+     * expired. Same filter as {@link Item#isActivelyListed()} and as the sorted cache used by
+     * the GUI, so the count always matches what the player sees.
+     * <p>
+     * Declaree {@code default} pour la meme raison que {@link #getItem(StorageType, int)} :
+     * l'implementation du plugin la sert en O(1) depuis le cache trie.
+     *
+     * @return number of actively listed items
+     */
+    default int getListedItemCount() {
+        return (int) getItems(StorageType.LISTED).stream().filter(Item::isActivelyListed).count();
+    }
+
+    /**
+     * Same as {@link #getListedItemCount()}, restricted to one category.
+     *
+     * @param category category to restrict to; {@code null} means every category
+     * @return number of actively listed items in that category
+     */
+    default int getListedItemCount(Category category) {
+        if (category == null) return getListedItemCount();
+        return (int) getItems(StorageType.LISTED).stream()
+                .filter(Item::isActivelyListed)
+                .filter(item -> item.hasCategory(category))
+                .count();
+    }
 
     /**
      * Resolves cached item identifiers back to their live instances from the storage map.

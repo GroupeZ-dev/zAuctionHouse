@@ -60,6 +60,22 @@ public interface IntList extends Iterable<Integer> {
     boolean contains(int value);
 
     /**
+     * Returns the index of the first occurrence of the given value, or {@code -1}.
+     * <p>
+     * Methode {@code default} : purement additive, aucune implementation tierce de
+     * {@code IntList} n'est cassee, ni a la compilation ni au binaire.
+     *
+     * @param value the value to look for
+     * @return the index of the first occurrence, or -1 when absent
+     */
+    default int indexOf(int value) {
+        for (int i = 0; i < size(); i++) {
+            if (getInt(i) == value) return i;
+        }
+        return -1;
+    }
+
+    /**
      * Creates and returns a copy of this list.
      *
      * @return a clone of this list

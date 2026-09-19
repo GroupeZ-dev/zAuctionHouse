@@ -17,7 +17,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 /**
@@ -30,7 +29,6 @@ public class ZCategoryManager implements CategoryManager {
     private final RuleLoaderRegistry ruleLoaderRegistry;
     private final PerformanceDebug performanceDebug;
     private final Map<String, Category> categories = new LinkedHashMap<>();
-    private final Map<String, Long> categoryCountCache = new ConcurrentHashMap<>();
     private List<Category> sortedCategories = List.of();
     private Category miscCategory;
     private boolean enabled = true;
@@ -236,38 +234,32 @@ public class ZCategoryManager implements CategoryManager {
 
     @Override
     public long getItemCountForCategory(String categoryId) {
-        if (!this.isEnabled()) return 0;
-        return this.categoryCountCache.computeIfAbsent(categoryId.toLowerCase(Locale.ROOT), this::computeCategoryCount);
+        if (!this.isEnabled()) return 0L;
+        if (categoryId == null || categoryId.isBlank()) return 0L;
+
+        var manager = this.plugin.getAuctionManager();
+
+        // Servi en O(1) par le cache trie, dont le filtre de reconstruction est litteralement
+        // isActivelyListed() : le compteur reste consistant avec la liste affichee. La
+        // memoisation est SUPPRIMEE, pas l'invalidation : la conserver figerait desormais
+        // chaque compteur a sa premiere valeur jusqu'au reload (C-098, C-104).
+        if (categoryId.equalsIgnoreCase("all")) return manager.getListedItemCount();
+
+        // getCategory() normalise la casse ; le ZCategory rendu porte la cle BRUTE dans
+        // getId(), qui est exactement celle utilisee par SortedItemsCache.buildCacheKey.
+        // Corrige au passage les categories a cle majuscule, qui rendaient 0.
+        return getCategory(categoryId).map(category -> (long) manager.getListedItemCount(category)).orElse(0L);
     }
 
     @Override
     public void invalidateCategoryCountCache() {
-        this.categoryCountCache.clear();
+        // Conservee pour ne casser ni l'interface publiee CategoryManager ni ses appelants.
+        // Les compteurs sont desormais derives du cache trie, qui porte sa propre
+        // invalidation : il n'y a plus rien a purger ici.
     }
 
     @Override
     public String getAllCategoryName() {
         return this.allCategoryName;
-    }
-
-    private long computeCategoryCount(String categoryId) {
-        long startTime = performanceDebug.start();
-
-        var manager = this.plugin.getAuctionManager();
-        var items = manager.getItems(StorageType.LISTED);
-
-        // Only count items that are actually shown in the auction list: available for sale and not expired,
-        // so the count stays consistent with what the player sees when opening the category. We filter on the
-        // raw snapshot here (no getItemIds) to avoid mutating the category-count cache during its own computeIfAbsent.
-        boolean all = categoryId.equals("all");
-        int c = 0;
-        for (var item : items) {
-            if (!item.isActivelyListed()) continue;
-            if (all || item.hasCategory(categoryId)) c++;
-        }
-        long count = c;
-
-        performanceDebug.end("computeCategoryCount[" + categoryId + "]", startTime, "total=" + items.size() + ", count=" + count);
-        return count;
     }
 }

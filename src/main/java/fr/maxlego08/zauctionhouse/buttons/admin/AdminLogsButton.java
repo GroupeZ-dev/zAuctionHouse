@@ -135,18 +135,33 @@ public class AdminLogsButton extends LoadingButton {
 
     /**
      * Creates an AdminLogItem by deserializing the item stacks from the log.
+     * <p>
+     * Les annonces multi-stacks sont ECRITES en joignant les charges utiles par {@code ';'}
+     * (ZAuctionManager.logItemAction, SellService, V3MigrationService) : la lecture doit donc
+     * redecouper, sinon un log multi-stacks s'affiche vide dans l'audit admin (C-100).
+     * {@code "abc".split(";")} rend {@code ["abc"]}, le comportement des logs mono-stack est
+     * donc strictement inchange.
+     *
+     * @param log the log row to rebuild
+     * @return the admin log item, with every readable stack of the payload
      */
     private AdminLogItem createAdminLogItem(LogDTO log) {
         List<ItemStack> itemStacks = new ArrayList<>();
 
         if (log.itemstack() != null && !log.itemstack().isEmpty()) {
-            try {
-                ItemStack decoded = Base64ItemStack.decode(log.itemstack());
-                if (decoded != null) {
-                    itemStacks.add(decoded);
+            for (String part : log.itemstack().split(";")) {
+                if (part.isBlank()) continue;
+                try {
+                    ItemStack decoded = Base64ItemStack.decode(part);
+                    if (decoded != null) {
+                        itemStacks.add(decoded);
+                    }
+                } catch (Throwable throwable) {
+                    // Throwable et non Exception : le decodeur < 1.20.5 passe par ItemStackUtils
+                    // et peut lever StackOverflowError (cf. C-054). Un stack corrompu ne doit plus
+                    // emporter les N-1 valides du lot.
+                    this.plugin.getLogger().warning("Failed to decode itemstack for log " + log.id() + ": " + throwable.getMessage());
                 }
-            } catch (Exception e) {
-                this.plugin.getLogger().warning("Failed to decode itemstack for log " + log.id() + ": " + e.getMessage());
             }
         }
 

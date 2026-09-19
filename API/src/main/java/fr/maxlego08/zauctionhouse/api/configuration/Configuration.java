@@ -12,6 +12,7 @@ import fr.maxlego08.zauctionhouse.api.configuration.records.HistoryConfiguration
 import fr.maxlego08.zauctionhouse.api.configuration.records.SalesNotificationConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ItemDisplayConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.ItemLoreConfiguration;
+import fr.maxlego08.zauctionhouse.api.configuration.records.MaintenanceConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.NumberMultiplicationConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.PerformanceConfiguration;
 import fr.maxlego08.zauctionhouse.api.configuration.records.PerformanceDebugConfiguration;
@@ -200,6 +201,21 @@ public interface Configuration extends ConfigurationFile {
     PerformanceConfiguration getPerformance();
 
     /**
+     * Configuration des taches de maintenance periodiques (balayage d'expiration et
+     * rearmement des statuts de confirmation).
+     * <p>
+     * Methode {@code default} volontaire : elle est purement additive et n'oblige aucune
+     * implementation tierce existante a etre recompilee. Ajouter une composante au record
+     * publie {@link PerformanceConfiguration} aurait au contraire modifie son constructeur
+     * canonique, donc rompu la compatibilite binaire.
+     *
+     * @return la configuration de maintenance
+     */
+    default MaintenanceConfiguration getMaintenance() {
+        return MaintenanceConfiguration.defaults();
+    }
+
+    /**
      * Gets the search filter configuration containing operator mappings.
      *
      * @return the search filter configuration
@@ -221,6 +237,20 @@ public interface Configuration extends ConfigurationFile {
      * @return true if sell inventory is enabled, false otherwise
      */
     boolean isSellInventoryEnabled();
+
+    /**
+     *
+     * <p>
+     * methode {@code default} : les implementations tierces de Configuration compilent
+     * toujours et heritent du comportement historique le plus sur. La valeur de repli {@code true}
+     * vaut le defaut de la cle {@code action.save-profile-on-sell} du config.yml : un serveur dont
+     * le config.yml n'a pas encore ete regenere se comporte comme un serveur a jour.
+     * @return {@code true} si le profil du vendeur doit etre sauvegarde sur disque immediatement
+     * apres que ses items ont quitte son inventaire pour etre mis en vente.
+     */
+    default boolean isSaveProfileOnSell() {
+        return true;
+    }
 
     /**
      * Checks if players are allowed to list items for a price that contains decimals.

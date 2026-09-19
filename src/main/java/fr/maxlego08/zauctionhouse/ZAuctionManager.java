@@ -1,5 +1,6 @@
 package fr.maxlego08.zauctionhouse;
 
+import com.tcoded.folialib.enums.EntityTaskResult;
 import fr.maxlego08.menu.api.engine.InventoryEngine;
 import fr.maxlego08.menu.api.utils.CompatibilityUtil;
 import fr.maxlego08.zauctionhouse.api.AuctionManager;
@@ -7,6 +8,9 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCache;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.category.Category;
+import fr.maxlego08.zauctionhouse.api.cluster.AuctionClusterBridge;
+import fr.maxlego08.zauctionhouse.api.cluster.LockToken;
+import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.event.AuctionEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveExpiredItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveListedItemEvent;
@@ -20,6 +24,10 @@ import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.*;
 import fr.maxlego08.zauctionhouse.api.services.AuctionOptionService;
+import fr.maxlego08.zauctionhouse.api.services.result.RemoveFailReason;
+import fr.maxlego08.zauctionhouse.api.services.result.RemoveResult;
+import fr.maxlego08.zauctionhouse.api.storage.StaleItemException;
+import fr.maxlego08.zauctionhouse.api.storage.dto.ItemDTO;
 import fr.maxlego08.zauctionhouse.api.tax.TaxResult;
 import fr.maxlego08.zauctionhouse.api.tax.TaxType;
 import fr.maxlego08.zauctionhouse.api.transaction.TransactionStatus;
@@ -29,6 +37,8 @@ import fr.maxlego08.zauctionhouse.api.utils.IntList;
 import fr.maxlego08.zauctionhouse.buttons.list.ListedItemsButton;
 import fr.maxlego08.zauctionhouse.discord.DiscordWebhookService;
 import fr.maxlego08.zauctionhouse.services.*;
+import fr.maxlego08.zauctionhouse.storage.repository.repositories.ItemRepository;
+import fr.maxlego08.zauctionhouse.tax.ZPurchaseCharge;
 import fr.maxlego08.zauctionhouse.utils.PerformanceDebug;
 import fr.maxlego08.zauctionhouse.utils.ZUtils;
 import fr.maxlego08.zauctionhouse.utils.cache.SortedItemsCache;
@@ -40,15 +50,28 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class ZAuctionManager extends ZUtils implements AuctionManager {
 
+    /**
+     * Filet temporel de la remise physique. Sur Folia, si l'entite est retiree APRES la
+     * planification, FoliaLib 0.5.1 ne complete jamais le future de la tache : sans ce filet
+     * la chaine de retrait resterait en vol pour toujours. 15 s est tres au-dessus du delai
+     * reel (1 tick) et ne se declenche donc jamais pour un joueur en ligne.
+     */
+    private static final long GIVE_ITEM_TIMEOUT_SECONDS = 15L;
+
     private final AuctionPlugin plugin;
     private final AuctionPurchaseService auctionPurchaseService;
     private final AuctionSellService auctionSellService;
-    private final AuctionRemoveService auctionRemoveService;
+    private final RemoveService auctionRemoveService;
     private final AuctionExpireService auctionExpireService;
     private final AuctionClaimService auctionClaimService;
     private final AuctionHistoryService auctionHistoryService;
@@ -56,7 +79,11 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     private final PerformanceDebug performanceDebug;
     private final SearchService searchService;
 
-    private final Map<Player, PlayerCache> caches = new ConcurrentHashMap<>();
+    // Indexation par UUID et non par Player : la cle Player retenait une reference forte vers
+    // le CraftPlayer, son inventaire et son monde pour toute deconnexion dont removeCache
+    // n'etait pas atteint (C-107). Les signatures publiees de l'API (getCache/clearPlayerCache/
+    // removeCache prennent un Player) sont INCHANGEES : le changement est purement interne.
+    private final Map<UUID, PlayerCache> caches = new ConcurrentHashMap<>();
     private final Map<StorageType, Map<Integer, Item>> storageItemsById = new EnumMap<>(StorageType.class);
     private final Map<UUID, IntList> idsListedByOwner = new ConcurrentHashMap<>();
     private final Map<UUID, IntList> idsExpiredByOwner = new ConcurrentHashMap<>();
@@ -67,7 +94,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         this.plugin = plugin;
         this.auctionPurchaseService = new PurchaseService(plugin);
         this.auctionSellService = new SellService(plugin, this);
-        this.auctionRemoveService = new RemoveService(plugin);
+        this.auctionRemoveService = new RemoveService(plugin, this);
         this.auctionExpireService = new ExpireService(plugin, this);
         this.auctionClaimService = new ClaimService(plugin);
         this.auctionHistoryService = new HistoryService(plugin);
@@ -229,21 +256,76 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         return resolveItems(storageType, getItemIds(storageType, predicate, comparator));
     }
 
+    /**
+     * Acces O(1) a l'instance detenue par un conteneur, sans copie du store.
+     * <p>
+     * L'implementation par defaut de {@link AuctionManager#getItem(StorageType, int)} copie
+     * l'integralite du bucket puis le parcourt lineairement : inacceptable a 50 000 annonces.
+     *
+     * @param storageType conteneur a interroger
+     * @param itemId      identifiant de l'item
+     * @return l'instance partagee detenue par le conteneur, ou {@code null}
+     */
+    @Override
+    public Item getItem(StorageType storageType, int itemId) {
+        var storage = this.storageItemsById.get(storageType);
+        return storage == null ? null : storage.get(itemId);
+    }
+
+    /**
+     * Nombre d'annonces reellement affichables, servi par le cache trie plutot que par une copie
+     * complete du store suivie d'un stream (implementation par defaut de l'interface).
+     * <p>
+     * Le compteur reflete donc exactement ce que le GUI affiche - memes donnees, meme fraicheur -
+     * et non un recalcul independant qui pourrait le contredire.
+     *
+     * @return le nombre d'annonces actuellement visibles dans l'hotel des ventes
+     */
+    @Override
+    public int getListedItemCount() {
+        var cache = this.sortedItemsCache;
+        if (cache == null) return AuctionManager.super.getListedItemCount();
+        return cache.getTotalCount(this.plugin.getConfiguration().getSort().defaultSort());
+    }
+
+    /**
+     * Meme compteur, restreint a une categorie.
+     *
+     * @param category categorie a compter, {@code null} valant « toutes categories »
+     * @return le nombre d'annonces visibles dans cette categorie
+     */
+    @Override
+    public int getListedItemCount(Category category) {
+        var cache = this.sortedItemsCache;
+        if (cache == null) return AuctionManager.super.getListedItemCount(category);
+        if (category == null) return getListedItemCount();
+        return cache.getTotalCount(category, this.plugin.getConfiguration().getSort().defaultSort());
+    }
+
     @Override
     public void addItem(StorageType storageType, Item item) {
         var storage = this.storageItemsById.get(storageType);
         storage.put(item.getId(), item);
         this.indexItem(storageType, item);
 
-        if (storageType == StorageType.LISTED) {
-            this.plugin.getCategoryManager().invalidateCategoryCountCache();
-            this.sortedItemsCache.invalidate();
-        }
+        invalidateListedCaches(storageType);
     }
 
     @Override
     public void removeItem(StorageType storageType, Item item) {
-        removeItem(storageType, item.getId());
+        // ATTENTION : ne PAS deleguer a removeItem(StorageType, int). Cette surcharge est
+        // utilisee par les transitions internes (removeListedItem LISTED -> EXPIRED,
+        // performListedToExpired, purchaseAuctionItem LISTED -> PURCHASED) qui RE-AJOUTENT
+        // ensuite la meme instance dans un autre conteneur : lui imposer le statut DELETED la
+        // rendrait definitivement inreclamable.
+        var storage = this.storageItemsById.get(storageType);
+        if (storage == null) return;
+
+        Item removed = storage.remove(item.getId());
+        if (removed == null) return;
+
+        this.deindexItem(storageType, removed);
+        invalidateListedCaches(storageType);
     }
 
     @Override
@@ -252,14 +334,44 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         if (storage == null) return;
 
         Item removed = storage.remove(itemId);
-        if (removed != null) {
-            this.deindexItem(storageType, removed);
+        if (removed == null) return;
 
-            if (storageType == StorageType.LISTED) {
-                this.plugin.getCategoryManager().invalidateCategoryCountCache();
-                this.sortedItemsCache.invalidate();
-            }
-        }
+        // C-046 : sortie TERMINALE par identifiant (purge d'un fantome par ExpireService, ou
+        // convergence demandee par ItemBoughtListener / ItemRemovedListener de l'addon Redis).
+        // L'instance qu'on sort du store reste referencee par les setClick des boutons deja
+        // rendus et par le cache ITEM_SHOW : la marquer terminale la rend inoffensive, elle ne
+        // franchit plus les gardes de statut de RemoveService et ConfirmHelper cesse de
+        // rediffuser AVAILABLE derriere.
+        removed.setStatus(ItemStatus.DELETED);
+
+        this.deindexItem(storageType, removed);
+        invalidateListedCaches(storageType);
+    }
+
+    private void invalidateListedCaches(StorageType storageType) {
+        if (storageType != StorageType.LISTED) return;
+        this.plugin.getCategoryManager().invalidateCategoryCountCache();
+        this.sortedItemsCache.invalidate();
+    }
+
+    /**
+     * Relecture autoritaire d'une ligne {@code %prefix%items}, destinee aux revalidations
+     * SOUS VERROU (retrait joueur et retrait admin).
+     * <p>
+     * Une seule requete sur la cle primaire, contrairement a {@code StorageManager.selectItem(int)}
+     * qui en fait trois et rend {@code null} quand l'economie de l'item a disparu de
+     * economies.yml. Postee explicitement sur l'executor de la base et non sur le ForkJoinPool
+     * commun, deja sature par les appels Jedis bloquants du bridge.
+     * <p>
+     * {@code ItemRepository.select(int)} filtre deja {@code storage_type = DELETED} : un
+     * {@link Optional} vide signifie donc « ligne detruite ».
+     *
+     * @param itemId identifiant de l'item
+     * @return la ligne base, ou un Optional vide si elle est detruite ou absente
+     */
+    public CompletableFuture<Optional<ItemDTO>> selectItemRow(int itemId) {
+        var storageManager = this.plugin.getStorageManager();
+        return CompletableFuture.supplyAsync(() -> storageManager.with(ItemRepository.class).select(itemId), this.plugin.getExecutorService());
     }
 
     @Override
@@ -482,159 +594,258 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public PlayerCache getCache(Player player) {
-        return this.caches.computeIfAbsent(player, p -> new ZPlayerCache());
+        return this.caches.computeIfAbsent(player.getUniqueId(), uuid -> new ZPlayerCache());
+    }
+
+    /**
+     * Accesseur NON creant, a utiliser sur tous les chemins de completion tardive (fin de
+     * retrait en masse, callbacks d'achat/expiration, fermeture d'inventaire) ou
+     * {@link #getCache(Player)} ressusciterait le cache d'un joueur deja deconnecte.
+     * Volontairement prive : le remonter dans l'interface publiee AuctionManager rendrait ce
+     * correctif de fuite api-breaking pour un gain nul.
+     */
+    private PlayerCache peekCache(Player player) {
+        return this.caches.get(player.getUniqueId());
     }
 
     @Override
     public void clearPlayersCache(PlayerCacheKey... keys) {
-        this.caches.forEach((player, cache) -> cache.remove(keys));
+        this.caches.forEach((uniqueId, cache) -> cache.remove(keys));
     }
 
     @Override
     public void clearPlayerCache(Player player, PlayerCacheKey... keys) {
-        getCache(player).remove(keys);
+        // No-op quand aucune entree n'existe : finishBulkRemoval nous appelle AVANT son test
+        // isOnline(), ce qui ressuscitait le cache d'un joueur deconnecte a chaque
+        // « tout recuperer ». Verifie : aucun appelant actuel ne comptait sur l'effet de bord
+        // « creer le cache ».
+        var cache = peekCache(player);
+        if (cache != null) cache.remove(keys);
     }
 
     @Override
     public void removeCache(Player player) {
-        this.caches.remove(player);
+        this.caches.remove(player.getUniqueId());
+    }
+
+    /**
+     * Decide UNE SEULE FOIS, sur le thread du joueur, ou doit aller une annonce retiree de la
+     * vente.
+     * <p>
+     * Cette decision etait faite DEUX fois (RemoveService pour ce qui est diffuse au cluster,
+     * ZAuctionManager pour ce qui est ecrit en base) avec, entre les deux, plusieurs sauts
+     * asynchrones : un inventaire qui se remplit entre-temps suffisait a les faire diverger.
+     * {@code canReceiveItem} lit {@code player.getInventory().firstEmpty()}, cet appel DOIT
+     * rester sur le thread du joueur.
+     *
+     * @param player joueur qui retire son annonce
+     * @param item   annonce retiree
+     * @return {@link StorageType#DELETED} pour une remise immediate, {@link StorageType#EXPIRED}
+     * pour un basculement dans les items expires
+     */
+    public StorageType resolveListedDestination(Player player, Item item) {
+        var listedConfig = this.plugin.getConfiguration().getActions().listed();
+        return (listedConfig.giveItem() && item.canReceiveItem(player)) ? StorageType.DELETED : StorageType.EXPIRED;
     }
 
     @Override
     public CompletableFuture<Void> removeListedItem(Player player, Item item) {
+        return removeListedItem(player, item, resolveListedDestination(player, item)).thenApply(delivered -> null);
+    }
+
+    /**
+     * Variante de {@link #removeListedItem(Player, Item, StorageType)} exprimee par le booleen
+     * historique {@code giveItem}, pour les appelants qui decident encore par ce predicat
+     * plutot que par une destination.
+     *
+     * @param player   joueur qui retire son annonce
+     * @param item     annonce retiree
+     * @param giveItem {@code true} pour rendre l'item au joueur (destination DELETED),
+     *                 {@code false} pour le basculer dans les items expires
+     * @return {@code true} si le lot a effectivement ete remis au joueur
+     */
+    public CompletableFuture<Boolean> removeListedItem(Player player, Item item, boolean giveItem) {
+        return removeListedItem(player, item, giveItem ? StorageType.DELETED : StorageType.EXPIRED);
+    }
+
+    /**
+     * ORDRE : ecriture en base D'ABORD, mutation memoire et remise physique ENSUITE.
+     * <p>
+     * Tant que l'UPDATE n'est pas confirme, RIEN n'est mute localement : en cas d'echec la
+     * memoire et la base restent d'accord (la ligne est toujours LISTED) et RemoveService
+     * restaure proprement le statut. Il n'y a donc aucun rollback memoire a ecrire.
+     * <p>
+     * L'ecriture est un compare-and-set {@code LISTED -> destination} : si un autre serveur a
+     * deja pris la ligne, le future echoue avec une {@code StaleItemException} et RIEN n'est
+     * mute ni remis.
+     *
+     * @param player      joueur qui retire son annonce
+     * @param item        annonce retiree
+     * @param destination decidee par l'appelant via {@link #resolveListedDestination}
+     * @return {@code true} si le lot a effectivement ete remis au joueur
+     */
+    public CompletableFuture<Boolean> removeListedItem(Player player, Item item, StorageType destination) {
 
         var configuration = this.plugin.getConfiguration();
         var storageManager = this.plugin.getStorageManager();
 
-        item.setStatus(ItemStatus.REMOVED);
-        removeItem(StorageType.LISTED, item);
-
-        this.updateListedItems(item, false, player);
-        clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED); // Suppression du cache du joueur
-
-        CompletableFuture<Void> updateFuture;
-
-        if (configuration.getActions().listed().giveItem() && item.canReceiveItem(player)) {
-
-            updateFuture = storageManager.updateItem(item, StorageType.DELETED);
-            giveItem(player, item);
-
-        } else {
-
+        if (destination == StorageType.EXPIRED) {
             var expiration = configuration.getExpireExpiration().getExpiration(player);
             long expiredAt = expiration > 0 ? System.currentTimeMillis() + (expiration * 1000) : 0;
             item.setExpiredAt(new Date(expiredAt));
-
-            addItem(StorageType.EXPIRED, item);
-            updateFuture = storageManager.updateItem(item, StorageType.EXPIRED);
         }
 
-        message(this.plugin, player, Message.ITEM_REMOVE_LISTED, "%items%", item.getItemDisplay());
+        return storageManager.updateItem(item, StorageType.LISTED, destination).thenCompose(v -> {
 
-        if (configuration.getActions().listed().openInventory()) {
-            openMainAuction(player, getCache(player).get(PlayerCacheKey.CURRENT_PAGE, 1));
-        } else {
-            this.plugin.getScheduler().runAtEntity(player, w -> {
-                if (player.isOnline()) player.closeInventory();
-            });
-        }
+            item.setStatus(destination == StorageType.EXPIRED ? ItemStatus.REMOVED : ItemStatus.DELETED);
+            removeItem(StorageType.LISTED, item);
+            if (destination == StorageType.EXPIRED) addItem(StorageType.EXPIRED, item);
 
-        callEvent(new AuctionRemoveListedItemEvent(item, player));
+            this.updateListedItems(item, false, player);
+            clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED);
 
-        logItemAction(LogType.REMOVE_LISTED, item, player, null, "removed_from_listed");
+            message(this.plugin, player, Message.ITEM_REMOVE_LISTED, "%items%", item.getItemDisplay());
 
-        return updateFuture;
+            if (configuration.getActions().listed().openInventory()) {
+                openMainAuction(player, getCache(player).get(PlayerCacheKey.CURRENT_PAGE, 1));
+            } else {
+                this.plugin.getScheduler().runAtEntity(player, w -> {
+                    if (player.isOnline()) player.closeInventory();
+                });
+            }
+
+            callEvent(new AuctionRemoveListedItemEvent(item, player));
+            logItemAction(LogType.REMOVE_LISTED, item, player, null, "removed_from_listed");
+
+            if (destination != StorageType.DELETED) return CompletableFuture.completedFuture(Boolean.FALSE);
+            return deliverOrRestore(player, item, StorageType.EXPIRED);
+        });
     }
 
     @Override
     public CompletableFuture<Void> removeSellingItem(Player player, Item item) {
+        return removeSellingItem(player, item, true).thenApply(delivered -> null);
+    }
+
+    /**
+     * @param player       vendeur
+     * @param item         annonce retiree
+     * @param updatePlayer {@code false} pour un retrait en masse (aucun message unitaire)
+     * @return {@code true} si le lot a effectivement ete remis au joueur
+     */
+    public CompletableFuture<Boolean> removeSellingItem(Player player, Item item, boolean updatePlayer) {
 
         var configuration = this.plugin.getConfiguration();
         var storageManager = this.plugin.getStorageManager();
 
-        item.setStatus(ItemStatus.DELETED);
-        removeItem(StorageType.LISTED, item);
+        return storageManager.updateItem(item, StorageType.LISTED, StorageType.DELETED).thenCompose(v -> {
 
-        this.updateListedItems(item, false, player);
-        clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED); // Suppression du cache du joueur
+            item.setStatus(ItemStatus.DELETED);
+            removeItem(StorageType.LISTED, item);
 
-        var updateFuture = storageManager.updateItem(item, StorageType.DELETED);
-        giveItem(player, item);
+            this.updateListedItems(item, false, player);
+            clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED);
 
-        message(this.plugin, player, Message.ITEM_REMOVE_SELLING, "%items%", item.getItemDisplay());
+            if (updatePlayer) {
+                message(this.plugin, player, Message.ITEM_REMOVE_SELLING, "%items%", item.getItemDisplay());
 
-        if (configuration.getActions().listed().openInventory()) {
-            this.updateInventory(player);
-        } else {
-            this.plugin.getScheduler().runAtEntity(player, w -> {
-                if (player.isOnline()) player.closeInventory();
-            });
-        }
+                if (configuration.getActions().listed().openInventory()) {
+                    this.updateInventory(player);
+                } else {
+                    this.plugin.getScheduler().runAtEntity(player, w -> {
+                        if (player.isOnline()) player.closeInventory();
+                    });
+                }
+            }
 
-        callEvent(new AuctionRemoveListedItemEvent(item, player));
+            callEvent(new AuctionRemoveListedItemEvent(item, player));
+            logItemAction(LogType.REMOVE_SELLING, item, player, null, updatePlayer ? "removed_selling_item" : "removed_selling_item_bulk");
 
-        logItemAction(LogType.REMOVE_SELLING, item, player, null, "removed_selling_item");
-
-        return updateFuture;
+            return deliverOrRestore(player, item, StorageType.EXPIRED);
+        });
     }
 
     @Override
     public CompletableFuture<Void> removeExpiredItem(Player player, Item item) {
+        return removeExpiredItem(player, item, true).thenApply(delivered -> null);
+    }
+
+    /**
+     * @param player       proprietaire de l'annonce expiree
+     * @param item         annonce reclamee
+     * @param updatePlayer {@code false} pour un retrait en masse (aucun message unitaire)
+     * @return {@code true} si le lot a effectivement ete remis au joueur
+     */
+    public CompletableFuture<Boolean> removeExpiredItem(Player player, Item item, boolean updatePlayer) {
 
         var configuration = this.plugin.getConfiguration();
         var storageManager = this.plugin.getStorageManager();
 
-        removeItem(StorageType.EXPIRED, item);
-        clearPlayerCache(player, PlayerCacheKey.ITEMS_EXPIRED);
+        return storageManager.updateItem(item, StorageType.EXPIRED, StorageType.DELETED).thenCompose(v -> {
 
-        var updateFuture = storageManager.updateItem(item, StorageType.DELETED);
-        giveItem(player, item);
+            item.setStatus(ItemStatus.DELETED);
+            removeItem(StorageType.EXPIRED, item);
+            clearPlayerCache(player, PlayerCacheKey.ITEMS_EXPIRED);
 
-        message(this.plugin, player, Message.ITEM_REMOVE_EXPIRED, "%items%", item.getItemDisplay());
+            if (updatePlayer) {
+                message(this.plugin, player, Message.ITEM_REMOVE_EXPIRED, "%items%", item.getItemDisplay());
 
-        if (configuration.getActions().expired().openInventory()) {
-            this.updateInventory(player);
-        } else {
-            this.plugin.getScheduler().runAtEntity(player, w -> {
-                if (player.isOnline()) player.closeInventory();
-            });
-        }
+                if (configuration.getActions().expired().openInventory()) {
+                    this.updateInventory(player);
+                } else {
+                    this.plugin.getScheduler().runAtEntity(player, w -> {
+                        if (player.isOnline()) player.closeInventory();
+                    });
+                }
+            }
 
-        callEvent(new AuctionRemoveExpiredItemEvent(item, player));
+            callEvent(new AuctionRemoveExpiredItemEvent(item, player));
+            logItemAction(LogType.REMOVE_EXPIRED, item, player, null, updatePlayer ? "removed_expired_item" : "removed_expired_item_bulk");
 
-        logItemAction(LogType.REMOVE_EXPIRED, item, player, null, "removed_expired_item");
-
-        return updateFuture;
+            // Compensation vers le conteneur d'ORIGINE : l'item redevient reclamable la ou il etait.
+            return deliverOrRestore(player, item, StorageType.EXPIRED);
+        });
     }
 
     @Override
     public CompletableFuture<Void> removePurchasedItem(Player player, Item item) {
+        return removePurchasedItem(player, item, true).thenApply(delivered -> null);
+    }
+
+    /**
+     * @param player       acheteur
+     * @param item         annonce achetee et reclamee
+     * @param updatePlayer {@code false} pour un retrait en masse (aucun message unitaire)
+     * @return {@code true} si le lot a effectivement ete remis au joueur
+     */
+    public CompletableFuture<Boolean> removePurchasedItem(Player player, Item item, boolean updatePlayer) {
 
         var configuration = this.plugin.getConfiguration();
         var storageManager = this.plugin.getStorageManager();
 
-        removeItem(StorageType.PURCHASED, item);
-        clearPlayerCache(player, PlayerCacheKey.ITEMS_PURCHASED);
+        return storageManager.updateItem(item, StorageType.PURCHASED, StorageType.DELETED).thenCompose(v -> {
 
-        var updateFuture = storageManager.updateItem(item, StorageType.DELETED);
-        giveItem(player, item);
+            item.setStatus(ItemStatus.DELETED);
+            removeItem(StorageType.PURCHASED, item);
+            clearPlayerCache(player, PlayerCacheKey.ITEMS_PURCHASED);
 
-        message(this.plugin, player, Message.ITEM_REMOVE_PURCHASED, "%items%", item.getItemDisplay());
+            if (updatePlayer) {
+                message(this.plugin, player, Message.ITEM_REMOVE_PURCHASED, "%items%", item.getItemDisplay());
 
-        if (configuration.getActions().purchased().openInventory()) {
-            this.updateInventory(player);
-        } else {
-            this.plugin.getScheduler().runAtEntity(player, w -> {
-                if (player.isOnline()) player.closeInventory();
-            });
-        }
+                if (configuration.getActions().purchased().openInventory()) {
+                    this.updateInventory(player);
+                } else {
+                    this.plugin.getScheduler().runAtEntity(player, w -> {
+                        if (player.isOnline()) player.closeInventory();
+                    });
+                }
+            }
 
-        callEvent(new AuctionRemovePurchasedItemEvent(item, player));
+            callEvent(new AuctionRemovePurchasedItemEvent(item, player));
+            logItemAction(LogType.REMOVE_PURCHASED, item, player, item.getSellerUniqueId(), updatePlayer ? "removed_purchased_item" : "removed_purchased_item_bulk");
 
-        logItemAction(LogType.REMOVE_PURCHASED, item, player, item.getSellerUniqueId(), "removed_purchased_item");
-
-        return updateFuture;
-
+            return deliverOrRestore(player, item, StorageType.PURCHASED);
+        });
     }
 
     @Override
@@ -658,37 +869,155 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             return;
         }
 
-        clusterBridge.checkAvailability(item).thenCompose(available -> {
+        // C-046 : garde d'identite. Le bouton admin capture la reference du store au rendu ; si
+        // un autre serveur l'a remplacee entre-temps, la supprimer ecraserait la ligne d'un etat
+        // qui ne nous appartient plus.
+        if (getItem(storageType, item.getId()) != item) {
+            this.plugin.getLogger().info("Stale item reference for item " + item.getId() + " in " + storageType + ", admin removal refused");
+            message(this.plugin, admin, Message.ADMIN_ITEM_NOT_AVAILABLE, "%items%", item.getItemDisplay());
+            inventoryManager.updateInventory(admin);
+            return;
+        }
 
-            if (!available) {
-                this.plugin.getLogger().info("Item is not available");
-                inventoryManager.updateInventory(admin);
-                return failedFuture(new IllegalStateException("Item indisponible"));
+        var storageManager = this.plugin.getStorageManager();
+        var previousStatus = item.getStatus();
+        var tokenHolder = new AtomicReference<LockToken>();
+        var statusChanged = new AtomicBoolean(false);
+
+        clusterBridge.checkAvailability(item, storageType).thenCompose(available -> {
+
+            if (!Boolean.TRUE.equals(available)) {
+                this.plugin.getLogger().info("Item " + item.getId() + " is not available on the cluster");
+                message(this.plugin, admin, Message.ADMIN_ITEM_NOT_AVAILABLE, "%items%", item.getItemDisplay());
+                return this.<LockToken>failedFuture(new IllegalStateException("Item indisponible"));
             }
 
             return clusterBridge.lockItem(item, admin.getUniqueId(), storageType);
 
-        }).thenCompose(lockToken -> clusterBridge.removeItem(item, storageType).thenApply(v -> lockToken)).thenAccept(lockToken -> {
+        }).thenCompose(lockToken -> {
+
+            tokenHolder.set(lockToken);
+
+            // C-042 : convention commune aux deux bridges, un echec d'acquisition se signale par
+            // un jeton noop (ou unavailable), jamais par un future en erreur. Sans cette garde,
+            // deux retraits admin concurrents - ou un simple double-clic - executent TOUS LES
+            // DEUX la remise : duplication franche.
+            if (lockToken == null || !lockToken.isAcquired()) {
+                this.plugin.getLogger().info("Item " + item.getId() + " is already locked, admin removal aborted");
+                message(this.plugin, admin, Message.ADMIN_ITEM_NOT_AVAILABLE, "%items%", item.getItemDisplay());
+                return this.<Void>failedFuture(new IllegalStateException("Item deja verrouille"));
+            }
+
+            // C-060 : relecture autoritaire SOUS VERROU. Sans elle, un clic admin sur un noeud
+            // desynchronise ecrase en aveugle la ligne PURCHASED d'un acheteur et duplique l'item.
+            return revalidateAdminRemoval(item, storageType, clusterBridge).thenCompose(fresh -> {
+
+                if (!Boolean.TRUE.equals(fresh)) {
+                    this.plugin.getLogger().warning("Admin removal refused for item " + item.getId() + ": the database row is no longer " + storageType);
+                    removeItem(storageType, item.getId()); // purge du fantome + marquage terminal
+                    clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_EXPIRED, PlayerCacheKey.ITEMS_PURCHASED, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_SEARCH);
+                    message(this.plugin, admin, Message.ADMIN_ITEM_NOT_AVAILABLE, "%items%", item.getItemDisplay());
+                    return this.<Void>failedFuture(new IllegalStateException("Item deja traite sur un autre serveur"));
+                }
+
+                // C-012 : durabilite D'ABORD, diffusion d'un etat TERMINAL ensuite. L'ancienne
+                // surcharge 2 arguments passait destination = null, donc Redis ecrivait
+                // state=REMOVED et ItemRemovedListener rechargeait la ligne (encore LISTED, le
+                // future d'ecriture etant jete) pour la remettre EN VENTE.
+                item.setStatus(ItemStatus.DELETED);
+                statusChanged.set(true);
+
+                return storageManager.updateItem(item, storageType, StorageType.DELETED)
+                        .thenCompose(v -> clusterBridge.removeItem(item, storageType, StorageType.DELETED));
+            });
+
+        }).thenCompose(v -> {
 
             removeItem(storageType, item);
-
-            this.plugin.getStorageManager().updateItem(item, StorageType.DELETED);
             clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_EXPIRED, PlayerCacheKey.ITEMS_PURCHASED, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_SEARCH);
 
-            giveItem(admin, item);
+            // La remise est chainee (giveItem est confine au thread de l'entite) et compensee :
+            // si elle n'a pas pu avoir lieu, la ligne redevient reclamable par son proprietaire
+            // au lieu d'etre detruite.
+            var claimable = storageType == StorageType.PURCHASED ? StorageType.PURCHASED : StorageType.EXPIRED;
 
-            var targetName = item.getSellerUniqueId().equals(targetUniqueId) ? item.getSellerName() : item.getBuyerName();
-            message(this.plugin, admin, Message.ADMIN_ITEM_REMOVED, "%items%", item.getItemDisplay(), "%target%", targetName == null ? "unknown" : targetName);
+            return deliverOrRestore(admin, item, claimable).thenAccept(delivered -> {
 
-            inventoryManager.updateInventory(admin);
+                var targetName = item.getSellerUniqueId().equals(targetUniqueId) ? item.getSellerName() : item.getBuyerName();
+                message(this.plugin, admin, Message.ADMIN_ITEM_REMOVED, "%items%", item.getItemDisplay(), "%target%", targetName == null ? "unknown" : targetName);
 
-            clusterBridge.unlockItem(item, lockToken, storageType);
+                inventoryManager.updateInventory(admin);
+            });
 
-        }).exceptionally(e -> {
-            this.plugin.getLogger().severe("Failed to remove item for admin: " + e.getMessage());
-            inventoryManager.updateInventory(admin);
-            return null;
+        }).whenComplete((v, throwable) -> {
+
+            if (throwable != null) {
+
+                var stale = StaleItemException.unwrap(throwable);
+                if (stale != null) {
+                    // Course perdue en base : la ligne ne portait plus l'etat source. On converge
+                    // vers la base, on ne restaure surtout pas le statut precedent (le rediffuser
+                    // remettrait en vente sur tout le cluster un item traite ailleurs).
+                    this.plugin.getLogger().severe("ADMIN REMOVE LOST THE RACE - item " + item.getId() + " admin " + admin.getName()
+                            + " : the row was already taken by another server, nothing was handed over, manual check advised");
+                    removeItem(storageType, item.getId());
+                    clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_EXPIRED, PlayerCacheKey.ITEMS_PURCHASED, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_SEARCH);
+                    // Site (b) de ITEM_NO_LONGER_AVAILABLE : on distingue la course PERDUE EN BASE
+                    // - l'ecriture est partie, une autre machine avait deja pris la ligne - des
+                    // refus prealables ci-dessus, qui eux n'ont rien tente et portent
+                    // ADMIN_ITEM_NOT_AVAILABLE.
+                    message(this.plugin, admin, Message.ITEM_NO_LONGER_AVAILABLE);
+                } else {
+                    this.plugin.getLogger().log(Level.SEVERE, "Failed to remove item " + item.getId() + " for admin: " + throwable.getMessage(), throwable);
+
+                    // Restaurer le statut si on l'avait deja passe a DELETED : sinon l'item
+                    // resterait invisible localement tout en occupant le store, et deviendrait
+                    // ni vendable ni recuperable.
+                    if (statusChanged.get()) item.setStatus(previousStatus);
+                }
+
+                inventoryManager.updateInventory(admin);
+            }
+
+            // Le verrou n'etait relache que sur le chemin nominal : toute sortie par exception
+            // (revalidation, ecriture, diffusion) le laissait fuir jusqu'au TTL. La garde
+            // isAcquired() est indispensable : liberer avec un jeton noop casserait le verrou
+            // legitime d'un autre appelant cote bridge local.
+            var token = tokenHolder.get();
+            if (token != null && token.isAcquired()) {
+                clusterBridge.releaseLock(item, token, storageType).whenComplete((released, unlockError) -> {
+                    if (unlockError != null) {
+                        this.plugin.getLogger().severe("Failed to unlock item " + item.getId() + " after admin removal: " + unlockError.getMessage());
+                    } else if (!Boolean.TRUE.equals(released)) {
+                        this.plugin.getLogger().severe("Cluster lock for item " + item.getId() + " was NOT held by this server at release time (admin removal).");
+                    }
+                });
+            }
         });
+    }
+
+    /**
+     * Relecture autoritaire de la ligne base pour le retrait admin, effectuee SOUS VERROU.
+     * <p>
+     * Court-circuitee en mono-serveur : la memoire y est la verite et la garde d'identite en
+     * tete de {@link #adminRemoveItem} suffit ; on ne facture pas un aller-retour SQL par clic.
+     *
+     * @param item          annonce visee
+     * @param storageType   conteneur d'ou elle est censee sortir
+     * @param clusterBridge pont cluster courant
+     * @return {@code true} si la ligne est toujours celle qu'on croit detenir
+     */
+    private CompletableFuture<Boolean> revalidateAdminRemoval(Item item, StorageType storageType, AuctionClusterBridge clusterBridge) {
+
+        if (!clusterBridge.isDistributed()) return CompletableFuture.completedFuture(Boolean.TRUE);
+
+        var timeoutMs = this.plugin.getConfiguration().getPerformance().checkAvailabilityTimeoutMs();
+
+        return selectItemRow(item.getId())
+                .orTimeout(timeoutMs, TimeUnit.MILLISECONDS)
+                .thenApply(optional -> optional.isPresent()
+                        && optional.get().storage_type() == storageType
+                        && (storageType != StorageType.LISTED || optional.get().buyer_unique_id() == null));
     }
 
     @Override
@@ -702,7 +1031,6 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     private CompletableFuture<Void> purchaseAuctionItem(Player player, AuctionItem auctionItem) {
 
         var auctionEconomy = auctionItem.getAuctionEconomy();
-        var price = auctionItem.getPrice();
         var seller = auctionItem.getSeller();
         var storageManager = this.plugin.getStorageManager();
         var configuration = this.plugin.getConfiguration();
@@ -713,52 +1041,45 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         String items = auctionItem.getItemsAsString();
         var itemsDisplay = auctionItem.getItemDisplay();
 
-        // Calculate purchase tax
-        var taxConfig = auctionEconomy.getTaxConfiguration();
-        TaxType taxType = taxConfig.getTaxType();
-        TaxResult taxResult = TaxResult.disabled(price);
-
-        // Get representative item for item-specific tax rules
-        var itemStacks = auctionItem.getItemStacks();
-        var representativeItem = itemStacks != null && !itemStacks.isEmpty() ? itemStacks.getFirst() : null;
-
-        if (taxConfig.isEnabled() && (taxType == TaxType.PURCHASE || taxType == TaxType.BOTH || taxType == TaxType.CAPITALISM)) {
-            taxResult = auctionEconomy.calculatePurchaseTax(player, price, representativeItem);
-
-            if (taxResult.isBypassed()) {
-                message(this.plugin, player, Message.TAX_EXEMPT);
-            }
+        // Calcul UNIQUE du montant de l'achat. Strictement le meme appel que celui fait par
+        // PurchaseService pour verifier le solde et par ListedItemsButton pour l'affichage : le
+        // montant verifie et le montant preleve ne peuvent plus diverger, et le type de taxe
+        // reellement applique est celui porte par le TaxResult, plus jamais celui de l'economie
+        // rededuit a posteriori.
+        final ZPurchaseCharge charge;
+        try {
+            charge = ZPurchaseCharge.resolve(player, auctionItem, auctionEconomy);
+        } catch (IllegalStateException exception) {
+            this.plugin.getLogger().severe("Invalid tax configuration for item " + auctionItem.getId() + ": " + exception.getMessage());
+            return failedFuture(exception);
         }
 
-        // Calculate what buyer pays and seller receives
-        BigDecimal buyerPays;
-        BigDecimal sellerReceives;
+        TaxResult taxResult = charge.taxResult();
+        BigDecimal buyerPays = charge.buyerPays();
+        BigDecimal sellerReceives = charge.sellerReceives();
 
-        if (taxResult.hasTax()) {
-            if (taxType == TaxType.CAPITALISM) {
-                // VAT: buyer pays price + tax, seller receives full price
-                buyerPays = taxResult.finalPrice(); // This is price + tax for CAPITALISM
-                sellerReceives = price;
+        if (taxResult.isBypassed()) {
 
-                // Send tax info message
-                if (taxResult.isReduced()) {
-                    message(this.plugin, player, Message.TAX_REDUCED, "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
-                }
-                message(player, Message.TAX_CAPITALISM_INFO, "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()), "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
-            } else {
-                // PURCHASE or BOTH: buyer pays full price, seller receives price - tax
-                buyerPays = price;
-                sellerReceives = taxResult.finalPrice(); // This is price - tax for PURCHASE/BOTH
+            message(this.plugin, player, Message.TAX_EXEMPT);
 
-                // Send tax info message
-                if (taxResult.isReduced()) {
-                    message(this.plugin, player, Message.TAX_REDUCED, "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
-                }
-                message(player, Message.TAX_PURCHASE_APPLIED, "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()), "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
+        } else if (taxResult.hasTax()) {
+
+            if (taxResult.isReduced()) {
+                message(this.plugin, player, Message.TAX_REDUCED, "%percentage%",
+                        String.format("%.1f", 100 - taxResult.reductionPercentage()));
             }
-        } else {
-            buyerPays = price;
-            sellerReceives = price;
+
+            if (taxResult.appliedType() == TaxType.CAPITALISM) {
+                // TVA : l'acheteur paie price + taxe, le vendeur touche le prix plein.
+                message(player, Message.TAX_CAPITALISM_INFO,
+                        "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()),
+                        "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
+            } else {
+                // PURCHASE / BOTH : l'acheteur paie le prix plein, le vendeur touche price - taxe.
+                message(player, Message.TAX_PURCHASE_APPLIED,
+                        "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()),
+                        "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
+            }
         }
 
         String resolvedSellerName = auctionItem.getSellerName();
@@ -769,7 +1090,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
                         + auctionItem.getSellerUniqueId() + " -> " + resolvedSellerName
                         + " (cross-server purchase, item " + auctionItem.getId() + ")");
             } else {
-                
+
                 resolvedSellerName = auctionItem.getSellerUniqueId().toString();
                 this.plugin.getLogger().warning("[ZAH] Could not resolve seller name for UUID "
                         + auctionItem.getSellerUniqueId() + " (item " + auctionItem.getId()
@@ -779,12 +1100,20 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         }
         final String sellerName = resolvedSellerName;
 
-        // On retire l'argent de l'acheteur
-        try {
-            auctionEconomy.withdraw(player.getUniqueId(), buyerPays, args(auctionEconomy.getWithdrawReason(), "%seller%", sellerName, "%items%", items));
-        } catch (Exception e) {
-            this.plugin.getLogger().severe("Failed to withdraw " + buyerPays + " from buyer " + player.getName() + " for item " + auctionItem.getId() + ": " + e.getMessage());
-            throw new RuntimeException("Failed to withdraw buyer payment", e);
+        // On retire l'argent de l'acheteur. withdrawChecked pre-controle le solde SOUS VERROU
+        // et rend false quand le provider refuse : l'achat s'arrete AVANT que l'item ne bouge,
+        // AVANT que le vendeur ne soit credite et AVANT toute ecriture d'etat.
+        boolean withdrawn = auctionEconomy.withdrawChecked(player.getUniqueId(), buyerPays,
+                args(auctionEconomy.getWithdrawReason(), "%seller%", sellerName, "%items%", items));
+
+        if (!withdrawn) {
+            this.plugin.getLogger().severe("Withdraw of " + buyerPays + " from buyer " + player.getName()
+                    + " was refused for item " + auctionItem.getId()
+                    + ". Purchase aborted before any item or status movement.");
+            message(this.plugin, player, Message.NOT_ENOUGH_MONEY);
+            // Remonte dans le .exceptionally de PurchaseService, qui restaure le statut et
+            // relache le verrou. Rien n'a bouge : c'est le comportement voulu.
+            throw new IllegalStateException("Buyer payment refused for item " + auctionItem.getId());
         }
 
         // On donne l'argent au vendeur
@@ -793,7 +1122,11 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         boolean sellerOnThisServer = seller.isOnline();
         boolean deferDeposit = !auctionEconomy.isAutoClaim()
                 || (!sellerOnThisServer && auctionEconomy.mustBeOnline())
-                || (!sellerOnThisServer && clusterBridge.isDistributed());
+                || (!sellerOnThisServer && clusterBridge.isDistributed())
+                // C-032 : ces economies (LEVEL, EXPERIENCE, ITEM) ne savent pas crediter un
+                // joueur hors ligne et se contentent d'un no-op silencieux. Le paiement doit
+                // devenir une transaction PENDING au lieu d'etre detruit.
+                || (!sellerOnThisServer && !auctionEconomy.supportsOfflineDeposit());
 
         if (deferDeposit) {
 
@@ -801,103 +1134,171 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         } else {
 
             transactionStatus = TransactionStatus.RETRIEVED;
-            try {
-                auctionEconomy.deposit(seller.getUniqueId(), sellerReceives, args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items));
-            } catch (Exception e) {
-                this.plugin.getLogger().severe("Failed to deposit " + sellerReceives + " to seller " + auctionItem.getSellerName() + " for item " + auctionItem.getId() + ": " + e.getMessage());
-                try {
-                    auctionEconomy.deposit(player.getUniqueId(), buyerPays, args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items));
-                } catch (Exception refundEx) {
-                    this.plugin.getLogger().severe("CRITICAL: Buyer refund failed after seller deposit failure: " + refundEx.getMessage());
+
+            boolean deposited = auctionEconomy.depositChecked(seller.getUniqueId(), sellerReceives,
+                    args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items));
+
+            if (!deposited) {
+                this.plugin.getLogger().severe("Failed to deposit " + sellerReceives + " to seller " + sellerName
+                        + " for item " + auctionItem.getId() + ". Refunding the buyer and aborting the purchase.");
+
+                if (!auctionEconomy.depositChecked(player.getUniqueId(), buyerPays,
+                        args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items))) {
+                    this.plugin.getLogger().severe("CRITICAL: buyer refund of " + buyerPays + " to "
+                            + player.getName() + " ALSO failed for item " + auctionItem.getId()
+                            + ". Manual reconciliation required.");
                 }
-                throw new RuntimeException("Failed to deposit seller payment", e);
+
+                throw new IllegalStateException("Failed to deposit seller payment for item " + auctionItem.getId());
             }
         }
 
-        // Créer les transactions avec gestion d'erreur
+        // Comptabilite. Elle ne doit JAMAIS interrompre la livraison : a ce stade l'argent a
+        // deja bouge. Toute exception du provider est journalisee, jamais propagee. Les
+        // .exceptionally d'origine etaient de toute facon du code mort : ZAuctionEconomy.get
+        // rend un CompletableFuture DEJA complete, aucune exception n'y transite.
         final BigDecimal finalBuyerPays = buyerPays;
         final BigDecimal finalSellerReceives = sellerReceives;
         final boolean deferred = deferDeposit;
-        auctionEconomy.get(player.getUniqueId()).thenAccept(buyerBalance -> {
-            storageManager.createTransaction(auctionItem, player.getUniqueId(), economyName, buyerBalance.add(finalBuyerPays), buyerBalance, finalBuyerPays.negate(), TransactionStatus.RETRIEVED);
-        }).exceptionally(throwable -> {
-            this.plugin.getLogger().severe("Failed to create buyer transaction for item " + auctionItem.getId() + ": " + throwable.getMessage());
-            return null;
-        });
 
-        auctionEconomy.get(seller.getUniqueId()).thenAccept(sellerBalance -> {
-            var beforeBalance = deferred ? sellerBalance : sellerBalance.subtract(finalSellerReceives);
-            storageManager.createTransaction(auctionItem, seller.getUniqueId(), economyName, beforeBalance, sellerBalance, finalSellerReceives, transactionStatus);
-        }).exceptionally(throwable -> {
-            this.plugin.getLogger().severe("Failed to create seller transaction for item " + auctionItem.getId() + ": " + throwable.getMessage());
-            return null;
-        });
-
-        if (seller.isOnline()) {
-            var sellerPlayer = seller.getPlayer();
-            if (sellerPlayer != null) {
-                message(this.plugin, sellerPlayer, Message.ITEM_BOUGHT_SELLER, "%items%", itemsDisplay, "%price%", economyManager.format(auctionEconomy, sellerReceives), "%seller%", sellerName, "%buyer%", player.getName());
-            }
+        try {
+            BigDecimal buyerBalance = readBalanceOrZero(auctionEconomy, player.getUniqueId());
+            storageManager.createTransaction(auctionItem, player.getUniqueId(), economyName,
+                    buyerBalance.add(finalBuyerPays), buyerBalance, finalBuyerPays.negate(), TransactionStatus.RETRIEVED);
+        } catch (Exception exception) {
+            this.plugin.getLogger().severe("Failed to create buyer transaction for item "
+                    + auctionItem.getId() + ": " + exception.getMessage());
         }
 
-        message(player, Message.ITEM_BOUGHT_BUYER, "%items%", itemsDisplay, "%price%", economyManager.format(auctionEconomy, buyerPays), "%seller%", sellerName, "%buyer%", player.getName());
+        try {
+            BigDecimal sellerBalance = readBalanceOrZero(auctionEconomy, seller.getUniqueId());
+            var beforeBalance = deferred ? sellerBalance : sellerBalance.subtract(finalSellerReceives);
+            storageManager.createTransaction(auctionItem, seller.getUniqueId(), economyName,
+                    beforeBalance, sellerBalance, finalSellerReceives, transactionStatus);
+        } catch (Exception exception) {
+            this.plugin.getLogger().severe("Failed to create seller transaction for item "
+                    + auctionItem.getId() + ": " + exception.getMessage());
+        }
+
+        // ------------------------------------------------------------------
+        // A partir d'ici : la ligne en base bouge AVANT toute mutation memoire
+        // et AVANT toute remise physique.
+        //
+        // setBuyer et setExpiredAt sont les seules mutations qui precedent l'ecriture, parce
+        // qu'ils sont la CHARGE UTILE de l'UPDATE (le schema lit getBuyerUniqueId() et
+        // getExpiredAt()).
+        //
+        // NOTE : le debit de l'acheteur et le credit du vendeur restent en amont. Apres un
+        // echec de l'UPDATE l'acheteur est debite sans rien recevoir : c'est une perte
+        // reversible a la main, la ou l'ordre precedent produisait une DUPLICATION
+        // irreversible.
+        // ------------------------------------------------------------------
 
         auctionItem.setBuyer(player);
-        auctionItem.setStatus(ItemStatus.PURCHASED);
-
-        this.updateListedItems(auctionItem, false, player);
-        clearPlayerCache(player, PlayerCacheKey.ITEMS_PURCHASED);
-        if (seller.isOnline()) {
-            var sellerPlayer = seller.getPlayer();
-            if (sellerPlayer != null) {
-                clearPlayerCache(sellerPlayer, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.HISTORY_DATA, PlayerCacheKey.PENDING_MONEY_DATA);
-            }
-        }
-
-        removeItem(StorageType.LISTED, auctionItem);
 
         var purchasedConfiguration = configuration.getActions().purchased();
-
-        CompletableFuture<Void> updateFuture;
+        final StorageType destination;
 
         if (purchasedConfiguration.giveItem()) {
-
-            updateFuture = storageManager.updateItem(auctionItem, StorageType.DELETED);
-            giveItem(player, auctionItem);
-
+            destination = StorageType.DELETED;
         } else {
-
             var expiration = configuration.getPurchaseExpiration().getExpiration(player);
-            long expiredAt = expiration > 0 ? System.currentTimeMillis() + (expiration * 1000) : 0;
-            auctionItem.setExpiredAt(new Date(expiredAt));
-
-            addItem(StorageType.PURCHASED, auctionItem);
-            updateFuture = storageManager.updateItem(auctionItem, StorageType.PURCHASED);
+            long purchaseExpiredAt = expiration > 0 ? System.currentTimeMillis() + (expiration * 1000) : 0;
+            auctionItem.setExpiredAt(new Date(purchaseExpiredAt));
+            destination = StorageType.PURCHASED;
         }
 
-        cache.remove(PlayerCacheKey.ITEM_SHOW);
-        if (purchasedConfiguration.openInventory()) {
-            openMainAuction(player, cache.get(PlayerCacheKey.CURRENT_PAGE, 1));
-        } else {
-            this.plugin.getScheduler().runAtEntity(player, w -> {
-                if (player.isOnline()) player.closeInventory();
-            });
-        }
+        final BigDecimal displayedBuyerPays = buyerPays;
+        final BigDecimal displayedSellerReceives = sellerReceives;
 
-        logItemAction(LogType.PURCHASE, auctionItem, player, auctionItem.getSellerUniqueId(), "purchase_item", seller.isOnline() ? new Date() : null);
+        return storageManager.updateItem(auctionItem, StorageType.LISTED, destination).thenCompose(v -> {
 
-        // Discord webhook notification
-        if (this.plugin instanceof ZAuctionPlugin zAuctionPlugin) {
-            DiscordWebhookService discordService = zAuctionPlugin.getDiscordWebhookService();
-            if (discordService != null && discordService.isEnabled()) {
-                discordService.notifyItemPurchased(player, auctionItem);
+            // --- 1. Mutations memoire (la base a confirme) ---
+            auctionItem.setStatus(destination == StorageType.PURCHASED ? ItemStatus.PURCHASED : ItemStatus.DELETED);
+            removeItem(StorageType.LISTED, auctionItem);
+            if (destination == StorageType.PURCHASED) addItem(StorageType.PURCHASED, auctionItem);
+
+            this.updateListedItems(auctionItem, false, player);
+            clearPlayerCache(player, PlayerCacheKey.ITEMS_PURCHASED);
+            if (seller.isOnline()) {
+                var sellerPlayer = seller.getPlayer();
+                if (sellerPlayer != null) {
+                    clearPlayerCache(sellerPlayer, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.HISTORY_DATA, PlayerCacheKey.PENDING_MONEY_DATA);
+                }
             }
 
-            // Broadcast purchase notification
-            zAuctionPlugin.getBroadcastService().broadcastPurchase(player, auctionItem);
-        }
+            // --- 2. Notifications (l'achat est acquis, on peut l'annoncer) ---
+            if (seller.isOnline()) {
+                var sellerPlayer = seller.getPlayer();
+                if (sellerPlayer != null) {
+                    message(this.plugin, sellerPlayer, Message.ITEM_BOUGHT_SELLER, "%items%", itemsDisplay, "%price%", economyManager.format(auctionEconomy, displayedSellerReceives), "%seller%", sellerName, "%buyer%", player.getName());
+                }
+            }
+            message(player, Message.ITEM_BOUGHT_BUYER, "%items%", itemsDisplay, "%price%", economyManager.format(auctionEconomy, displayedBuyerPays), "%seller%", sellerName, "%buyer%", player.getName());
 
-        return updateFuture;
+            cache.remove(PlayerCacheKey.ITEM_SHOW);
+            if (purchasedConfiguration.openInventory()) {
+                openMainAuction(player, cache.get(PlayerCacheKey.CURRENT_PAGE, 1));
+            } else {
+                this.plugin.getScheduler().runAtEntity(player, w -> {
+                    if (player.isOnline()) player.closeInventory();
+                });
+            }
+
+            logItemAction(LogType.PURCHASE, auctionItem, player, auctionItem.getSellerUniqueId(), "purchase_item", seller.isOnline() ? new Date() : null);
+
+            if (this.plugin instanceof ZAuctionPlugin zAuctionPlugin) {
+                DiscordWebhookService discordService = zAuctionPlugin.getDiscordWebhookService();
+                if (discordService != null && discordService.isEnabled()) {
+                    discordService.notifyItemPurchased(player, auctionItem);
+                }
+                zAuctionPlugin.getBroadcastService().broadcastPurchase(player, auctionItem);
+            }
+
+            // --- 3. Remise physique, chainee et compensee ---
+            if (destination != StorageType.DELETED) return CompletableFuture.<Void>completedFuture(null);
+
+            // Si la remise ne peut pas avoir lieu, la ligne redevient PURCHASED : l'acheteur la
+            // reclamera dans son onglet « items achetes » au lieu de perdre son achat.
+            return deliverOrRestore(player, auctionItem, StorageType.PURCHASED).thenApply(delivered -> null);
+
+        }).whenComplete((v, throwable) -> {
+            // L'argent a deja bouge : si la ligne nous echappe ici, il faut la trace complete
+            // pour un remboursement manuel.
+            if (throwable != null && StaleItemException.unwrap(throwable) != null) {
+                this.plugin.getLogger().severe("PURCHASE LOST THE RACE - item " + auctionItem.getId()
+                        + " buyer " + player.getUniqueId() + " (" + player.getName() + ") price " + displayedBuyerPays
+                        + " economy " + auctionEconomy.getName()
+                        + " : money was moved but the row was already taken by another server, manual refund required");
+            }
+        });
+    }
+
+    /**
+     * Lecture defensive d'un solde, uniquement destinee aux colonnes before/after de
+     * l'historique.
+     * <p>
+     * {@code AuctionEconomy.get} rend aujourd'hui un future DEJA complete (voir
+     * {@code ZAuctionEconomy.get}) : le {@code join()} ne bloque donc jamais.
+     * <p>
+     * En cas de panne du provider on rend ZERO plutot que de faire echouer un achat deja
+     * commis : les colonnes before/after sont alors fausses pour cette ligne, ce qui est
+     * strictement preferable a la perte de la dette PENDING du vendeur. Le SEVERE qui precede
+     * rend le cas reperable.
+     *
+     * @param auctionEconomy economie interrogee
+     * @param playerId       joueur dont on lit le solde
+     * @return le solde, ou {@link BigDecimal#ZERO} si le provider ne repond pas
+     */
+    private BigDecimal readBalanceOrZero(AuctionEconomy auctionEconomy, UUID playerId) {
+        try {
+            var balance = auctionEconomy.get(playerId).join();
+            return balance == null ? BigDecimal.ZERO : balance;
+        } catch (Exception exception) {
+            this.plugin.getLogger().severe("Unable to read the balance of " + playerId + " for economy "
+                    + auctionEconomy.getName() + ": " + exception.getMessage());
+            return BigDecimal.ZERO;
+        }
     }
 
     @Override
@@ -905,15 +1306,201 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         this.message(this.plugin, player, message, args);
     }
 
-    public void giveItem(Player player, Item item) {
-        if (item instanceof AuctionItem auctionItem) {
+    /**
+     * Resultat d'une remise physique.
+     *
+     * @param executed  true si la tache a reellement tourne sur le thread de l'entite
+     * @param delivered nombre d'ItemStack effectivement remis (ou deposes au sol)
+     * @param total     nombre d'ItemStack que portait l'annonce
+     */
+    public record GiveResult(boolean executed, int delivered, int total) {
 
-            var itemStacks = auctionItem.getItemStacks();
-            for (ItemStack itemStack : itemStacks) {
-                player.getInventory().addItem(itemStack).forEach((slot, dropItemStack) -> player.getWorld().dropItem(player.getLocation(), dropItemStack));
+        /**
+         * @param total nombre d'ItemStack que portait l'annonce
+         * @return un resultat marquant qu'aucune remise n'a eu lieu
+         */
+        public static GiveResult notExecuted(int total) {
+            return new GiveResult(false, 0, total);
+        }
+
+        /**
+         * @return true si RIEN n'a ete remis : le lot doit etre rendu reclamable en base
+         */
+        public boolean isNothingDelivered() {
+            return this.delivered == 0;
+        }
+    }
+
+    /**
+     * Remet le contenu d'une annonce dans l'inventaire d'un joueur.
+     * <p>
+     * La remise est TOUJOURS executee sur le thread de l'entite : c'est obligatoire sur Folia,
+     * et c'est deja necessaire sur Paper puisque la chaine d'achat bascule sur un pool commun
+     * des la relecture en base et la chaine de retrait sur l'executor de la base.
+     * <p>
+     * Le future rendu n'est JAMAIS complete exceptionnellement : un echec se lit dans le
+     * {@link GiveResult}. La boucle ne s'interrompt plus au premier ItemStack null ou fautif,
+     * ce qui evite qu'un lot partiellement corrompu soit detruit a moitie.
+     *
+     * @param player joueur destinataire
+     * @param item   annonce a remettre
+     * @return le compte-rendu de la remise
+     */
+    public CompletableFuture<GiveResult> giveItem(Player player, Item item) {
+
+        if (!(item instanceof AuctionItem auctionItem)) {
+            this.plugin.getLogger().severe("[ZAH] give item not implemented for item #" + item.getId());
+            return CompletableFuture.completedFuture(GiveResult.notExecuted(0));
+        }
+
+        var itemStacks = auctionItem.getItemStacks();
+        final int total = itemStacks == null ? 0 : itemStacks.size();
+        if (total == 0) {
+            this.plugin.getLogger().severe("[ZAH] Item #" + item.getId() + " has no content to give to " + player.getName());
+            return CompletableFuture.completedFuture(GiveResult.notExecuted(0));
+        }
+
+        var future = new CompletableFuture<GiveResult>();
+        var settled = new AtomicBoolean(false);
+
+        var scheduled = this.plugin.getScheduler().runAtEntity(player, wrappedTask -> {
+
+            // Le filet temporel ci-dessous a pu abandonner la remise et declencher la
+            // compensation : dans ce cas il ne faut SURTOUT pas remettre les items, on
+            // dupliquerait le lot.
+            if (!settled.compareAndSet(false, true)) {
+                this.plugin.getLogger().severe("[ZAH] Give aborted for item #" + item.getId()
+                        + ": the delivery was already compensated, the item is claimable again.");
+                return;
             }
 
-        } else plugin.getLogger().severe("give item not implemented");
+            if (!player.isOnline()) {
+                future.complete(GiveResult.notExecuted(total));
+                return;
+            }
+
+            int delivered = 0;
+            try {
+                for (ItemStack itemStack : itemStacks) {
+                    if (itemStack == null) {
+                        this.plugin.getLogger().severe("[ZAH] Null ItemStack in item #" + item.getId() + ", skipped.");
+                        continue;
+                    }
+                    try {
+                        player.getInventory().addItem(itemStack.clone())
+                                .forEach((slot, dropItemStack) -> player.getWorld().dropItem(player.getLocation(), dropItemStack));
+                        delivered++;
+                    } catch (Throwable throwable) {
+                        this.plugin.getLogger().severe("[ZAH] Unable to give a stack of item #" + item.getId() + ": " + throwable);
+                    }
+                }
+            } finally {
+                future.complete(new GiveResult(true, delivered, total));
+            }
+        });
+
+        // Filet 1 : la tache n'a pas pu etre planifiee (ENTITY_RETIRED / SCHEDULER_RETIRED sur Folia).
+        scheduled.whenComplete((result, throwable) -> {
+            if (throwable == null && result == EntityTaskResult.SUCCESS) return;
+            if (settled.compareAndSet(false, true)) future.complete(GiveResult.notExecuted(total));
+        });
+
+        // Filet 2 : l'entite est retiree APRES la planification, personne ne complete le future.
+        this.plugin.getScheduler().runLaterAsync(wrappedTask -> {
+            if (settled.compareAndSet(false, true)) {
+                this.plugin.getLogger().severe("[ZAH] Give timed out for item #" + item.getId()
+                        + " (player " + player.getName() + "), the item will be made claimable again.");
+                future.complete(GiveResult.notExecuted(total));
+            }
+        }, GIVE_ITEM_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        return future;
+    }
+
+    /**
+     * Remet le lot au joueur APRES que l'ecriture en base a ete confirmee, et compense si la
+     * remise n'a pas pu avoir lieu DU TOUT : la ligne est repositionnee dans
+     * {@code claimableStorage} au lieu d'etre perdue. C'est ce qui empeche l'inversion d'ordre
+     * d'echanger une duplication contre une destruction.
+     * <p>
+     * Ce future ne se termine JAMAIS en erreur : passe l'ecriture en base le retrait est commis
+     * et ne doit plus jamais pouvoir etre rapporte en echec.
+     *
+     * @param player           destinataire de la remise
+     * @param item             annonce concernee
+     * @param claimableStorage conteneur ou la rendre reclamable si la remise echoue
+     * @return true si le lot a effectivement ete remis au joueur
+     */
+    private CompletableFuture<Boolean> deliverOrRestore(Player player, Item item, StorageType claimableStorage) {
+
+        return giveItem(player, item).thenCompose(giveResult -> {
+
+            if (!giveResult.isNothingDelivered()) return CompletableFuture.completedFuture(Boolean.TRUE);
+
+            this.plugin.getLogger().severe("[ZAH] Item #" + item.getId() + " could not be delivered to "
+                    + player.getName() + ", restoring it as " + claimableStorage + " so it stays claimable.");
+
+            return restoreClaimable(item, claimableStorage).thenApply(restored -> {
+                if (!Boolean.TRUE.equals(restored)) {
+                    this.plugin.getLogger().severe("[ZAH] CRITICAL: item #" + item.getId()
+                            + " is neither delivered nor claimable, a manual restore is required.");
+                }
+                return Boolean.FALSE;
+            });
+
+        }).exceptionally(throwable -> {
+            this.plugin.getLogger().severe("[ZAH] Unexpected error while delivering item #" + item.getId() + ": " + throwable);
+            return Boolean.FALSE;
+        });
+    }
+
+    /**
+     * Repositionne dans un conteneur RECLAMABLE une ligne deja passee a DELETED dont la remise
+     * physique n'a finalement pas pu avoir lieu.
+     * <p>
+     * Une SEULE primitive suffit desormais : {@link ItemRepository#restoreFromDeleted(Item, StorageType)}
+     * porte un compare-and-set dont la source est DELETED (et non LISTED) et n'impose pas le
+     * {@code whereNull("buyer_unique_id")} du chemin de vente. Elle couvre donc aussi bien la
+     * compensation vers EXPIRED que celle vers PURCHASED, en rendant son propre rowcount : les
+     * deux branches de contournement qui vivaient ici - dont un {@code updateItem} deprecie qui
+     * jetait son rowcount et rendait donc un succes inconditionnel - disparaissent.
+     * <p>
+     * {@code expired_at} est remis a zero, ce qui vaut « n'expire jamais » ({@code ZItem.isExpired}) :
+     * une compensation ne doit pas produire un item deja perime, donc immediatement re-balaye
+     * par le service d'expiration. La primitive ecrit cette valeur telle quelle.
+     *
+     * @param item             annonce a rendre reclamable
+     * @param claimableStorage conteneur cible (EXPIRED ou PURCHASED)
+     * @return true si la ligne a bien ete repositionnee
+     */
+    private CompletableFuture<Boolean> restoreClaimable(Item item, StorageType claimableStorage) {
+
+        var storageManager = this.plugin.getStorageManager();
+        item.setExpiredAt(new Date(0));
+
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                // 1 = ligne restauree, 0 = un autre noeud l'a deja bougee : dans ce dernier cas
+                // la compensation est inutile ET interdite, la ligne ne nous appartient plus.
+                return storageManager.with(ItemRepository.class).restoreFromDeleted(item, claimableStorage) == 1;
+            } catch (Throwable throwable) {
+                this.plugin.getLogger().severe("[ZAH] Unable to restore item #" + item.getId() + ": " + throwable);
+                return Boolean.FALSE;
+            }
+        }, this.plugin.getExecutorService()).thenCompose(restored -> {
+
+            if (!Boolean.TRUE.equals(restored)) return CompletableFuture.completedFuture(Boolean.FALSE);
+
+            // La mutation du store et des index par proprietaire (IntArrayList non thread-safe)
+            // repasse par le thread principal.
+            var applied = new CompletableFuture<Boolean>();
+            this.plugin.getScheduler().runNextTick(wrappedTask -> {
+                item.setStatus(claimableStorage == StorageType.PURCHASED ? ItemStatus.PURCHASED : ItemStatus.REMOVED);
+                addItem(claimableStorage, item);
+                applied.complete(Boolean.TRUE);
+            });
+            return applied;
+        });
     }
 
     @Override
@@ -935,7 +1522,9 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         this.sortedItemsCache.ensureCacheValidAsync().thenRun(() -> {
             for (Player onlinePlayer : this.plugin.getServer().getOnlinePlayers()) {
 
-                if (onlinePlayer == ignoredPlayer) return;
+                // Le `return` sortait du lambda thenRun, donc de TOUTE la boucle : tous les
+                // joueurs situes apres le joueur ignore gardaient un GUI perime.
+                if (onlinePlayer == ignoredPlayer) continue;
 
                 this.plugin.getScheduler().runAtEntity(onlinePlayer, w -> {
 
@@ -958,12 +1547,24 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     private void removeFromCache(Player player, Item item) {
-        if (this.caches.containsKey(player)) {
-            var cache = this.caches.get(player);
-            IntList items = cache.get(PlayerCacheKey.ITEMS_LISTED);
-            if (items != null && !items.isEmpty()) {
-                items.rem(item.getId());
-            }
+        // ITEMS_LISTED est un IntArrayList NON thread-safe partage avec le rendu de l'inventaire
+        // du joueur. La branche update-inventory-on-action:false le mute pour TOUS les joueurs en
+        // ligne depuis un thread arbitraire, pendant que le thread proprietaire l'itere. On
+        // confine donc la mutation au thread du joueur (C-105).
+        var scheduler = this.plugin.getScheduler();
+        if (scheduler.isOwnedByCurrentRegion(player)) {
+            removeFromCacheNow(player, item);
+            return;
+        }
+        scheduler.runAtEntity(player, wrappedTask -> removeFromCacheNow(player, item));
+    }
+
+    private void removeFromCacheNow(Player player, Item item) {
+        var cache = peekCache(player);
+        if (cache == null) return;
+        IntList items = cache.get(PlayerCacheKey.ITEMS_LISTED);
+        if (items != null && !items.isEmpty()) {
+            items.rem(item.getId());
         }
     }
 
@@ -982,7 +1583,10 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         if (item instanceof AuctionItem auctionItem) {
             var itemStacks = auctionItem.getItemStacks();
             if (itemStacks != null && !itemStacks.isEmpty()) {
-                encodedItemStack = itemStacks.stream().map(Base64ItemStack::encode).collect(Collectors.joining(";"));
+                // Base64ItemStack.encode rend desormais null sur charge illisible : sans le
+                // filtre, un null traverserait Collectors.joining sous la forme de la chaine
+                // litterale "null" et corromprait le journal admin.
+                encodedItemStack = itemStacks.stream().map(Base64ItemStack::encode).filter(Objects::nonNull).collect(Collectors.joining(";"));
             }
         }
 
@@ -1068,105 +1672,122 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public void removeAllExpiredItems(Player player) {
-        var configuration = this.plugin.getConfiguration();
-        var storageManager = this.plugin.getStorageManager();
-        var freeSpace = configuration.getActions().expired().freeSpace();
-
         var items = new ArrayList<>(getExpiredItems(player));
         if (items.isEmpty()) return;
 
-        int given = 0;
-        for (Item item : items) {
-            if (freeSpace && !item.canReceiveItem(player)) break;
-
-            removeItem(StorageType.EXPIRED, item);
-            storageManager.updateItem(item, StorageType.DELETED);
-            giveItem(player, item);
-            callEvent(new AuctionRemoveExpiredItemEvent(item, player));
-            logItemAction(LogType.REMOVE_EXPIRED, item, player, null, "removed_expired_item_bulk");
-            given++;
-        }
-
-        if (given > 0) {
-            clearPlayerCache(player, PlayerCacheKey.ITEMS_EXPIRED);
-            message(this.plugin, player, Message.REMOVE_ALL_ITEMS, "%amount%", String.valueOf(given));
-        }
-
-        if (configuration.getActions().expired().openInventory()) {
-            updateInventory(player);
-        } else {
-            this.plugin.getScheduler().runAtEntity(player, w -> {
-                if (player.isOnline()) player.closeInventory();
-            });
-        }
+        processBulkItems(player, items, item -> this.auctionRemoveService.removeExpiredItem(player, item, false))
+                .thenAccept(progress -> finishBulkRemoval(player, progress, items.size(), this.plugin.getConfiguration().getActions().expired().openInventory(), PlayerCacheKey.ITEMS_EXPIRED));
     }
 
     @Override
     public void removeAllSellingItems(Player player) {
-        var configuration = this.plugin.getConfiguration();
-        var storageManager = this.plugin.getStorageManager();
-        var freeSpace = configuration.getActions().selling().freeSpace();
-        var clusterBridge = this.plugin.getAuctionClusterBridge();
-
         var items = new ArrayList<>(getPlayerSellingItems(player));
         if (items.isEmpty()) return;
 
-        int given = 0;
-        for (Item item : items) {
-            if (item.getStatus() != ItemStatus.AVAILABLE) continue;
-            if (freeSpace && !item.canReceiveItem(player)) break;
-
-            item.setStatus(ItemStatus.DELETED);
-            removeItem(StorageType.LISTED, item);
-            updateListedItems(item, false, player);
-            storageManager.updateItem(item, StorageType.DELETED);
-            giveItem(player, item);
-            clusterBridge.removeItem(item, StorageType.LISTED);
-            callEvent(new AuctionRemoveListedItemEvent(item, player));
-            logItemAction(LogType.REMOVE_SELLING, item, player, null, "removed_selling_item_bulk");
-            given++;
-        }
-
-        if (given > 0) {
-            clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED);
-            message(this.plugin, player, Message.REMOVE_ALL_ITEMS, "%amount%", String.valueOf(given));
-        }
-
-        updateInventory(player);
+        processBulkItems(player, items, item -> this.auctionRemoveService.removeSellingItem(player, item, false))
+                .thenAccept(progress -> finishBulkRemoval(player, progress, items.size(), true, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED));
     }
 
     @Override
     public void removeAllPurchasedItems(Player player) {
-        var configuration = this.plugin.getConfiguration();
-        var storageManager = this.plugin.getStorageManager();
-        var freeSpace = configuration.getActions().purchased().freeSpace();
-
         var items = new ArrayList<>(getPurchasedItems(player));
         if (items.isEmpty()) return;
 
-        int given = 0;
+        processBulkItems(player, items, item -> this.auctionRemoveService.removePurchasedItem(player, item, false))
+                .thenAccept(progress -> finishBulkRemoval(player, progress, items.size(), this.plugin.getConfiguration().getActions().purchased().openInventory(), PlayerCacheKey.ITEMS_PURCHASED));
+    }
+
+    private CompletableFuture<BulkRemovalProgress> processBulkItems(Player player, List<Item> items, Function<Item, CompletableFuture<RemoveResult>> removal) {
+        CompletableFuture<BulkRemovalProgress> future = CompletableFuture.completedFuture(new BulkRemovalProgress(0, 0, false));
+
         for (Item item : items) {
-            if (freeSpace && !item.canReceiveItem(player)) break;
+            future = future.thenCompose(progress -> {
+                if (progress.stopped()) return CompletableFuture.completedFuture(progress);
 
-            removeItem(StorageType.PURCHASED, item);
-            storageManager.updateItem(item, StorageType.DELETED);
-            giveItem(player, item);
-            callEvent(new AuctionRemovePurchasedItemEvent(item, player));
-            logItemAction(LogType.REMOVE_PURCHASED, item, player, item.getSellerUniqueId(), "removed_purchased_item_bulk");
-            given++;
-        }
+                return runBulkRemovalOnPlayerThread(player, item, removal).handle((result, throwable) -> {
 
-        if (given > 0) {
-            clearPlayerCache(player, PlayerCacheKey.ITEMS_PURCHASED);
-            message(this.plugin, player, Message.REMOVE_ALL_ITEMS, "%amount%", String.valueOf(given));
-        }
+                    if (throwable != null) {
+                        // Une annonce en echec ne doit PAS emporter tout le lot : on la compte
+                        // comme traitee-non-rendue et on continue avec les suivantes.
+                        this.plugin.getLogger().severe("Bulk removal failed for item " + item.getId() + ": " + throwable.getMessage());
+                        return new BulkRemovalProgress(progress.given(), progress.processed() + 1, false);
+                    }
 
-        if (configuration.getActions().purchased().openInventory()) {
-            updateInventory(player);
-        } else {
-            this.plugin.getScheduler().runAtEntity(player, w -> {
-                if (player.isOnline()) player.closeInventory();
+                    boolean success = result != null && result.isSuccess() && result.isItemGiven();
+
+                    // Seul un inventaire plein justifie d'arreter : continuer n'aurait aucun sens.
+                    // INTERNAL_ERROR ne doit plus interrompre la chaine (C-053).
+                    boolean stopped = result == null || result.getFailReason() == RemoveFailReason.INSUFFICIENT_SPACE;
+
+                    return new BulkRemovalProgress(progress.given() + (success ? 1 : 0), progress.processed() + 1, stopped);
+                });
             });
         }
+
+        return future;
     }
+
+    private CompletableFuture<RemoveResult> runBulkRemovalOnPlayerThread(Player player, Item item, Function<Item, CompletableFuture<RemoveResult>> removal) {
+        var future = new CompletableFuture<RemoveResult>();
+
+        try {
+            this.plugin.getScheduler().runAtEntity(player, wrappedTask -> {
+                if (!player.isOnline()) {
+                    future.complete(RemoveResult.failure("Player is offline", RemoveFailReason.INTERNAL_ERROR));
+                    return;
+                }
+
+                try {
+                    removal.apply(item).whenComplete((result, throwable) -> {
+                        if (throwable == null) {
+                            future.complete(result);
+                        } else {
+                            future.completeExceptionally(throwable);
+                        }
+                    });
+                } catch (Throwable throwable) {
+                    future.completeExceptionally(throwable);
+                }
+            });
+        } catch (Throwable throwable) {
+            future.completeExceptionally(throwable);
+        }
+
+        return future;
+    }
+
+    private void finishBulkRemoval(Player player, BulkRemovalProgress progress, int requested, boolean openInventory, PlayerCacheKey... cacheKeys) {
+        this.plugin.getScheduler().runAtEntity(player, wrappedTask -> {
+            clearPlayerCache(player, cacheKeys);
+
+            int given = progress.given();
+            if (given > 0) {
+                message(this.plugin, player, Message.REMOVE_ALL_ITEMS, "%amount%", String.valueOf(given));
+            }
+
+            // Les annonces non rendues etaient jusqu'ici passees sous silence cote joueur : un
+            // simple warning console lui laissait croire qu'il avait tout recupere alors que le
+            // lot s'etait arrete au premier incident.
+            int skipped = requested - given;
+            if (skipped > 0) {
+                // L'inventaire plein est la SEULE cause qui interrompt le lot : on la nomme, sinon
+                // le joueur ne sait pas quoi faire pour obtenir le reste.
+                if (progress.stopped()) {
+                    message(this.plugin, player, Message.NOT_ENOUGH_SPACE);
+                }
+
+                message(this.plugin, player, Message.REMOVE_ALL_ITEMS_PARTIAL, "%amount%", String.valueOf(skipped));
+            }
+
+            if (!player.isOnline()) return;
+
+            if (openInventory) {
+                updateInventory(player);
+            } else {
+                player.closeInventory();
+            }
+        });
+    }
+
+    private record BulkRemovalProgress(int given, int processed, boolean stopped) { }
 }

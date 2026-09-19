@@ -30,12 +30,32 @@ public class PlayerRepository extends Repository {
         });
     }
 
+    /**
+     * Charge la totalite de l'annuaire des joueurs.
+     * <p>
+     * {@code selectAllOrFail} et non {@code selectAll} : un echec avale rendait une liste VIDE,
+     * et le chargement mettait alors en QUARANTAINE la totalite des annonces (vendeur
+     * introuvable) au lieu de tuer le demarrage bruyamment (C-001).
+     *
+     * @return every known player row
+     * @throws IllegalStateException if the query failed
+     */
     public List<PlayerDTO> select() {
-        return selectAll(PlayerDTO.class);
+        return selectAllOrFail(PlayerDTO.class);
     }
 
+    /**
+     * Charge un lot de joueurs par UUID.
+     * <p>
+     * Clause IN PAGINEE et echec PROPAGE : sur un gros reseau, la liste d'UUID depassait le
+     * plafond de parametres du pilote et la requete etait rejetee, silencieusement (C-001).
+     *
+     * @param uuids the player unique ids, as strings
+     * @return the matching rows
+     * @throws IllegalStateException if the query failed
+     */
     public List<PlayerDTO> select(List<String> uuids) {
-        return select(PlayerDTO.class, schema -> schema.whereIn("unique_id", uuids));
+        return selectInOrFail(PlayerDTO.class, "unique_id", uuids);
     }
 
     public String select(UUID uniqueId) {

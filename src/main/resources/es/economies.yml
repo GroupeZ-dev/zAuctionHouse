@@ -74,6 +74,11 @@ economies:
     # Si es true, el dinero se deposita solo cuando el vendedor esta en linea.
     # Si es false, el dinero se deposita incluso cuando el vendedor esta desconectado.
     # Util para plugins de economia que no soportan transacciones offline.
+    #
+    # ADVERTENCIA: esta opcion se FUERZA a true al iniciar para los tipos de economia LEVEL,
+    # EXPERIENCE, ITEM y ZMENUITEMS. Esos tipos dependen de la entidad del jugador y
+    # simplemente no hacen nada cuando el jugador esta desconectado, lo que destruia el pago
+    # del vendedor. Los vendedores de esas economias ahora reciben su dinero con /ah claim.
     must-be-online: false
 
     # Permiso opcional requerido para usar esta economia.
@@ -133,6 +138,14 @@ economies:
       # CAPITALISM: Impuesto estilo IVA donde el COMPRADOR paga mas, el vendedor recibe el precio completo.
       #             Ejemplo: Objeto listado a 1000$ con 5% de IVA -> El comprador paga 1050$.
       #             El comprador paga: 1050$ | El vendedor recibe: 1000$
+      #
+      # NOTA sobre las reglas por objeto (tax.item-rules mas abajo):
+      # Una regla por objeto ahora se evalua en la COMPRA sea cual sea el 'type' de arriba. Una
+      # regla PURCHASE o CAPITALISM declarada en una economia 'type: SELL' se ignoraba
+      # silenciosamente al comprar; a partir de ahora se aplica. Revisa tus reglas por objeto
+      # antes de actualizar.
+      # Para un listado que contiene varios stacks, gana la regla que produce el impuesto MAS
+      # ALTO, la misma regla que ya se usaba en el lado de la venta.
       type: SELL
 
       # Metodo de calculo del impuesto:

@@ -103,6 +103,58 @@ public interface AuctionEconomy {
     void withdraw(UUID playerId, BigDecimal value, String reason);
 
     /**
+     * Retire le montant du compte du joueur et indique si le retrait a REELLEMENT eu lieu.
+     * <p>
+     * L'implementation par defaut delegue a {@link #withdraw(UUID, BigDecimal, String)} et
+     * repond {@code true} : elle preserve a l'identique le comportement des implementations
+     * ecrites avant l'introduction de cette methode. Les implementations qui savent controler
+     * leur provider (voir {@code ZAuctionEconomy}) doivent la surcharger.
+     * <p>
+     * Un {@code false} signifie qu'AUCUN argent n'a bouge : l'appelant doit abandonner
+     * l'operation avant tout mouvement d'item.
+     *
+     * @param playerId the player to withdraw money from
+     * @param value    the amount of money to withdraw
+     * @param reason   the reason for the withdrawal
+     * @return {@code true} si le retrait a eu lieu, {@code false} s'il a ete refuse
+     */
+    default boolean withdrawChecked(UUID playerId, BigDecimal value, String reason) {
+        withdraw(playerId, value, reason);
+        return true;
+    }
+
+    /**
+     * Depose le montant sur le compte du joueur et indique si le depot a REELLEMENT eu lieu.
+     * <p>
+     * Meme contrat de compatibilite que {@link #withdrawChecked(UUID, BigDecimal, String)}.
+     * Un {@code false} signifie que l'argent n'a pas ete credite et que l'appelant doit le
+     * conserver sous forme de dette (transaction PENDING) ou le journaliser en SEVERE.
+     *
+     * @param playerId the player to deposit money into
+     * @param value    the amount of money to deposit
+     * @param reason   the reason for the deposit
+     * @return {@code true} si le depot a eu lieu, {@code false} sinon
+     */
+    default boolean depositChecked(UUID playerId, BigDecimal value, String reason) {
+        deposit(playerId, value, reason);
+        return true;
+    }
+
+    /**
+     * Indique si cette economie sait crediter un joueur HORS LIGNE.
+     * <p>
+     * Les economies adossees a l'entite joueur (niveaux, experience, items) sont des no-op
+     * silencieux quand le joueur n'est pas connecte : l'argent du vendeur disparait. Le plugin
+     * s'appuie sur ce predicat pour transformer le paiement en transaction PENDING plutot que
+     * de le detruire.
+     *
+     * @return {@code true} si un depot hors ligne est possible (valeur par defaut)
+     */
+    default boolean supportsOfflineDeposit() {
+        return true;
+    }
+
+    /**
      * Gets the reason for depositing money into an account.
      *
      * @return the deposit reason as a string.

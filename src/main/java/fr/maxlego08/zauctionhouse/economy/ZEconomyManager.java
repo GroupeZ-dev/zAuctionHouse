@@ -350,6 +350,18 @@ public class ZEconomyManager implements EconomyManager {
             return;
         }
 
+        // C-032 : les providers adosses a l'entite joueur (LEVEL, EXPERIENCE, ITEM,
+        // ZMENUITEMS) sont des no-op silencieux quand le joueur est hors ligne : le paiement
+        // du vendeur disparait purement et simplement. Forcer must-be-online transforme ce
+        // paiement en transaction PENDING, reclamable via /ah claim.
+        if (!ZAuctionEconomy.supportsOfflineDeposit(currencies) && !mustBeOnline) {
+            mustBeOnline = true;
+            this.plugin.getLogger().warning("Economy '" + name + "' uses type '" + type + "', which cannot"
+                    + " credit an offline player. 'must-be-online' has been forced to true: sellers will now"
+                    + " receive their money through /ah claim instead of losing it. Update economies.yml to"
+                    + " silence this warning.");
+        }
+
         EnumMap<ItemType, BigDecimal> maxPrices = new EnumMap<>(ItemType.class);
         if (accessor.contains("max-prices")) {
             maxPrices = loadPrices(accessor.getObject("max-prices"), "max-prices for economy '" + name + "'");
@@ -362,7 +374,11 @@ public class ZEconomyManager implements EconomyManager {
         // Load tax configuration
         TaxConfiguration taxConfiguration = loadTaxConfiguration(name, accessor);
 
-        var auctionEconomy = new ZAuctionEconomy(this.plugin, currencyProvider, name, displayName, format, symbol, permission, depositReason, withdrawReason, priceFormat, minPrices, maxPrices, autoClaim, mustBeOnline, taxConfiguration);
+        // `currencies` est transmis pour que ZAuctionEconomy sache si le provider fait du
+        // read-modify-write sur des API Bukkit main-thread-only (ITEM / ZMENUITEMS / LEVEL /
+        // EXPERIENCE) et doive donc muter le solde sur le thread proprietaire du joueur (C-084),
+        // et pour qu'il sache repondre a supportsOfflineDeposit() (C-032).
+        var auctionEconomy = new ZAuctionEconomy(this.plugin, currencyProvider, currencies, name, displayName, format, symbol, permission, depositReason, withdrawReason, priceFormat, minPrices, maxPrices, autoClaim, mustBeOnline, taxConfiguration);
         this.economies.add(auctionEconomy);
         this.plugin.getLogger().info("Economy '" + name + "' loaded successfully!");
     }

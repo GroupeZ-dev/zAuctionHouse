@@ -302,6 +302,9 @@ public class ZelAuctionMigrationService {
                     }
 
                     LogType logType = "BUY".equalsIgnoreCase(transactionType) ? LogType.PURCHASE : LogType.SALE;
+                    // createLogEntry leve desormais SQLException / IllegalStateException au lieu
+                    // d'avaler l'echec : la ligne n'est PAS comptee comme migree et le
+                    // catch(Exception) ci-dessous la remonte a l'exploitant (C-033).
                     createLogEntry(v4Connection, fromUuid, v4Itemstack, price, logType, date);
                     migrated++;
 
@@ -365,23 +368,80 @@ public class ZelAuctionMigrationService {
         }
     }
 
-    private void createLogEntry(DatabaseConnection v4Connection, UUID playerUuid, String itemstack, double price, LogType logType, long date) {
-        try {
-            Schema schema = SchemaBuilder.insert(Tables.LOGS, s -> {
-                s.string("log_type", logType.name());
-                s.object("item_id", 0);
-                s.uuid("player_unique_id", playerUuid);
-                s.string("itemstack", itemstack);
-                s.decimal("price", BigDecimal.valueOf(price));
-                s.string("economy_name", "vault");
-                s.string("additional_data", "migrated_from_zelauction");
-                s.object("created_at", new Date(date));
-            });
+    /**
+     * Cree la ligne {@code %prefix%items} porteuse de la cle etrangere de {@code %prefix%logs}
+     * pour une transaction ZelAuction.
+     * <p>
+     * ZelAuction n'a aucun item V4 correspondant : la ligne est ecrite directement en
+     * {@link StorageType#DELETED}, donc jamais chargee en jeu (ItemRepository filtre DELETED),
+     * mais bien reelle pour la base. La cle etrangere etant ON DELETE CASCADE, purger ces
+     * lignes effacerait aussi les logs associes -- c'est le comportement voulu.
+     * <p>
+     * Le vendeur doit deja exister dans {@code %prefix%players} (la colonne
+     * {@code seller_unique_id} porte elle-meme une cle etrangere) : migrateTransactions
+     * appelle trackPlayer AVANT createLogEntry, cet invariant est donc satisfait.
+     *
+     * @param v4Connection connexion a la base V4
+     * @param sellerUuid   vendeur porteur de la ligne sentinelle
+     * @param price        prix de la transaction ZelAuction
+     * @param date         horodatage de la transaction ZelAuction
+     * @return l'identifiant genere de la ligne sentinelle
+     * @throws SQLException si le pilote refuse l'insertion
+     */
+    private int createSentinelItem(DatabaseConnection v4Connection, UUID sellerUuid, double price, long date) throws SQLException {
+        return SchemaBuilder.insert(Tables.ITEMS, s -> {
+            s.string("item_type", ItemType.AUCTION.name());
+            s.uuid("seller_unique_id", sellerUuid);
+            s.decimal("price", BigDecimal.valueOf(price));
+            s.string("economy_name", "vault");
+            s.string("storage_type", StorageType.DELETED.name());
+            s.string("server_name", plugin.getConfiguration().getServerName());
+            s.object("expired_at", new Date(date));
+            s.object("created_at", new Date(date));
+        }).execute(v4Connection, logger);
+    }
 
-            schema.execute(v4Connection, logger);
-        } catch (SQLException e) {
-            this.plugin.getLogger().warning("Failed to create log entry: " + e.getMessage());
+    /**
+     * Ecrit l'entree d'historique V4 correspondant a une transaction ZelAuction.
+     * <p>
+     * L'ancienne version ecrivait {@code item_id = 0}, ce qui violait la cle etrangere
+     * {@code logs -> items} declaree par CreateLogsMigration : sous MySQL (InnoDB) l'insert
+     * levait une DatabaseException que le {@code catch(SQLException)} d'alors ne voyait meme
+     * pas, et TOUT l'historique ZelAuction etait perdu en silence. Sous SQLite, ou Sarah
+     * n'emet aucun {@code PRAGMA foreign_keys=ON}, l'insert passait : le comportement
+     * basculait donc selon le backend, sans aucun signal pour l'exploitant (C-033).
+     * <p>
+     * On cree desormais une vraie ligne sentinelle en {@link StorageType#DELETED} qui
+     * satisfait la cle etrangere sans aucun changement de schema. Rendre {@code item_id}
+     * nullable serait inoperant : le MigrationManager de Sarah ne sait qu'AJOUTER des
+     * colonnes manquantes, il n'emet jamais d'{@code ALTER ... MODIFY} sur les
+     * installations existantes.
+     *
+     * @param v4Connection connexion a la base V4
+     * @param playerUuid   joueur a l'origine de la ligne d'historique
+     * @param itemstack    itemstack deja converti au format V4
+     * @param price        prix de la transaction ZelAuction
+     * @param logType      type de log (PURCHASE ou SALE)
+     * @param date         horodatage de la transaction ZelAuction
+     * @throws SQLException     si le pilote refuse l'une des deux insertions
+     * @throws IllegalStateException si la ligne sentinelle n'a pas pu etre creee : on
+     *                               n'ecrit JAMAIS un log orphelin en repli
+     */
+    private void createLogEntry(DatabaseConnection v4Connection, UUID playerUuid, String itemstack, double price, LogType logType, long date) throws SQLException {
+        int sentinelItemId = createSentinelItem(v4Connection, playerUuid, price, date);
+        if (sentinelItemId <= 0) {
+            throw new IllegalStateException("unable to create the sentinel item row for the ZelAuction log");
         }
+        SchemaBuilder.insert(Tables.LOGS, s -> {
+            s.string("log_type", logType.name());
+            s.object("item_id", sentinelItemId);
+            s.uuid("player_unique_id", playerUuid);
+            s.string("itemstack", itemstack);
+            s.decimal("price", BigDecimal.valueOf(price));
+            s.string("economy_name", "vault");
+            s.string("additional_data", "migrated_from_zelauction");
+            s.object("created_at", new Date(date));
+        }).execute(v4Connection, logger);
     }
 
     /**

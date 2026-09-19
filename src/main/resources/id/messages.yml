@@ -92,12 +92,14 @@ inventory-not-found: "<error>Gagal nemuin menu inventori <white>%inventory-name%
 
 sell-error-air: "<error>Lah, masa jual angin? Pegang barangnya dulu dong!"
 sell-error-change: "<error>Barang di tangan kamu berubah, penjualan dibatalkan."
+sell-error-invalid-item: "<error>Barang ini gak bisa dijual, datanya gagal disimpan."
 sell-error-economy: "<error>Gagal nemuin sistem ekonomi <white>%name%<error>."
 sell-error-default-economy: "<error>Ekonomi default belum diatur. Coba lapor ke admin ya."
 sell-inventory-empty: "<error>Taruh barangnya dulu di inventori sebelum konfirmasi."
 sell-inventory-cancelled: "<error>Penjualan dibatalkan, barang kamu udah dibalikin."
 sell-items-cleared: "<success>Barang yang dipilih berhasil dibersihkan."
 sell-item-added: "<success>Barang berhasil ditambahkan ke daftar jual."
+sell-inventory-full: "<error>Kamu gak bisa milih lebih dari <white>%max%<error> stack."
 sell-item-removed: "<success>Barang berhasil dihapus dari daftar jual."
 
 #=============================================================================
@@ -110,6 +112,7 @@ admin-open-inventory: "<success>Membuka barang %type% milik <white>%target%<succ
 admin-forceopen-inventory: "<success>Membuka inventori <white>%inventory%<success> milik <white>%target%<success> di halaman <white>%page%<success>."
 admin-open-history: "<success>Membuka riwayat milik <white>%target%<success>."
 admin-item-removed: "<success>Kamu mengambil <white>%items%<success> dari <white>%target%<success>."
+admin-item-not-available: "<error>Barang <white>%items%<error> udah gak tersedia: udah kejual, diambil, atau dihapus di server lain."
 admin-item-added: "<success>Kamu menambahkan <white>%items%<success> ke <white>%target%<success> di bagian <white>%type%<success>."
 admin-item-retrieved: "<success>Barang berhasil diambil kembali."
 admin-no-item-to-retrieve: "<error>Gak ada barang yang bisa diambil dari log ini."
@@ -128,6 +131,7 @@ item-remove-listed: "#e6fff3Kamu baru aja narik %items% #e6fff3dari daftar jual.
 item-remove-expired: "#e6fff3Kamu narik %items% #e6fff3dari daftar barang kadaluarsa."
 item-remove-purchased: "#e6fff3Kamu ngambil %items% #e6fff3yang habis kamu beli."
 item-remove-selling: "#e6fff3Kamu membatalkan penjualan %items% #e6fff3."
+item-no-longer-available: "<error>Barang ini udah gak ada, barusan diproses di server lain."
 
 #=============================================================================
 # TRANSACTION MESSAGES
@@ -141,10 +145,12 @@ item-bought-buyer: "#e6fff3Kamu sukses ngebeli %items% #e6fff3seharga #92bed8%pr
 # ERROR MESSAGES
 #=============================================================================
 
+server-shutting-down: "<error>Server sedang dimatikan, coba lagi nanti."
 not-enough-money: "<error>Duit kamu gak cukup buat beli ini."
 not-enough-space: "<error>Tas kamu penuh nih, kosongin dulu tempatnya."
 price-too-high: "<error>Harganya kemahalan, maksimal jual itu <white>%max-price%<error>."
 price-too-low: "<error>Harganya terlalu murah, minimal jual itu <white>%min-price%<error>."
+price-decimal-not-allowed: "<error>Gak bisa jual barang dengan harga desimal, pakai angka bulat aja ya."
 listed-items-limit: "<error>Kamu udah gak bisa jual barang lagi, maksimal cuma <white>%max-items%<error> barang<error>."
 world-banned: "<error>Kamu gak diizinin buka lelang di world ini."
 item-blacklisted: "<error>Barang ini masuk daftar hitam dan gak boleh dijual."
@@ -283,6 +289,7 @@ admin-option-list-header: "<primary>Pengaturan buat <white>%player%<primary>:"
 #=============================================================================
 
 remove-all-items: "#e6fff3Kamu narik semua <white>%amount%<#e6fff3> barang sekaligus."
+remove-all-items-partial: "<error>%amount% barang gagal ditarik, coba lagi ya."
 
 #=============================================================================
 # ADMIN LOGS MESSAGES

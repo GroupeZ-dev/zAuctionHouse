@@ -120,6 +120,10 @@ sell-error-air: "<error>Vous ne pouvez pas vendre du vide !"
 # Placeholders disponibles: aucun
 sell-error-change: "<error>L'item dans votre main a changé, vente annulée."
 
+# Affiché lorsqu'un item ne peut pas être mis en vente car ses données n'ont pas pu être sérialisées.
+# Placeholders disponibles: aucun
+sell-error-invalid-item: "<error>Cet item ne peut pas être mis en vente, ses données n'ont pas pu être sauvegardées."
+
 # Affiché lorsque le fournisseur d'économie spécifié n'existe pas.
 # Placeholders disponibles:
 #   %name% - Nom de l'économie spécifiée
@@ -144,6 +148,11 @@ sell-items-cleared: "<success>Les items sélectionnés ont été effacés."
 # Affiché lorsqu'un item est ajouté à la liste de vente.
 # Placeholders disponibles: aucun
 sell-item-added: "<success>Item ajouté à la liste de vente."
+
+# Affiché lorsqu'un joueur sélectionne plus de stacks que l'inventaire de vente ne peut en contenir.
+# Placeholders disponibles:
+#   %max% - Nombre maximum de stacks sélectionnables
+sell-inventory-full: "<error>Vous ne pouvez pas sélectionner plus de <white>%max%<error> stacks."
 
 # Affiché lorsqu'un item est retiré de la liste de vente.
 # Placeholders disponibles: aucun
@@ -185,6 +194,12 @@ admin-open-history: "<success>Ouverture de l'historique pour <white>%target%<suc
 #   %items%  - Description de l'item
 #   %target% - Nom du joueur cible
 admin-item-removed: "<success>Vous avez retiré <white>%items%<success> de <white>%target%<success>."
+
+# Affiché lorsqu'une action admin est refusée car l'item n'est plus disponible
+# (verrouillé par un autre serveur, vendu, récupéré ou supprimé ailleurs).
+# Placeholders disponibles:
+#   %items%  - Description de l'item
+admin-item-not-available: "<error>L'item <white>%items%<error> n'est plus disponible : il a été vendu, récupéré ou supprimé sur un autre serveur."
 
 # Affiché lorsqu'un admin ajoute des items à un joueur.
 # Placeholders disponibles:
@@ -228,6 +243,9 @@ item-remove-purchased: "#e6fff3Vous venez de retirer %items% #e6fff3des items ac
 # Retrait depuis l'inventaire de vos items
 item-remove-selling: "#e6fff3Vous venez de retirer %items% #e6fff3de vos items."
 
+# Affiché lorsque l'item a disparu avant la fin de l'action (traité sur un autre serveur)
+item-no-longer-available: "<error>Cet item n'est plus disponible, il vient d'être traité sur un autre serveur."
+
 #=============================================================================
 # MESSAGES DE TRANSACTION
 #=============================================================================
@@ -254,6 +272,10 @@ item-bought-buyer: "#e6fff3Vous venez d'acheter %items% #e6fff3pour #92bed8%pric
 #=============================================================================
 # MESSAGES D'ERREUR
 #=============================================================================
+
+# Affiché lorsqu'une action est refusée car le serveur est en cours d'arrêt.
+# Placeholders disponibles: aucun
+server-shutting-down: "<error>Le serveur est en cours d'arrêt, réessayez plus tard."
 
 # Affiché lorsque le joueur n'a pas assez d'argent pour acheter.
 # Placeholders disponibles: aucun
@@ -603,6 +625,11 @@ admin-option-reset: "<success>Toutes les options de <white>%player%<success> ont
 admin-option-list-header: "<primary>Options pour <white>%player%<primary> :"
 
 remove-all-items: "#e6fff3Vous avez recupere <white>%amount%<#e6fff3> item(s)."
+
+# Affiché lorsque certaines annonces n'ont pas pu être récupérées lors d'un retrait en masse.
+# Placeholders disponibles:
+#   %amount% - Nombre d'annonces qui n'ont pas pu être récupérées
+remove-all-items-partial: "<error>%amount% annonce(s) n'ont pas pu être récupérées, veuillez réessayer."
 
 #=============================================================================
 # ADMIN LOGS MESSAGES

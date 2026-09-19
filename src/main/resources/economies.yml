@@ -74,6 +74,11 @@ economies:
     # If true, money is only deposited when the seller is online.
     # If false, money is deposited even when the seller is offline.
     # Useful for economy plugins that don't support offline transactions.
+    #
+    # WARNING: this setting is FORCED to true at startup for the economy types LEVEL,
+    # EXPERIENCE, ITEM and ZMENUITEMS. Those types are backed by the player entity and simply
+    # do nothing when the player is offline, which used to destroy the seller's payment.
+    # Sellers using one of those economies now receive their money through /ah claim.
     must-be-online: false
 
     # Optional permission required to use this economy.
@@ -133,6 +138,13 @@ economies:
       # CAPITALISM: VAT-style tax where BUYER pays extra, seller receives full price.
       #             Example: Item listed for 1000$ with 5% VAT → Buyer pays 1050$.
       #             Buyer pays: 1050$ | Seller receives: 1000$
+      #
+      # NOTE on item-specific rules (tax.item-rules below):
+      # An item rule is now evaluated on PURCHASE whatever the 'type' above is. A PURCHASE or
+      # CAPITALISM rule declared on a 'type: SELL' economy used to be silently ignored at
+      # purchase time; it is applied from now on. Review your item rules before updating.
+      # For a listing containing several stacks, the rule that yields the HIGHEST tax wins,
+      # which is the same rule already used on the selling side.
       type: SELL
 
       # Tax calculation method:

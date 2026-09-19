@@ -3,6 +3,7 @@ package fr.maxlego08.zauctionhouse;
 import com.tcoded.folialib.FoliaLib;
 import com.tcoded.folialib.impl.PlatformScheduler;
 import dev.faststats.bukkit.BukkitContext;
+import fr.maxlego08.sarah.database.DatabaseType;
 import fr.maxlego08.zauctionhouse.api.AuctionManager;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.InventoriesLoader;
@@ -22,6 +23,7 @@ import fr.maxlego08.zauctionhouse.api.placeholders.PlaceholderRegister;
 import fr.maxlego08.zauctionhouse.api.rules.ItemRuleManager;
 import fr.maxlego08.zauctionhouse.api.rules.loader.RuleLoaderRegistry;
 import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
+import fr.maxlego08.zauctionhouse.api.utils.Base64ItemStack;
 import fr.maxlego08.zauctionhouse.api.utils.Plugins;
 import fr.maxlego08.zauctionhouse.category.ZCategoryManager;
 import fr.maxlego08.zauctionhouse.cluster.LocalAuctionClusterBridge;
@@ -37,6 +39,7 @@ import fr.maxlego08.zauctionhouse.hooks.permissions.LuckPermsOfflinePermission;
 import fr.maxlego08.zauctionhouse.listeners.PlayerListener;
 import fr.maxlego08.zauctionhouse.loader.MessageLoader;
 import fr.maxlego08.zauctionhouse.loader.ZInventoriesLoader;
+import fr.maxlego08.zauctionhouse.maintenance.ZMaintenanceScheduler;
 import fr.maxlego08.zauctionhouse.migration.ZMigrationRegistry;
 import fr.maxlego08.zauctionhouse.migration.v3.V3MigrationProvider;
 import fr.maxlego08.zauctionhouse.permissions.PermissionRegistrar;
@@ -67,8 +70,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
 public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
@@ -79,7 +87,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     private final ZCommandManager commandManager = new ZCommandManager(this);
     private final AuctionManager auctionManager = new ZAuctionManager(this);
     private final EconomyManager economyManager = new ZEconomyManager(this);
-    private final ExecutorService asyncExecutor = Executors.newFixedThreadPool(4);
+    private final ExecutorService asyncExecutor = createStorageExecutor();
     private final Placeholder placeholder = new LocalPlaceholder(this);
     private final ZRuleLoaderRegistry ruleLoaderRegistry = new ZRuleLoaderRegistry(this);
     private final ItemRuleManager itemRuleManager = new ZItemRuleManager(this, ruleLoaderRegistry);
@@ -89,6 +97,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     private final PermissionRegistrar permissionRegistrar = new PermissionRegistrar(this);
     private final ItemContentManager itemContentManager = new ZItemContentManager();
     private final MessageHelper messageHelper = new MessageHelper();
+    private final ZMaintenanceScheduler maintenanceScheduler = new ZMaintenanceScheduler(this);
     private LocaleHelper localeHelper;
     private InventoriesLoader inventoriesLoader;
     private ChatSearchListener chatSearchListener;
@@ -96,12 +105,157 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     private DiscordWebhookService discordWebhookService;
     private VersionChecker versionChecker;
     private boolean isEnabled = false;
+
+    // Arme a la TOUTE PREMIERE ligne de onDisable(), donc AVANT toute fermeture de ressource :
+    // les services doivent cesser d'accepter de nouvelles operations avant que quoi que ce
+    // soit ne soit ferme (C-022).
+    private volatile boolean shuttingDown = false;
+
+    // Le teardown est desormais inconditionnel ; ce drapeau n'existe que pour le rendre
+    // idempotent face a un onDisable reentrant (C-118).
+    private volatile boolean teardownDone = false;
+
     private PlatformScheduler platformScheduler;
-    private AuctionClusterBridge auctionClusterBridge = new LocalAuctionClusterBridge();
-    private OfflinePermission offlinePermission = new EmptyOfflinePermission();
+
+    // Ecrit une seule fois par le onEnable de l'addon Redis, lu par les trois services depuis
+    // des workers : sans volatile, aucune relation happens-before ne garantit que le worker
+    // voie autre chose que le LocalAuctionClusterBridge initial (C-117).
+    private volatile AuctionClusterBridge auctionClusterBridge = new LocalAuctionClusterBridge();
+
+    // Meme defaut, en pire : setOfflinePermission est publie dans l'API, donc appelable par un
+    // plugin tiers depuis n'importe quel thread, et lu par ExpireService sur des chemins
+    // asynchrones (C-117).
+    private volatile OfflinePermission offlinePermission = new EmptyOfflinePermission();
     private final BukkitContext context = new BukkitContext.Factory(this, "3854068cfb5b22b58f2ae87e2c84062a")
             .metrics(dev.faststats.Metrics.Factory::create)
             .create();
+
+    /**
+     * Taille du pool d'IO bloquante. Le passage de 4 a max(4, availableProcessors()) est le
+     * prerequis du routage de tous les logs, transactions et upserts vers ce meme pool.
+     */
+    private static final int STORAGE_POOL_SIZE = Math.max(4, Runtime.getRuntime().availableProcessors());
+
+    /**
+     * Nombre de taches de stockage ABANDONNEES par la politique de rejet depuis le demarrage.
+     * La premiere est journalisee avec sa pile -- qui designe le site de soumission -- les
+     * suivantes en une seule ligne, pour ne pas noyer la console pendant un arret de serveur.
+     */
+    private final AtomicLong rejectedStorageTasks = new AtomicLong();
+
+    /**
+     * Executor dedie a l'IO bloquante (JDBC). Deux differences avec
+     * {@code Executors.newFixedThreadPool(4)} :
+     * <ul>
+     *   <li>threads nommes et daemon, pour que les dumps de threads soient exploitables ;</li>
+     *   <li>politique de rejet explicite, {@link #handleRejectedStorageTask}, au lieu de la
+     *       RejectedExecutionException levee par defaut.</li>
+     * </ul>
+     * La file est volontairement NON BORNEE : un rejet ne peut donc survenir qu'apres
+     * {@code shutdown()}. C'est le drainage de onDisable (shutdown + awaitTermination AVANT la
+     * fermeture de la connexion), et non la politique de rejet, qui garantit que les ecritures
+     * deja soumises aboutissent (C-022).
+     *
+     * @return l'executeur de stockage
+     */
+    private ExecutorService createStorageExecutor() {
+        AtomicInteger counter = new AtomicInteger();
+        ThreadFactory factory = runnable -> {
+            Thread thread = new Thread(runnable, "zAuctionHouse-Storage-" + counter.incrementAndGet());
+            thread.setDaemon(true);
+            return thread;
+        };
+        return new ThreadPoolExecutor(STORAGE_POOL_SIZE, STORAGE_POOL_SIZE, 0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(), factory, this::handleRejectedStorageTask);
+    }
+
+    /**
+     * Politique de rejet de l'executeur de stockage.
+     * <p>
+     * Un handler INCONDITIONNEL {@code (runnable, executor) -> runnable.run()} etait une
+     * regression grave : il executait une ecriture JDBC BLOQUANTE sur le thread appelant, or
+     * {@code ZStorageManager.async()} y route {@code upsertPlayer}, {@code log()} et
+     * {@code createTransaction} -- appeles depuis des listeners et des commandes, donc depuis
+     * le THREAD PRINCIPAL. Une base lente y figeait le tick, watchdog compris.
+     * <p>
+     * Deux gardes, dans cet ordre :
+     * <ol>
+     *   <li>executeur arrete : semantique exacte de {@code CallerRunsPolicy}, on N'EXECUTE PAS.
+     *       Le drainage est en cours et la connexion base est sur le point d'etre fermee ;
+     *       executer ici reviendrait a ecrire sur une connexion morte. Contrairement a
+     *       {@code CallerRunsPolicy}, l'abandon n'est PAS silencieux : il est journalise en
+     *       SEVERE, avec la pile du site de soumission pour la premiere occurrence.</li>
+     *   <li>thread de tick appelant : on N'EXECUTE PAS non plus. Perdre une ecriture est un
+     *       incident journalise ; bloquer le tick sur du JDBC est un incident serveur.</li>
+     * </ol>
+     * Hors de ces deux cas -- executeur vivant ET appelant hors tick -- la tache est bien
+     * executee dans le thread appelant, comme {@code CallerRunsPolicy}.
+     *
+     * @param runnable la tache de stockage rejetee
+     * @param executor l'executeur qui l'a rejetee
+     */
+    private void handleRejectedStorageTask(Runnable runnable, ThreadPoolExecutor executor) {
+
+        boolean shutdown = executor.isShutdown();
+        boolean tickThread = isServerTickThread();
+
+        if (!shutdown && !tickThread) {
+            runnable.run();
+            return;
+        }
+
+        long dropped = this.rejectedStorageTasks.incrementAndGet();
+        String reason = shutdown
+                ? "the storage executor is already shut down (the database connection is closing)"
+                : "the calling thread is a server tick thread and JDBC must never block a tick";
+
+        var rejection = new RejectedExecutionException("zAuctionHouse storage task rejected: " + reason);
+
+        if (dropped == 1) {
+            // La pile designe le site de soumission de l'ecriture perdue : c'est la seule
+            // facon de l'identifier.
+            getLogger().log(Level.SEVERE, "A storage write was DROPPED because " + reason
+                    + ". The stack trace below points at the submission site.", rejection);
+        } else {
+            getLogger().severe("A storage write was DROPPED because " + reason
+                    + " (" + dropped + " dropped since startup).");
+        }
+
+        // On LEVE, on ne rend jamais la main en silence.
+        //
+        // Le contrat d'Executor.execute est d'executer la tache OU de lever : un retour
+        // silencieux est la seule issue interdite. CompletableFuture.runAsync(r, executor)
+        // cree son futur PUIS appelle execute() ; si execute() rend la main sans avoir
+        // programme la tache, ce futur n'est JAMAIS complete, ni normalement ni
+        // exceptionnellement. Tout ce qui s'y enchaine attend alors indefiniment -- et la
+        // chaine d'achat s'y enchaine sans orTimeout : un achat resterait suspendu, l'item
+        // verrouille, le joueur sans reponse.
+        //
+        // En levant, l'echec devient synchrone et visible au site de soumission. Les services
+        // testent deja isShuttingDown() a l'entree, donc ce chemin ne se produit en pratique
+        // qu'au drainage de l'arret, ou l'abandon est le comportement voulu.
+        throw rejection;
+    }
+
+    /**
+     * Teste si le thread courant est un thread de tick.
+     * <p>
+     * {@code Server.isPrimaryThread()} est l'implementation utilisee partout ailleurs dans le
+     * plugin ; sous Folia elle rend {@code true} pour TOUT thread de tick, region comprise, ce
+     * qui est exactement la garde recherchee. En cas d'indisponibilite du serveur (chargement,
+     * arret brutal) on repond {@code true} : la reponse conservatrice est celle qui n'execute
+     * RIEN de bloquant sur un thread dont on ignore la nature.
+     *
+     * @return {@code true} si l'appelant ne doit en aucun cas executer d'IO bloquante
+     */
+    private boolean isServerTickThread() {
+        try {
+            var server = Bukkit.getServer();
+            return server == null || server.isPrimaryThread();
+        } catch (Throwable throwable) {
+            return true;
+        }
+    }
 
     @Override
     public void onEnable() {
@@ -118,6 +272,10 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
 
         // Now save config.yml with the correct language
         this.saveFile("config.yml", true);
+
+        // Phase 1 du deploiement du marqueur de format (C-029) : la lecture accepte les deux
+        // formats, l'ecriture reste sans marqueur tant que la cle n'est pas passee a true.
+        Base64ItemStack.setWriteFormatMarker(getConfig().getBoolean("write-itemstack-format-marker", false));
 
         FoliaLib foliaLib = new FoliaLib(this);
         this.platformScheduler = foliaLib.getScheduler();
@@ -157,7 +315,21 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
 
         this.inventoriesLoader.load();
 
-        this.storageManager.loadItems();
+        // Le chargement devient fail-closed : on l'entoure explicitement plutot que de laisser
+        // l'exception traverser onEnable, pour poser un message d'exploitation lisible. Sans ce
+        // bloc, Bukkit desactive bien le plugin mais l'exploitant n'a aucun moyen de comprendre
+        // que le refus de demarrer est DELIBERE (C-001).
+        try {
+            this.storageManager.loadItems();
+        } catch (RuntimeException exception) {
+            getLogger().log(Level.SEVERE, "Failed to load the auction items from the database. The plugin REFUSES "
+                    + "to start with a partially loaded auction house: buyers would be charged full price for "
+                    + "listings whose content could not be read.", exception);
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
+
+        this.maintenanceScheduler.start();
 
         this.registerPlaceholders();
         this.registerHooks();
@@ -182,17 +354,36 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     @Override
     public void onDisable() {
 
-        if (!this.isEnabled) return;
+        // TOUTE PREMIERE instruction : les services doivent cesser d'accepter de nouvelles
+        // operations avant que quoi que ce soit ne soit ferme (C-022).
+        this.shuttingDown = true;
+
+        // ZAuctionPlugin melangeait deux notions distinctes : le plugin a fini de demarrer
+        // (isEnabled, positionne en toute derniere ligne de onEnable) et les ressources JVM
+        // sont ouvertes (asyncExecutor, sortedItemsCache, connexion base). Les ressources
+        // naissent AVANT le point de sortie anticipee : la garde historique
+        // if (!isEnabled) return; sautait donc TOUT le teardown des qu'une exception survenait
+        // apres l'ouverture de la base (migration Sarah, YAML d'inventaire invalide,
+        // loadItems, hooks), laissant le pool Hikari et le ForkJoinPool vivants jusqu'au kill
+        // du serveur (C-118). Seul le desenregistrement du VersionChecker reste conditionne au
+        // demarrage complet.
+        if (this.teardownDone) return;
+        this.teardownDone = true;
+
+        // Arret des balayages periodiques avant toute fermeture de ressource.
+        this.maintenanceScheduler.stop();
 
         // Unregister version checker listener
-        if (this.versionChecker != null) {
+        if (this.isEnabled && this.versionChecker != null) {
             this.versionChecker.unregister();
         }
 
         // Shutdown the sorted items cache (closes ForkJoinPool)
         this.auctionManager.shutdown();
 
-        // Shutdown the async executor service
+        // Drain de l'executeur asynchrone. CET ORDRE EST CRITIQUE : le drain doit rester AVANT
+        // la fermeture de la connexion, c'est lui qui garantit que les ecritures deja soumises
+        // aboutissent au lieu de mourir sur une connexion fermee (C-022).
         this.asyncExecutor.shutdown();
         try {
             if (!this.asyncExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
@@ -201,13 +392,27 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
                     getLogger().warning("ExecutorService did not terminate properly");
                 }
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException exception) {
             this.asyncExecutor.shutdownNow();
             Thread.currentThread().interrupt();
         }
 
-        this.storageManager.onDisable();
-        context.shutdown();
+        // Fermeture de la connexion base, protegee par un test de nullite : storageManager
+        // .onEnable() peut avoir echoue avant d'affecter databaseConnection, et onDisable est
+        // alors invoque de facon REENTRANTE depuis l'interieur de onEnable (ZStorageManager
+        // appelle disablePlugin alors que Bukkit a deja positionne isEnabled a true).
+        try {
+            if (this.storageManager.getDatabaseConnection() != null) {
+                this.storageManager.onDisable();
+            }
+        } catch (Exception exception) {
+            getLogger().log(Level.WARNING, "Failed to close the database connection", exception);
+        }
+
+        // SimpleContext.shutdown() commence par un test de son propre drapeau ready : c'est un
+        // no-op tant que context.ready() n'a pas ete atteint. Aucun risque a le rendre
+        // inconditionnel.
+        this.context.shutdown();
     }
 
     @Override
@@ -219,6 +424,9 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
 
         this.reloadConfig();
 
+        // Le drapeau d'ecriture du marqueur de format peut avoir change dans config.yml.
+        Base64ItemStack.setWriteFormatMarker(getConfig().getBoolean("write-itemstack-format-marker", false));
+
         // Re-initialize locale helper with configured language from language.yml
         String configuredLanguage = this.loadLanguageConfiguration();
         this.localeHelper = new LocaleHelper(getLogger(), configuredLanguage);
@@ -229,6 +437,9 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
 
         // Update economy references for all items after reload
         this.auctionManager.updateItemEconomies();
+
+        // Les intervalles de maintenance ont pu changer dans config.yml.
+        this.maintenanceScheduler.start();
     }
 
     private void loadFiles() {
@@ -412,13 +623,67 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
     }
 
     @Override
+    public boolean isShuttingDown() {
+        return this.shuttingDown;
+    }
+
+    /**
+     * Ordonnanceur des taches de maintenance periodiques (rearmement des statuts de
+     * confirmation, balayage des annonces arrivees a terme).
+     *
+     * @return l'ordonnanceur de maintenance, jamais {@code null}
+     */
+    public ZMaintenanceScheduler getMaintenanceScheduler() {
+        return this.maintenanceScheduler;
+    }
+
+    @Override
     public AuctionClusterBridge getAuctionClusterBridge() {
         return this.auctionClusterBridge;
     }
 
     @Override
     public void setAuctionClusterBridge(AuctionClusterBridge auctionClusterBridge) {
+
+        // SQLITE + bridge distribue = configuration IMPOSSIBLE. Chaque serveur a son PROPRE
+        // fichier de base : les identifiants d'items se recoupent d'un serveur a l'autre, les
+        // verrous du cluster portent sur des objets differents, et toute la protection
+        // anti-duplication opere dans le vide. Les items SERONT dupliques (C-010).
+        //
+        // On NE fait PAS disablePlugin(zAuctionHouse) : couper l'hotel des ventes entier
+        // priverait les joueurs d'items deja en base, alors que retomber en mono-serveur est
+        // SUR ; et desactiver un plugin depuis le onEnable d'un AUTRE plugin, pendant que
+        // Bukkit enumere ses plugins, est fragile.
+        if (auctionClusterBridge != null && auctionClusterBridge.isDistributed() && isSqliteStorage()) {
+            getLogger().severe("=========================================================================");
+            getLogger().severe("A DISTRIBUTED cluster bridge (" + auctionClusterBridge.getClass().getSimpleName() + ") tried to install");
+            getLogger().severe("itself while storage-type is SQLITE. Each server has its OWN database file:");
+            getLogger().severe("item ids collide across servers and the cluster locks protect nothing.");
+            getLogger().severe("The bridge is REFUSED. This server stays in single-server mode.");
+            getLogger().severe("Fix: set storage-type to MYSQL/MARIADB with a SHARED database,");
+            getLogger().severe("or remove the cluster addon.");
+            getLogger().severe("=========================================================================");
+            return;
+        }
+
+        var previous = this.auctionClusterBridge;
         this.auctionClusterBridge = auctionClusterBridge;
+
+        // Le mode REELLEMENT en vigueur doit etre lisible dans la console de chaque noeud :
+        // c'est le seul moyen de detecter un repli silencieux en mono-serveur (C-036).
+        getLogger().info("Cluster bridge: " + (previous == null ? "none" : previous.getClass().getSimpleName())
+                + " -> " + (auctionClusterBridge == null ? "none" : auctionClusterBridge.getClass().getSimpleName())
+                + " (distributed=" + (auctionClusterBridge != null && auctionClusterBridge.isDistributed()) + ")");
+    }
+
+    /**
+     * Indique si le stockage actif est un fichier SQLite local.
+     *
+     * @return {@code true} si la connexion est ouverte sur SQLITE
+     */
+    private boolean isSqliteStorage() {
+        var connection = this.storageManager.getDatabaseConnection();
+        return connection != null && connection.getDatabaseConfiguration().getDatabaseType() == DatabaseType.SQLITE;
     }
 
     @Override

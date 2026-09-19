@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -56,7 +57,10 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
 
             Placeholders placeholders = createPlaceholders(player, needed);
             if (needed.contains(ItemPlaceholder.ITEM_COUNT)) {
-                placeholders.register("item_count", this.itemStacks.stream().map(ItemStack::getAmount).reduce(0, Integer::sum).toString());
+                // Ceinture defensive (C-038) : depuis la quarantaine du chargement, aucun
+                // ZAuctionItem publie ne porte de ItemStack null, mais un lot construit par
+                // une autre voie (addon, migration) ne doit pas faire partir l'affichage en NPE.
+                placeholders.register("item_count", this.itemStacks.stream().filter(Objects::nonNull).map(ItemStack::getAmount).reduce(0, Integer::sum).toString());
             }
 
             meta.updateLore(itemMeta, lore.stream().map(placeholders::parse).toList(), LoreType.APPEND);
@@ -113,12 +117,14 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
         var componentHelper = ComponentMessageHelper.componentMessage;
         var configuration = this.plugin.getConfiguration().getItemDisplay();
 
-        var currentItemStacks = this.itemStacks;
+        // LES DEUX branches parcouraient itemStacks sans garde : la fusion (isSimilar) et le
+        // rendu (hasDisplayName / getAmount). Le filtre est pose UNE fois, en amont des deux.
+        List<ItemStack> currentItemStacks = this.itemStacks.stream().filter(Objects::nonNull).toList();
         if (configuration.mergeSimilar()) {
-            currentItemStacks = new ArrayList<>();
-            for (ItemStack itemStack : this.itemStacks) {
+            List<ItemStack> merged = new ArrayList<>();
+            for (ItemStack itemStack : currentItemStacks) {
                 boolean canAdd = true;
-                for (ItemStack currentItemStack : currentItemStacks) {
+                for (ItemStack currentItemStack : merged) {
                     if (currentItemStack.isSimilar(itemStack)) {
                         currentItemStack.setAmount(currentItemStack.getAmount() + itemStack.getAmount());
                         canAdd = false;
@@ -127,9 +133,10 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
                 }
 
                 if (canAdd) {
-                    currentItemStacks.add(itemStack.clone());
+                    merged.add(itemStack.clone());
                 }
             }
+            currentItemStacks = merged;
         }
 
         int size = currentItemStacks.size();
@@ -153,6 +160,6 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
 
     @Override
     public String getItemsAsString() {
-        return this.itemStacks.stream().map(i -> "x" + i.getAmount() + " " + i.getType().name()).collect(Collectors.joining(", "));
+        return this.itemStacks.stream().filter(Objects::nonNull).map(i -> "x" + i.getAmount() + " " + i.getType().name()).collect(Collectors.joining(", "));
     }
 }

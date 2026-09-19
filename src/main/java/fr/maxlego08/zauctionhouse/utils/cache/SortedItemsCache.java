@@ -13,7 +13,9 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
@@ -26,8 +28,32 @@ import java.util.function.Supplier;
  * <p>
  * Thread-safe implementation using read-write locks to allow concurrent reads
  * while ensuring consistency during cache rebuilds.
+ * <p>
+ * <b>Rythme des reconstructions</b> : une reconstruction complete coute une passe de
+ * filtrage/groupement sur tout le store, 2 tris globaux et 2 tris par categorie. Elle n'est
+ * donc JAMAIS declenchee une fois par invalidation : les invalidations sont coalescees dans le
+ * temps par {@link #MIN_REBUILD_INTERVAL_MS}, et l'etat sale est porte par un compteur de
+ * generation et non par un drapeau booleen.
  */
 public class SortedItemsCache {
+
+    /**
+     * Intervalle minimal entre deux reconstructions completes, mesure depuis la FIN de la
+     * precedente.
+     * <p>
+     * Sans cette fenetre, chaque invalidation (une mise en vente, un achat, ou le message
+     * correspondant recu du bus Redis) declenchait un retri integral : a 10 mises en vente par
+     * seconde sur le cluster, les reconstructions s'enchainaient dos a dos en permanence sur
+     * chaque noeud. Avec la fenetre, le nombre de tris complets est borne par unite de temps
+     * (au plus un toutes les 250 ms) au lieu d'etre proportionnel au trafic.
+     * <p>
+     * 250 ms est un compromis assume : c'est 5 ticks, sous le seuil de perception d'un joueur
+     * qui ouvre l'hotel des ventes, et cela laisse le processeur respirer entre deux tris meme
+     * quand la reconstruction elle-meme dure plusieurs dizaines de millisecondes. Constante
+     * volontairement non configurable : une valeur trop basse ramene la tempete de
+     * reconstruction que ce cache existe precisement pour eviter.
+     */
+    private static final long MIN_REBUILD_INTERVAL_MS = 250L;
 
     private final AuctionPlugin plugin;
     private final PerformanceDebug performanceDebug;
@@ -44,16 +70,25 @@ public class SortedItemsCache {
     // Lock for rebuilding the cache (only used during rebuild, not for reads)
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-    // Flag indicating the cache needs to be rebuilt
-    private final AtomicBoolean dirty = new AtomicBoolean(true);
+    // Compteur d'invalidation, incremente a CHAQUE invalidate(). Il remplace l'ancien drapeau
+    // booleen `dirty` : un booleen ne dit pas SI la mutation qui l'a leve est deja reflechie
+    // dans l'instantane publie, il ne pouvait donc etre remis a false que de facon aveugle
+    // (mutation concurrente perdue, C-101) ou jamais (drapeau collant : chaque lecture
+    // relancait un tri complet, C-056).
+    private final AtomicLong invalidationCounter = new AtomicLong();
 
-    // Flag indicating a rebuild is currently in progress
-    private final AtomicBoolean rebuildInProgress = new AtomicBoolean(false);
+    // Valeur du compteur que reflete l'instantane actuellement publie. Le cache est sale tant
+    // que builtGeneration < invalidationCounter. Initialise a -1 : rien n'a encore ete
+    // construit, le cache est donc sale des la construction de l'objet.
+    private final AtomicLong builtGeneration = new AtomicLong(-1L);
 
-    // Reference to ongoing async rebuild (null if none in progress)
+    // Reference to ongoing async rebuild (null if none in progress).
+    // Porte aussi bien une reconstruction en cours d'execution qu'une reconstruction DEJA
+    // PLANIFIEE pour la fin de la fenetre de coalescence : toutes les demandes concurrentes se
+    // partagent ce meme future, donc un seul tri les sert toutes.
     private final AtomicReference<CompletableFuture<Void>> ongoingRebuild = new AtomicReference<>(null);
 
-    // Timestamp of last rebuild for debugging
+    // Timestamp of the last completed rebuild, also used as the start of the coalescing window
     private volatile long lastRebuildTime = 0;
 
     // Configurable thresholds (loaded from config)
@@ -124,20 +159,25 @@ public class SortedItemsCache {
     }
 
     /**
-     * Triggers an async cache rebuild if the cache is dirty and no rebuild is in progress.
-     * This method is non-blocking and returns immediately.
+     * Triggers an async cache rebuild if the cache is dirty. Non-blocking.
+     * <p>
+     * Chemin de RENDU : appele par chaque {@code getSortedIds} et chaque {@code getTotalCount},
+     * donc par {@code %listed_items%} et par les neuf {@code %category_count_*%} de chaque
+     * inventaire ouvert. Il doit rester a cout constant.
+     * <p>
+     * Pendant la fenetre de coalescence, la demande ne declenche AUCUN tri : le cache reste
+     * simplement sale (le compteur d'invalidation porte deja cette information) et la premiere
+     * lecture posterieure a la fenetre relancera la reconstruction. C'est ce qui rend le nombre
+     * de tris borne par unite de temps au lieu de proportionnel au trafic (C-056).
+     * <p>
+     * Il n'existe qu'UN SEUL point d'entree de reconstruction, {@link #requestRebuild()} : deux
+     * gardes independantes laissaient auparavant demarrer DEUX reconstructions concurrentes,
+     * chacune prenant le writeLock et re-triant integralement le store.
      */
     private void triggerRebuildIfNeeded() {
-        if (dirty.get() && rebuildInProgress.compareAndSet(false, true)) {
-            // We won the race, trigger async rebuild
-            plugin.getScheduler().runAsync(w -> {
-                try {
-                    rebuildCache();
-                } finally {
-                    rebuildInProgress.set(false);
-                }
-            });
-        }
+        if (!isDirty()) return;
+        if (remainingCooldownMillis() > 0L) return;
+        requestRebuild();
     }
 
     /**
@@ -169,24 +209,43 @@ public class SortedItemsCache {
 
     /**
      * Invalidates the entire cache. The cache will be rebuilt on next access.
+     * <p>
+     * Operation O(1) et non bloquante : elle ne fait qu'avancer le compteur de generation.
+     * Aucune reconstruction n'est declenchee ici, c'est la prochaine demande (une lecture, ou
+     * {@link #ensureCacheValidAsync()}) qui en planifiera une, au plus une par fenetre de
+     * coalescence.
      */
     public void invalidate() {
-        dirty.set(true);
+        this.invalidationCounter.incrementAndGet();
     }
 
     /**
      * Forces an immediate synchronous cache rebuild.
      * Use sparingly as this blocks the calling thread.
+     * <p>
+     * Marque d'abord le cache sale : sans cela, une mutation qui n'est pas passee par
+     * {@link #invalidate()} (un changement de statut applique en place) verrait un cache
+     * considere comme propre et la reconstruction serait ignoree.
      */
     public void rebuild() {
+        this.invalidationCounter.incrementAndGet();
         rebuildCache();
     }
 
     /**
      * Schedules an asynchronous cache rebuild.
+     * <p>
+     * Appelee apres des mutations en masse qui ne passent PAS par {@link #invalidate()} :
+     * chargement initial depuis la base, et reprise des confirmations/expirations par le
+     * {@code ZMaintenanceScheduler}, qui repositionne un statut en place. Le compteur est donc
+     * avance ici aussi, faute de quoi la reconstruction serait ignoree comme inutile.
+     * <p>
+     * Passe par le point d'entree unique : la demande est coalescee avec les autres et respecte
+     * la fenetre minimale entre deux reconstructions.
      */
     public void rebuildAsync() {
-        plugin.getScheduler().runAsync(w -> rebuildCache());
+        this.invalidationCounter.incrementAndGet();
+        requestRebuild();
     }
 
     /**
@@ -226,59 +285,118 @@ public class SortedItemsCache {
 
     /**
      * Returns whether the cache is currently dirty (needs rebuild).
+     * <p>
+     * Derive du compteur de generation : le cache est sale tant que l'instantane publie ne
+     * reflete pas la derniere invalidation connue.
      */
     public boolean isDirty() {
-        return dirty.get();
+        return this.builtGeneration.get() < this.invalidationCounter.get();
     }
 
     /**
      * Ensures the cache is valid asynchronously.
      * Returns a CompletableFuture that completes when the cache is ready.
      * If the cache is already valid, returns an already-completed future.
-     * If a rebuild is already in progress, returns the existing future.
+     * If a rebuild is already in progress or already scheduled, returns the existing future.
+     * <p>
+     * Chemin sensible a la fraicheur (ouverture de l'hotel des ventes,
+     * {@code updateListedItems}) : contrairement a {@link #triggerRebuildIfNeeded()}, la
+     * demande n'est pas abandonnee pendant la fenetre de coalescence, elle y est PLANIFIEE.
+     * Toutes les demandes concurrentes se partagent le meme future, donc un seul tri les sert
+     * toutes et la fenetre borne bien le nombre de reconstructions.
+     * <p>
+     * Le future rendu garantit qu'une reconstruction a eu lieu, pas que l'instantane publie
+     * couvre l'invalidation de l'appelant : si une reconstruction etait deja engagee, elle peut
+     * avoir lu le store avant cette invalidation. Dans ce cas le cache reste sale (le compteur
+     * a bouge) et la lecture suivante replanifie une reconstruction. On ne relance
+     * volontairement PAS un second tri ici : sous charge, une invalidation arrive pendant
+     * chaque reconstruction, la relance systematique doublait donc le cout de chaque cycle
+     * (C-056 / C-101).
      *
      * @return CompletableFuture that completes when cache is valid
      */
     public CompletableFuture<Void> ensureCacheValidAsync() {
-        // If cache is already valid, return completed future
-        if (!dirty.get()) {
+        if (!isDirty()) {
             return CompletableFuture.completedFuture(null);
         }
-
-        // Check if there's already a rebuild in progress
-        CompletableFuture<Void> existing = ongoingRebuild.get();
-        if (existing != null && !existing.isDone()) {
-            return existing;
-        }
-
-        // Create new rebuild future
-        CompletableFuture<Void> newFuture = new CompletableFuture<>();
-
-        // Try to set as the ongoing rebuild (atomic)
-        if (ongoingRebuild.compareAndSet(existing, newFuture)) {
-            // We won the race, start the async rebuild
-            plugin.getScheduler().runAsync(w -> {
-                try {
-                    rebuildCache();
-                    newFuture.complete(null);
-                } catch (Exception e) {
-                    newFuture.completeExceptionally(e);
-                } finally {
-                    ongoingRebuild.compareAndSet(newFuture, null);
-                }
-            });
-            return newFuture;
-        } else {
-            // Another thread started rebuild, use their future
-            CompletableFuture<Void> otherFuture = ongoingRebuild.get();
-            return otherFuture != null ? otherFuture : CompletableFuture.completedFuture(null);
-        }
+        return requestRebuild();
     }
 
-    private void ensureCacheValid() {
-        if (dirty.get()) {
-            rebuildCache();
+    /**
+     * Temps restant avant que la prochaine reconstruction soit autorisee.
+     *
+     * @return le nombre de millisecondes restantes, 0 si une reconstruction peut demarrer
+     */
+    private long remainingCooldownMillis() {
+        long last = this.lastRebuildTime;
+        if (last == 0L) return 0L; // aucune reconstruction effectuee jusqu'ici
+
+        long elapsed = System.currentTimeMillis() - last;
+        if (elapsed < 0L) return 0L; // horloge systeme revenue en arriere
+
+        long remaining = MIN_REBUILD_INTERVAL_MS - elapsed;
+        return remaining > 0L ? remaining : 0L;
+    }
+
+    /**
+     * Point d'entree UNIQUE des reconstructions asynchrones.
+     * <p>
+     * Coalesce : si une reconstruction est en cours ou deja planifiee, son future est rendu tel
+     * quel. Sinon une seule est planifiee, immediatement si la fenetre de coalescence est
+     * ecoulee, sinon a la fin de cette fenetre.
+     *
+     * @return le future de la reconstruction qui servira cette demande
+     */
+    private CompletableFuture<Void> requestRebuild() {
+        CompletableFuture<Void> existing = this.ongoingRebuild.get();
+        if (existing != null && !existing.isDone()) return existing;
+
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        if (!this.ongoingRebuild.compareAndSet(existing, future)) {
+            // Un autre thread vient de planifier la reconstruction : on se greffe dessus.
+            CompletableFuture<Void> other = this.ongoingRebuild.get();
+            return other != null ? other : CompletableFuture.completedFuture(null);
         }
+
+        long delay = remainingCooldownMillis();
+        try {
+            if (delay <= 0L) {
+                this.plugin.getScheduler().runAsync(wrappedTask -> runRebuildTask(future));
+            } else {
+                this.plugin.getScheduler().runLaterAsync(() -> runRebuildTask(future), delay, TimeUnit.MILLISECONDS);
+            }
+        } catch (Throwable throwable) {
+            // Ordonnanceur indisponible (arret du serveur) : liberer la place et completer le
+            // future. Le laisser pendant figerait definitivement les .thenRun de
+            // ZAuctionManager : inventaire jamais ouvert, inventaires jamais rafraichis.
+            this.ongoingRebuild.compareAndSet(future, null);
+            this.plugin.getLogger().warning("[ZAH] Unable to schedule the sorted items cache rebuild: " + throwable.getMessage());
+            future.complete(null);
+        }
+        return future;
+    }
+
+    /**
+     * Corps de la tache asynchrone de reconstruction.
+     * <p>
+     * UNE SEULE reconstruction par tache. Une invalidation survenue pendant celle-ci laisse le
+     * cache sale sans relance immediate : la demande suivante, apres la fenetre de coalescence,
+     * s'en chargera.
+     *
+     * @param future le future a completer pour tous les demandeurs coalesces
+     */
+    private void runRebuildTask(CompletableFuture<Void> future) {
+        try {
+            rebuildCache();
+        } catch (Exception exception) {
+            this.ongoingRebuild.compareAndSet(future, null);
+            future.completeExceptionally(exception);
+            return;
+        }
+        // Liberer la place AVANT de completer : une continuation qui redemande immediatement une
+        // reconstruction doit pouvoir en planifier une nouvelle.
+        this.ongoingRebuild.compareAndSet(future, null);
+        future.complete(null);
     }
 
     private void rebuildCache() {
@@ -286,8 +404,13 @@ public class SortedItemsCache {
 
         lock.writeLock().lock();
         try {
-            // Double-check after acquiring lock
-            if (!dirty.get()) {
+            // Capture AVANT toute lecture du store : une invalidation posterieure a cette ligne
+            // n'est pas garantie visible dans les listes construites ci-dessous.
+            long startedAtGeneration = this.invalidationCounter.get();
+
+            // Double-check after acquiring lock : un autre thread a deja publie un instantane au
+            // moins aussi recent.
+            if (this.builtGeneration.get() >= startedAtGeneration) {
                 performanceDebug.end("SortedItemsCache.rebuild", startTime, "skipped (already rebuilt)");
                 return;
             }
@@ -327,7 +450,7 @@ public class SortedItemsCache {
                 // No items, publish empty maps and mark as clean
                 sortedAllItems.set(newSortedAllItems);
                 sortedByCategoryItems.set(newSortedByCategoryItems);
-                dirty.set(false);
+                markBuilt(startedAtGeneration);
                 lastRebuildTime = System.currentTimeMillis();
                 performanceDebug.end("SortedItemsCache.rebuild", startTime, "items=0");
                 return;
@@ -338,11 +461,7 @@ public class SortedItemsCache {
             Item[] itemArray = availableItems.toArray(new Item[0]);
 
             // Sort by date and extract IDs
-            if (itemCount >= parallelSortThreshold) {
-                Arrays.parallelSort(itemArray, SortItem.ASCENDING_DATE.getComparator());
-            } else {
-                Arrays.sort(itemArray, SortItem.ASCENDING_DATE.getComparator());
-            }
+            sortInPool(itemArray, SortItem.ASCENDING_DATE.getComparator(), itemCount);
             int[] ascDateIds = extractIdsToArray(itemArray);
             int[] descDateIds = reverseArray(ascDateIds);
 
@@ -350,11 +469,7 @@ public class SortedItemsCache {
             newSortedAllItems.put(SortItem.DECREASING_DATE, wrapArray(descDateIds));
 
             // Sort by price and extract IDs
-            if (itemCount >= parallelSortThreshold) {
-                Arrays.parallelSort(itemArray, SortItem.ASCENDING_PRICE.getComparator());
-            } else {
-                Arrays.sort(itemArray, SortItem.ASCENDING_PRICE.getComparator());
-            }
+            sortInPool(itemArray, SortItem.ASCENDING_PRICE.getComparator(), itemCount);
             int[] ascPriceIds = extractIdsToArray(itemArray);
             int[] descPriceIds = reverseArray(ascPriceIds);
 
@@ -386,7 +501,7 @@ public class SortedItemsCache {
             sortedAllItems.set(newSortedAllItems);
             sortedByCategoryItems.set(newSortedByCategoryItems);
 
-            dirty.set(false);
+            markBuilt(startedAtGeneration);
             lastRebuildTime = System.currentTimeMillis();
 
             performanceDebug.end("SortedItemsCache.rebuild", startTime,
@@ -395,6 +510,20 @@ public class SortedItemsCache {
         } finally {
             lock.writeLock().unlock();
         }
+    }
+
+    /**
+     * Enregistre la generation que reflete l'instantane qui vient d'etre publie.
+     * <p>
+     * {@code max} : une reconstruction plus ancienne ne peut pas faire reculer la generation
+     * publiee. Si le compteur d'invalidation a bouge pendant la reconstruction, il reste
+     * strictement superieur a cette valeur : le cache demeure sale, la mutation concurrente
+     * n'est donc pas perdue (C-101), et aucune reconstruction n'est relancee ici.
+     *
+     * @param generationAtSnapshot la valeur du compteur capturee avant la lecture du store
+     */
+    private void markBuilt(long generationAtSnapshot) {
+        this.builtGeneration.accumulateAndGet(generationAtSnapshot, Math::max);
     }
 
     /**
@@ -413,11 +542,7 @@ public class SortedItemsCache {
         Item[] itemArray = categoryItems.toArray(new Item[0]);
 
         // Sort by date ascending
-        if (size >= parallelSortThreshold) {
-            Arrays.parallelSort(itemArray, SortItem.ASCENDING_DATE.getComparator());
-        } else {
-            Arrays.sort(itemArray, SortItem.ASCENDING_DATE.getComparator());
-        }
+        sortInPool(itemArray, SortItem.ASCENDING_DATE.getComparator(), size);
         int[] ascDateIds = extractIdsToArray(itemArray);
         int[] descDateIds = reverseArray(ascDateIds);
 
@@ -425,16 +550,44 @@ public class SortedItemsCache {
         targetMap.put(buildCacheKey(categoryId, SortItem.DECREASING_DATE), wrapArray(descDateIds));
 
         // Sort by price ascending
-        if (size >= parallelSortThreshold) {
-            Arrays.parallelSort(itemArray, SortItem.ASCENDING_PRICE.getComparator());
-        } else {
-            Arrays.sort(itemArray, SortItem.ASCENDING_PRICE.getComparator());
-        }
+        sortInPool(itemArray, SortItem.ASCENDING_PRICE.getComparator(), size);
         int[] ascPriceIds = extractIdsToArray(itemArray);
         int[] descPriceIds = reverseArray(ascPriceIds);
 
         targetMap.put(buildCacheKey(categoryId, SortItem.ASCENDING_PRICE), wrapArray(ascPriceIds));
         targetMap.put(buildCacheKey(categoryId, SortItem.DECREASING_PRICE), wrapArray(descPriceIds));
+    }
+
+    /**
+     * Trie sur le ForkJoinPool PRIVE du cache. {@link Arrays#parallelSort} utilise sinon le
+     * ForkJoinPool COMMUN de la JVM, deja sature par les appels Jedis bloquants du bridge
+     * (C-056).
+     *
+     * @param itemArray  le tableau a trier, modifie sur place
+     * @param comparator l'ordre de tri
+     * @param itemCount  la taille logique, comparee au seuil de parallelisme
+     */
+    private void sortInPool(Item[] itemArray, Comparator<Item> comparator, int itemCount) {
+        if (itemCount < parallelSortThreshold) {
+            Arrays.sort(itemArray, comparator);
+            return;
+        }
+        // Deja dans un worker du pool prive (buildCategorySortedLists appele depuis le
+        // parallelStream de rebuildCache) : Arrays.parallelSort y forke sur le pool COURANT,
+        // un submit imbrique suivi d'un get() bloquant n'apporterait rien et forcerait le
+        // pool a compenser en creant un thread supplementaire.
+        if (ForkJoinTask.getPool() == this.forkJoinPool) {
+            Arrays.parallelSort(itemArray, comparator);
+            return;
+        }
+        try {
+            forkJoinPool.submit(() -> Arrays.parallelSort(itemArray, comparator)).get();
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            Arrays.sort(itemArray, comparator);
+        } catch (Exception exception) {
+            Arrays.sort(itemArray, comparator);
+        }
     }
 
     /**
@@ -505,10 +658,10 @@ public class SortedItemsCache {
     public void shutdown() {
         forkJoinPool.shutdown();
         try {
-            if (!forkJoinPool.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS)) {
+            if (!forkJoinPool.awaitTermination(10, TimeUnit.SECONDS)) {
                 plugin.getLogger().warning("ForkJoinPool did not terminate within 10 seconds, forcing shutdown");
                 forkJoinPool.shutdownNow();
-                if (!forkJoinPool.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                if (!forkJoinPool.awaitTermination(5, TimeUnit.SECONDS)) {
                     plugin.getLogger().severe("ForkJoinPool did not terminate properly after forced shutdown");
                 }
             }

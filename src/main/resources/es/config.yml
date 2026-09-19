@@ -126,7 +126,25 @@ timezone: auto
 # - MARIADB : Servidor de base de datos MariaDB (compatible con MySQL)
 #             Ideal para: Configuraciones multi-servidor, grandes casas de subastas
 # Nota: Para la sincronizacion multi-servidor, usa MySQL/MariaDB con el addon Redis.
+#
+# ADVERTENCIA: SQLITE es INCOMPATIBLE con el addon de cluster Redis.
+# Cada servidor mantendria su PROPIO archivo de base de datos, los identificadores de objetos
+# colisionarian entre servidores y los bloqueos del cluster no protegerian nada: los objetos
+# SERIAN duplicados.
+# Con el addon instalado, SQLITE ahora se rechaza: el addon se desactiva a si mismo y este
+# servidor permanece en modo servidor unico. Usa MYSQL o MARIADB con una base COMPARTIDA.
 storage-type: SQLITE
+
+# Escribe un marcador de formato ("V2:" / "NBT:") al inicio de cada ItemStack serializado.
+# DESPLIEGUE EN DOS FASES - esta es la fase 2 del nuevo formato de serializacion de objetos:
+# - false (predeterminado): el plugin LEE ambos formatos pero ESCRIBE sin marcador, lo que
+#   permite volver a la version anterior sin perder ningun anuncio.
+# - true: cambia a true solo cuando TODOS los servidores de la red usen esta version o una
+#   posterior. Un servidor que siga en una version anterior no sabe leer un contenido con
+#   prefijo "V2:" y el anuncio seria ilegible para el.
+# Cuando todo el parque este actualizado, pon true: el formato pasa a estar en el propio dato
+# y no en la version de Minecraft del servidor que lo lee.
+write-itemstack-format-marker: false
 
 # Identificador del nombre del servidor para configuraciones multi-servidor.
 # Este nombre se almacena con cada anuncio para identificar de que servidor proviene.
@@ -498,6 +516,37 @@ expiration:
       enable: false
 
 #=============================================================================
+# TAREAS DE MANTENIMIENTO
+#=============================================================================
+
+# Tareas de fondo periodicas que mantienen coherente la casa de subastas.
+# Son ligeras y acotadas; desactivarlas solo se recomienda para depuracion.
+
+maintenance:
+  # Frecuencia (en segundos) del barrido de los anuncios que han llegado a su fecha de
+  # caducidad. Sin esta tarea, un anuncio solo caduca si un jugador abre por casualidad una
+  # pestana que recorre la lista: puede seguir en venta mucho despues de su plazo.
+  # En multi-servidor cada objeto caduca bajo el bloqueo distribuido: varios servidores que
+  # ejecuten esta tarea no pueden caducar dos veces el mismo objeto.
+  # Pon 0 para desactivar.
+  expiration-sweep-interval-seconds: 60
+
+  # Numero maximo de anuncios procesados por pasada. Un atraso importante se reabsorbe
+  # progresivamente en varias pasadas en lugar de en una sola rafaga.
+  expiration-sweep-batch-size: 50
+
+  # Duracion (en segundos) tras la cual un objeto bloqueado en una pantalla de confirmacion
+  # (de compra o de retirada) vuelve a estar disponible.
+  # Es la red de seguridad para un jugador que se desconecta, muere o pierde su cache mientras
+  # una ventana de confirmacion esta abierta: sin ella el objeto queda congelado y no se puede
+  # comprar en ningun servidor de la red.
+  # Minimo 60 segundos. Pon 0 para desactivar.
+  confirmation-timeout-seconds: 60
+
+  # Frecuencia (en segundos) de verificacion de los estados de confirmacion caducados.
+  confirmation-sweep-interval-seconds: 10
+
+#=============================================================================
 # LIMITES DE ANUNCIOS
 #=============================================================================
 
@@ -777,6 +826,14 @@ action:
   # Cuando esta activado, el inventario de subastas se actualiza automaticamente al agregar/eliminar objetos.
   # Desactivar si se experimentan problemas de rendimiento con actualizaciones frecuentes.
   update-inventory-on-action: true
+
+  # Cuando esta activado, el perfil del vendedor se escribe en el disco inmediatamente despues de
+  # que sus objetos hayan salido de su inventario para ponerse en venta. Sin esto, un fallo del
+  # servidor entre la retirada de los objetos y el guardado periodico del perfil devuelve los
+  # objetos al jugador cuando ya estan en venta: duplicacion.
+  # Es una escritura de disco SINCRONA en cada puesta en venta: desactivarla en un servidor muy
+  # cargado, o si un plugin de sincronizacion de inventario ya gestiona la persistencia.
+  save-profile-on-sell: true
 
   # Cuando esta activado, el filtro de categoria se restablece cada vez que un jugador abre la casa de subastas.
   # Cuando esta desactivado, la categoria seleccionada anteriormente persiste entre aperturas.

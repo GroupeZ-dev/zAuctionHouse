@@ -9,6 +9,8 @@ import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.services.AuctionExpireService;
+import fr.maxlego08.zauctionhouse.api.storage.StaleItemException;
+import fr.maxlego08.zauctionhouse.api.storage.StorageManager;
 import org.bukkit.OfflinePlayer;
 
 import java.util.*;
@@ -81,7 +83,13 @@ public class ExpireService implements AuctionExpireService {
                 item.setExpiredAt(new Date(expiredAt));
 
                 this.auctionManager.addItem(StorageType.EXPIRED, item);
-                storageManager.updateItem(item, StorageType.EXPIRED);
+                // C-078 : ecriture compare-and-set. Si la ligne n'est plus LISTED (vendue ou
+                // expiree par un autre noeud), le future echoue avec StaleItemException et le
+                // fantome memoire est purge au lieu de rester reclamable.
+                storageManager.updateItem(item, StorageType.LISTED, StorageType.EXPIRED).exceptionally(throwable -> {
+                    handleStaleTransition(item, StorageType.EXPIRED, throwable);
+                    return null;
+                });
             });
 
             var onlinePlayer = offlineSeller.isOnline() ? offlineSeller.getPlayer() : null;
@@ -102,7 +110,13 @@ public class ExpireService implements AuctionExpireService {
         } else {
 
             item.setStatus(ItemStatus.DELETED);
-            storageManager.updateItem(item, StorageType.DELETED);
+            // C-078 : l'objet doit QUITTER le store. Le laisser dedans avec un statut DELETED
+            // en fait un fantome que le joueur voit encore et peut tenter de reclamer.
+            this.auctionManager.removeItem(storageType, item);
+            storageManager.updateItem(item, storageType, StorageType.DELETED).exceptionally(throwable -> {
+                handleStaleTransition(item, StorageType.DELETED, throwable);
+                return null;
+            });
         }
 
         // Log expiration for debugging purposes
@@ -115,14 +129,35 @@ public class ExpireService implements AuctionExpireService {
     public void processExpiredItems(List<Item> items, StorageType storageType) {
         if (items.isEmpty()) return;
 
-        // Guard: filter out items already processed by another server (e.g., claimed via Redis cluster)
+        // C-088 : ce point d'entree n'est plus seulement appele par un clic joueur, il l'est
+        // aussi par le balayage d'expiration PLANIFIE. Entre la selection du lot et son
+        // traitement (au moins un tick plus tard, davantage sous charge) un item a pu etre
+        // vendu, retire, sorti du store ou entrer en section critique. Le lot est donc refiltre
+        // ici sur trois criteres au lieu d'un seul. Aucune etape de cette methode ne suppose
+        // qu'un joueur est connecte : le vendeur est resolu en OfflinePlayer et chaque acces a
+        // getPlayer() est garde.
         List<Item> filtered = new ArrayList<>();
         for (Item item : items) {
+
+            if (item == null) continue;
+
+            // Deja traite ailleurs (reclame via le bus cluster) : l'instance doit quitter le store.
             if (item.getStatus() == ItemStatus.DELETED) {
                 this.auctionManager.removeItem(storageType, item);
-            } else {
-                filtered.add(item);
+                continue;
             }
+
+            // Reference fantome : le store ne detient plus CETTE instance. Un autre chemin l'a
+            // deja sortie ou remplacee ; la traiter ecraserait une ligne qui n'est plus a nous.
+            if (this.auctionManager.getItem(storageType, item.getId()) != item) continue;
+
+            // Etat transitoire : une confirmation est ouverte ou une section critique d'achat /
+            // de retrait est en vol. C'est a cette chaine de conclure ; le balayage suivant
+            // reprendra l'item si elle ne revient jamais (le balayage TTL des statuts de
+            // confirmation la debloque de son cote).
+            if (isTransientStatus(item.getStatus())) continue;
+
+            filtered.add(item);
         }
         if (filtered.isEmpty()) return;
 
@@ -188,9 +223,15 @@ public class ExpireService implements AuctionExpireService {
                 }
 
                 // Batch update all online seller items
+                // C-094 : le batch rend les ids qui ont PERDU la course, dont on purge la memoire.
                 Map<StorageType, List<Item>> batchUpdate = new EnumMap<>(StorageType.class);
                 batchUpdate.put(StorageType.EXPIRED, onlineSellerItems);
-                storageManager.updateItems(batchUpdate);
+                storageManager.updateItems(batchUpdate, StorageType.LISTED)
+                        .thenAccept(staleIds -> dropStaleGhosts(staleIds, StorageType.EXPIRED))
+                        .exceptionally(throwable -> {
+                            this.plugin.getLogger().log(Level.SEVERE, "Failed to persist batch expiration of " + onlineSellerItems.size() + " item(s)", throwable);
+                            return null;
+                        });
             }
 
             // Process offline sellers asynchronously then batch update
@@ -217,7 +258,12 @@ public class ExpireService implements AuctionExpireService {
                                     this.plugin.getScheduler().runNextTick(w -> {
                                         Map<StorageType, List<Item>> batchUpdate = new EnumMap<>(StorageType.class);
                                         batchUpdate.put(StorageType.EXPIRED, new ArrayList<>(processedItems));
-                                        storageManager.updateItems(batchUpdate);
+                                        storageManager.updateItems(batchUpdate, StorageType.LISTED)
+                                                .thenAccept(staleIds -> dropStaleGhosts(staleIds, StorageType.EXPIRED))
+                                                .exceptionally(batchThrowable -> {
+                                                    this.plugin.getLogger().log(Level.SEVERE, "Failed to persist batch expiration (offline sellers)", batchThrowable);
+                                                    return null;
+                                                });
                                     });
                                 }
                             });
@@ -228,12 +274,23 @@ public class ExpireService implements AuctionExpireService {
             // Items from EXPIRED storage go to DELETED
             for (Item item : validItems) {
                 item.setStatus(ItemStatus.DELETED);
+                // C-078 : idem, l'objet quitte le store, il n'est plus reclamable.
+                this.auctionManager.removeItem(storageType, item);
             }
 
             // Batch update all items to DELETED
             Map<StorageType, List<Item>> batchUpdate = new EnumMap<>(StorageType.class);
             batchUpdate.put(StorageType.DELETED, validItems);
-            storageManager.updateItems(batchUpdate);
+            storageManager.updateItems(batchUpdate, storageType)
+                    .thenAccept(staleIds -> {
+                        if (staleIds != null && !staleIds.isEmpty()) {
+                            this.plugin.getLogger().warning(staleIds.size() + " item(s) lost the deletion race: " + staleIds);
+                        }
+                    })
+                    .exceptionally(throwable -> {
+                        this.plugin.getLogger().log(Level.SEVERE, "Failed to persist batch deletion of " + validItems.size() + " item(s)", throwable);
+                        return null;
+                    });
         }
     }
 
@@ -273,15 +330,39 @@ public class ExpireService implements AuctionExpireService {
                             .orTimeout(perf.lockItemTimeoutMs(), TimeUnit.MILLISECONDS)
                             .thenCompose(token -> {
                                 tokenHolder.set(token);
-                                if (LockToken.noop().value().equals(token.value())) {
+                                // Un jeton non acquis couvre a la fois la contention (noop) et
+                                // l'etat terminal a portee (unavailable) : dans les deux cas, cet
+                                // item ne nous appartient pas.
+                                if (token == null || !token.isAcquired()) {
                                     // Another server is already processing this item.
                                     return CompletableFuture.<Void>completedFuture(null);
                                 }
-                                return storageManager.selectItem(item.getId())
+                                return storageManager.selectItemState(item.getId())
                                         .orTimeout(perf.checkAvailabilityTimeoutMs(), TimeUnit.MILLISECONDS)
-                                        .thenCompose(dbItem -> {
-                                            if (dbItem == null || dbItem.getBuyerUniqueId() != null) {
-                                                // Sold/deleted on another server: remove the local ghost, do NOT expire.
+                                        .thenCompose(lookup -> {
+                                            // C-091 : la ligne doit etre ENCORE listee. ItemRepository.select(int)
+                                            // ne filtre que DELETED : une ligne deja passee a EXPIRED par un
+                                            // autre noeud remonte ici avec buyer_unique_id null et franchirait
+                                            // l'ancienne garde. ItemLoaderUtils traduit LISTED -> AVAILABLE,
+                                            // donc tester le statut equivaut a tester storage_type = 'LISTED'.
+                                            var dbItem = lookup.item();
+                                            boolean stillListed = lookup.isFound() && dbItem != null
+                                                    && dbItem.getBuyerUniqueId() == null
+                                                    && dbItem.getStatus() == ItemStatus.AVAILABLE;
+
+                                            if (!stillListed) {
+                                                // C-109 : on ne purge la copie memoire QUE lorsque la base est
+                                                // formelle. UNAVAILABLE signifie que la ligne EXISTE mais n'a pas
+                                                // su etre relue (economie absente d'economies.yml, contenu
+                                                // illisible) : purger ferait disparaitre une annonce parfaitement
+                                                // valide pour une simple erreur de configuration.
+                                                if (lookup.state() == StorageManager.LookupState.UNAVAILABLE) {
+                                                    logger.warning("Item " + item.getId() + " could not be re-read from the database (unknown economy or unreadable content):"
+                                                            + " expiration postponed, the listing is left untouched.");
+                                                    return CompletableFuture.<Void>completedFuture(null);
+                                                }
+                                                // Sold/deleted/already expired on another server: remove the
+                                                // local ghost, do NOT expire.
                                                 this.plugin.getScheduler().runNextTick(w -> {
                                                     this.auctionManager.removeItem(StorageType.LISTED, item.getId());
                                                     this.auctionManager.clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_SEARCH);
@@ -301,10 +382,16 @@ public class ExpireService implements AuctionExpireService {
                         logger.warning("Cluster-aware expiration skipped/failed for item " + item.getId() + ": " + throwable.getMessage());
                     }
                     var token = tokenHolder.get();
-                    if (token != null && !LockToken.noop().value().equals(token.value())) {
-                        clusterBridge.unlockItem(item, token, StorageType.LISTED).exceptionally(ex -> {
-                            logger.severe("Failed to unlock item " + item.getId() + " after expiration: " + ex.getMessage());
-                            return null;
+                    if (token != null && token.isAcquired()) {
+                        // C-061 : le verdict de liberation est desormais consomme. Un false signifie
+                        // que le jeton presente n'etait plus celui inscrit cote cluster : le verrou a
+                        // ete repris par un autre noeud pendant la section critique.
+                        clusterBridge.releaseLock(item, token, StorageType.LISTED).whenComplete((released, ex) -> {
+                            if (ex != null) {
+                                logger.severe("Failed to unlock item " + item.getId() + " after expiration: " + ex.getMessage());
+                            } else if (!Boolean.TRUE.equals(released)) {
+                                logger.severe("Cluster lock for item " + item.getId() + " was NOT held at release time after expiration.");
+                            }
                         });
                     }
                 });
@@ -352,12 +439,17 @@ public class ExpireService implements AuctionExpireService {
             this.plugin.getScheduler().runNextTick(w -> {
                 var previousExpiredAt = item.getExpiredAt();
                 item.setExpiredAt(new Date(expiredAt));
-                storageManager.updateItem(item, StorageType.EXPIRED).whenComplete((u, t) -> {
+                storageManager.updateItem(item, StorageType.LISTED, StorageType.EXPIRED).whenComplete((u, t) -> {
                     if (t != null) {
                         // DB update failed: revert the expiredAt change and leave the item in the
                         // LISTED store unchanged so a later sweep retries. Never create a local
                         // EXPIRED phantom against a still-LISTED database row.
                         item.setExpiredAt(previousExpiredAt);
+                        if (StaleItemException.unwrap(t) != null) {
+                            // Course perdue : l'item n'est plus a nous, on retire le fantome local
+                            // au lieu de laisser un LISTED memoire face a une base qui dit autre chose.
+                            handleStaleTransition(item, StorageType.EXPIRED, t);
+                        }
                         done.completeExceptionally(t);
                         return;
                     }
@@ -372,6 +464,61 @@ public class ExpireService implements AuctionExpireService {
                 });
             });
             return done;
+        });
+    }
+
+    /**
+     * Un statut transitoire signale une chaine en cours sur cet item : confirmation ouverte cote
+     * joueur, ou section critique d'achat / de retrait deja engagee (verrou pose, argent ou lot
+     * potentiellement en mouvement). L'expiration ne doit alors JAMAIS s'inviter : elle
+     * deplacerait la ligne sous les pieds de la chaine et le lot serait duplique ou perdu.
+     *
+     * @param status le statut de l'item au moment du balayage
+     * @return {@code true} si l'item appartient a une operation en cours
+     */
+    private static boolean isTransientStatus(ItemStatus status) {
+        return status == ItemStatus.IS_BEING_PURCHASED
+                || status == ItemStatus.IS_BEING_REMOVED
+                || status == ItemStatus.IS_PURCHASE_CONFIRM
+                || status == ItemStatus.IS_REMOVE_CONFIRM;
+    }
+
+    /**
+     * La transition a perdu la course : la ligne ne portait plus l'etat source attendu (un autre
+     * serveur l'a vendue, expiree ou detruite entre-temps). On ne conserve JAMAIS le fantome en
+     * memoire, il serait reclamable localement alors que la base dit autre chose.
+     *
+     * @param item        l'item dont la transition a echoue
+     * @param destination l'etat destination vise par le compare-and-set
+     * @param throwable   l'erreur remontee par la couche de stockage
+     */
+    private void handleStaleTransition(Item item, StorageType destination, Throwable throwable) {
+        var stale = StaleItemException.unwrap(throwable);
+        if (stale == null) {
+            this.plugin.getLogger().log(Level.SEVERE, "Failed to persist transition of item " + item.getId() + " to " + destination, throwable);
+            return;
+        }
+        this.plugin.getLogger().warning("Item " + item.getId() + " lost the " + destination + " race (" + stale.getMessage() + "), dropping the local ghost");
+        dropStaleGhosts(List.of(item.getId()), destination);
+    }
+
+    /**
+     * Purge de la memoire les items qui n'ont pas remporte leur transition, dans le conteneur
+     * source comme dans le conteneur destination, puis invalide les caches d'affichage.
+     *
+     * @param staleIds    les identifiants des items ayant perdu la course
+     * @param destination l'etat destination vise par le compare-and-set
+     */
+    private void dropStaleGhosts(List<Integer> staleIds, StorageType destination) {
+        if (staleIds == null || staleIds.isEmpty()) return;
+        this.plugin.getLogger().warning(staleIds.size() + " item(s) lost the " + destination + " race, dropping local ghosts: " + staleIds);
+        this.plugin.getScheduler().runNextTick(w -> {
+            for (Integer staleId : staleIds) {
+                this.auctionManager.removeItem(StorageType.LISTED, staleId);
+                this.auctionManager.removeItem(StorageType.EXPIRED, staleId);
+                this.auctionManager.removeItem(StorageType.PURCHASED, staleId);
+            }
+            this.auctionManager.clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED, PlayerCacheKey.ITEMS_PURCHASED, PlayerCacheKey.ITEMS_SEARCH);
         });
     }
 }

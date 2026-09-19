@@ -126,7 +126,25 @@ timezone: auto
 # - MARIADB : Server database MariaDB (compatibile MySQL)
 #             Ideale per: Configurazioni multi-server, grandi case d'aste
 # Nota: Per la sincronizzazione multi-server, usa MySQL/MariaDB con l'addon Redis.
+#
+# ATTENZIONE: SQLITE è INCOMPATIBILE con l'addon cluster Redis.
+# Ogni server manterrebbe il PROPRIO file di database, gli identificatori degli oggetti
+# entrerebbero in collisione tra i server e i lock del cluster non proteggerebbero nulla:
+# gli oggetti VERREBBERO duplicati.
+# Con l'addon installato, SQLITE viene ora rifiutato: l'addon si disattiva da solo e questo
+# server resta in modalità server singolo. Usa MYSQL o MARIADB con un database CONDIVISO.
 storage-type: SQLITE
+
+# Scrive un marcatore di formato ("V2:" / "NBT:") in testa a ogni ItemStack serializzato.
+# DISTRIBUZIONE IN DUE FASI - questa è la fase 2 del nuovo formato di serializzazione:
+# - false (predefinito): il plugin LEGGE entrambi i formati ma SCRIVE senza marcatore, il che
+#   permette di tornare alla versione precedente senza perdere alcun annuncio.
+# - true: passa a true solo quando TUTTI i server della rete usano questa versione o una più
+#   recente. Un server rimasto a una versione precedente non sa leggere un contenuto con
+#   prefisso "V2:" e l'annuncio diventerebbe illeggibile per lui.
+# Una volta aggiornato tutto il parco server, imposta true: il formato è allora portato dal
+# dato stesso e non dalla versione Minecraft del server che lo rilegge.
+write-itemstack-format-marker: false
 
 # Identificatore del nome del server per configurazioni multi-server.
 # Questo nome viene memorizzato con ogni annuncio per identificare da quale server proviene.
@@ -498,6 +516,37 @@ expiration:
       enable: false
 
 #=============================================================================
+# ATTIVITA DI MANUTENZIONE
+#=============================================================================
+
+# Attività periodiche in background che mantengono coerente la casa d'aste.
+# Sono leggere e limitate; disattivarle è consigliato solo per il debug.
+
+maintenance:
+  # Frequenza (in secondi) della scansione degli annunci che hanno raggiunto la loro data di
+  # scadenza. Senza questa attività, un annuncio scade solo se un giocatore apre per caso una
+  # scheda che percorre la lista: può quindi restare in vendita molto oltre il suo termine.
+  # In multi-server ogni oggetto viene fatto scadere sotto il lock distribuito: più server che
+  # eseguono questa attività non possono far scadere due volte lo stesso oggetto.
+  # Imposta 0 per disattivare.
+  expiration-sweep-interval-seconds: 60
+
+  # Numero massimo di annunci elaborati per passaggio. Un arretrato importante viene
+  # riassorbito progressivamente su più passaggi invece che in una sola raffica.
+  expiration-sweep-batch-size: 50
+
+  # Durata (in secondi) oltre la quale un oggetto bloccato in una schermata di conferma
+  # (di acquisto o di rimozione) torna disponibile.
+  # È la rete di sicurezza per un giocatore che si disconnette, muore o perde la sua cache
+  # mentre una finestra di conferma è aperta: senza di essa l'oggetto resta congelato e non
+  # acquistabile su tutti i server della rete.
+  # Minimo 60 secondi. Imposta 0 per disattivare.
+  confirmation-timeout-seconds: 60
+
+  # Frequenza (in secondi) di verifica degli stati di conferma scaduti.
+  confirmation-sweep-interval-seconds: 10
+
+#=============================================================================
 # LIMITI DEGLI ANNUNCI
 #=============================================================================
 
@@ -777,6 +826,14 @@ action:
   # Quando attivato, l'inventario delle aste si aggiorna automaticamente ad aggiunte/rimozioni di oggetti.
   # Disattivare se si riscontrano problemi di prestazioni con aggiornamenti frequenti.
   update-inventory-on-action: true
+
+  # Quando attivato, il profilo del venditore viene scritto su disco immediatamente dopo che i
+  # suoi oggetti hanno lasciato l'inventario per essere messi in vendita. Senza questo, un crash
+  # del server tra la rimozione degli oggetti e il salvataggio periodico del profilo restituisce
+  # gli oggetti al giocatore mentre sono già in vendita: duplicazione.
+  # È una scrittura su disco SINCRONA a ogni messa in vendita: disattivarla su un server molto
+  # carico, o se un plugin di sincronizzazione dell'inventario gestisce già la persistenza.
+  save-profile-on-sell: true
 
   # Quando attivato, il filtro categoria viene reimpostato ogni volta che un giocatore apre la casa d'aste.
   # Quando disattivato, la categoria selezionata in precedenza persiste tra le aperture.

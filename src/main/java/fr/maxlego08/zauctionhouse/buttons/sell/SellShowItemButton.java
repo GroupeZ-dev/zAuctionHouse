@@ -112,6 +112,19 @@ public class SellShowItemButton extends Button {
             sellItems.remove(clickedSlot);
             manager.message(player, Message.SELL_ITEM_REMOVED);
         } else {
+            // C-097 : borner la selection a ce que le GUI sait AFFICHER et RETIRER. onRender
+            // tronque a Math.min(slots.size(), entries.size()) : au-dela, les stacks selectionnes
+            // deviennent invisibles ET non deselectionnables (le bouton de retrait n'est rendu que
+            // pour les entrees affichees). Le garde !this.slots.isEmpty() evite le cas degenere ou
+            // un bouton mal configure bloquerait TOUTE selection.
+            // Sur les configurations livrees (36 slots pour 36 emplacements cliquables) ce plafond
+            // n'est jamais atteint : aucune regression.
+            // Un clic refuse sans retour visuel est un bug d'interface : le joueur doit savoir
+            // pourquoi son stack n'a pas ete pris.
+            if (!this.slots.isEmpty() && sellItems.size() >= this.slots.size()) {
+                manager.message(player, Message.SELL_INVENTORY_FULL, "%max%", String.valueOf(this.slots.size()));
+                return;
+            }
             sellItems.put(clickedSlot, clickedItem.clone());
             manager.message(player, Message.SELL_ITEM_ADDED);
         }

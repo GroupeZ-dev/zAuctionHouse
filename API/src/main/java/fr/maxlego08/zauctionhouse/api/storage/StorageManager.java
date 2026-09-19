@@ -121,6 +121,82 @@ public interface StorageManager {
     CompletableFuture<Void> updateItems(Map<StorageType, List<Item>> itemsByStorageType);
 
     /**
+     * Updates the item in compare-and-set mode: the write only succeeds while the row still
+     * carries {@code from}.
+     * <p>
+     * Le future echoue avec {@link StaleItemException} quand la course est perdue. L'appelant ne
+     * doit alors ni remettre l'item au joueur, ni deplacer d'argent, ni restaurer un statut du
+     * cycle LISTED : il doit purger sa copie memoire et converger vers la base.
+     * <p>
+     * L'implementation par defaut delegue a {@link #updateItem(Item, StorageType)} et n'offre donc
+     * AUCUNE garantie de compare-and-set : elle n'existe que pour ne pas casser les implementations
+     * tierces existantes de cette interface.
+     *
+     * @param item item to update
+     * @param from storage bucket the row is expected to still carry
+     * @param to   destination storage bucket
+     * @return future completing when the update is persisted, failing with
+     *         {@link StaleItemException} when no row matched
+     */
+    default CompletableFuture<Void> updateItem(Item item, StorageType from, StorageType to) {
+        return updateItem(item, to);
+    }
+
+    /**
+     * Batch compare-and-set variant of {@link #updateItems(Map)}.
+     *
+     * @param itemsByStorageType destination bucket to items to move
+     * @param from               storage bucket all these rows are expected to still carry
+     * @return future completing with the ids that lost the race (empty when everything moved);
+     *         the default implementation always reports an empty list
+     */
+    default CompletableFuture<List<Integer>> updateItems(Map<StorageType, List<Item>> itemsByStorageType, StorageType from) {
+        return updateItems(itemsByStorageType).thenApply(ignored -> List.of());
+    }
+
+    /**
+     * Reserve une annonce : la ligne parente est creee dans un etat NON PUBLIABLE et les contenus
+     * sont inseres, mais l'annonce n'est visible d'aucun serveur tant que
+     * {@link #publishAuctionItem(AuctionItem)} n'a pas ete appele.
+     * <p>
+     * L'implementation par defaut delegue a {@link #createAuctionItem} : un StorageManager tiers
+     * compile contre une version anterieure de l'API continue de fonctionner a l'identique, sans
+     * le gain d'atomicite.
+     *
+     * @param seller            player listing the item
+     * @param price             price of the listing
+     * @param expiredAt         expiration timestamp in milliseconds
+     * @param itemStacks        item stacks being sold
+     * @param encodedItemStacks les contenus DEJA encodes ({@code Base64ItemStack}), dans le meme
+     *                          ordre que {@code itemStacks} ; aucun element ne doit etre null
+     * @param auctionEconomy    economy to use for the listing
+     * @return future containing the reserved {@link AuctionItem}
+     */
+    default CompletableFuture<AuctionItem> reserveAuctionItem(Player seller, BigDecimal price, long expiredAt, List<ItemStack> itemStacks, List<String> encodedItemStacks, AuctionEconomy auctionEconomy) {
+        return createAuctionItem(seller, price, expiredAt, itemStacks, auctionEconomy);
+    }
+
+    /**
+     * Rend visible une annonce reservee.
+     *
+     * @param auctionItem the reserved listing to publish
+     * @return le nombre de lignes publiees : 1 = succes, 0 = la reservation n'existe plus
+     */
+    default CompletableFuture<Integer> publishAuctionItem(AuctionItem auctionItem) {
+        return CompletableFuture.completedFuture(1);
+    }
+
+    /**
+     * Annule une reservation qui n'a pas pu aboutir (les contenus partent en cascade).
+     *
+     * @param auctionItem the reservation to cancel
+     * @return future completing when the reservation has been removed
+     */
+    default CompletableFuture<Void> cancelReservation(AuctionItem auctionItem) {
+        return CompletableFuture.completedFuture(null);
+    }
+
+    /**
      * Records an audit log entry describing an action performed on an item.
      *
      * @param logType        type of log entry to create
@@ -153,6 +229,83 @@ public interface StorageManager {
      * @return future containing the item when found or {@code null} otherwise
      */
     CompletableFuture<Item> selectItem(int id);
+
+    /**
+     * Outcome of a single-item lookup.
+     */
+    enum LookupState {
+        /** The row exists and the item could be fully rebuilt. */
+        FOUND,
+        /** The row does not exist any more (deleted, or never existed): the item is definitively gone. */
+        GONE,
+        /** The row exists but could NOT be rebuilt: unknown economy, unreadable content, unsupported type. */
+        UNAVAILABLE
+    }
+
+    /**
+     * Result of {@link #selectItemState(int)}.
+     *
+     * @param state the lookup outcome
+     * @param item  the resolved item, non-null only when {@code state} is {@link LookupState#FOUND}
+     */
+    record ItemLookupResult(LookupState state, Item item) {
+
+        /**
+         * Creates a result describing a fully resolved item.
+         *
+         * @param item the resolved item
+         * @return the lookup result
+         */
+        public static ItemLookupResult found(Item item) {
+            return new ItemLookupResult(LookupState.FOUND, item);
+        }
+
+        /**
+         * Creates a result describing a row that does not exist any more.
+         *
+         * @return the lookup result
+         */
+        public static ItemLookupResult gone() {
+            return new ItemLookupResult(LookupState.GONE, null);
+        }
+
+        /**
+         * Creates a result describing a row that exists but could not be rebuilt.
+         *
+         * @return the lookup result
+         */
+        public static ItemLookupResult unavailable() {
+            return new ItemLookupResult(LookupState.UNAVAILABLE, null);
+        }
+
+        /**
+         * Tells whether the item could be fully resolved.
+         *
+         * @return {@code true} when the state is {@link LookupState#FOUND}
+         */
+        public boolean isFound() {
+            return this.state == LookupState.FOUND;
+        }
+    }
+
+    /**
+     * Looks up a single item and reports WHY it could not be resolved.
+     * <p>
+     * {@link #selectItem(int)} collapses three very different situations into a single
+     * {@code null}: the row was deleted, the economy referenced by the row is missing from
+     * economies.yml, or the content could not be decoded. Callers then treat all three as
+     * "sold elsewhere" and purge the local copy - which silently makes a listing vanish when
+     * the real problem is a configuration mistake.
+     * <p>
+     * The default implementation maps {@code null} to {@link LookupState#GONE}, so third-party
+     * implementations of this interface keep compiling and behaving exactly as before.
+     *
+     * @param id identifier of the item
+     * @return future resolving to the lookup outcome
+     */
+    default CompletableFuture<ItemLookupResult> selectItemState(int id) {
+        return selectItem(id).thenApply(item -> item == null ? ItemLookupResult.gone() : ItemLookupResult.found(item));
+    }
 
     /**
      * Finds a player's UUID by their username.

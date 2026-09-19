@@ -126,7 +126,25 @@ timezone: auto
 # - MARIADB : Serveur de base de données MariaDB (compatible MySQL)
 #             Idéal pour: Configurations multi-serveurs, grands hôtels des ventes
 # Note: Pour la synchronisation multi-serveur, utilisez MySQL/MariaDB avec l'addon Redis.
+#
+# ATTENTION: SQLITE est INCOMPATIBLE avec l'addon cluster Redis.
+# Chaque serveur garderait son PROPRE fichier de base de donnees, les identifiants d'items
+# entreraient en collision d'un serveur a l'autre et les verrous du cluster ne protegeraient
+# rien - les items SERAIENT dupliques.
+# Avec l'addon installe, SQLITE est desormais refuse: l'addon se desactive lui-meme et ce
+# serveur reste en mono-serveur. Utilisez MYSQL ou MARIADB avec une base PARTAGEE.
 storage-type: SQLITE
+
+# Ecrit un marqueur de format ("V2:" / "NBT:") en tete de chaque ItemStack serialise.
+# DEPLOIEMENT EN DEUX PHASES - il s'agit ici de la phase 2 du nouveau format de serialisation:
+# - false (par defaut): le plugin LIT les deux formats mais ECRIT sans marqueur, ce qui permet
+#   de revenir a la version precedente sans perdre la moindre annonce.
+# - true: ne passez a true qu'une fois TOUS les serveurs du reseau migres vers cette version ou
+#   une plus recente. Un serveur reste en version anterieure ne sait pas lire une charge
+#   prefixee "V2:" et l'annonce deviendrait illisible pour lui.
+# Une fois tout le parc a jour, passez a true: le format est alors porte par la donnee et non
+# par la version Minecraft du serveur qui la relit.
+write-itemstack-format-marker: false
 
 # Identifiant du nom de serveur pour les configurations multi-serveurs.
 # Ce nom est stocké avec chaque annonce pour identifier de quel serveur elle provient.
@@ -497,6 +515,37 @@ expiration:
       enable: false
 
 #=============================================================================
+# TACHES DE MAINTENANCE
+#=============================================================================
+
+# Taches de fond periodiques qui maintiennent l'hotel des ventes coherent.
+# Elles sont peu couteuses et bornees; les desactiver n'est conseille que pour du debogage.
+
+maintenance:
+  # Frequence (en secondes) du balayage des annonces arrivees a leur date d'expiration.
+  # Sans cette tache, une annonce n'expire que si un joueur ouvre par hasard un onglet qui
+  # parcourt la liste: elle peut donc rester en vente longtemps apres son echeance.
+  # En multi-serveurs chaque item est expire sous le verrou distribue: plusieurs serveurs
+  # executant cette tache ne peuvent pas expirer deux fois le meme item.
+  # Mettre 0 pour desactiver.
+  expiration-sweep-interval-seconds: 60
+
+  # Nombre maximum d'annonces traitees par passage. Un arriere important est resorbe
+  # progressivement sur plusieurs passages plutot qu'en une seule rafale.
+  expiration-sweep-batch-size: 50
+
+  # Duree (en secondes) au-dela de laquelle un item bloque dans un ecran de confirmation
+  # (achat ou retrait) est rendu disponible.
+  # C'est le filet de securite pour un joueur qui se deconnecte, meurt ou perd son cache
+  # pendant qu'une fenetre de confirmation est ouverte: sans lui l'item reste gele et
+  # inachetable sur tous les serveurs du reseau.
+  # Minimum 60 secondes. Mettre 0 pour desactiver.
+  confirmation-timeout-seconds: 60
+
+  # Frequence (en secondes) de verification des statuts de confirmation perimes.
+  confirmation-sweep-interval-seconds: 10
+
+#=============================================================================
 # LIMITES D'ANNONCES
 #=============================================================================
 
@@ -776,6 +825,14 @@ action:
   # Quand activé, l'inventaire d'enchères se rafraîchit automatiquement lors d'ajouts/suppressions d'items.
   # Désactiver si vous rencontrez des problèmes de performance avec des mises à jour fréquentes.
   update-inventory-on-action: true
+
+  # Quand activé, le profil du vendeur est écrit sur le disque immédiatement après que ses items
+  # ont quitté son inventaire pour être mis en vente. Sans cela, un crash du serveur entre le
+  # retrait des items et la sauvegarde périodique du profil rend les items au joueur alors qu'ils
+  # sont déjà en vente : duplication.
+  # C'est une écriture disque SYNCHRONE à chaque mise en vente : la désactiver sur un serveur très
+  # chargé, ou si un plugin de synchronisation d'inventaire gère déjà la persistance.
+  save-profile-on-sell: true
 
   # Quand activé, le filtre de catégorie est réinitialisé à chaque ouverture de l'hôtel des ventes.
   # Quand désactivé, la catégorie précédemment sélectionnée persiste entre les ouvertures.

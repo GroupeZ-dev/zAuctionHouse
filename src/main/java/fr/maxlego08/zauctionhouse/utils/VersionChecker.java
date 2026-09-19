@@ -14,7 +14,6 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /**
@@ -26,8 +25,8 @@ public class VersionChecker extends ZUtils implements Listener {
     private final String URL_RESOURCE = "https://groupez.dev/resources/%s";
     private final AuctionPlugin plugin;
     private final int pluginID;
-    private boolean useLastVersion = false;
-    private String lastVersion;
+    private volatile boolean useLastVersion = false;
+    private volatile String lastVersion;
 
     public VersionChecker(AuctionPlugin plugin, int pluginID) {
         super();
@@ -52,13 +51,9 @@ public class VersionChecker extends ZUtils implements Listener {
         // event
 
         String pluginVersion = plugin.getDescription().getVersion();
-        AtomicBoolean atomicBoolean = new AtomicBoolean();
         this.getVersion(version -> {
 
-            long ver = Long.parseLong(version.replace(".", ""));
-            long plVersion = Long.parseLong(pluginVersion.replace(".", ""));
-            atomicBoolean.set(plVersion >= ver);
-            this.useLastVersion = atomicBoolean.get();
+            this.useLastVersion = compare(pluginVersion, version) >= 0;
             this.lastVersion = version;
 
             if (this.useLastVersion) {
@@ -71,6 +66,43 @@ public class VersionChecker extends ZUtils implements Listener {
             }
         });
 
+    }
+
+    /**
+     * Comparaison segment par segment. {@code Long.parseLong(v.replace(".", ""))} cassait des
+     * qu'un segment passait a deux chiffres (4.0.1.10 -> 40110 etait juge superieur a
+     * 4.0.2.0 -> 4020) et levait une NumberFormatException, dans un bloc asynchrone, sur toute
+     * version portant un suffixe non numerique.
+     *
+     * @param left  la version locale
+     * @param right la version distante
+     * @return un entier negatif, nul ou positif selon que left est anterieure, egale ou
+     * posterieure a right
+     */
+    private static int compare(String left, String right) {
+        String[] leftParts = left.split("\\.");
+        String[] rightParts = right.split("\\.");
+        int length = Math.max(leftParts.length, rightParts.length);
+        for (int i = 0; i < length; i++) {
+            int a = i < leftParts.length ? parseSegment(leftParts[i]) : 0;
+            int b = i < rightParts.length ? parseSegment(rightParts[i]) : 0;
+            if (a != b) return Integer.compare(a, b);
+        }
+        return 0;
+    }
+
+    /**
+     * Absorbe un suffixe non numerique du type "-SNAPSHOT".
+     *
+     * @param segment le segment de version a lire
+     * @return la valeur numerique du segment, 0 s'il n'en porte aucune
+     */
+    private static int parseSegment(String segment) {
+        StringBuilder builder = new StringBuilder();
+        for (char c : segment.toCharArray()) {
+            if (Character.isDigit(c)) builder.append(c);
+        }
+        return builder.isEmpty() ? 0 : Integer.parseInt(builder.toString());
     }
 
     @EventHandler

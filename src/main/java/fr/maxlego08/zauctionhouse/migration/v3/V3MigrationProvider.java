@@ -9,6 +9,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 
 /**
  * Migration provider for zAuctionHouse V3.
@@ -123,12 +124,36 @@ public class V3MigrationProvider implements MigrationProvider {
             case JSON -> service.migrateFromJson(migrationConfig.getJsonFolder());
         };
 
-        return migrationFuture.thenApply(result -> MigrationResult.success(
-                result.getPlayersImported(),
-                result.getItemsImported(),
-                result.getTransactionsImported(),
-                result.getErrors(),
-                result.getDurationMs()
-        )).exceptionally(throwable -> MigrationResult.failure(throwable.getMessage()));
+        return migrationFuture.thenApply(result -> {
+
+            // Le verdict du service DOIT etre propage. Le thenApply d'origine mappait
+            // inconditionnellement vers MigrationResult.success : une base V3 vide ou des
+            // identifiants errones affichaient un succes vert a l'admin, et la branche
+            // Message.MIGRATION_FAILED de CommandAuctionAdminMigrate:94 etait du code mort.
+            // Les trois providers freres (CrazyAuctions, DonutAuction, ZelAuction) le font deja.
+            if (!result.isSuccess()) {
+                plugin.getLogger().severe("[Migration] zAuctionHouse V3 migration FAILED: " + result.getErrorMessage());
+                return MigrationResult.failure(result.getErrorMessage());
+            }
+
+            // `errors` etait affiche a l'admin sans jamais empecher le message de succes :
+            // on ne fait pas echouer la migration pour autant (les lignes valides sont importees),
+            // mais l'exploitant doit savoir qu'il ne peut PAS encore supprimer ses donnees V3.
+            if (result.getErrors() > 0) {
+                plugin.getLogger().warning("[Migration] zAuctionHouse V3 migration completed with " + result.getErrors()
+                        + " error(s). Read the SEVERE/WARNING lines above BEFORE deleting your V3 data.");
+            }
+
+            return MigrationResult.success(
+                    result.getPlayersImported(),
+                    result.getItemsImported(),
+                    result.getTransactionsImported(),
+                    result.getErrors(),
+                    result.getDurationMs()
+            );
+        }).exceptionally(throwable -> {
+            plugin.getLogger().log(Level.SEVERE, "[Migration] zAuctionHouse V3 migration threw", throwable);
+            return MigrationResult.failure(throwable.getMessage());
+        });
     }
 }

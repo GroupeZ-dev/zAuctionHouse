@@ -5,6 +5,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
+import java.util.logging.Level;
 import java.util.zip.GZIPInputStream;
 
 public class ItemStackUtils {
@@ -14,13 +15,13 @@ public class ItemStackUtils {
     /**
      * Change {@link ItemStack} to {@link String}
      *
-     * @return {@link String}
+     * @param paramItemStack the ItemStack to serialize
+     * @return {@link String}, or {@code null} when the legacy NMS path is unusable
      */
     public static String serializeItemStack(ItemStack paramItemStack) {
 
         if (paramItemStack == null) return "null";
 
-        ByteArrayOutputStream localByteArrayOutputStream = null;
         try {
             Class<?> localClass = EnumReflectionItemStack.NBTTAGCOMPOUND.getClassz();
             Constructor<?> localConstructor = localClass.getConstructor();
@@ -29,20 +30,41 @@ public class ItemStackUtils {
 
             EnumReflectionItemStack.ITEMSTACK.getClassz().getMethod("b", new Class[]{localClass}).invoke(localObject2, localObject1);
 
-            localByteArrayOutputStream = new ByteArrayOutputStream();
+            ByteArrayOutputStream localByteArrayOutputStream = new ByteArrayOutputStream();
             EnumReflectionItemStack.NBTCOMPRESSEDSTREAMTOOLS.getClassz().getMethod("a", new Class[]{localClass, OutputStream.class}).invoke(null, localObject1, localByteArrayOutputStream);
-        } catch (Exception localException) {
-            localException.printStackTrace();
+            return Base64.encode(localByteArrayOutputStream.toByteArray());
+        } catch (Throwable throwable) {
+            // Le code d'origine dereferencait `localByteArrayOutputStream` APRES son propre
+            // catch : NPE garantie des que la reflexion echoue (getClassz() fait
+            // nmsPackage.split(",")[3], ce qui explose sur Paper >= 1.20.6).
+            // Et surtout : NE JAMAIS rendre Base64.encode(new byte[0]). Cette chaine vide
+            // partait telle quelle dans auction_items.itemstack, l'INSERT REUSSISSAIT et le
+            // vendeur perdait son item sans la moindre trace. On rend null : la vente doit
+            // echouer bruyamment (garde a poser dans le chemin de vente, cf. C-067).
+            Bukkit.getLogger().log(Level.SEVERE,
+                    "[zAuctionHouse] Unable to serialize an ItemStack through the legacy NBT path", throwable);
+            return null;
         }
-        return Base64.encode(localByteArrayOutputStream.toByteArray());
     }
 
 
+    /**
+     * Deserialise une charge utile NBT historique, en retombant sur le flux Bukkit si la voie
+     * NMS echoue.
+     *
+     * @param paramString the payload to deserialize
+     * @return the decoded ItemStack, or {@code null} when the payload is unreadable
+     */
     public static ItemStack safeDeserializeItemStack(String paramString) {
         try {
             return tryDeserializeItemStack(paramString);
-        } catch (Exception exception) {
-            return Base64ItemStack.decode(paramString);
+        } catch (Throwable throwable) {
+            // RECURSION MUTUELLE INFINIE corrigee (C-054) : le repli appelait
+            // Base64ItemStack.decode(), qui sur un serveur < 1.20.5 rappelle cette meme
+            // methode -> StackOverflowError, qu'aucun catch(Exception) du projet ne rattrape,
+            // et qui avortait AuctionLoader.loadItems() (100 % synchrone, appele nu depuis
+            // ZAuctionPlugin.onEnable()). On appelle desormais le decodeur Bukkit DIRECT.
+            return Base64ItemStack.decodeBukkitStream(paramString);
         }
     }
 

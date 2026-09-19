@@ -14,10 +14,12 @@ import fr.maxlego08.zauctionhouse.storage.repository.repositories.ItemRepository
 import fr.maxlego08.zauctionhouse.storage.repository.repositories.PlayerRepository;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -27,8 +29,15 @@ public class CommandAuctionAdminGenerate extends VCommand {
 
     private static final String[] LAST_SUFFIXES = {"Player", "Gamer", "Master", "Pro", "King", "Queen", "Lord", "Boss", "Chief", "Hero", "Legend", "Star", "Wolf", "Dragon", "Phoenix", "Ninja", "Knight", "Wizard", "Mage", "Hunter", "Crafter", "Builder", "Miner", "Archer", "Warrior", "Slayer", "Ranger", "Scout", "Seeker", "Rider", "123", "456", "789", "007", "42", "99", "77", "666", "888", "1337", "HD", "TV", "YT", "TTV", "MC", "PVP", "PVE", "OP", "GG", "XD"};
 
-    private final Map<CommandSender, Long> confirmationMap = new HashMap<>();
-    private final Map<CommandSender, Integer> confirmationAmountMap = new HashMap<>();
+    /** Identite de repli pour la console : il n'y en a qu'une, une seule entree suffit. */
+    private static final UUID CONSOLE_ID = new UUID(0L, 0L);
+
+    /** Duree pendant laquelle une demande de generation reste confirmable. */
+    private static final long CONFIRMATION_WINDOW_MS = 30_000L;
+
+    // Ne PAS indexer par CommandSender : conserver un Player retient le CraftPlayer,
+    // son inventaire et son monde pour toute la duree de vie du plugin.
+    private final Map<UUID, PendingGeneration> pendingGenerations = new ConcurrentHashMap<>();
 
     public CommandAuctionAdminGenerate(AuctionPlugin plugin) {
         super(plugin);
@@ -67,15 +76,18 @@ public class CommandAuctionAdminGenerate extends VCommand {
         }
 
         long currentTime = System.currentTimeMillis();
-        Long lastConfirmation = confirmationMap.get(sender);
-        Integer lastAmount = confirmationAmountMap.get(sender);
+        UUID senderId = senderId(this.sender);
 
-        // Check if this is a confirmation (within 30 seconds and same amount)
-        if (lastConfirmation != null && lastAmount != null && (currentTime - lastConfirmation) < 30000 && lastAmount.equals(amount)) {
+        // Purge des confirmations perimees a la lecture : pas de tache, pas de fuite.
+        this.pendingGenerations.values().removeIf(entry -> currentTime - entry.requestedAt() >= CONFIRMATION_WINDOW_MS);
+
+        PendingGeneration pending = this.pendingGenerations.get(senderId);
+
+        // Check if this is a confirmation (within the window and same amount)
+        if (pending != null && pending.amount() == amount) {
 
             // Clear confirmation data
-            confirmationMap.remove(sender);
-            confirmationAmountMap.remove(sender);
+            this.pendingGenerations.remove(senderId);
 
             // Execute generation
             message(this.plugin, sender, Message.ADMIN_GENERATE_CONFIRMED, "%amount%", String.valueOf(amount));
@@ -84,11 +96,14 @@ public class CommandAuctionAdminGenerate extends VCommand {
         }
 
         // First execution - show warning and store confirmation data
-        confirmationMap.put(sender, currentTime);
-        confirmationAmountMap.put(sender, amount);
+        this.pendingGenerations.put(senderId, new PendingGeneration(amount, currentTime));
         message(this.plugin, sender, Message.ADMIN_GENERATE_WARNING, "%amount%", String.valueOf(amount));
 
         return CommandType.SUCCESS;
+    }
+
+    private UUID senderId(CommandSender commandSender) {
+        return commandSender instanceof Player player ? player.getUniqueId() : CONSOLE_ID;
     }
 
     private List<Material> getValidMaterials() {
@@ -115,49 +130,74 @@ public class CommandAuctionAdminGenerate extends VCommand {
         long startTime = System.currentTimeMillis();
         CommandSender commandSender = this.sender;
 
-        // Pre-generate all data on the main thread
-        List<GenerationData> dataList = new ArrayList<>(amount);
-        Map<String, UUID> nameToUuidCache = new HashMap<>();
-        var playerRepository = plugin.getStorageManager().with(PlayerRepository.class);
-
-        for (int i = 0; i < amount; i++) {
-            ThreadLocalRandom random = ThreadLocalRandom.current();
-
-            String sellerName = generateRandomName(random);
-
-            // Check cache first
-            UUID sellerUUID = nameToUuidCache.get(sellerName);
-            if (sellerUUID == null) {
-                // Check database
-                sellerUUID = playerRepository.selectByName(sellerName);
-                if (sellerUUID == null) {
-                    sellerUUID = UUID.randomUUID();
-                }
-                nameToUuidCache.put(sellerName, sellerUUID);
-            }
-
-            Material material = validMaterials.get(random.nextInt(validMaterials.size()));
-            int itemAmount = material.getMaxStackSize() == 1 ? 1 : random.nextInt(material.getMaxStackSize()) + 1;
-            BigDecimal price = BigDecimal.valueOf(random.nextInt(99990) + 10);
-            long expiredAt = System.currentTimeMillis() + (24L * 60L * 60L * 1000L);
-
-            dataList.add(new GenerationData(sellerUUID, sellerName, material, itemAmount, price, expiredAt));
-        }
-
-        // Now process asynchronously
         var storageManager = plugin.getStorageManager();
-        var economyManager = plugin.getEconomyManager();
-        AuctionEconomy defaultEconomy = economyManager.getDefaultEconomy(ItemType.AUCTION);
+        var playerRepository = storageManager.with(PlayerRepository.class);
+        AuctionEconomy defaultEconomy = plugin.getEconomyManager().getDefaultEconomy(ItemType.AUCTION);
         if (defaultEconomy == null) {
             plugin.getLogger().severe("No default economy configured for AUCTION items, cannot generate items.");
             return;
         }
+
         AtomicInteger created = new AtomicInteger(0);
         AtomicInteger lastReported = new AtomicInteger(0);
         int totalAmount = amount;
 
         plugin.getScheduler().runAsync(task -> {
             try {
+                // La pre-generation etait faite SUR LE THREAD PRINCIPAL et faisait un
+                // selectByName par pseudo distinct : jusqu'a ~27 000 SELECT bloquants sur une
+                // colonne `name` non indexee (C-081). Une seule lecture de la table remplace
+                // le tout. Volontairement PAS de whereIn : Sarah construit ses IN par
+                // placeholders et SQLite plafonne a 999 / 32 766 variables.
+                Map<String, UUID> knownPlayers = new HashMap<>();
+                for (var dto : playerRepository.select()) {
+                    knownPlayers.putIfAbsent(dto.name(), dto.unique_id());
+                }
+
+                List<GenerationData> dataList = new ArrayList<>(totalAmount);
+                Map<String, UUID> nameToUuidCache = new HashMap<>();
+
+                for (int i = 0; i < totalAmount; i++) {
+                    ThreadLocalRandom random = ThreadLocalRandom.current();
+
+                    String sellerName = null;
+                    UUID sellerUUID = null;
+
+                    // Ne JAMAIS adopter l'UUID d'un joueur REEL (C-085) : les annonces de test
+                    // apparaitraient dans son onglet "mes ventes" et lui seraient recuperables.
+                    // Un pseudo deja tire par CETTE generation reste reutilisable, pour qu'un
+                    // meme faux vendeur puisse porter plusieurs annonces.
+                    for (int attempt = 0; attempt < 8 && sellerUUID == null; attempt++) {
+                        String candidate = generateRandomName(random);
+
+                        UUID cached = nameToUuidCache.get(candidate);
+                        if (cached != null) {
+                            sellerName = candidate;
+                            sellerUUID = cached;
+                            break;
+                        }
+
+                        // Test en memoire sur l'instantane charge plus haut : aucune requete
+                        // supplementaire, contrairement au selectByName par candidat.
+                        if (knownPlayers.containsKey(candidate)) continue;
+
+                        sellerName = candidate;
+                        sellerUUID = UUID.randomUUID();
+                        nameToUuidCache.put(candidate, sellerUUID);
+                    }
+
+                    // Espace de pseudos sature : on saute cette annonce plutot que de
+                    // polluer le compte d'un joueur reel.
+                    if (sellerUUID == null) continue;
+
+                    Material material = validMaterials.get(random.nextInt(validMaterials.size()));
+                    int itemAmount = material.getMaxStackSize() == 1 ? 1 : random.nextInt(material.getMaxStackSize()) + 1;
+                    BigDecimal price = BigDecimal.valueOf(random.nextInt(99990) + 10);
+                    long expiredAt = System.currentTimeMillis() + (24L * 60L * 60L * 1000L);
+
+                    dataList.add(new GenerationData(sellerUUID, sellerName, material, itemAmount, price, expiredAt));
+                }
+
                 var itemRepository = storageManager.with(ItemRepository.class);
                 var auctionItemRepository = storageManager.with(AuctionItemRepository.class);
 
@@ -250,6 +290,10 @@ public class CommandAuctionAdminGenerate extends VCommand {
             case 2 -> suffix + firstName;
             default -> firstName + random.nextInt(1000);
         };
+    }
+
+    /** Demande de generation en attente de confirmation, horodatee pour la purge a la lecture. */
+    private record PendingGeneration(int amount, long requestedAt) {
     }
 
     private record GenerationData(UUID sellerUUID, String sellerName, Material material, int itemAmount,

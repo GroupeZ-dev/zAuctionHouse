@@ -1,13 +1,16 @@
 package fr.maxlego08.zauctionhouse.migration.v3;
 
+import fr.maxlego08.sarah.DatabaseConnection;
 import fr.maxlego08.sarah.SchemaBuilder;
 import fr.maxlego08.sarah.database.Schema;
 import fr.maxlego08.sarah.logger.JULogger;
 import fr.maxlego08.sarah.logger.Logger;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.item.ItemType;
+import fr.maxlego08.zauctionhouse.api.item.StorageType;
 import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.storage.Tables;
+import fr.maxlego08.zauctionhouse.api.storage.dto.PlayerDTO;
 import fr.maxlego08.zauctionhouse.api.transaction.TransactionStatus;
 import fr.maxlego08.zauctionhouse.migration.v3.items.V3AuctionItem;
 import fr.maxlego08.zauctionhouse.migration.v3.items.V3Transaction;
@@ -22,6 +25,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Service for migrating data from zAuctionHouse V3 to V4.
@@ -53,6 +57,8 @@ import java.util.function.Consumer;
  */
 public class V3MigrationService {
 
+    private static final String UNKNOWN_PLAYER_NAME = "Unknown";
+
     private final AuctionPlugin plugin;
     private final Logger logger;
     private Consumer<String> progressCallback;
@@ -75,6 +81,19 @@ public class V3MigrationService {
         if (progressCallback != null) {
             progressCallback.accept(message);
         }
+    }
+
+    /**
+     * Connexion de destination (base V4), partagee par toutes les ecritures de la migration.
+     * <p>
+     * Evite de passer par {@code with(PlayerRepository.class).getConnection()} dans cinq
+     * methodes distinctes : la connexion est celle du gestionnaire de stockage, pas celle
+     * d'un repository particulier.
+     *
+     * @return la connexion JDBC de la base V4
+     */
+    private DatabaseConnection connection() {
+        return plugin.getStorageManager().getDatabaseConnection();
     }
 
     /**
@@ -177,24 +196,38 @@ public class V3MigrationService {
         Map<UUID, String> players = new HashMap<>();
 
         for (V3AuctionItem item : items) {
-            if (item.getSeller() != null && item.getSellerName() != null) {
-                players.putIfAbsent(item.getSeller(), item.getSellerName());
-            }
-            if (item.getBuyer() != null) {
-                players.putIfAbsent(item.getBuyer(), "Unknown");
-            }
+            trackPlayer(players, item.getSeller(), item.getSellerName());
+            trackPlayer(players, item.getBuyer(), null);
         }
 
         for (V3Transaction transaction : transactions) {
-            if (transaction.getSeller() != null) {
-                players.putIfAbsent(transaction.getSeller(), "Unknown");
-            }
-            if (transaction.getBuyer() != null) {
-                players.putIfAbsent(transaction.getBuyer(), "Unknown");
-            }
+            trackPlayer(players, transaction.getSeller(), null);
+            trackPlayer(players, transaction.getBuyer(), null);
         }
 
         return players;
+    }
+
+    /**
+     * Un vrai pseudo l'emporte TOUJOURS sur le placeholder, quel que soit l'ordre de parcours.
+     * <p>
+     * Avec {@code putIfAbsent}, un joueur rencontre d'abord comme ACHETEUR figeait "Unknown"
+     * alors qu'on connaissait son pseudo en tant que vendeur un peu plus loin dans la liste.
+     * Les hooks freres le font deja correctement (CrazyAuctionsMigrationService.trackPlayer).
+     *
+     * @param players  la table de collecte, mutee sur place
+     * @param uniqueId l'identifiant du joueur, ignore quand il est {@code null}
+     * @param name     le pseudo connu, ou {@code null} quand la source ne le porte pas
+     */
+    private void trackPlayer(Map<UUID, String> players, UUID uniqueId, String name) {
+        if (uniqueId == null) return;
+
+        String resolved = (name != null && !name.isBlank()) ? name : UNKNOWN_PLAYER_NAME;
+        String previous = players.get(uniqueId);
+
+        if (previous == null || (UNKNOWN_PLAYER_NAME.equals(previous) && !UNKNOWN_PLAYER_NAME.equals(resolved))) {
+            players.put(uniqueId, resolved);
+        }
     }
 
     /**
@@ -204,7 +237,22 @@ public class V3MigrationService {
         int migrated = 0;
         PlayerRepository playerRepo = plugin.getStorageManager().with(PlayerRepository.class);
 
+        // Le pseudo V4 vient de PlayerListener.onConnect : il est TOUJOURS plus fiable que le
+        // placeholder de la migration. upsertPlayer ecrasait la ligne existante et remplacait
+        // le pseudo reel d'un joueur actif par "Unknown" (C-108).
+        //
+        // ATTENTION : je REJETTE le correctif propose par l'audit
+        // (`if ("Unknown".equals(entry.getValue())) continue;`). Sauter l'INSERTION d'un UUID
+        // inconnu casse deux invariants verifies : items.buyer_unique_id porte une FK vers
+        // players (CreateItemMigration:15), donc sous MySQL l'item entier est rejete ; et
+        // ItemLoaderUtils met desormais l'item en quarantaine si son vendeur manque de la table.
+        // Les UUID inconnus DOIVENT donc etre inseres, meme sous "Unknown".
+        Set<UUID> knownPlayers = playerRepo.select().stream().map(PlayerDTO::unique_id).collect(Collectors.toSet());
+
         for (Map.Entry<UUID, String> entry : players.entrySet()) {
+
+            if (knownPlayers.contains(entry.getKey())) continue;
+
             try {
                 playerRepo.upsertPlayer(entry.getKey(), entry.getValue());
                 migrated++;
@@ -224,26 +272,51 @@ public class V3MigrationService {
         int migrated = 0;
 
         for (V3AuctionItem v3Item : items) {
+
+            int itemId = -1;
             try {
-                // Create item in ITEMS table
-                int itemId = createItem(v3Item);
-                if (itemId == -1) {
+                // V3SqlDataReader.parseItem ne controle NI le vendeur NI l'itemstack : une seule
+                // ligne V3 corrompue produisait soit une NPE dans SchemaBuilder.uuid (value.toString()),
+                // soit un INSERT enfant avec un itemstack null, donc une annonce vide et VENDABLE.
+                if (v3Item.getSeller() == null) {
+                    plugin.getLogger().warning("Skipping V3 item " + v3Item.getId() + ": no seller");
+                    errors.incrementAndGet();
+                    continue;
+                }
+                if (v3Item.getItemstack() == null || v3Item.getItemstack().isBlank()) {
+                    plugin.getLogger().warning("Skipping V3 item " + v3Item.getId() + ": empty itemstack payload");
                     errors.incrementAndGet();
                     continue;
                 }
 
-                // Create auction item(s) in AUCTION_ITEMS table
+                itemId = createItem(v3Item);
+
+                // InsertRequest rend 0 (et non -1) quand le pilote ne remonte aucune cle generee :
+                // la garde `itemId == -1` etait morte deux fois, le catch qui rendait -1 l'etant
+                // lui aussi (Sarah leve une DatabaseException runtime, jamais une SQLException).
+                if (itemId <= 0) {
+                    plugin.getLogger().warning("Failed to create the parent row for V3 item " + v3Item.getId());
+                    errors.incrementAndGet();
+                    continue;
+                }
+
                 createAuctionItems(itemId, v3Item);
 
                 migrated++;
 
-                // Progress update every 100 items
                 if (migrated % 100 == 0) {
                     progress("Migrated " + migrated + "/" + items.size() + " items...");
                 }
             } catch (Exception e) {
-                plugin.getLogger().warning("Failed to migrate item " + v3Item.getId() + ": " + e.getMessage());
+                // COMPENSATION. La ligne parente est deja commitee : sans ce DELETE, l'annonce
+                // reste VENDABLE au prix plein avec un lot ampute ou vide (C-075). La FK
+                // auction_items.item_id est ON DELETE CASCADE, les contenus deja inseres partent
+                // avec la ligne parente.
                 errors.incrementAndGet();
+                plugin.getLogger().severe("Failed to migrate V3 item " + v3Item.getId() + " (V4 id " + itemId + "): " + e.getMessage());
+                if (itemId > 0) {
+                    deleteOrphanItem(itemId);
+                }
             }
         }
 
@@ -251,62 +324,101 @@ public class V3MigrationService {
     }
 
     /**
-     * Creates an item in the V4 ITEMS table.
+     * Supprime la ligne %prefix%items orpheline laissee par un lot partiellement insere.
+     *
+     * @param itemId identifiant V4 de la ligne parente a compenser
      */
-    private int createItem(V3AuctionItem v3Item) {
+    private void deleteOrphanItem(int itemId) {
         try {
-            Schema schema = SchemaBuilder.insert(Tables.ITEMS, s -> {
-                s.string("item_type", ItemType.AUCTION.name());
-                s.uuid("seller_unique_id", v3Item.getSeller());
-                if (v3Item.getBuyer() != null) {
-                    s.uuid("buyer_unique_id", v3Item.getBuyer());
-                }
-                s.decimal("price", BigDecimal.valueOf(v3Item.getPrice()));
-                s.string("economy_name", v3Item.getEconomy() != null ? v3Item.getEconomy() : "vault");
-                s.string("storage_type", v3Item.getStorageType().toV4StorageType().name());
-                s.string("server_name", v3Item.getServerName() != null ? v3Item.getServerName() : plugin.getConfiguration().getServerName());
-                s.object("expired_at", new Date(v3Item.getExpireAt()));
-            });
-
-            return schema.execute(plugin.getStorageManager().with(PlayerRepository.class).getConnection(), logger);
-        } catch (SQLException e) {
-            plugin.getLogger().warning("Failed to create item: " + e.getMessage());
-            return -1;
+            SchemaBuilder.delete(Tables.ITEMS).where("id", itemId).execute(connection(), logger);
+            plugin.getLogger().warning("Rolled back the orphan V4 item row #" + itemId);
+        } catch (Exception e) {
+            // Trace exploitable : sans l'id V4 exact, l'exploitant n'a AUCUN moyen de retrouver
+            // l'annonce a supprimer a la main.
+            plugin.getLogger().severe("MANUAL ACTION REQUIRED: the orphan V4 item row #" + itemId
+                    + " could not be deleted (" + e.getMessage() + "). It is currently listed for sale "
+                    + "with a truncated or empty content.");
         }
+    }
+
+    /**
+     * Creates an item in the V4 ITEMS table.
+     * <p>
+     * Le {@code catch (SQLException)} d'origine etait du CODE MORT : Sarah leve une
+     * {@code DatabaseException extends SarahException extends RuntimeException}. L'echec
+     * remontait donc quand meme, mais au parent, apres avoir fait croire au contraire.
+     *
+     * @param v3Item la ligne V3 a importer
+     * @return l'identifiant genere de la ligne parente
+     * @throws SQLException si le pilote refuse l'insertion
+     */
+    private int createItem(V3AuctionItem v3Item) throws SQLException {
+        Schema schema = SchemaBuilder.insert(Tables.ITEMS, s -> {
+            s.string("item_type", ItemType.AUCTION.name());
+            s.uuid("seller_unique_id", v3Item.getSeller());
+            if (v3Item.getBuyer() != null) {
+                s.uuid("buyer_unique_id", v3Item.getBuyer());
+            }
+            s.decimal("price", BigDecimal.valueOf(v3Item.getPrice()));
+            s.string("economy_name", v3Item.getEconomy() != null ? v3Item.getEconomy() : "vault");
+            s.string("storage_type", v3Item.getStorageType().toV4StorageType().name());
+            s.string("server_name", v3Item.getServerName() != null ? v3Item.getServerName() : plugin.getConfiguration().getServerName());
+            s.object("expired_at", new Date(v3Item.getExpireAt()));
+        });
+
+        return schema.execute(connection(), logger);
     }
 
     /**
      * Creates auction item entries in the V4 AUCTION_ITEMS table.
      * Handles both single items and multi-item (INVENTORY type) items.
+     *
+     * @param itemId identifiant de la ligne parente
+     * @param v3Item la ligne V3 a importer
+     * @throws SQLException si le pilote refuse une insertion
      */
-    private void createAuctionItems(int itemId, V3AuctionItem v3Item) {
+    private void createAuctionItems(int itemId, V3AuctionItem v3Item) throws SQLException {
         String itemstack = v3Item.getItemstack();
+        int inserted = 0;
 
         if (v3Item.isInventoryType() && itemstack.contains(";")) {
             // Multi-item: split by semicolon
-            String[] itemstacks = itemstack.split(";");
-            for (String stack : itemstacks) {
+            for (String stack : itemstack.split(";")) {
                 if (!stack.trim().isEmpty()) {
                     insertAuctionItem(itemId, stack.trim());
+                    inserted++;
                 }
             }
         } else {
             // Single item
             insertAuctionItem(itemId, itemstack);
+            inserted++;
+        }
+
+        // Un lot V3 dont la charge utile vaut exactement ";" produit `";".split(";")` = tableau
+        // VIDE : ZERO contenu insere, ZERO exception, item compte comme migre, annonce vendable
+        // au prix plein pour un lot vide. C'est le declencheur le plus certain de C-075.
+        if (inserted == 0) {
+            throw new IllegalStateException("no readable ItemStack in the V3 payload for item_id " + itemId);
         }
     }
 
-    private void insertAuctionItem(int itemId, String itemstack) {
-        try {
-            Schema schema = SchemaBuilder.insert(Tables.AUCTION_ITEMS, s -> {
-                s.object("item_id", itemId);
-                s.string("itemstack", itemstack);
-            });
-
-            schema.execute(plugin.getStorageManager().with(PlayerRepository.class).getConnection(), logger);
-        } catch (SQLException e) {
-            plugin.getLogger().warning("Failed to create auction item for item_id " + itemId + ": " + e.getMessage());
+    /**
+     * Insere un contenu unique de l'annonce.
+     *
+     * @param itemId    identifiant de la ligne parente
+     * @param itemstack charge utile serialisee, jamais vide
+     * @throws SQLException si le pilote refuse l'insertion
+     */
+    private void insertAuctionItem(int itemId, String itemstack) throws SQLException {
+        if (itemstack == null || itemstack.isBlank()) {
+            throw new IllegalStateException("empty itemstack payload for item_id " + itemId);
         }
+
+        SchemaBuilder.insert(Tables.AUCTION_ITEMS, s -> {
+            s.object("item_id", itemId);
+            s.string("itemstack", itemstack);
+        }).execute(connection(), logger);
     }
 
     /**
@@ -317,12 +429,51 @@ public class V3MigrationService {
 
         for (V3Transaction v3Trans : transactions) {
             try {
-                // Create a log entry for the purchase
-                createLogEntry(v3Trans);
+                if (v3Trans.getSeller() == null || v3Trans.getBuyer() == null) {
+                    // SchemaBuilder.uuid fait value.toString() : un UUID null partait en NPE.
+                    plugin.getLogger().warning("Skipping V3 transaction " + v3Trans.getId() + ": missing seller or buyer");
+                    errors.incrementAndGet();
+                    continue;
+                }
 
-                // If money is still pending, create a transaction entry
+                // item_id = 0 violait la cle etrangere logs/transactions -> items sous MySQL
+                // (CreateLogsMigration:12 et CreateTransactionsMigration:12 declarent bien la FK,
+                // et SchemaBuilder l'emet en InnoDB) : l'insert levait une DatabaseException que
+                // le catch(SQLException) ne voyait pas, et TOUT l'argent PENDING V3 etait perdu.
+                // Sous SQLite, ou Sarah n'emet aucun PRAGMA foreign_keys=ON, l'insert passait :
+                // d'ou une bascule de comportement selon le backend, invisible a l'admin (C-033).
+                //
+                // On cree une vraie ligne %prefix%items en storage_type DELETED : jamais chargee
+                // (ItemRepository.select et select(int) filtrent DELETED), mais elle satisfait la FK.
+                // Je REJETTE le correctif de l'audit (rendre item_id nullable) : MigrationManager
+                // de Sarah ne sait qu'AJOUTER des colonnes manquantes, il n'emet jamais
+                // d'ALTER ... MODIFY, le correctif serait inoperant sur les installations existantes.
+                int sentinelItemId = createSentinelItem(v3Trans);
+                if (sentinelItemId <= 0) {
+                    plugin.getLogger().severe("Failed to create the sentinel row for V3 transaction " + v3Trans.getId() + ", skipping it");
+                    errors.incrementAndGet();
+                    continue;
+                }
+
+                // L'ARGENT D'ABORD. L'ordre d'origine ecrivait l'historique en premier : un
+                // echec de log faisait sauter le `continue` implicite et les gains en attente
+                // du vendeur n'etaient jamais importes. Chacun a desormais son propre try/catch.
                 if (v3Trans.isNeedMoney()) {
-                    createPendingTransaction(v3Trans);
+                    try {
+                        createPendingTransaction(sentinelItemId, v3Trans);
+                    } catch (Exception e) {
+                        plugin.getLogger().severe("MONEY LOST: failed to import the pending money of V3 transaction "
+                                + v3Trans.getId() + " (seller " + v3Trans.getSeller() + ", amount " + v3Trans.getPrice()
+                                + "): " + e.getMessage());
+                        errors.incrementAndGet();
+                    }
+                }
+
+                try {
+                    createLogEntry(sentinelItemId, v3Trans);
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Failed to import the history of V3 transaction " + v3Trans.getId() + ": " + e.getMessage());
+                    errors.incrementAndGet();
                 }
 
                 migrated++;
@@ -340,50 +491,72 @@ public class V3MigrationService {
     }
 
     /**
-     * Creates a log entry for a V3 transaction.
+     * Cree la ligne %prefix%items porteuse des FK de logs/transactions pour une transaction V3.
+     * <p>
+     * La V3 n'a aucun item correspondant : la ligne est ecrite directement en
+     * {@link StorageType#DELETED}, donc invisible en jeu, mais reelle pour la base.
+     * La FK etant ON DELETE CASCADE, purger ces lignes effacerait aussi les logs et
+     * transactions associes -- c'est le comportement voulu.
+     *
+     * @param v3Trans la transaction V3 a importer
+     * @return l'identifiant genere de la ligne sentinelle
+     * @throws SQLException si le pilote refuse l'insertion
      */
-    private void createLogEntry(V3Transaction v3Trans) {
-        try {
-            Schema schema = SchemaBuilder.insert(Tables.LOGS, s -> {
-                s.string("log_type", LogType.PURCHASE.name());
-                s.object("item_id", 0); // No direct mapping, use 0
-                s.uuid("player_unique_id", v3Trans.getBuyer());
-                s.uuid("target_unique_id", v3Trans.getSeller());
-                s.string("itemstack", v3Trans.getItemstack());
-                s.decimal("price", BigDecimal.valueOf(v3Trans.getPrice()));
-                s.string("economy_name", v3Trans.getEconomy() != null ? v3Trans.getEconomy() : "vault");
-                s.string("additional_data", "migrated_from_v3");
-                if (v3Trans.isRead()) {
-                    s.object("readed_at", new Date(v3Trans.getTransactionDate()));
-                }
-                s.object("created_at", new Date(v3Trans.getTransactionDate()));
-            });
+    private int createSentinelItem(V3Transaction v3Trans) throws SQLException {
+        return SchemaBuilder.insert(Tables.ITEMS, s -> {
+            s.string("item_type", ItemType.AUCTION.name());
+            s.uuid("seller_unique_id", v3Trans.getSeller());
+            s.uuid("buyer_unique_id", v3Trans.getBuyer());
+            s.decimal("price", BigDecimal.valueOf(v3Trans.getPrice()));
+            s.string("economy_name", v3Trans.getEconomy() != null ? v3Trans.getEconomy() : "vault");
+            s.string("storage_type", StorageType.DELETED.name());
+            s.string("server_name", plugin.getConfiguration().getServerName());
+            s.object("expired_at", new Date(v3Trans.getTransactionDate()));
+            s.object("created_at", new Date(v3Trans.getTransactionDate()));
+        }).execute(connection(), logger);
+    }
 
-            schema.execute(plugin.getStorageManager().with(PlayerRepository.class).getConnection(), logger);
-        } catch (SQLException e) {
-            plugin.getLogger().warning("Failed to create log entry: " + e.getMessage());
-        }
+    /**
+     * Creates a log entry for a V3 transaction.
+     *
+     * @param itemId   identifiant de la ligne sentinelle porteuse de la FK
+     * @param v3Trans  la transaction V3 a importer
+     * @throws SQLException si le pilote refuse l'insertion
+     */
+    private void createLogEntry(int itemId, V3Transaction v3Trans) throws SQLException {
+        SchemaBuilder.insert(Tables.LOGS, s -> {
+            s.string("log_type", LogType.PURCHASE.name());
+            s.object("item_id", itemId);
+            s.uuid("player_unique_id", v3Trans.getBuyer());
+            s.uuid("target_unique_id", v3Trans.getSeller());
+            s.string("itemstack", v3Trans.getItemstack());
+            s.decimal("price", BigDecimal.valueOf(v3Trans.getPrice()));
+            s.string("economy_name", v3Trans.getEconomy() != null ? v3Trans.getEconomy() : "vault");
+            s.string("additional_data", "migrated_from_v3");
+            if (v3Trans.isRead()) {
+                s.object("readed_at", new Date(v3Trans.getTransactionDate()));
+            }
+            s.object("created_at", new Date(v3Trans.getTransactionDate()));
+        }).execute(connection(), logger);
     }
 
     /**
      * Creates a pending transaction entry for unclaimed money.
+     *
+     * @param itemId   identifiant de la ligne sentinelle porteuse de la FK
+     * @param v3Trans  la transaction V3 a importer
+     * @throws SQLException si le pilote refuse l'insertion
      */
-    private void createPendingTransaction(V3Transaction v3Trans) {
-        try {
-            Schema schema = SchemaBuilder.insert(Tables.TRANSACTIONS, s -> {
-                s.object("item_id", 0);
-                s.uuid("player_unique_id", v3Trans.getSeller());
-                s.string("economy_name", v3Trans.getEconomy() != null ? v3Trans.getEconomy() : "vault");
-                s.decimal("before", BigDecimal.ZERO);
-                s.decimal("after", BigDecimal.ZERO);
-                s.decimal("value", BigDecimal.valueOf(v3Trans.getPrice()));
-                s.string("status", TransactionStatus.PENDING.name());
-                s.object("created_at", new Date(v3Trans.getTransactionDate()));
-            });
-
-            schema.execute(plugin.getStorageManager().with(PlayerRepository.class).getConnection(), logger);
-        } catch (SQLException e) {
-            plugin.getLogger().warning("Failed to create pending transaction: " + e.getMessage());
-        }
+    private void createPendingTransaction(int itemId, V3Transaction v3Trans) throws SQLException {
+        SchemaBuilder.insert(Tables.TRANSACTIONS, s -> {
+            s.object("item_id", itemId);
+            s.uuid("player_unique_id", v3Trans.getSeller());
+            s.string("economy_name", v3Trans.getEconomy() != null ? v3Trans.getEconomy() : "vault");
+            s.decimal("before", BigDecimal.ZERO);
+            s.decimal("after", BigDecimal.ZERO);
+            s.decimal("value", BigDecimal.valueOf(v3Trans.getPrice()));
+            s.string("status", TransactionStatus.PENDING.name());
+            s.object("created_at", new Date(v3Trans.getTransactionDate()));
+        }).execute(connection(), logger);
     }
 }

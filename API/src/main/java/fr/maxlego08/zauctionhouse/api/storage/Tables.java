@@ -15,4 +15,12 @@ public interface Tables {
 
     String TRANSACTIONS = "%prefix%transactions";
 
+    /**
+     * Sentinelle d'idempotence des migrations de donnees.
+     * <p>
+     * Doit rester STRICTEMENT identique a {@code MigrationStateRepository.TABLE_NAME}, qui porte
+     * sa propre copie de la constante pour rester compilable independamment de ce module.
+     */
+    String MIGRATION_STATE = "%prefix%migration_state";
+
 }

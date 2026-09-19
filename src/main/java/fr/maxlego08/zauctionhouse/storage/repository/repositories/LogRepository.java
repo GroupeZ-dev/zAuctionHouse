@@ -12,6 +12,15 @@ import java.util.*;
 
 public class LogRepository extends Repository {
 
+    /**
+     * Marqueur ecrit dans {@code additional_data} par l'import V3
+     * ({@code V3MigrationService.createLogEntry}). C'est le SEUL discriminant fiable d'un log
+     * migre : depuis le correctif de C-033, une ligne migree ne porte plus {@code item_id = 0}
+     * mais l'identifiant d'une ligne sentinelle de la table items, DIFFERENT pour chaque
+     * transaction importee.
+     */
+    public static final String MIGRATED_FROM_V3 = "migrated_from_v3";
+
     public LogRepository(AuctionPlugin plugin, DatabaseConnection connection) {
         super(plugin, connection, Tables.LOGS);
     }
@@ -140,22 +149,43 @@ public class LogRepository extends Repository {
         });
     }
 
+    /**
+     * Deletes every log entry produced by a player.
+     *
+     * @param playerUniqueId the actor whose logs are purged
+     * @return the number of rows actually deleted
+     */
     public long deleteByPlayer(UUID playerUniqueId) {
-        long count = select(LogDTO.class, schema -> schema.where("player_unique_id", playerUniqueId.toString())).size();
-        delete(schema -> schema.where("player_unique_id", playerUniqueId.toString()));
-        return count;
+        // Sarah remonte deja le rowcount (DeleteRequest:35). Le pre-comptage par select()
+        // materialisait en heap toutes les lignes, chacune portant un itemstack LONGTEXT,
+        // et balayait la table deux fois.
+        return Math.max(0, delete(schema -> schema.where("player_unique_id", playerUniqueId.toString())));
     }
 
+    /**
+     * Deletes every log entry older than the given age.
+     *
+     * @param olderThanMs the age, in milliseconds, beyond which a log is purged
+     * @return the number of rows actually deleted
+     */
     public long deleteOlderThan(long olderThanMs) {
         Date cutoff = new Date(System.currentTimeMillis() - olderThanMs);
-        long count = select(LogDTO.class, schema -> schema.where("created_at", "<", cutoff)).size();
-        delete(schema -> schema.where("created_at", "<", cutoff));
-        return count;
+        return Math.max(0, delete(schema -> schema.where("created_at", "<", cutoff)));
     }
 
+    /**
+     * Deletes the log entries imported from a previous version.
+     * <p>
+     * La purge porte sur le marqueur {@link #MIGRATED_FROM_V3} et NON sur {@code item_id = 0}.
+     * Le correctif de C-033 a fait porter aux logs migres l'identifiant d'une ligne sentinelle
+     * (pour satisfaire la cle etrangere vers items) : le predicat {@code item_id = 0} ne
+     * ramenait donc plus aucune ligne et la commande {@code /ah admin logs clear-migrated}
+     * annoncait un succes a zero ligne purgee. Le marqueur, lui, est ecrit par les DEUX
+     * generations d'import -- avant comme apres C-033 -- donc la purge couvre les deux.
+     *
+     * @return the number of rows actually deleted
+     */
     public long deleteMigrated() {
-        long count = select(LogDTO.class, schema -> schema.where("item_id", 0)).size();
-        delete(schema -> schema.where("item_id", 0));
-        return count;
+        return Math.max(0, delete(schema -> schema.where("additional_data", MIGRATED_FROM_V3)));
     }
 }

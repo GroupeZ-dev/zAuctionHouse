@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class ItemContentButton extends Button {
 
@@ -41,7 +42,9 @@ public class ItemContentButton extends Button {
         // Check for AuctionItem first
         var item = cache.get(PlayerCacheKey.ITEM_SHOW);
         if (item instanceof AuctionItem auctionItem && auctionItem.getItemStacks() != null) {
-            return auctionItem.getItemStacks().stream().map(ItemStack::clone).toList();
+            // C-038 : un contenu illisible laisse un null dans la liste ; sans ce filtre le
+            // rendu part en NPE sur ItemStack::clone.
+            return auctionItem.getItemStacks().stream().filter(Objects::nonNull).map(ItemStack::clone).toList();
         }
 
         // Check for AdminLogItem (used by admin logs)

@@ -101,7 +101,7 @@ public class ZTaxConfiguration implements TaxConfiguration {
                 TaxType ruleTaxType = matchingRule.getTaxType();
                 // Only apply if this rule applies to sell operations
                 if (ruleTaxType == TaxType.SELL || ruleTaxType == TaxType.BOTH) {
-                    return calculateTax(player, price, matchingRule.getAmountType(), matchingRule.getAmount());
+                    return calculateTax(player, price, matchingRule.getAmountType(), matchingRule.getAmount(), ruleTaxType);
                 }
                 // Rule doesn't apply to sell, check if default config applies
                 if (taxType != TaxType.SELL && taxType != TaxType.BOTH) {
@@ -115,7 +115,7 @@ public class ZTaxConfiguration implements TaxConfiguration {
             return TaxResult.disabled(price);
         }
 
-        return calculateTax(player, price, amountType, amount);
+        return calculateTax(player, price, amountType, amount, taxType);
     }
 
     @Override
@@ -151,7 +151,7 @@ public class ZTaxConfiguration implements TaxConfiguration {
 
     private TaxResult calculatePurchaseTaxInternal(Player player, BigDecimal price,
                                                    TaxAmountType calcAmountType, double calcAmount, TaxType calcTaxType) {
-        TaxResult baseResult = calculateTax(player, price, calcAmountType, calcAmount);
+        TaxResult baseResult = calculateTax(player, price, calcAmountType, calcAmount, calcTaxType);
 
         if (baseResult.isBypassed() || !baseResult.hasTax()) {
             return baseResult;
@@ -168,7 +168,8 @@ public class ZTaxConfiguration implements TaxConfiguration {
                     buyerPays,  // Buyer pays more
                     false,
                     baseResult.isReduced(),
-                    baseResult.reductionPercentage()
+                    baseResult.reductionPercentage(),
+                    TaxType.CAPITALISM
             );
         } else {
             // PURCHASE or BOTH: seller receives less
@@ -180,7 +181,8 @@ public class ZTaxConfiguration implements TaxConfiguration {
                     sellerReceives,
                     false,
                     baseResult.isReduced(),
-                    baseResult.reductionPercentage()
+                    baseResult.reductionPercentage(),
+                    calcTaxType
             );
         }
     }
@@ -188,7 +190,8 @@ public class ZTaxConfiguration implements TaxConfiguration {
     /**
      * Calculates tax with bypass and reduction checks.
      */
-    private TaxResult calculateTax(Player player, BigDecimal price, TaxAmountType calcAmountType, double calcAmount) {
+    private TaxResult calculateTax(Player player, BigDecimal price, TaxAmountType calcAmountType,
+                                   double calcAmount, TaxType appliedType) {
         // Check for bypass
         if (canBypass(player)) {
             return TaxResult.bypassed(price);
@@ -226,7 +229,8 @@ public class ZTaxConfiguration implements TaxConfiguration {
 
         BigDecimal finalPrice = price.subtract(taxAmount);
 
-        return new TaxResult(taxAmount, effectivePercentage, price, finalPrice, false, isReduced, reductionPercentage);
+        return new TaxResult(taxAmount, effectivePercentage, price, finalPrice, false, isReduced,
+                reductionPercentage, appliedType);
     }
 
     @Override

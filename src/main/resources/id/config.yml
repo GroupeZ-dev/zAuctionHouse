@@ -126,7 +126,24 @@ timezone: auto
 # - MARIADB : MariaDB database server (MySQL-compatible)
 #             Best for: Multi-server setups, large auction houses
 # Note: For multi-server synchronization, use MySQL/MariaDB with the Redis addon.
+#
+# WARNING: SQLITE is INCOMPATIBLE with the Redis cluster addon.
+# Each server would keep its OWN database file, item ids would collide between servers and the
+# cluster locks would protect nothing - items WOULD be duplicated.
+# With the addon installed, SQLITE is now refused: the addon disables itself and this server
+# stays in single-server mode. Use MYSQL or MARIADB with a SHARED database instead.
 storage-type: SQLITE
+
+# Writes a format marker ("V2:" / "NBT:") at the head of every serialized ItemStack.
+# TWO-PHASE ROLLOUT - this is phase 2 of the new item serialization format:
+# - false (default): the plugin READS both formats but WRITES without any marker, so you can
+#   roll back to a previous version without losing a single listing.
+# - true: only switch once EVERY server of the network runs this version or a newer one. A
+#   server left on an older version cannot read a "V2:"-prefixed payload and the listing would
+#   become unreadable for it.
+# Once the whole network is up to date, set it to true: the format is then carried by the data
+# itself instead of by the Minecraft version of the server that reads it.
+write-itemstack-format-marker: false
 
 # Server name identifier for multi-server setups.
 # This name is stored with each auction listing to identify which server it came from.
@@ -409,6 +426,11 @@ number-sell-multiplication:
     - format: TR         # Tredecillion
       multiplication: 1000000000000000000000000000000000000000000
 
+# When set to false, players cannot list items for a price that contains
+# decimals (e.g. 10.5); only whole numbers are allowed.
+# Set to true to allow decimal prices.
+allow-decimal-prices: true
+
 #=============================================================================
 # EXPIRATION SETTINGS
 #=============================================================================
@@ -486,6 +508,37 @@ expiration:
     default-expiration: 604800   # 1 week
     permission:
       enable: false
+
+#=============================================================================
+# MAINTENANCE TASKS
+#=============================================================================
+
+# Periodic background tasks that keep the auction house consistent.
+# These tasks are cheap and bounded; disabling them is only recommended for debugging.
+
+maintenance:
+  # How often (in seconds) the plugin scans active listings for entries that reached their
+  # expiration date. Without this task, a listing only expires when a player happens to open
+  # a tab that walks the item list, so a listing can stay for sale long past its deadline.
+  # In a multi-server setup each item is expired under the distributed lock, so several
+  # servers running this task cannot expire the same item twice.
+  # Set to 0 to disable.
+  expiration-sweep-interval-seconds: 60
+
+  # Maximum number of listings processed per sweep. A large backlog is cleared progressively
+  # over several sweeps instead of in a single burst.
+  expiration-sweep-batch-size: 50
+
+  # How long (in seconds) an item may stay in a confirmation state (purchase or removal
+  # confirmation GUI) before the plugin releases it back to "available".
+  # This is the safety net for a player who disconnects, dies or loses their cache while a
+  # confirmation window is open: without it the item stays frozen and unbuyable on every
+  # server of the network.
+  # Minimum 60 seconds. Set to 0 to disable.
+  confirmation-timeout-seconds: 60
+
+  # How often (in seconds) the plugin checks for stale confirmation states.
+  confirmation-sweep-interval-seconds: 10
 
 #=============================================================================
 # LISTING LIMITS
@@ -767,6 +820,14 @@ action:
   # When enabled, the auction inventory automatically refreshes when items are added or removed.
   # Disable if you experience performance issues with frequent updates.
   update-inventory-on-action: true
+
+  # Kalau diaktifkan, profil penjual langsung ditulis ke disk sesaat setelah barangnya keluar dari
+  # inventori untuk dijual. Tanpa ini, server yang crash di antara penarikan barang dan penyimpanan
+  # profil berkala bakal mengembalikan barang ke pemain padahal barangnya sudah terpasang di lelang:
+  # duplikasi.
+  # Ini penulisan disk SINKRON tiap kali ada penjualan: matikan di server dengan beban tinggi, atau
+  # kalau plugin sinkronisasi inventori sudah menangani persistensi sendiri.
+  save-profile-on-sell: true
 
   # When enabled, the category filter is reset every time a player opens the auction house.
   # When disabled, the previously selected category persists between opens.

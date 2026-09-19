@@ -74,6 +74,11 @@ economies:
     # Kalau true, duit cuma dikasih pas penjual lagi online.
     # Kalau false, duit tetep dikasih biarpun penjual lagi offline.
     # Berguna buat plugin ekonomi yang gak dukung transaksi offline.
+    #
+    # PERHATIAN: settingan ini bakal DIPAKSA jadi true pas server nyala buat tipe ekonomi
+    # LEVEL, EXPERIENCE, ITEM, sama ZMENUITEMS. Tipe-tipe ini nempel ke entity player, jadi
+    # gak ngapa-ngapain pas playernya lagi offline - dulu duit penjual malah ilang gitu aja.
+    # Sekarang penjual di ekonomi-ekonomi itu ngambil duitnya lewat /ah claim.
     must-be-online: false
 
     # Permission opsional yang dibutuhin buat pake ekonomi ini.
@@ -133,6 +138,14 @@ economies:
       # CAPITALISM: Gaya pajak PPN dimana PEMBELI bayar lebih, penjual dapet harga utuh.
       #             Contoh: Jual barang $1000, PPN 5% → Pembeli bayar $1050.
       #             Pembeli bayar: $1050 | Penjual dapet: $1000
+      #
+      # CATATAN soal aturan per barang (tax.item-rules di bawah):
+      # Aturan per barang sekarang tetep dicek pas PEMBELIAN, apapun 'type' di atas. Aturan
+      # PURCHASE atau CAPITALISM yang ditaruh di ekonomi 'type: SELL' dulu diem-diem
+      # diabaikan pas beli; mulai sekarang bakal kepake beneran. Cek lagi aturan per barang
+      # kamu sebelum update.
+      # Buat jualan yang isinya beberapa stack, aturan yang pajaknya PALING GEDE yang menang,
+      # sama kayak yang udah dipake di sisi jualan.
       type: SELL
 
       # Metode itung pajak:

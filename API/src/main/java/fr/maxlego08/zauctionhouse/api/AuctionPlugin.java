@@ -82,6 +82,24 @@ public interface AuctionPlugin extends Plugin {
     ExecutorService getExecutorService();
 
     /**
+     * Indique si le plugin a commence son arret.
+     * <p>
+     * Les services (achat, vente, retrait) doivent refuser toute NOUVELLE operation quand
+     * cette methode rend {@code true} : leurs chaines tournent sur des pools que le plugin ne
+     * controle pas (ForkJoinPool.commonPool, pool Jedis de l'addon) et survivent donc a
+     * {@code onDisable}, ou elles debiteraient un acheteur pendant que la connexion base se
+     * ferme (C-022).
+     * <p>
+     * Methode {@code default} : source- et binaire-compatible pour toute implementation tierce
+     * existante, comme {@link fr.maxlego08.zauctionhouse.api.cluster.AuctionClusterBridge#isDistributed()}.
+     *
+     * @return {@code true} si l'arret du plugin a commence
+     */
+    default boolean isShuttingDown() {
+        return false;
+    }
+
+    /**
      * @return placeholder service that resolves custom tokens inside messages
      */
     Placeholder getPlaceholder();
