@@ -223,6 +223,9 @@ items:
     active-value: "true"
     # Value shown in %search_active% when no search is active.
     inactive-value: "false"
+    # Enable the dialog instead of chat input and right-click reset.
+    dialog:
+      enabled: false
     item:
       material: COMPASS
       name: "#2CCED2<bold>sᴇᴀʀᴄʜ"

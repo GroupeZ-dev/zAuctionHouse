@@ -222,6 +222,9 @@ items:
     active-value: "true"
     # Nilai yang ditampilin di %search_active% pas pencarian mati.
     inactive-value: "false"
+    # Enable the dialog instead of chat input and right-click reset.
+    dialog:
+      enabled: false
     item:
       material: COMPASS
       name: "#2CCED2<bold>CARI BARANG"

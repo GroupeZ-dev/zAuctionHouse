@@ -1,0 +1,23 @@
+name: Auction Search
+type: multi_action
+can-close-with-escape: true
+pause: false
+after-action: CLOSE
+number-of-columns: 3
+body:
+  description:
+    type: plain_message
+    messages:
+    - <gray>กรอกชื่อไอเทมหรือตัวกรอง เช่น seller = Notch
+    width: 350
+query-label: คำค้นหา
+search-label: <aqua>ค้นหา
+clear-label: <yellow>ล้างคำค้นหา
+cancel-label: <red>ยกเลิก
+multi-actions:
+  search:
+    label: <aqua>ค้นหา
+  clear:
+    label: <yellow>ล้างคำค้นหา
+  cancel:
+    label: <red>ยกเลิก
