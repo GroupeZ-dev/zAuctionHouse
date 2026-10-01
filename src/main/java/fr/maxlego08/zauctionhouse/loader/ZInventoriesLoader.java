@@ -6,6 +6,7 @@ import fr.maxlego08.menu.api.exceptions.InventoryException;
 import fr.maxlego08.menu.api.loader.NoneLoader;
 import fr.maxlego08.menu.api.pattern.PatternManager;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
+import fr.maxlego08.zauctionhouse.ZAuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.InventoriesLoader;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
@@ -116,6 +117,15 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
     @Override
     public void loadButtons() {
 
+        // Remove loaders left behind by an older plugin instance during a hot reload.
+        this.buttonManager.getLoaders().stream()
+                .map(fr.maxlego08.menu.api.loader.ButtonLoader::getPlugin)
+                .filter(owner -> owner != this.plugin && !owner.isEnabled()
+                        && owner.getName().equals(this.plugin.getName()))
+                .distinct().toList().forEach(owner -> {
+                    this.buttonManager.unregisters(owner);
+                    this.inventoryManager.deleteInventories(owner);
+                });
         this.buttonManager.unregisters(this.plugin);
 
         // Permissibles
@@ -201,6 +211,9 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
     @Override
     public void reload() {
 
+        if (this.plugin instanceof ZAuctionPlugin zAuctionPlugin && zAuctionPlugin.getChatSearchListener() != null) {
+            zAuctionPlugin.getChatSearchListener().reloadDialog();
+        }
         this.inventoryManager.deleteInventories(this.plugin);
         this.loadPatterns();
         this.loadInventories();

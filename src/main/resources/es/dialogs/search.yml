@@ -1,0 +1,23 @@
+name: Buscar Subastas
+type: multi_action
+can-close-with-escape: true
+pause: false
+after-action: CLOSE
+number-of-columns: 3
+body:
+  description:
+    type: plain_message
+    messages:
+    - <gray>Introduce un nombre o filtro, como seller = Notch.
+    width: 350
+query-label: Consulta
+search-label: <aqua>Buscar
+clear-label: <yellow>Limpiar
+cancel-label: <red>Cancelar
+multi-actions:
+  search:
+    label: <aqua>Buscar
+  clear:
+    label: <yellow>Limpiar
+  cancel:
+    label: <red>Cancelar

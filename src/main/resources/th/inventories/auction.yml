@@ -221,6 +221,9 @@ items:
     active-value: "true"
     # ค่าที่แสดงใน %search_active% เมื่อไม่มีการค้นหาที่ใช้งานอยู่
     inactive-value: "false"
+    # เปิดใช้หน้าต่างค้นหาแทนการพิมพ์ในแชตและคลิกขวาเพื่อล้างคำค้นหา
+    dialog:
+      enabled: false
     item:
       material: COMPASS
       name: "#2CCED2<bold>ค้นหา"

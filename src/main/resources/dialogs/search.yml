@@ -1,0 +1,23 @@
+name: Auction Search
+type: multi_action
+can-close-with-escape: true
+pause: false
+after-action: CLOSE
+number-of-columns: 3
+body:
+  description:
+    type: plain_message
+    messages:
+    - <gray>Enter an item name or a filter, such as seller = Notch.
+    width: 350
+query-label: Search query
+search-label: <aqua>Search
+clear-label: <yellow>Clear
+cancel-label: <red>Cancel
+multi-actions:
+  search:
+    label: <aqua>Search
+  clear:
+    label: <yellow>Clear
+  cancel:
+    label: <red>Cancel
