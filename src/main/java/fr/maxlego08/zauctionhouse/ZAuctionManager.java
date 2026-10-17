@@ -15,6 +15,8 @@ import fr.maxlego08.zauctionhouse.api.event.AuctionEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveExpiredItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveListedItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemovePurchasedItemEvent;
+import fr.maxlego08.zauctionhouse.api.event.events.stats.AuctionItemPurchasedEvent;
+import fr.maxlego08.zauctionhouse.api.event.events.stats.AuctionOpenEvent;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
@@ -121,6 +123,9 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public void openMainAuction(Player player, int page) {
+        // Event d'observation : compte chaque ouverture (ou retour) sur le menu principal
+        callObservationalEvent(new AuctionOpenEvent(player));
+
         var cache = getCache(player);
 
         // Reset category filter if configured
@@ -1160,6 +1165,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         final BigDecimal finalBuyerPays = buyerPays;
         final BigDecimal finalSellerReceives = sellerReceives;
         final boolean deferred = deferDeposit;
+        final TransactionStatus sellerPaymentStatus = transactionStatus;
 
         try {
             BigDecimal buyerBalance = readBalanceOrZero(auctionEconomy, player.getUniqueId());
@@ -1246,6 +1252,11 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             }
 
             logItemAction(LogType.PURCHASE, auctionItem, player, auctionItem.getSellerUniqueId(), "purchase_item", seller.isOnline() ? new Date() : null);
+
+            // Event post-commit (non annulable) : porte les montants REELLEMENT factures, calcules
+            // par ZPurchaseCharge (hors API). Jamais tire sur une course perdue, on est dans la
+            // continuation du CAS reussi.
+            callObservationalEvent(new AuctionItemPurchasedEvent(player, auctionItem, displayedBuyerPays, displayedSellerReceives, taxResult, sellerPaymentStatus));
 
             if (this.plugin instanceof ZAuctionPlugin zAuctionPlugin) {
                 DiscordWebhookService discordService = zAuctionPlugin.getDiscordWebhookService();
@@ -1602,6 +1613,19 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             auctionEvent.callEvent();
         } else {
             this.plugin.getScheduler().runNextTick(w -> auctionEvent.callEvent());
+        }
+    }
+
+    /**
+     * Delivre un event d'observation (stats) sans jamais laisser un echec de dispatch
+     * (planification refusee, plugin desactive...) impacter la transaction en cours,
+     * par exemple sauter la remise physique d'un achat deja commite.
+     */
+    private void callObservationalEvent(AuctionEvent auctionEvent) {
+        try {
+            callEvent(auctionEvent);
+        } catch (Throwable throwable) {
+            this.plugin.getLogger().warning("Unable to dispatch " + auctionEvent.getClass().getSimpleName() + ": " + throwable);
         }
     }
 

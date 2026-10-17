@@ -3,7 +3,6 @@ package fr.maxlego08.zauctionhouse.command.commands;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.configuration.commands.arguments.CommandSellArguments;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
-import fr.maxlego08.zauctionhouse.api.event.events.sell.AuctionPreSellEvent;
 import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
@@ -82,14 +81,8 @@ public class CommandAuctionSell extends VCommandArgument<CommandSellArguments> {
         long expiration = configuration.getSellExpiration().getExpiration(player);
         long expiredAt = expiration > 0 ? System.currentTimeMillis() + (expiration * 1000) : 0;
 
-        var event = new AuctionPreSellEvent(this.player, amount, expiredAt, itemStack, auctionEconomy, price);
-        if (!event.callEvent()) return CommandType.DEFAULT;
-
-        price = event.getPrice();
-        amount = event.getAmount();
-        expiredAt = event.getExpiredAt();
-        auctionEconomy = event.getAuctionEconomy();
-        itemStack = event.getItemStack();
+        // AuctionPreSellEvent est tire par SellService.sellAuctionItems (funnel commun a tous les
+        // chemins de vente) : surtout pas ici, sinon double declenchement.
 
         // Clone the item with the correct amount for selling
         var clonedItemStack = itemStack.clone();

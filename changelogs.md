@@ -92,6 +92,15 @@
 - **Added** `redis-config.lock-renew-enabled` in the addon, and `lock-ttl-seconds` is re-documented as a renewable lease
 - **Changed** `economies.yml` now documents the offline payment and purchase tax changes above, in all six languages
 
+### API events
+
+- **Added** Four post-action events in the new package `fr.maxlego08.zauctionhouse.api.event.events.stats`. They are not cancellable and are delivered synchronously on the main thread (global region thread on Folia, not the player's region: schedule on the player before touching entity state). A failure to dispatch them never affects the underlying sale, purchase or claim:
+  - `AuctionItemListedEvent` — a listing has been committed and published, on every sell path (command, sell inventory, GUI). Carries the seller, the auction item and the sell tax (`null` when none was applied)
+  - `AuctionItemPurchasedEvent` — a purchase has been committed. Carries the buyer, the auction item, the amounts actually charged (`getBuyerPays()`, `getSellerReceives()`), the applied `TaxResult` and whether the seller was paid immediately (`RETRIEVED`) or is owed a claim (`PENDING`). Never fired for a failed, cancelled or lost purchase
+  - `AuctionMoneyClaimEvent` — a player has claimed pending money. Carries the amount actually deposited for each economy
+  - `AuctionOpenEvent` — a player opens, or is brought back to, the main auction inventory
+- **Fixed** `AuctionPreSellEvent` was only fired by `/ah sell` when the sell inventory was disabled. It is now fired once for every listing, including the sell inventory and the GUI, and cancelling it cancels the sale on every path. Addons listening to it will now see GUI sales too. Changing the item or the amount is only honoured for single-stack sales; price, expiration and economy changes are honoured everywhere
+
 ### Known limitations
 
 - On a purchase the money still moves before the listing is committed. If another server sold the same listing first, the buyer is charged and the seller keeps both the item and a claimable payment. The incident is logged with everything needed to fix it by hand, but it is not refunded automatically. That is the next piece of work

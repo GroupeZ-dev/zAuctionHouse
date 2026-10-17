@@ -6,6 +6,8 @@ import fr.maxlego08.zauctionhouse.api.AuctionManager;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
+import fr.maxlego08.zauctionhouse.api.event.events.sell.AuctionPreSellEvent;
+import fr.maxlego08.zauctionhouse.api.event.events.stats.AuctionItemListedEvent;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
@@ -72,6 +74,43 @@ public class SellService extends ZUtils implements AuctionSellService {
             message(this.plugin, player, Message.SERVER_SHUTTING_DOWN);
             return CompletableFuture.completedFuture(SellResult.failure("Server is shutting down", SellFailReason.INTERNAL_ERROR));
         }
+
+        // AuctionPreSellEvent est desormais tire ICI, funnel unique de toutes les ventes (commande,
+        // inventaire de vente, GUI) : un seul event par mise en vente, quel que soit le chemin.
+        ItemStack representative = slotItems.values().stream()
+                .filter(itemStack -> itemStack != null && !itemStack.getType().isAir())
+                .findFirst().map(ItemStack::clone).orElse(null);
+        int totalAmount = slotItems.values().stream()
+                .filter(itemStack -> itemStack != null && !itemStack.getType().isAir())
+                .mapToInt(ItemStack::getAmount).sum();
+
+        // Rien de vendable : pas d'event, processSell renvoie l'erreur habituelle (SELL_ERROR_AIR)
+        if (representative == null) {
+            return this.processSell(player, price, expiredAt, slotItems, auctionEconomy);
+        }
+
+        var preSellEvent = new AuctionPreSellEvent(player, totalAmount, expiredAt, representative, auctionEconomy, price);
+        if (!preSellEvent.callEvent()) {
+            return CompletableFuture.completedFuture(SellResult.failure("Event cancelled", SellFailReason.EVENT_CANCELLED));
+        }
+
+        Map<Integer, ItemStack> finalSlotItems = slotItems;
+        if (slotItems.size() == 1 && preSellEvent.getItemStack() != null) {
+            // Mono-stack (chemin commande) : les mutations d'item et de quantite restent honorees.
+            // En multi-stack (GUI) les slots reels sont vendus, seul le stack representatif aurait ete mute.
+            var mutatedItemStack = preSellEvent.getItemStack().clone();
+            mutatedItemStack.setAmount(Math.max(1, preSellEvent.getAmount()));
+            finalSlotItems = Map.of(slotItems.keySet().iterator().next(), mutatedItemStack);
+        }
+
+        return this.processSell(player, preSellEvent.getPrice(), preSellEvent.getExpiredAt(), finalSlotItems, preSellEvent.getAuctionEconomy());
+    }
+
+    /**
+     * Traitement de la vente une fois {@link AuctionPreSellEvent} accepte, avec les valeurs
+     * eventuellement modifiees par les listeners.
+     */
+    private CompletableFuture<SellResult> processSell(Player player, BigDecimal price, long expiredAt, Map<Integer, ItemStack> slotItems, AuctionEconomy auctionEconomy) {
 
         // Filter out null or air items and clone them
         var validSlotItems = slotItems.entrySet().stream().filter(entry -> entry.getValue() != null && !entry.getValue().getType().isAir()).collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().clone()));
@@ -817,6 +856,10 @@ public class SellService extends ZUtils implements AuctionSellService {
             additionalData += ";sell_tax=" + taxResult.taxAmount();
         }
         this.plugin.getStorageManager().log(LogType.SALE, auctionItem.getId(), player, null, encodedItemStack, auctionItem.getPrice(), auctionEconomy.getName(), additionalData, null);
+
+        // Event post-commit (non annulable). postSell est toujours execute sur le thread principal /
+        // la region (re-dispatche par runNextTick, C-082) : appel direct.
+        new AuctionItemListedEvent(player, auctionItem, taxResult.hasTax() ? taxResult : null).callEvent();
 
         this.plugin.getAuctionClusterBridge().notifyItemListed(auctionItem).thenAccept(v -> {
             this.plugin.getLogger().info("Cluster notify item sold");
