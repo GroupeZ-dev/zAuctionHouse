@@ -44,7 +44,7 @@ public enum PlayerCacheKey {
     SELL_PRICE(new TypeToken<BigDecimal>() {}, () -> BigDecimal.ZERO),
     SELL_ECONOMY(new TypeToken<AuctionEconomy>() {}, () -> null),
     SELL_EXPIRED_AT(new TypeToken<Long>() {}, () -> 0L),
-    SELL_AMOUNT(new TypeToken<Integer>() {}, () -> 1),
+    SELL_AMOUNT(new TypeToken<Integer>() {}, () -> 0), // 0 = le stack entier en main
     SELL_ITEMS(new TypeToken<Map<Integer, org.bukkit.inventory.ItemStack>>() {}, HashMap::new),
     CURRENT_CATEGORY(new TypeToken<Category>() {}, () -> null),
 

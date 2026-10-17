@@ -74,7 +74,10 @@ public class CommandAuctionSell extends VCommandArgument<CommandSellArguments> {
         if (price == null) return CommandType.SYNTAX_ERROR;
 
         if (plugin.getConfiguration().isSellInventoryEnabled()) {
-            auctionManager.getSellService().openSellCommandInventory(player, price, auctionEconomy);
+            // La quantite n'est appliquee qu'a la confirmation, sur l'item alors en main : on
+            // transmet donc la valeur demandee brute (0 = tout le stack), plafonnee par SellConfirmButton.
+            int sellAmount = argAsString(CommandSellArguments.AMOUNT, null) == null ? 0 : Math.max(1, argAsInteger(CommandSellArguments.AMOUNT, 1));
+            auctionManager.getSellService().openSellCommandInventory(player, price, auctionEconomy, sellAmount);
             return CommandType.SUCCESS;
         }
 

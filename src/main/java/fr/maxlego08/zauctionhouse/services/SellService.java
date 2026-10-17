@@ -590,7 +590,7 @@ public class SellService extends ZUtils implements AuctionSellService {
     }
 
     @Override
-    public void openSellCommandInventory(Player player, BigDecimal price, AuctionEconomy auctionEconomy) {
+    public void openSellCommandInventory(Player player, BigDecimal price, AuctionEconomy auctionEconomy, int amount) {
         var cache = this.manager.getCache(player);
         var configuration = this.plugin.getConfiguration();
 
@@ -600,7 +600,7 @@ public class SellService extends ZUtils implements AuctionSellService {
         cache.set(PlayerCacheKey.SELL_PRICE, price);
         cache.set(PlayerCacheKey.SELL_ECONOMY, auctionEconomy);
         cache.set(PlayerCacheKey.SELL_EXPIRED_AT, expiredAt);
-        cache.set(PlayerCacheKey.SELL_AMOUNT, 1);
+        cache.set(PlayerCacheKey.SELL_AMOUNT, Math.max(0, amount));
         cache.remove(PlayerCacheKey.SELL_ITEMS);
 
         this.plugin.getInventoriesLoader().openInventory(player, Inventories.SELL_INVENTORY);

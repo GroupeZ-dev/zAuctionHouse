@@ -1,5 +1,9 @@
 # Unreleased
 
+- **Fixed** With `enable-sell-inventory: true`, the amount given to `/ah sell <price> <amount>` was ignored and the whole stack held in hand was listed. The amount is now applied when confirming, capped by what the player actually holds
+
+# 4.0.1.4
+
 > **Read this before updating a network.** This release closes a long list of item and money duplication paths. Two setups that used to start are now refused, and operations that used to silently overwrite the database now fail with a message. That is intended, but your players and your staff will see it on day one.
 
 ### Before you update

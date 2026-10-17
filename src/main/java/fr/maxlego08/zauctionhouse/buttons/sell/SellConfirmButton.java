@@ -53,8 +53,12 @@ public class SellConfirmButton extends Button {
                 this.plugin.getAuctionManager().message(player, Message.SELL_INVENTORY_EMPTY);
                 return;
             }
+            var itemToSell = mainHandItem.clone();
+            int sellAmount = cache.get(PlayerCacheKey.SELL_AMOUNT, 0);
+            if (sellAmount > 0) itemToSell.setAmount(Math.min(sellAmount, mainHandItem.getAmount()));
+
             sellItems = new HashMap<>();
-            sellItems.put(AuctionSellService.MAIN_HAND_SLOT, mainHandItem.clone());
+            sellItems.put(AuctionSellService.MAIN_HAND_SLOT, itemToSell);
         }
 
         BigDecimal price = cache.get(PlayerCacheKey.SELL_PRICE, BigDecimal.ZERO);
