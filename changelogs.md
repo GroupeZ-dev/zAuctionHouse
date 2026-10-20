@@ -11,6 +11,7 @@
 - **Added** `SELL_ECONOMY` can be set with `/ah admin cache set`
 - **Added** PlaceholderAPI placeholders for the sale in progress: `%zauctionhouse_sell_price%`, `%zauctionhouse_sell_price_formatted%`, `%zauctionhouse_sell_economy%`, `%zauctionhouse_sell_economy_name%`, `%zauctionhouse_sell_amount%`
 - **API** `AuctionSellService#openSellCommandInventory(Player, BigDecimal, AuctionEconomy, int)`, `CommandManager#applyCooldown(Player, VCommand)` and `VCommand#setDeferredCooldown(boolean)`
+- **Updated** Sarah to version ``1.26``, added `database-configuration.max-lifetime`
 
 # 4.0.1.4
 

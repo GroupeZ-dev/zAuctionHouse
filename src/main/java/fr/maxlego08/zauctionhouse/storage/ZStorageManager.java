@@ -137,17 +137,11 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
             var sweep = with(ItemRepository.class).recoverOrphanReservations(System.currentTimeMillis() - ORPHAN_RESERVATION_GRACE_MS);
 
             if (sweep.recovered() > 0) {
-                this.plugin.getLogger().warning("[ZAH] " + sweep.recovered() + " listing reservation(s) were committed"
-                        + " (the seller had already handed over his items) but never published, most likely a server"
-                        + " crash during a sale. They have been made claimable by their seller in the 'expired items'"
-                        + " section.");
+                this.plugin.getLogger().warning("[ZAH] " + sweep.recovered() + " listing reservation(s) were committed" + " (the seller had already handed over his items) but never published, most likely a server" + " crash during a sale. They have been made claimable by their seller in the 'expired items'" + " section.");
             }
 
             if (!sweep.purged().isEmpty()) {
-                this.plugin.getLogger().severe("[ZAH] " + sweep.purged().size() + " listing reservation(s) " + sweep.purged()
-                        + " died BEFORE the seller handed over his items. They have been DELETED with their contents:"
-                        + " the seller still holds those stacks in his inventory, handing them back would have"
-                        + " DUPLICATED them.");
+                this.plugin.getLogger().severe("[ZAH] " + sweep.purged().size() + " listing reservation(s) " + sweep.purged() + " died BEFORE the seller handed over his items. They have been DELETED with their contents:" + " the seller still holds those stacks in his inventory, handing them back would have" + " DUPLICATED them.");
             }
         } catch (Throwable throwable) {
             this.plugin.getLogger().severe("[ZAH] Unable to recover orphan listing reservations: " + throwable);
@@ -212,7 +206,14 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
         String database = globalDatabaseConfiguration.getDatabase();
         boolean debug = globalDatabaseConfiguration.isDebug();
 
-        return new DatabaseConfiguration(tablePrefix, user, password, port, host, database, debug, storageType);
+        var databaseConfiguration = new DatabaseConfiguration(tablePrefix, user, password, port, host, database, debug, storageType);
+
+        Long maxLifetimeMillis = globalDatabaseConfiguration.getMaxLifetimeMillis();
+        if (maxLifetimeMillis != null) {
+            databaseConfiguration = databaseConfiguration.withMaxLifetime(maxLifetimeMillis);
+        }
+
+        return databaseConfiguration;
     }
 
     @Override
@@ -265,7 +266,8 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
             int itemId = with(ItemRepository.class).create(seller.getUniqueId(), ItemType.AUCTION, price, expiredAt, auctionEconomy, StorageType.DELETED);
             // insertSync rend 0 quand le pilote ne remonte aucune cle generee : la vente doit
             // echouer proprement plutot que d'inserer des contenus orphelins sur l'item 0.
-            if (itemId <= 0) throw new IllegalStateException("Unable to reserve a listing row (generated id = " + itemId + ")");
+            if (itemId <= 0)
+                throw new IllegalStateException("Unable to reserve a listing row (generated id = " + itemId + ")");
             return with(AuctionItemRepository.class).create(seller.getUniqueId(), seller.getName(), itemId, price, expiredAt, itemStacks, encodedItemStacks, auctionEconomy);
         }, this.plugin.getExecutorService());
     }
@@ -304,14 +306,14 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
         return CompletableFuture.runAsync(() -> {
             int deleted = with(ItemRepository.class).deleteReservation(auctionItem.getId());
             if (deleted != 1) {
-                this.plugin.getLogger().warning("[ZAH] Reservation " + auctionItem.getId()
-                        + " was already gone (or no longer cancellable) when cancelling.");
+                this.plugin.getLogger().warning("[ZAH] Reservation " + auctionItem.getId() + " was already gone (or no longer cancellable) when cancelling.");
             }
         }, this.plugin.getExecutorService());
     }
 
     @Override
-    @SuppressWarnings("deprecation") // ItemRepository.updateItem(Item, StorageType) : ecriture sans garde de transition.
+    @SuppressWarnings("deprecation")
+    // ItemRepository.updateItem(Item, StorageType) : ecriture sans garde de transition.
     public CompletableFuture<Void> updateItem(Item item, StorageType storageType) {
         return CompletableFuture.runAsync(() -> with(ItemRepository.class).updateItem(item, storageType), this.plugin.getExecutorService());
     }
@@ -389,9 +391,7 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
 
             var optionalAuctionEconomy = this.plugin.getEconomyManager().getEconomy(dto.economy_name());
             if (optionalAuctionEconomy.isEmpty()) {
-                this.plugin.getLogger().severe("Impossible to find the economy " + dto.economy_name()
-                        + " for auction item id " + dto.id() + ". The item is NOT gone, it is UNREADABLE: "
-                        + "check economies.yml before assuming the listing disappeared.");
+                this.plugin.getLogger().severe("Impossible to find the economy " + dto.economy_name() + " for auction item id " + dto.id() + ". The item is NOT gone, it is UNREADABLE: " + "check economies.yml before assuming the listing disappeared.");
                 return ItemLookupResult.unavailable();
             }
 
