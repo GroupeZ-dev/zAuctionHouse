@@ -53,5 +53,20 @@ public interface AuctionSellService {
      * @param price          the pre-configured price for the listing
      * @param auctionEconomy the economy to use for the transaction
      */
-    void openSellCommandInventory(Player player, BigDecimal price, AuctionEconomy auctionEconomy);
+    default void openSellCommandInventory(Player player, BigDecimal price, AuctionEconomy auctionEconomy) {
+        openSellCommandInventory(player, price, auctionEconomy, 0);
+    }
+
+    /**
+     * Opens the sell command inventory for a player with pre-configured price, economy and amount.
+     * <p>
+     * The amount only applies when the player confirms without selecting items, i.e. when the
+     * item held in the main hand is sold. It is capped by the amount actually held at confirmation.
+     *
+     * @param player         the player to open the inventory for
+     * @param price          the pre-configured price for the listing
+     * @param auctionEconomy the economy to use for the transaction
+     * @param amount         the amount to sell from the main hand, or {@code 0} (or less) to sell the whole stack
+     */
+    void openSellCommandInventory(Player player, BigDecimal price, AuctionEconomy auctionEconomy, int amount);
 }

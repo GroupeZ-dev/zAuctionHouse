@@ -3,6 +3,7 @@ package fr.maxlego08.zauctionhouse.command.commands.admin.cache;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCache;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
+import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.item.SortItem;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.utils.Permission;
@@ -20,7 +21,7 @@ import java.util.Set;
 
 public class CommandAuctionAdminCacheSet extends VCommand {
 
-    private static final Set<PlayerCacheKey> SETTABLE_KEYS = Set.of(PlayerCacheKey.CURRENT_PAGE, PlayerCacheKey.SELL_AMOUNT, PlayerCacheKey.ITEM_SORT_LOADING, PlayerCacheKey.PURCHASE_ITEM, PlayerCacheKey.SELL_EXPIRED_AT, PlayerCacheKey.SELL_PRICE, PlayerCacheKey.ITEM_SORT, PlayerCacheKey.ADMIN_TARGET_NAME);
+    private static final Set<PlayerCacheKey> SETTABLE_KEYS = Set.of(PlayerCacheKey.CURRENT_PAGE, PlayerCacheKey.SELL_AMOUNT, PlayerCacheKey.ITEM_SORT_LOADING, PlayerCacheKey.PURCHASE_ITEM, PlayerCacheKey.SELL_EXPIRED_AT, PlayerCacheKey.SELL_PRICE, PlayerCacheKey.SELL_ECONOMY, PlayerCacheKey.ITEM_SORT, PlayerCacheKey.ADMIN_TARGET_NAME);
 
     public CommandAuctionAdminCacheSet(AuctionPlugin plugin) {
         super(plugin);
@@ -120,6 +121,7 @@ public class CommandAuctionAdminCacheSet extends VCommand {
             case ITEM_SORT_LOADING, PURCHASE_ITEM -> Boolean.parseBoolean(value);
             case SELL_EXPIRED_AT -> Long.parseLong(value);
             case SELL_PRICE -> new BigDecimal(value);
+            case SELL_ECONOMY -> this.plugin.getEconomyManager().getEconomy(value).orElseThrow(() -> new IllegalArgumentException("Unknown economy: " + value));
             case ITEM_SORT -> SortItem.valueOf(value.toUpperCase());
             case ADMIN_TARGET_NAME -> value;
             default -> throw new IllegalArgumentException("Unsupported key: " + key);
@@ -129,10 +131,11 @@ public class CommandAuctionAdminCacheSet extends VCommand {
     private List<String> getValueSuggestions(PlayerCacheKey key) {
         return switch (key) {
             case CURRENT_PAGE -> List.of("1", "2", "3");
-            case SELL_AMOUNT -> List.of("1", "16", "32", "64");
+            case SELL_AMOUNT -> List.of("0", "1", "16", "32", "64");
             case ITEM_SORT_LOADING, PURCHASE_ITEM -> List.of("true", "false");
             case SELL_EXPIRED_AT -> List.of("0");
             case SELL_PRICE -> List.of("0", "100", "1000");
+            case SELL_ECONOMY -> this.plugin.getEconomyManager().getEconomies().stream().map(AuctionEconomy::getName).toList();
             case ITEM_SORT -> Arrays.stream(SortItem.values()).map(SortItem::name).toList();
             case ADMIN_TARGET_NAME -> Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
             default -> List.of();

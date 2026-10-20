@@ -131,6 +131,9 @@ items:
     # Type de bouton - gère le cycle des économies.
     type: ZAUCTIONHOUSE_SELL_ECONOMY
 
+    # Optionnel : sélectionne cette économie au lieu de les faire défiler.
+    # economy: vault
+
     # Position du slot - centre de la rangée du bas.
     slot: 49
 
@@ -186,6 +189,10 @@ items:
   confirm:
     # Type de bouton - gère la confirmation de vente.
     type: ZAUCTIONHOUSE_SELL_CONFIRM
+
+    # Optionnel : vend toujours avec cette économie, quelle que soit l'économie sélectionnée.
+    # Ajoutez un bouton de confirmation par économie pour vendre en un seul clic.
+    # economy: level
 
     # Position du slot - extrême droite de la rangée du bas.
     slot: 53

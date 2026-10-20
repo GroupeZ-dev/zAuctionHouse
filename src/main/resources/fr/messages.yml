@@ -254,6 +254,8 @@ item-no-longer-available: "<error>Cet item n'est plus disponible, il vient d'êt
 # Placeholders disponibles:
 #   %items% - Description de l'item
 #   %price% - Prix de vente
+#   %tax% - Taxe prélevée sur cette vente (0 si aucune)
+#   %percentage% - Pourcentage de taxe (0 si aucune)
 item-sold: "#e6fff3Vous venez de mettre en vente %items% #e6fff3pour #92bed8%price%#e6fff3."
 
 # Affiché au vendeur lorsque son item est acheté (si en ligne).
@@ -284,6 +286,7 @@ not-enough-money: "<error>Vous n'avez pas assez d'argent pour acheter ceci."
 # Affiché lorsque l'inventaire du joueur est plein (si la vérification d'espace est activée).
 # Placeholders disponibles: aucun
 not-enough-space: "<error>Vous n'avez pas assez de place dans votre inventaire."
+purchase-inventory-full: "<primary>Votre inventaire est plein, l'objet a été placé dans vos objets achetés."
 
 # Affiché lorsque le prix de vente dépasse le maximum autorisé.
 # Placeholders disponibles:

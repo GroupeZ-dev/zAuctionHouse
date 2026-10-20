@@ -3,7 +3,6 @@ package fr.maxlego08.zauctionhouse.command.commands;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.configuration.commands.arguments.CommandSellArguments;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
-import fr.maxlego08.zauctionhouse.api.event.events.sell.AuctionPreSellEvent;
 import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
@@ -23,6 +22,9 @@ public class CommandAuctionSell extends VCommandArgument<CommandSellArguments> {
         this.setPermission(Permission.ZAUCTIONHOUSE_SELL);
         this.setDescription(Message.COMMAND_DESCRIPTION_AUCTION_SELL);
         this.setConsoleCanUse(false);
+        // Le cooldown n'est pose qu'une fois la vente reussie (ici ou dans SellConfirmButton) :
+        // une vente annulee ou refusee ne doit pas le consommer.
+        this.setDeferredCooldown(true);
     }
 
     @Override
@@ -75,21 +77,18 @@ public class CommandAuctionSell extends VCommandArgument<CommandSellArguments> {
         if (price == null) return CommandType.SYNTAX_ERROR;
 
         if (plugin.getConfiguration().isSellInventoryEnabled()) {
-            auctionManager.getSellService().openSellCommandInventory(player, price, auctionEconomy);
+            // La quantite n'est appliquee qu'a la confirmation, sur l'item alors en main : on
+            // transmet donc la valeur demandee brute (0 = tout le stack), plafonnee par SellConfirmButton.
+            int sellAmount = argAsString(CommandSellArguments.AMOUNT, null) == null ? 0 : Math.max(1, argAsInteger(CommandSellArguments.AMOUNT, 1));
+            auctionManager.getSellService().openSellCommandInventory(player, price, auctionEconomy, sellAmount);
             return CommandType.SUCCESS;
         }
 
         long expiration = configuration.getSellExpiration().getExpiration(player);
         long expiredAt = expiration > 0 ? System.currentTimeMillis() + (expiration * 1000) : 0;
 
-        var event = new AuctionPreSellEvent(this.player, amount, expiredAt, itemStack, auctionEconomy, price);
-        if (!event.callEvent()) return CommandType.DEFAULT;
-
-        price = event.getPrice();
-        amount = event.getAmount();
-        expiredAt = event.getExpiredAt();
-        auctionEconomy = event.getAuctionEconomy();
-        itemStack = event.getItemStack();
+        // AuctionPreSellEvent est tire par SellService.sellAuctionItems (funnel commun a tous les
+        // chemins de vente) : surtout pas ici, sinon double declenchement.
 
         // Clone the item with the correct amount for selling
         var clonedItemStack = itemStack.clone();
@@ -97,7 +96,10 @@ public class CommandAuctionSell extends VCommandArgument<CommandSellArguments> {
 
         // Use MAIN_HAND_SLOT to indicate the item is in the player's main hand
         Map<Integer, ItemStack> slotItems = Map.of(AuctionSellService.MAIN_HAND_SLOT, clonedItemStack);
-        auctionManager.getSellService().sellAuctionItems(player, price, expiredAt, slotItems, auctionEconomy);
+        var seller = this.player;
+        auctionManager.getSellService().sellAuctionItems(seller, price, expiredAt, slotItems, auctionEconomy).thenAccept(result -> {
+            if (result != null && result.success()) plugin.getCommandManager().applyCooldown(seller, this);
+        });
 
         return CommandType.SUCCESS;
     }

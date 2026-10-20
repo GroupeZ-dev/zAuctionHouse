@@ -25,6 +25,7 @@ public abstract class VCommand extends Arguments {
     protected VCommand parent;
     protected List<VCommand> subVCommands = new ArrayList<>();
     private boolean runAsync = false;
+    private boolean deferredCooldown = false;
     protected CommandSender sender;
     protected Player player;
     protected Map<Integer, CollectionBiConsumer> tabCompletions = new HashMap<>();
@@ -317,6 +318,29 @@ public abstract class VCommand extends Arguments {
      */
     protected VCommand setRunAsync(boolean runAsync) {
         this.runAsync = runAsync;
+        return this;
+    }
+
+    /**
+     * Checks if the cooldown of this command is started by the command itself, through
+     * {@link CommandManager#applyCooldown(org.bukkit.entity.Player, VCommand)}, instead of
+     * automatically when the command succeeds.
+     *
+     * @return true if the cooldown is deferred.
+     */
+    public boolean isDeferredCooldown() {
+        return deferredCooldown;
+    }
+
+    /**
+     * Sets whether the cooldown of this command is started by the command itself. Use it for
+     * commands whose action completes later, e.g. after an inventory confirmation.
+     *
+     * @param deferredCooldown true to defer the cooldown.
+     * @return this VCommand instance.
+     */
+    protected VCommand setDeferredCooldown(boolean deferredCooldown) {
+        this.deferredCooldown = deferredCooldown;
         return this;
     }
 

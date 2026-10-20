@@ -9,6 +9,7 @@ import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
+import fr.maxlego08.zauctionhouse.command.commands.CommandAuctionSell;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -23,13 +24,35 @@ import java.util.Map;
 /**
  * Button to confirm the sale of selected items.
  * Shows a summary of the price and economy, and processes the sale when clicked.
+ * <p>
+ * With an {@code economy} option the button always sells with that economy, whatever economy is
+ * selected: one button per economy lists the item in a single click.
  */
 public class SellConfirmButton extends Button {
 
     private final AuctionPlugin plugin;
+    // null = economie selectionnee dans l'inventaire (SELL_ECONOMY)
+    private final String economyName;
 
     public SellConfirmButton(Plugin plugin) {
+        this(plugin, null);
+    }
+
+    public SellConfirmButton(Plugin plugin, String economyName) {
         this.plugin = (AuctionPlugin) plugin;
+        this.economyName = economyName;
+    }
+
+    /**
+     * @return l'economie de la vente : celle imposee par le bouton, sinon celle selectionnee,
+     * sinon l'economie par defaut. null si l'economie imposee n'existe pas (ou plus).
+     */
+    private AuctionEconomy resolveEconomy(Player player, AuctionEconomy defaultEconomy) {
+        if (this.economyName != null) {
+            return this.plugin.getEconomyManager().getEconomy(this.economyName).orElse(null);
+        }
+        if (defaultEconomy == null) return null;
+        return this.plugin.getAuctionManager().getCache(player).get(PlayerCacheKey.SELL_ECONOMY, defaultEconomy);
     }
 
     @Override
@@ -53,8 +76,12 @@ public class SellConfirmButton extends Button {
                 this.plugin.getAuctionManager().message(player, Message.SELL_INVENTORY_EMPTY);
                 return;
             }
+            var itemToSell = mainHandItem.clone();
+            int sellAmount = cache.get(PlayerCacheKey.SELL_AMOUNT, 0);
+            if (sellAmount > 0) itemToSell.setAmount(Math.min(sellAmount, mainHandItem.getAmount()));
+
             sellItems = new HashMap<>();
-            sellItems.put(AuctionSellService.MAIN_HAND_SLOT, mainHandItem.clone());
+            sellItems.put(AuctionSellService.MAIN_HAND_SLOT, itemToSell);
         }
 
         BigDecimal price = cache.get(PlayerCacheKey.SELL_PRICE, BigDecimal.ZERO);
@@ -63,7 +90,11 @@ public class SellConfirmButton extends Button {
             this.plugin.getAuctionManager().message(player, Message.SELL_ERROR_DEFAULT_ECONOMY);
             return;
         }
-        AuctionEconomy economy = cache.get(PlayerCacheKey.SELL_ECONOMY, defaultEconomy);
+        AuctionEconomy economy = resolveEconomy(player, defaultEconomy);
+        if (economy == null) {
+            this.plugin.getAuctionManager().message(player, Message.SELL_ERROR_ECONOMY, "%name%", this.economyName);
+            return;
+        }
         long expiredAt = cache.get(PlayerCacheKey.SELL_EXPIRED_AT, 0L);
 
         cache.set(PlayerCacheKey.CURRENT_PAGE, 1);
@@ -73,7 +104,21 @@ public class SellConfirmButton extends Button {
         player.closeInventory();
 
         // The service will verify items are still in their slots and remove them after async tax check
-        manager.getSellService().sellAuctionItems(player, price, expiredAt, sellItems, economy);
+        manager.getSellService().sellAuctionItems(player, price, expiredAt, sellItems, economy).thenAccept(result -> {
+            if (result != null && result.success()) applySellCooldown(player);
+        });
+    }
+
+    /**
+     * L'inventaire de vente n'est ouvert que par /ah sell : c'est ici, une fois la vente
+     * reussie, que le cooldown de la commande demarre (voir {@link CommandAuctionSell}).
+     */
+    private void applySellCooldown(Player player) {
+        var commandManager = this.plugin.getCommandManager();
+        commandManager.getCommands().stream()
+                .filter(command -> command instanceof CommandAuctionSell)
+                .findFirst()
+                .ifPresent(command -> commandManager.applyCooldown(player, command));
     }
 
     @Override
@@ -89,7 +134,7 @@ public class SellConfirmButton extends Button {
 
         BigDecimal price = cache.get(PlayerCacheKey.SELL_PRICE, BigDecimal.ZERO);
         AuctionEconomy defaultEconomy = economyManager.getDefaultEconomy(ItemType.AUCTION);
-        AuctionEconomy economy = defaultEconomy != null ? cache.get(PlayerCacheKey.SELL_ECONOMY, defaultEconomy) : null;
+        AuctionEconomy economy = resolveEconomy(player, defaultEconomy);
 
         Map<Integer, ItemStack> sellItems = cache.get(PlayerCacheKey.SELL_ITEMS);
         int itemCount = 0;
