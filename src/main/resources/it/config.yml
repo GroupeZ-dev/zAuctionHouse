@@ -190,6 +190,11 @@ database-configuration:
   # Consigliato: Tenere disattivato in produzione.
   debug: false
 
+  # Durata massima di una connessione MySQL o MariaDB del pool, in secondi.
+  # Una connessione piu vecchia viene ritirata e sostituita. 0 mantiene le connessioni fino alla chiusura del pool.
+  # Hikari richiede almeno 30 secondi. 1800 sono 30 minuti, il valore predefinito se l'opzione e omessa.
+  max-lifetime: 1800
+
 #=============================================================================
 # SCORCIATOIE DI COLORE PER I MESSAGGI
 #=============================================================================
