@@ -871,8 +871,9 @@ action:
     # Se false, gli oggetti vanno nella sezione "oggetti acquistati" per il ritiro successivo
     give-item: false
 
-    # Se give-item è true, questo verifica se il giocatore ha abbastanza spazio nel suo inventario
-    # Se false e non c'è spazio disponibile, l'acquisto viene bloccato
+    # Usato solo se give-item è true
+    # Se true, l'acquisto viene bloccato quando l'inventario del giocatore è pieno
+    # Se false, l'acquisto va a buon fine e, se l'oggetto non entra, viene messo negli "oggetti acquistati"
     player-inventory-must-have-free-space: true
 
     # Se true, riapre l'inventario delle aste dopo l'acquisto

@@ -87,6 +87,7 @@ public enum Message {
 
     NOT_ENOUGH_MONEY("<error>You don’t have enough money to buy this."),
     NOT_ENOUGH_SPACE("<error>You don't have enough space in your inventory."),
+    PURCHASE_INVENTORY_FULL("<primary>Your inventory is full, the item has been placed in your purchased items."),
 
     PRICE_TOO_HIGH("<error>You cannot sell for more than <white>%max-price%<error>."),
     PRICE_TOO_LOW("<error>You cannot sell for less than <white>%min-price%<error>."),

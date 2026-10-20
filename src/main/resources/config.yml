@@ -865,8 +865,9 @@ action:
     # If false, items go to their "purchased items" section for later retrieval
     give-item: false
 
-    # If give-item is true, this checks if the player has enough inventory space
-    # If false and no space available, the purchase is blocked
+    # Only used when give-item is true
+    # If true, the purchase is blocked when the player's inventory is full
+    # If false, the purchase goes through and, when the item does not fit, it is placed in "purchased items"
     player-inventory-must-have-free-space: true
 
     # If true, reopens the auction inventory after purchasing

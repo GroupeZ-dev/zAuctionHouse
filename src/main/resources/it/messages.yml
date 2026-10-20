@@ -284,6 +284,7 @@ not-enough-money: "<error>Non hai abbastanza soldi per comprare questo."
 # Mostrato quando l'inventario del giocatore è pieno (se la verifica dello spazio è attivata).
 # Placeholder disponibili: nessuno
 not-enough-space: "<error>Non hai abbastanza spazio nel tuo inventario."
+purchase-inventory-full: "<primary>Il tuo inventario è pieno, l'oggetto è stato messo tra i tuoi oggetti acquistati."
 
 # Mostrato quando il prezzo di vendita supera il massimo consentito.
 # Placeholder disponibili:
