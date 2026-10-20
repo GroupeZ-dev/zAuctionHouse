@@ -1,5 +1,7 @@
 package fr.maxlego08.zauctionhouse.api.command;
 
+import org.bukkit.entity.Player;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -30,5 +32,17 @@ public interface CommandManager {
      * @param uniqueId the player's UUID
      */
     void clearCooldowns(UUID uniqueId);
+
+    /**
+     * Starts the configured cooldown of a command for a player.
+     * <p>
+     * The command manager does this by itself each time a command runs, except for commands
+     * marked with {@link VCommand#isDeferredCooldown()}: those must call this method once the
+     * action they start has really been completed (e.g. a sale confirmed in an inventory).
+     *
+     * @param player  the player
+     * @param command the command whose cooldown starts
+     */
+    void applyCooldown(Player player, VCommand command);
 
 }

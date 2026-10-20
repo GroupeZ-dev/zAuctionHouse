@@ -9,6 +9,7 @@ import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionSellService;
+import fr.maxlego08.zauctionhouse.command.commands.CommandAuctionSell;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -77,7 +78,21 @@ public class SellConfirmButton extends Button {
         player.closeInventory();
 
         // The service will verify items are still in their slots and remove them after async tax check
-        manager.getSellService().sellAuctionItems(player, price, expiredAt, sellItems, economy);
+        manager.getSellService().sellAuctionItems(player, price, expiredAt, sellItems, economy).thenAccept(result -> {
+            if (result != null && result.success()) applySellCooldown(player);
+        });
+    }
+
+    /**
+     * L'inventaire de vente n'est ouvert que par /ah sell : c'est ici, une fois la vente
+     * reussie, que le cooldown de la commande demarre (voir {@link CommandAuctionSell}).
+     */
+    private void applySellCooldown(Player player) {
+        var commandManager = this.plugin.getCommandManager();
+        commandManager.getCommands().stream()
+                .filter(command -> command instanceof CommandAuctionSell)
+                .findFirst()
+                .ifPresent(command -> commandManager.applyCooldown(player, command));
     }
 
     @Override

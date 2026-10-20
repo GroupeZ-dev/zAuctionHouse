@@ -22,6 +22,9 @@ public class CommandAuctionSell extends VCommandArgument<CommandSellArguments> {
         this.setPermission(Permission.ZAUCTIONHOUSE_SELL);
         this.setDescription(Message.COMMAND_DESCRIPTION_AUCTION_SELL);
         this.setConsoleCanUse(false);
+        // Le cooldown n'est pose qu'une fois la vente reussie (ici ou dans SellConfirmButton) :
+        // une vente annulee ou refusee ne doit pas le consommer.
+        this.setDeferredCooldown(true);
     }
 
     @Override
@@ -93,7 +96,10 @@ public class CommandAuctionSell extends VCommandArgument<CommandSellArguments> {
 
         // Use MAIN_HAND_SLOT to indicate the item is in the player's main hand
         Map<Integer, ItemStack> slotItems = Map.of(AuctionSellService.MAIN_HAND_SLOT, clonedItemStack);
-        auctionManager.getSellService().sellAuctionItems(player, price, expiredAt, slotItems, auctionEconomy);
+        var seller = this.player;
+        auctionManager.getSellService().sellAuctionItems(seller, price, expiredAt, slotItems, auctionEconomy).thenAccept(result -> {
+            if (result != null && result.success()) plugin.getCommandManager().applyCooldown(seller, this);
+        });
 
         return CommandType.SUCCESS;
     }
