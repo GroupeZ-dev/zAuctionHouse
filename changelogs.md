@@ -4,6 +4,8 @@
 - **Fixed** With `purchased-item.give-item: true` and `player-inventory-must-have-free-space: false`, a purchase that did not fit in the inventory was dropped on the ground. The whole lot now goes to "purchased items" (as in V3) and the new `purchase-inventory-full` message is sent. With `player-inventory-must-have-free-space: true` the purchase is still blocked, and an inventory that fills up between the click and the delivery now also sends the lot to "purchased items" instead of dropping it
 - **Fixed** The `/ah sell` cooldown was consumed even when nothing was sold (sell inventory closed, sale refused). It now starts only once the sale is completed. Other commands keep their current cooldown behaviour
 - **Fixed** A message set to `""` in `messages.yml` still sent a line containing only the prefix. It is now really disabled
+- **Fixed** The sell tax messages (`tax-sell-applied`, `tax-reduced`, `tax-exempt`) were sent before the listing was saved, even when the sale then failed and the tax was refunded. They are now sent after the listing is published
+- **Added** `%tax%` and `%percentage%` in the `item-sold` message, so the tax can be shown in a single message by disabling `tax-sell-applied`
 - **Added** `open-when-empty` option on `ZAUCTIONHOUSE_EXPIRED_INVENTORY`, `ZAUCTIONHOUSE_PURCHASED_INVENTORY` and `ZAUCTIONHOUSE_SELLING_INVENTORY`: the button opens the inventory even when the list is empty. The default `auction.yml` uses it on the `else` buttons
 - **API** `AuctionSellService#openSellCommandInventory(Player, BigDecimal, AuctionEconomy, int)`, `CommandManager#applyCooldown(Player, VCommand)` and `VCommand#setDeferredCooldown(boolean)`
 

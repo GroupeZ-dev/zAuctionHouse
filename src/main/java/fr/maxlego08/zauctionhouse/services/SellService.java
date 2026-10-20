@@ -774,8 +774,10 @@ public class SellService extends ZUtils implements AuctionSellService {
 
         final TaxResult taxResult = highestTaxResult;
 
+        // Les messages de taxe (exemption, reduction, montant preleve) sont envoyes par postSell,
+        // une fois l'annonce publiee : une vente qui echoue ensuite rembourse la taxe, le joueur
+        // ne doit donc pas avoir lu qu'elle a ete appliquee.
         if (taxResult.isBypassed()) {
-            message(this.plugin, player, Message.TAX_EXEMPT);
             return CompletableFuture.completedFuture(taxResult);
         }
 
@@ -800,17 +802,6 @@ public class SellService extends ZUtils implements AuctionSellService {
             return CompletableFuture.completedFuture(null);
         }
 
-        // Send appropriate messages on entity thread
-        this.plugin.getScheduler().runAtEntity(player, task -> {
-            if (taxResult.isReduced()) {
-                message(this.plugin, player, Message.TAX_REDUCED,
-                        "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
-            }
-            message(this.plugin, player, Message.TAX_SELL_APPLIED,
-                    "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()),
-                    "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
-        });
-
         return CompletableFuture.completedFuture(taxResult);
     }
 
@@ -823,6 +814,37 @@ public class SellService extends ZUtils implements AuctionSellService {
      * @param auctionEconomy the economy of the auction item
      * @param taxResult      the tax result from the sell operation
      */
+    /**
+     * Envoie les messages de fin de vente, APRES la publication de l'annonce. {@code item-sold}
+     * recoit aussi {@code %tax%} et {@code %percentage%} : un serveur peut ainsi fusionner les
+     * deux messages en vidant {@code tax-sell-applied}.
+     *
+     * @param player         le vendeur
+     * @param auctionItem    l'annonce publiee
+     * @param auctionEconomy l'economie de l'annonce
+     * @param taxResult      la taxe reellement prelevee, ou null
+     */
+    private void sendSellMessages(Player player, AuctionItem auctionItem, AuctionEconomy auctionEconomy, TaxResult taxResult) {
+        var economyManager = this.plugin.getEconomyManager();
+        boolean hasTax = taxResult != null && !taxResult.isBypassed() && taxResult.hasTax();
+
+        String tax = economyManager.format(auctionEconomy, hasTax ? taxResult.taxAmount() : BigDecimal.ZERO);
+        String percentage = String.format("%.1f", hasTax ? taxResult.taxPercentage() : 0.0);
+
+        if (taxResult != null && taxResult.isBypassed()) {
+            message(this.plugin, player, Message.TAX_EXEMPT);
+        } else if (hasTax) {
+            if (taxResult.isReduced()) {
+                message(this.plugin, player, Message.TAX_REDUCED,
+                        "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
+            }
+            message(this.plugin, player, Message.TAX_SELL_APPLIED, "%tax%", tax, "%percentage%", percentage);
+        }
+
+        message(this.plugin, player, Message.ITEM_SOLD, "%price%", auctionItem.getFormattedPrice(), "%items%", auctionItem.getItemDisplay(),
+                "%tax%", tax, "%percentage%", percentage);
+    }
+
     private void postSell(Player player, AuctionItem auctionItem, AuctionEconomy auctionEconomy, TaxResult taxResult) {
 
         // Ajout des catégories de l'item
@@ -835,7 +857,7 @@ public class SellService extends ZUtils implements AuctionSellService {
 
         this.manager.updateListedItems(auctionItem, true, player);
 
-        message(this.plugin, player, Message.ITEM_SOLD, "%price%", auctionItem.getFormattedPrice(), "%items%", auctionItem.getItemDisplay());
+        sendSellMessages(player, auctionItem, auctionEconomy, taxResult);
 
         // L'annonce est DEJA publiee : un contenu recalcitrant ne doit plus faire remonter
         // d'exception apres commit, le log admin est le seul a en souffrir.

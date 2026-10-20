@@ -254,6 +254,8 @@ item-no-longer-available: "<error>This item is no longer available, it has just 
 # Available placeholders:
 #   %items% - Item description
 #   %price% - Sale price
+#   %tax% - Tax taken on this sale (0 if none)
+#   %percentage% - Tax percentage (0 if none)
 item-sold: "#e6fff3You just sold %items% #e6fff3for #92bed8%price%#e6fff3."
 
 # Shown to seller when their item is purchased (if online).

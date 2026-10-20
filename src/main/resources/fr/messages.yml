@@ -254,6 +254,8 @@ item-no-longer-available: "<error>Cet item n'est plus disponible, il vient d'êt
 # Placeholders disponibles:
 #   %items% - Description de l'item
 #   %price% - Prix de vente
+#   %tax% - Taxe prélevée sur cette vente (0 si aucune)
+#   %percentage% - Pourcentage de taxe (0 si aucune)
 item-sold: "#e6fff3Vous venez de mettre en vente %items% #e6fff3pour #92bed8%price%#e6fff3."
 
 # Affiché au vendeur lorsque son item est acheté (si en ligne).
