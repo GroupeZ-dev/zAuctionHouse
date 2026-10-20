@@ -7,6 +7,9 @@
 - **Fixed** The sell tax messages (`tax-sell-applied`, `tax-reduced`, `tax-exempt`) were sent before the listing was saved, even when the sale then failed and the tax was refunded. They are now sent after the listing is published
 - **Added** `%tax%` and `%percentage%` in the `item-sold` message, so the tax can be shown in a single message by disabling `tax-sell-applied`
 - **Added** `open-when-empty` option on `ZAUCTIONHOUSE_EXPIRED_INVENTORY`, `ZAUCTIONHOUSE_PURCHASED_INVENTORY` and `ZAUCTIONHOUSE_SELLING_INVENTORY`: the button opens the inventory even when the list is empty. The default `auction.yml` uses it on the `else` buttons
+- **Added** `economy` option on `ZAUCTIONHOUSE_SELL_CONFIRM` to always sell with a given economy: one button per economy lists the item in a single click (regression from V3). The same option on `ZAUCTIONHOUSE_SELL_ECONOMY` selects that economy instead of cycling, with a new `%selected%` placeholder
+- **Added** `SELL_ECONOMY` can be set with `/ah admin cache set`
+- **Added** PlaceholderAPI placeholders for the sale in progress: `%zauctionhouse_sell_price%`, `%zauctionhouse_sell_price_formatted%`, `%zauctionhouse_sell_economy%`, `%zauctionhouse_sell_economy_name%`, `%zauctionhouse_sell_amount%`
 - **API** `AuctionSellService#openSellCommandInventory(Player, BigDecimal, AuctionEconomy, int)`, `CommandManager#applyCooldown(Player, VCommand)` and `VCommand#setDeferredCooldown(boolean)`
 
 # 4.0.1.4

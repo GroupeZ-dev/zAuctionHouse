@@ -131,6 +131,9 @@ items:
     # Tipe tombol - ngatur gonta-ganti jenis uang.
     type: ZAUCTIONHOUSE_SELL_ECONOMY
 
+    # Optional: select this economy instead of cycling through them.
+    # economy: vault
+
     # Posisi slot - tengah di baris bawah.
     slot: 49
 
@@ -186,6 +189,10 @@ items:
   confirm:
     # Tipe tombol - ngatur konfirmasi jualan.
     type: ZAUCTIONHOUSE_SELL_CONFIRM
+
+    # Optional: always sell with this economy, whatever economy is selected.
+    # Add one confirm button per economy to list the item in a single click.
+    # economy: level
 
     # Posisi slot - pojok kanan di baris bawah.
     slot: 53

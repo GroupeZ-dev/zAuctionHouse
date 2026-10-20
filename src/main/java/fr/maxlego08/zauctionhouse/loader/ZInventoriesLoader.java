@@ -142,8 +142,8 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new NoneLoader(this.plugin, ConfirmRemoveListedButton.class, "ZAUCTIONHOUSE_CONFIRM_REMOVE_LISTED"));
         this.buttonManager.register(new NoneLoader(this.plugin, ConfirmPurchaseButton.class, "ZAUCTIONHOUSE_CONFIRM_PURCHASE"));
         this.buttonManager.register(new NoneLoader(this.plugin, SellCancelButton.class, "ZAUCTIONHOUSE_SELL_CANCEL"));
-        this.buttonManager.register(new NoneLoader(this.plugin, SellConfirmButton.class, "ZAUCTIONHOUSE_SELL_CONFIRM"));
-        this.buttonManager.register(new NoneLoader(this.plugin, SellEconomyButton.class, "ZAUCTIONHOUSE_SELL_ECONOMY"));
+        this.buttonManager.register(new SellEconomyOptionLoader(this.plugin, "ZAUCTIONHOUSE_SELL_CONFIRM", SellConfirmButton::new));
+        this.buttonManager.register(new SellEconomyOptionLoader(this.plugin, "ZAUCTIONHOUSE_SELL_ECONOMY", SellEconomyButton::new));
         this.buttonManager.register(new LoadingSlotLoader(this.plugin, HistoryItemsButton.class, "ZAUCTIONHOUSE_HISTORY_ITEMS"));
         this.buttonManager.register(new SellShowItemLoader(this.plugin));
         this.buttonManager.register(new SellPriceButtonLoader(this.plugin));
