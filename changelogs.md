@@ -1,5 +1,7 @@
 # Unreleased
 
+# 4.0.1.5
+
 - **Fixed** With `enable-sell-inventory: true`, the amount given to `/ah sell <price> <amount>` was ignored and the whole stack held in hand was listed. The amount is now applied when confirming, capped by what the player actually holds
 - **Fixed** With `purchased-item.give-item: true` and `player-inventory-must-have-free-space: false`, a purchase that did not fit in the inventory was dropped on the ground. The whole lot now goes to "purchased items" (as in V3) and the new `purchase-inventory-full` message is sent. With `player-inventory-must-have-free-space: true` the purchase is still blocked, and an inventory that fills up between the click and the delivery now also sends the lot to "purchased items" instead of dropping it
 - **Fixed** The `/ah sell` cooldown was consumed even when nothing was sold (sell inventory closed, sale refused). It now starts only once the sale is completed. Other commands keep their current cooldown behaviour
