@@ -1,5 +1,22 @@
 # Unreleased
 
+# 4.0.1.5
+
+- **Fixed** With `enable-sell-inventory: true`, the amount given to `/ah sell <price> <amount>` was ignored and the whole stack held in hand was listed. The amount is now applied when confirming, capped by what the player actually holds
+- **Fixed** With `purchased-item.give-item: true` and `player-inventory-must-have-free-space: false`, a purchase that did not fit in the inventory was dropped on the ground. The whole lot now goes to "purchased items" (as in V3) and the new `purchase-inventory-full` message is sent. With `player-inventory-must-have-free-space: true` the purchase is still blocked, and an inventory that fills up between the click and the delivery now also sends the lot to "purchased items" instead of dropping it
+- **Fixed** The `/ah sell` cooldown was consumed even when nothing was sold (sell inventory closed, sale refused). It now starts only once the sale is completed. Other commands keep their current cooldown behaviour
+- **Fixed** A message set to `""` in `messages.yml` still sent a line containing only the prefix. It is now really disabled
+- **Fixed** The sell tax messages (`tax-sell-applied`, `tax-reduced`, `tax-exempt`) were sent before the listing was saved, even when the sale then failed and the tax was refunded. They are now sent after the listing is published
+- **Added** `%tax%` and `%percentage%` in the `item-sold` message, so the tax can be shown in a single message by disabling `tax-sell-applied`
+- **Added** `open-when-empty` option on `ZAUCTIONHOUSE_EXPIRED_INVENTORY`, `ZAUCTIONHOUSE_PURCHASED_INVENTORY` and `ZAUCTIONHOUSE_SELLING_INVENTORY`: the button opens the inventory even when the list is empty. The default `auction.yml` uses it on the `else` buttons
+- **Added** `economy` option on `ZAUCTIONHOUSE_SELL_CONFIRM` to always sell with a given economy: one button per economy lists the item in a single click (regression from V3). The same option on `ZAUCTIONHOUSE_SELL_ECONOMY` selects that economy instead of cycling, with a new `%selected%` placeholder
+- **Added** `SELL_ECONOMY` can be set with `/ah admin cache set`
+- **Added** PlaceholderAPI placeholders for the sale in progress: `%zauctionhouse_sell_price%`, `%zauctionhouse_sell_price_formatted%`, `%zauctionhouse_sell_economy%`, `%zauctionhouse_sell_economy_name%`, `%zauctionhouse_sell_amount%`
+- **API** `AuctionSellService#openSellCommandInventory(Player, BigDecimal, AuctionEconomy, int)`, `CommandManager#applyCooldown(Player, VCommand)` and `VCommand#setDeferredCooldown(boolean)`
+- **Updated** Sarah to version ``1.26``, added `database-configuration.max-lifetime`
+
+# 4.0.1.4
+
 > **Read this before updating a network.** This release closes a long list of item and money duplication paths. Two setups that used to start are now refused, and operations that used to silently overwrite the database now fail with a message. That is intended, but your players and your staff will see it on day one.
 
 ### Before you update
@@ -91,6 +108,15 @@
 - **Added** `admin-item-not-available`, `server-shutting-down`, `item-no-longer-available`, `sell-error-invalid-item`, `sell-inventory-full` and `remove-all-items-partial` messages, in all six languages
 - **Added** `redis-config.lock-renew-enabled` in the addon, and `lock-ttl-seconds` is re-documented as a renewable lease
 - **Changed** `economies.yml` now documents the offline payment and purchase tax changes above, in all six languages
+
+### API events
+
+- **Added** Four post-action events in the new package `fr.maxlego08.zauctionhouse.api.event.events.stats`. They are not cancellable and are delivered synchronously on the main thread (global region thread on Folia, not the player's region: schedule on the player before touching entity state). A failure to dispatch them never affects the underlying sale, purchase or claim:
+  - `AuctionItemListedEvent` — a listing has been committed and published, on every sell path (command, sell inventory, GUI). Carries the seller, the auction item and the sell tax (`null` when none was applied)
+  - `AuctionItemPurchasedEvent` — a purchase has been committed. Carries the buyer, the auction item, the amounts actually charged (`getBuyerPays()`, `getSellerReceives()`), the applied `TaxResult` and whether the seller was paid immediately (`RETRIEVED`) or is owed a claim (`PENDING`). Never fired for a failed, cancelled or lost purchase
+  - `AuctionMoneyClaimEvent` — a player has claimed pending money. Carries the amount actually deposited for each economy
+  - `AuctionOpenEvent` — a player opens, or is brought back to, the main auction inventory
+- **Fixed** `AuctionPreSellEvent` was only fired by `/ah sell` when the sell inventory was disabled. It is now fired once for every listing, including the sell inventory and the GUI, and cancelling it cancels the sale on every path. Addons listening to it will now see GUI sales too. Changing the item or the amount is only honoured for single-stack sales; price, expiration and economy changes are honoured everywhere
 
 ### Known limitations
 

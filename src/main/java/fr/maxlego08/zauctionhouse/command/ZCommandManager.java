@@ -16,10 +16,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ZCommandManager extends ZUtils implements CommandManager, CommandExecutor, TabCompleter {
 
@@ -39,7 +39,8 @@ public class ZCommandManager extends ZUtils implements CommandManager, CommandEx
 
     private final AuctionPlugin plugin;
     private final List<VCommand> commands = new ArrayList<VCommand>();
-    private final Map<UUID, Map<String, Long>> cooldowns = new HashMap<>();
+    // Concurrent : le cooldown peut etre pose depuis une commande async ou la fin d'une vente.
+    private final Map<UUID, Map<String, Long>> cooldowns = new ConcurrentHashMap<>();
 
     public ZCommandManager(AuctionPlugin template) {
         this.plugin = template;
@@ -60,6 +61,14 @@ public class ZCommandManager extends ZUtils implements CommandManager, CommandEx
     @Override
     public void clearCooldowns(UUID uniqueId) {
         this.cooldowns.remove(uniqueId);
+    }
+
+    @Override
+    public void applyCooldown(Player player, VCommand command) {
+        CooldownConfiguration cooldownConfig = this.plugin.getConfiguration().getCooldown();
+        String commandName = command.getFirst();
+        if (cooldownConfig.getCooldownForCommand(commandName) <= 0) return;
+        this.cooldowns.computeIfAbsent(player.getUniqueId(), k -> new ConcurrentHashMap<>()).put(commandName, System.currentTimeMillis());
     }
 
     @Override
@@ -143,15 +152,17 @@ public class ZCommandManager extends ZUtils implements CommandManager, CommandEx
                 String commandName = command.getFirst();
                 long cooldownMs = cooldownConfig.getCooldownForCommand(commandName);
                 if (cooldownMs > 0 && !hasPermission(sender, cooldownConfig.bypassPermission())) {
-                    UUID uuid = player.getUniqueId();
-                    Map<String, Long> playerCooldowns = this.cooldowns.computeIfAbsent(uuid, k -> new HashMap<>());
+                    Map<String, Long> playerCooldowns = this.cooldowns.computeIfAbsent(player.getUniqueId(), k -> new ConcurrentHashMap<>());
                     long now = System.currentTimeMillis();
                     Long lastUsed = playerCooldowns.get(commandName);
                     if (lastUsed != null && (now - lastUsed) < cooldownMs) {
                         message(this.plugin, sender, Message.COMMAND_COOLDOWN);
                         return CommandType.DEFAULT;
                     }
-                    playerCooldowns.put(commandName, now);
+                    // Une commande a cooldown differe (ex. /ah sell avec l'inventaire de vente) le
+                    // pose elle-meme via applyCooldown, une fois son action reellement terminee :
+                    // une vente annulee ou refusee ne doit pas le consommer.
+                    if (!command.isDeferredCooldown()) playerCooldowns.put(commandName, now);
                 }
             }
 

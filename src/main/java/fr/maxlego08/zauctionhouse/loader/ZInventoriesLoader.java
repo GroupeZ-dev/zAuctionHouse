@@ -133,17 +133,17 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new NoneLoader(this.plugin, RemoveAllSellingButton.class, "ZAUCTIONHOUSE_REMOVE_ALL_SELLING"));
         this.buttonManager.register(new NoneLoader(this.plugin, RemoveAllPurchasedButton.class, "ZAUCTIONHOUSE_REMOVE_ALL_PURCHASED"));
 
-        this.buttonManager.register(new NoneLoader(this.plugin, ExpiredInventoryButton.class, "ZAUCTIONHOUSE_EXPIRED_INVENTORY"));
-        this.buttonManager.register(new NoneLoader(this.plugin, SellingInventoryButton.class, "ZAUCTIONHOUSE_SELLING_INVENTORY"));
-        this.buttonManager.register(new NoneLoader(this.plugin, PurchasedInventoryButton.class, "ZAUCTIONHOUSE_PURCHASED_INVENTORY"));
+        this.buttonManager.register(new InventoryButtonLoader(this.plugin, "ZAUCTIONHOUSE_EXPIRED_INVENTORY", ExpiredInventoryButton::new));
+        this.buttonManager.register(new InventoryButtonLoader(this.plugin, "ZAUCTIONHOUSE_SELLING_INVENTORY", SellingInventoryButton::new));
+        this.buttonManager.register(new InventoryButtonLoader(this.plugin, "ZAUCTIONHOUSE_PURCHASED_INVENTORY", PurchasedInventoryButton::new));
         this.buttonManager.register(new NoneLoader(this.plugin, HistoryInventoryButton.class, "ZAUCTIONHOUSE_HISTORY_INVENTORY"));
 
         this.buttonManager.register(new NoneLoader(this.plugin, ShowButton.class, "ZAUCTIONHOUSE_SHOW"));
         this.buttonManager.register(new NoneLoader(this.plugin, ConfirmRemoveListedButton.class, "ZAUCTIONHOUSE_CONFIRM_REMOVE_LISTED"));
         this.buttonManager.register(new NoneLoader(this.plugin, ConfirmPurchaseButton.class, "ZAUCTIONHOUSE_CONFIRM_PURCHASE"));
         this.buttonManager.register(new NoneLoader(this.plugin, SellCancelButton.class, "ZAUCTIONHOUSE_SELL_CANCEL"));
-        this.buttonManager.register(new NoneLoader(this.plugin, SellConfirmButton.class, "ZAUCTIONHOUSE_SELL_CONFIRM"));
-        this.buttonManager.register(new NoneLoader(this.plugin, SellEconomyButton.class, "ZAUCTIONHOUSE_SELL_ECONOMY"));
+        this.buttonManager.register(new SellEconomyOptionLoader(this.plugin, "ZAUCTIONHOUSE_SELL_CONFIRM", SellConfirmButton::new));
+        this.buttonManager.register(new SellEconomyOptionLoader(this.plugin, "ZAUCTIONHOUSE_SELL_ECONOMY", SellEconomyButton::new));
         this.buttonManager.register(new LoadingSlotLoader(this.plugin, HistoryItemsButton.class, "ZAUCTIONHOUSE_HISTORY_ITEMS"));
         this.buttonManager.register(new SellShowItemLoader(this.plugin));
         this.buttonManager.register(new SellPriceButtonLoader(this.plugin));

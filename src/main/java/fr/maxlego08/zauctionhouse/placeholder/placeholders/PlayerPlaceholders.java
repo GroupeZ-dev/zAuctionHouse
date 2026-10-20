@@ -3,12 +3,15 @@ package fr.maxlego08.zauctionhouse.placeholder.placeholders;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.category.Category;
+import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.placeholders.Placeholder;
 import fr.maxlego08.zauctionhouse.api.placeholders.PlaceholderRegister;
+import org.bukkit.entity.Player;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.function.Function;
 
 public class PlayerPlaceholders implements PlaceholderRegister {
 
@@ -51,6 +54,28 @@ public class PlayerPlaceholders implements PlaceholderRegister {
 
             return "main";
         }, "Returns the id of the current category for the player (main for auction house)");
+
+        // Vente en cours dans l'inventaire de vente (/ah sell avec enable-sell-inventory)
+        var economyManager = plugin.getEconomyManager();
+        Function<Player, AuctionEconomy> sellEconomy = player -> {
+            AuctionEconomy defaultEconomy = economyManager.getDefaultEconomy(ItemType.AUCTION);
+            return defaultEconomy == null ? null : manager.getCache(player).get(PlayerCacheKey.SELL_ECONOMY, defaultEconomy);
+        };
+        placeholder.register("sell_price", player -> manager.getCache(player).get(PlayerCacheKey.SELL_PRICE, BigDecimal.ZERO).toPlainString(), "Returns the raw price of the sale in progress in the sell inventory");
+        placeholder.register("sell_price_formatted", player -> {
+            BigDecimal price = manager.getCache(player).get(PlayerCacheKey.SELL_PRICE, BigDecimal.ZERO);
+            AuctionEconomy economy = sellEconomy.apply(player);
+            return economy == null ? price.toPlainString() : economyManager.format(economy, price);
+        }, "Returns the formatted price of the sale in progress in the sell inventory");
+        placeholder.register("sell_economy", player -> {
+            AuctionEconomy economy = sellEconomy.apply(player);
+            return economy == null ? "" : economy.getDisplayName();
+        }, "Returns the display name of the economy selected for the sale in progress");
+        placeholder.register("sell_economy_name", player -> {
+            AuctionEconomy economy = sellEconomy.apply(player);
+            return economy == null ? "" : economy.getName();
+        }, "Returns the name of the economy selected for the sale in progress");
+        placeholder.register("sell_amount", player -> String.valueOf(manager.getCache(player).get(PlayerCacheKey.SELL_AMOUNT, 0)), "Returns the amount requested for the sale in progress (0 = the whole stack held in hand)");
 
         // Pending money placeholders
         placeholder.register("pending_money", player -> {

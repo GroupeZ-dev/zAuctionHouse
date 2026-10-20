@@ -47,10 +47,14 @@ public abstract class MessageUtils extends PlaceholderUtils {
                     switch (essentialsMessage.messageType()) {
                         case TCHAT, WITHOUT_PREFIX -> sendTchatMessage(sender, classicMessage, args);
                         case ACTION -> classicMessage.messages().forEach(currentMessage -> {
-                            this.componentMessage.sendActionBar(player, papi(getString(currentMessage, args), player));
+                            String text = papi(getString(currentMessage, args), player);
+                            if (isDisabledLine(classicMessage, text)) return;
+                            this.componentMessage.sendActionBar(player, text);
                         });
                         case CENTER -> classicMessage.messages().forEach(currentMessage -> {
-                            this.componentMessage.sendMessage(sender, getCenteredMessage(papi(getString(currentMessage, args), player)));
+                            String text = papi(getString(currentMessage, args), player);
+                            if (isDisabledLine(classicMessage, text)) return;
+                            this.componentMessage.sendMessage(sender, getCenteredMessage(text));
                         });
                     }
 
@@ -73,7 +77,24 @@ public abstract class MessageUtils extends PlaceholderUtils {
 
     private void sendTchatMessage(CommandSender sender, ClassicMessage classicMessage, Object... args) {
         boolean isWithoutPrefix = classicMessage.messageType() == MessageType.WITHOUT_PREFIX || classicMessage.messages().size() > 1;
-        classicMessage.messages().forEach(message -> this.componentMessage.sendMessage(sender, (isWithoutPrefix ? "" : Message.PREFIX.getMessageAsString()) + papi(getString(message, args), sender)));
+        classicMessage.messages().forEach(message -> {
+            String text = papi(getString(message, args), sender);
+            if (isDisabledLine(classicMessage, text)) return;
+            this.componentMessage.sendMessage(sender, (isWithoutPrefix ? "" : Message.PREFIX.getMessageAsString()) + text);
+        });
+    }
+
+    /**
+     * Un message d'une seule ligne vide (ex. {@code item-sold: ""}) est un message desactive :
+     * on n'envoie rien, pas meme le prefixe. Les lignes vides d'un message multi-lignes restent
+     * envoyees, elles servent d'espacement.
+     *
+     * @param classicMessage le message en cours d'envoi
+     * @param text           la ligne apres remplacement des arguments et des placeholders
+     * @return true si la ligne ne doit pas etre envoyee
+     */
+    private boolean isDisabledLine(ClassicMessage classicMessage, String text) {
+        return classicMessage.messages().size() == 1 && (text == null || text.isBlank());
     }
 
     protected String getMessage(Message message, Object... args) {

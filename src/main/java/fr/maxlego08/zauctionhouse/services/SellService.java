@@ -6,6 +6,8 @@ import fr.maxlego08.zauctionhouse.api.AuctionManager;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
+import fr.maxlego08.zauctionhouse.api.event.events.sell.AuctionPreSellEvent;
+import fr.maxlego08.zauctionhouse.api.event.events.stats.AuctionItemListedEvent;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.item.ItemType;
 import fr.maxlego08.zauctionhouse.api.item.StorageType;
@@ -72,6 +74,43 @@ public class SellService extends ZUtils implements AuctionSellService {
             message(this.plugin, player, Message.SERVER_SHUTTING_DOWN);
             return CompletableFuture.completedFuture(SellResult.failure("Server is shutting down", SellFailReason.INTERNAL_ERROR));
         }
+
+        // AuctionPreSellEvent est desormais tire ICI, funnel unique de toutes les ventes (commande,
+        // inventaire de vente, GUI) : un seul event par mise en vente, quel que soit le chemin.
+        ItemStack representative = slotItems.values().stream()
+                .filter(itemStack -> itemStack != null && !itemStack.getType().isAir())
+                .findFirst().map(ItemStack::clone).orElse(null);
+        int totalAmount = slotItems.values().stream()
+                .filter(itemStack -> itemStack != null && !itemStack.getType().isAir())
+                .mapToInt(ItemStack::getAmount).sum();
+
+        // Rien de vendable : pas d'event, processSell renvoie l'erreur habituelle (SELL_ERROR_AIR)
+        if (representative == null) {
+            return this.processSell(player, price, expiredAt, slotItems, auctionEconomy);
+        }
+
+        var preSellEvent = new AuctionPreSellEvent(player, totalAmount, expiredAt, representative, auctionEconomy, price);
+        if (!preSellEvent.callEvent()) {
+            return CompletableFuture.completedFuture(SellResult.failure("Event cancelled", SellFailReason.EVENT_CANCELLED));
+        }
+
+        Map<Integer, ItemStack> finalSlotItems = slotItems;
+        if (slotItems.size() == 1 && preSellEvent.getItemStack() != null) {
+            // Mono-stack (chemin commande) : les mutations d'item et de quantite restent honorees.
+            // En multi-stack (GUI) les slots reels sont vendus, seul le stack representatif aurait ete mute.
+            var mutatedItemStack = preSellEvent.getItemStack().clone();
+            mutatedItemStack.setAmount(Math.max(1, preSellEvent.getAmount()));
+            finalSlotItems = Map.of(slotItems.keySet().iterator().next(), mutatedItemStack);
+        }
+
+        return this.processSell(player, preSellEvent.getPrice(), preSellEvent.getExpiredAt(), finalSlotItems, preSellEvent.getAuctionEconomy());
+    }
+
+    /**
+     * Traitement de la vente une fois {@link AuctionPreSellEvent} accepte, avec les valeurs
+     * eventuellement modifiees par les listeners.
+     */
+    private CompletableFuture<SellResult> processSell(Player player, BigDecimal price, long expiredAt, Map<Integer, ItemStack> slotItems, AuctionEconomy auctionEconomy) {
 
         // Filter out null or air items and clone them
         var validSlotItems = slotItems.entrySet().stream().filter(entry -> entry.getValue() != null && !entry.getValue().getType().isAir()).collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().clone()));
@@ -551,7 +590,7 @@ public class SellService extends ZUtils implements AuctionSellService {
     }
 
     @Override
-    public void openSellCommandInventory(Player player, BigDecimal price, AuctionEconomy auctionEconomy) {
+    public void openSellCommandInventory(Player player, BigDecimal price, AuctionEconomy auctionEconomy, int amount) {
         var cache = this.manager.getCache(player);
         var configuration = this.plugin.getConfiguration();
 
@@ -561,7 +600,7 @@ public class SellService extends ZUtils implements AuctionSellService {
         cache.set(PlayerCacheKey.SELL_PRICE, price);
         cache.set(PlayerCacheKey.SELL_ECONOMY, auctionEconomy);
         cache.set(PlayerCacheKey.SELL_EXPIRED_AT, expiredAt);
-        cache.set(PlayerCacheKey.SELL_AMOUNT, 1);
+        cache.set(PlayerCacheKey.SELL_AMOUNT, Math.max(0, amount));
         cache.remove(PlayerCacheKey.SELL_ITEMS);
 
         this.plugin.getInventoriesLoader().openInventory(player, Inventories.SELL_INVENTORY);
@@ -735,8 +774,10 @@ public class SellService extends ZUtils implements AuctionSellService {
 
         final TaxResult taxResult = highestTaxResult;
 
+        // Les messages de taxe (exemption, reduction, montant preleve) sont envoyes par postSell,
+        // une fois l'annonce publiee : une vente qui echoue ensuite rembourse la taxe, le joueur
+        // ne doit donc pas avoir lu qu'elle a ete appliquee.
         if (taxResult.isBypassed()) {
-            message(this.plugin, player, Message.TAX_EXEMPT);
             return CompletableFuture.completedFuture(taxResult);
         }
 
@@ -761,17 +802,6 @@ public class SellService extends ZUtils implements AuctionSellService {
             return CompletableFuture.completedFuture(null);
         }
 
-        // Send appropriate messages on entity thread
-        this.plugin.getScheduler().runAtEntity(player, task -> {
-            if (taxResult.isReduced()) {
-                message(this.plugin, player, Message.TAX_REDUCED,
-                        "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
-            }
-            message(this.plugin, player, Message.TAX_SELL_APPLIED,
-                    "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()),
-                    "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
-        });
-
         return CompletableFuture.completedFuture(taxResult);
     }
 
@@ -784,6 +814,37 @@ public class SellService extends ZUtils implements AuctionSellService {
      * @param auctionEconomy the economy of the auction item
      * @param taxResult      the tax result from the sell operation
      */
+    /**
+     * Envoie les messages de fin de vente, APRES la publication de l'annonce. {@code item-sold}
+     * recoit aussi {@code %tax%} et {@code %percentage%} : un serveur peut ainsi fusionner les
+     * deux messages en vidant {@code tax-sell-applied}.
+     *
+     * @param player         le vendeur
+     * @param auctionItem    l'annonce publiee
+     * @param auctionEconomy l'economie de l'annonce
+     * @param taxResult      la taxe reellement prelevee, ou null
+     */
+    private void sendSellMessages(Player player, AuctionItem auctionItem, AuctionEconomy auctionEconomy, TaxResult taxResult) {
+        var economyManager = this.plugin.getEconomyManager();
+        boolean hasTax = taxResult != null && !taxResult.isBypassed() && taxResult.hasTax();
+
+        String tax = economyManager.format(auctionEconomy, hasTax ? taxResult.taxAmount() : BigDecimal.ZERO);
+        String percentage = String.format("%.1f", hasTax ? taxResult.taxPercentage() : 0.0);
+
+        if (taxResult != null && taxResult.isBypassed()) {
+            message(this.plugin, player, Message.TAX_EXEMPT);
+        } else if (hasTax) {
+            if (taxResult.isReduced()) {
+                message(this.plugin, player, Message.TAX_REDUCED,
+                        "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
+            }
+            message(this.plugin, player, Message.TAX_SELL_APPLIED, "%tax%", tax, "%percentage%", percentage);
+        }
+
+        message(this.plugin, player, Message.ITEM_SOLD, "%price%", auctionItem.getFormattedPrice(), "%items%", auctionItem.getItemDisplay(),
+                "%tax%", tax, "%percentage%", percentage);
+    }
+
     private void postSell(Player player, AuctionItem auctionItem, AuctionEconomy auctionEconomy, TaxResult taxResult) {
 
         // Ajout des catégories de l'item
@@ -796,7 +857,7 @@ public class SellService extends ZUtils implements AuctionSellService {
 
         this.manager.updateListedItems(auctionItem, true, player);
 
-        message(this.plugin, player, Message.ITEM_SOLD, "%price%", auctionItem.getFormattedPrice(), "%items%", auctionItem.getItemDisplay());
+        sendSellMessages(player, auctionItem, auctionEconomy, taxResult);
 
         // L'annonce est DEJA publiee : un contenu recalcitrant ne doit plus faire remonter
         // d'exception apres commit, le log admin est le seul a en souffrir.
@@ -817,6 +878,10 @@ public class SellService extends ZUtils implements AuctionSellService {
             additionalData += ";sell_tax=" + taxResult.taxAmount();
         }
         this.plugin.getStorageManager().log(LogType.SALE, auctionItem.getId(), player, null, encodedItemStack, auctionItem.getPrice(), auctionEconomy.getName(), additionalData, null);
+
+        // Event post-commit (non annulable). postSell est toujours execute sur le thread principal /
+        // la region (re-dispatche par runNextTick, C-082) : appel direct.
+        new AuctionItemListedEvent(player, auctionItem, taxResult.hasTax() ? taxResult : null).callEvent();
 
         this.plugin.getAuctionClusterBridge().notifyItemListed(auctionItem).thenAccept(v -> {
             this.plugin.getLogger().info("Cluster notify item sold");

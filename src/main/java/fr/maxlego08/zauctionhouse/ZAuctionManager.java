@@ -15,6 +15,8 @@ import fr.maxlego08.zauctionhouse.api.event.AuctionEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveExpiredItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemoveListedItemEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.remove.AuctionRemovePurchasedItemEvent;
+import fr.maxlego08.zauctionhouse.api.event.events.stats.AuctionItemPurchasedEvent;
+import fr.maxlego08.zauctionhouse.api.event.events.stats.AuctionOpenEvent;
 import fr.maxlego08.zauctionhouse.api.inventories.Inventories;
 import fr.maxlego08.zauctionhouse.api.item.Item;
 import fr.maxlego08.zauctionhouse.api.item.ItemStatus;
@@ -121,6 +123,9 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public void openMainAuction(Player player, int page) {
+        // Event d'observation : compte chaque ouverture (ou retour) sur le menu principal
+        callObservationalEvent(new AuctionOpenEvent(player));
+
         var cache = getCache(player);
 
         // Reset category filter if configured
@@ -1160,6 +1165,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         final BigDecimal finalBuyerPays = buyerPays;
         final BigDecimal finalSellerReceives = sellerReceives;
         final boolean deferred = deferDeposit;
+        final TransactionStatus sellerPaymentStatus = transactionStatus;
 
         try {
             BigDecimal buyerBalance = readBalanceOrZero(auctionEconomy, player.getUniqueId());
@@ -1247,6 +1253,11 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
             logItemAction(LogType.PURCHASE, auctionItem, player, auctionItem.getSellerUniqueId(), "purchase_item", seller.isOnline() ? new Date() : null);
 
+            // Event post-commit (non annulable) : porte les montants REELLEMENT factures, calcules
+            // par ZPurchaseCharge (hors API). Jamais tire sur une course perdue, on est dans la
+            // continuation du CAS reussi.
+            callObservationalEvent(new AuctionItemPurchasedEvent(player, auctionItem, displayedBuyerPays, displayedSellerReceives, taxResult, sellerPaymentStatus));
+
             if (this.plugin instanceof ZAuctionPlugin zAuctionPlugin) {
                 DiscordWebhookService discordService = zAuctionPlugin.getDiscordWebhookService();
                 if (discordService != null && discordService.isEnabled()) {
@@ -1259,8 +1270,9 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             if (destination != StorageType.DELETED) return CompletableFuture.<Void>completedFuture(null);
 
             // Si la remise ne peut pas avoir lieu, la ligne redevient PURCHASED : l'acheteur la
-            // reclamera dans son onglet « items achetes » au lieu de perdre son achat.
-            return deliverOrRestore(player, auctionItem, StorageType.PURCHASED).thenApply(delivered -> null);
+            // reclamera dans son onglet « items achetes » au lieu de perdre son achat. Un lot qui
+            // ne rentre pas en entier y part aussi, plutot que d'etre depose au sol (comme en V3).
+            return deliverOrRestore(player, auctionItem, StorageType.PURCHASED, Message.PURCHASE_INVENTORY_FULL).thenApply(delivered -> null);
 
         }).whenComplete((v, throwable) -> {
             // L'argent a deja bouge : si la ligne nous echappe ici, il faut la trace complete
@@ -1312,8 +1324,13 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
      * @param executed  true si la tache a reellement tourne sur le thread de l'entite
      * @param delivered nombre d'ItemStack effectivement remis (ou deposes au sol)
      * @param total     nombre d'ItemStack que portait l'annonce
+     * @param inventoryFull true si la remise a ete refusee parce que le lot ne rentrait pas en entier
      */
-    public record GiveResult(boolean executed, int delivered, int total) {
+    public record GiveResult(boolean executed, int delivered, int total, boolean inventoryFull) {
+
+        public GiveResult(boolean executed, int delivered, int total) {
+            this(executed, delivered, total, false);
+        }
 
         /**
          * @param total nombre d'ItemStack que portait l'annonce
@@ -1321,6 +1338,14 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
          */
         public static GiveResult notExecuted(int total) {
             return new GiveResult(false, 0, total);
+        }
+
+        /**
+         * @param total nombre d'ItemStack que portait l'annonce
+         * @return un resultat marquant que rien n'a ete remis faute de place
+         */
+        public static GiveResult noSpace(int total) {
+            return new GiveResult(true, 0, total, true);
         }
 
         /**
@@ -1347,6 +1372,23 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
      * @return le compte-rendu de la remise
      */
     public CompletableFuture<GiveResult> giveItem(Player player, Item item) {
+        return giveItem(player, item, true);
+    }
+
+    /**
+     * Variante de {@link #giveItem(Player, Item)} qui peut refuser la remise quand le lot ne
+     * rentre pas en entier dans l'inventaire, au lieu d'en deposer une partie au sol.
+     * <p>
+     * Le test de place est fait sur le thread de l'entite, juste avant la remise : il ne peut
+     * donc pas diverger de ce que {@code addItem} fera ensuite.
+     *
+     * @param player       joueur destinataire
+     * @param item         annonce a remettre
+     * @param dropOverflow true pour deposer au sol ce qui ne rentre pas, false pour ne rien
+     *                     remettre et rendre {@link GiveResult#noSpace(int)}
+     * @return le compte-rendu de la remise
+     */
+    public CompletableFuture<GiveResult> giveItem(Player player, Item item, boolean dropOverflow) {
 
         if (!(item instanceof AuctionItem auctionItem)) {
             this.plugin.getLogger().severe("[ZAH] give item not implemented for item #" + item.getId());
@@ -1376,6 +1418,11 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
             if (!player.isOnline()) {
                 future.complete(GiveResult.notExecuted(total));
+                return;
+            }
+
+            if (!dropOverflow && !fitsInInventory(player, itemStacks)) {
+                future.complete(GiveResult.noSpace(total));
                 return;
             }
 
@@ -1418,6 +1465,50 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     /**
+     * Simule l'ajout du lot dans l'inventaire de stockage du joueur, sans le modifier : les
+     * piles similaires non pleines sont completees d'abord, puis les cases vides, comme le
+     * fait {@code addItem}. DOIT etre appele sur le thread de l'entite.
+     *
+     * @param player     joueur destinataire
+     * @param itemStacks contenu de l'annonce
+     * @return true si tout le lot rentre
+     */
+    private boolean fitsInInventory(Player player, List<ItemStack> itemStacks) {
+        ItemStack[] contents = player.getInventory().getStorageContents();
+        ItemStack[] simulation = new ItemStack[contents.length];
+        for (int i = 0; i < contents.length; i++) {
+            simulation[i] = contents[i] == null || contents[i].getType().isAir() ? null : contents[i].clone();
+        }
+
+        for (ItemStack itemStack : itemStacks) {
+            if (itemStack == null || itemStack.getType().isAir()) continue;
+
+            int remaining = itemStack.getAmount();
+            int maxStackSize = itemStack.getMaxStackSize();
+
+            for (int i = 0; i < simulation.length && remaining > 0; i++) {
+                ItemStack current = simulation[i];
+                if (current == null || !current.isSimilar(itemStack) || current.getAmount() >= maxStackSize) continue;
+                int added = Math.min(maxStackSize - current.getAmount(), remaining);
+                current.setAmount(current.getAmount() + added);
+                remaining -= added;
+            }
+
+            for (int i = 0; i < simulation.length && remaining > 0; i++) {
+                if (simulation[i] != null) continue;
+                int added = Math.min(maxStackSize, remaining);
+                ItemStack placed = itemStack.clone();
+                placed.setAmount(added);
+                simulation[i] = placed;
+                remaining -= added;
+            }
+
+            if (remaining > 0) return false;
+        }
+        return true;
+    }
+
+    /**
      * Remet le lot au joueur APRES que l'ecriture en base a ete confirmee, et compense si la
      * remise n'a pas pu avoir lieu DU TOUT : la ligne est repositionnee dans
      * {@code claimableStorage} au lieu d'etre perdue. C'est ce qui empeche l'inversion d'ordre
@@ -1432,18 +1523,40 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
      * @return true si le lot a effectivement ete remis au joueur
      */
     private CompletableFuture<Boolean> deliverOrRestore(Player player, Item item, StorageType claimableStorage) {
+        return deliverOrRestore(player, item, claimableStorage, null);
+    }
 
-        return giveItem(player, item).thenCompose(giveResult -> {
+    /**
+     * Variante de {@link #deliverOrRestore(Player, Item, StorageType)} qui, au lieu de deposer
+     * au sol ce qui ne rentre pas, rend tout le lot reclamable quand l'inventaire est trop plein.
+     *
+     * @param player               destinataire de la remise
+     * @param item                 annonce concernee
+     * @param claimableStorage     conteneur ou la rendre reclamable si la remise echoue
+     * @param inventoryFullMessage message envoye quand le lot a ete rendu reclamable faute de
+     *                             place, ou null pour garder le depot au sol
+     * @return true si le lot a effectivement ete remis au joueur
+     */
+    private CompletableFuture<Boolean> deliverOrRestore(Player player, Item item, StorageType claimableStorage, Message inventoryFullMessage) {
+
+        return giveItem(player, item, inventoryFullMessage == null).thenCompose(giveResult -> {
 
             if (!giveResult.isNothingDelivered()) return CompletableFuture.completedFuture(Boolean.TRUE);
 
-            this.plugin.getLogger().severe("[ZAH] Item #" + item.getId() + " could not be delivered to "
-                    + player.getName() + ", restoring it as " + claimableStorage + " so it stays claimable.");
+            if (giveResult.inventoryFull()) {
+                this.plugin.getLogger().info("[ZAH] Item #" + item.getId() + " does not fit in the inventory of "
+                        + player.getName() + ", moving it to " + claimableStorage + ".");
+            } else {
+                this.plugin.getLogger().severe("[ZAH] Item #" + item.getId() + " could not be delivered to "
+                        + player.getName() + ", restoring it as " + claimableStorage + " so it stays claimable.");
+            }
 
             return restoreClaimable(item, claimableStorage).thenApply(restored -> {
                 if (!Boolean.TRUE.equals(restored)) {
                     this.plugin.getLogger().severe("[ZAH] CRITICAL: item #" + item.getId()
                             + " is neither delivered nor claimable, a manual restore is required.");
+                } else if (giveResult.inventoryFull()) {
+                    message(player, inventoryFullMessage);
                 }
                 return Boolean.FALSE;
             });
@@ -1602,6 +1715,19 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             auctionEvent.callEvent();
         } else {
             this.plugin.getScheduler().runNextTick(w -> auctionEvent.callEvent());
+        }
+    }
+
+    /**
+     * Delivre un event d'observation (stats) sans jamais laisser un echec de dispatch
+     * (planification refusee, plugin desactive...) impacter la transaction en cours,
+     * par exemple sauter la remise physique d'un achat deja commite.
+     */
+    private void callObservationalEvent(AuctionEvent auctionEvent) {
+        try {
+            callEvent(auctionEvent);
+        } catch (Throwable throwable) {
+            this.plugin.getLogger().warning("Unable to dispatch " + auctionEvent.getClass().getSimpleName() + ": " + throwable);
         }
     }
 

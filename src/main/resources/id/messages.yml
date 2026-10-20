@@ -148,6 +148,7 @@ item-bought-buyer: "#e6fff3Kamu sukses ngebeli %items% #e6fff3seharga #92bed8%pr
 server-shutting-down: "<error>Server sedang dimatikan, coba lagi nanti."
 not-enough-money: "<error>Duit kamu gak cukup buat beli ini."
 not-enough-space: "<error>Tas kamu penuh nih, kosongin dulu tempatnya."
+purchase-inventory-full: "<primary>Tas kamu penuh, barangnya sudah dipindahkan ke barang yang kamu beli."
 price-too-high: "<error>Harganya kemahalan, maksimal jual itu <white>%max-price%<error>."
 price-too-low: "<error>Harganya terlalu murah, minimal jual itu <white>%min-price%<error>."
 price-decimal-not-allowed: "<error>Gak bisa jual barang dengan harga desimal, pakai angka bulat aja ya."
