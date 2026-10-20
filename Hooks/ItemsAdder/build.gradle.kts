@@ -9,5 +9,5 @@ repositories {
 
 dependencies {
     compileOnly(projects.api)
-    compileOnly("dev.lone:api-itemsadder:4.0.10")
+    compileOnly("beer.devs:itemsadder-api:4.0.17")
 }
