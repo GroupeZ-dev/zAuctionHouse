@@ -190,6 +190,11 @@ database-configuration:
   # Recomendado: Mantener desactivado en produccion.
   debug: false
 
+  # Duracion maxima de una conexion MySQL o MariaDB del pool, en segundos.
+  # Una conexion mas antigua se retira y se reemplaza. 0 mantiene las conexiones hasta que se cierra el pool.
+  # Hikari exige al menos 30 segundos. 1800 son 30 minutos, el valor por defecto si se omite esta opcion.
+  max-lifetime: 1800
+
 #=============================================================================
 # ATAJOS DE COLOR PARA LOS MENSAJES
 #=============================================================================
@@ -871,8 +876,9 @@ action:
     # Si es false, los objetos van a la seccion "objetos comprados" para la retirada posterior
     give-item: false
 
-    # Si give-item es true, esto verifica si el jugador tiene suficiente espacio en su inventario
-    # Si es false y no hay espacio disponible, la compra se bloquea
+    # Solo se usa si give-item es true
+    # Si es true, la compra se bloquea cuando el inventario del jugador está lleno
+    # Si es false, la compra se realiza y, si el objeto no cabe, se coloca en los "objetos comprados"
     player-inventory-must-have-free-space: true
 
     # Si es true, reabre el inventario de subastas despues de la compra

@@ -15,9 +15,11 @@ import org.jspecify.annotations.NonNull;
 public class PurchasedInventoryButton extends Button {
 
     private final AuctionPlugin plugin;
+    private final boolean openWhenEmpty;
 
-    public PurchasedInventoryButton(Plugin plugin) {
+    public PurchasedInventoryButton(Plugin plugin, boolean openWhenEmpty) {
         this.plugin = (AuctionPlugin) plugin;
+        this.openWhenEmpty = openWhenEmpty;
     }
 
     @Override
@@ -27,6 +29,8 @@ public class PurchasedInventoryButton extends Button {
 
     @Override
     public boolean checkPermission(Player player, InventoryEngine inventory, Placeholders placeholders) {
+        // open-when-empty : le bouton reste cliquable meme sans item, l'inventaire s'ouvre vide
+        if (this.openWhenEmpty) return super.checkPermission(player, inventory, placeholders);
         var list = this.plugin.getAuctionManager().getPurchasedItems(player);
         return super.checkPermission(player, inventory, placeholders) && !list.isEmpty();
     }

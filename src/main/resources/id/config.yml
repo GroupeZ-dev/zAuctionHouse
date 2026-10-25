@@ -189,6 +189,11 @@ database-configuration:
   # Recommended: Keep disabled in production.
   debug: false
 
+  # Maximum lifetime of a pooled MySQL or MariaDB connection, in seconds.
+  # A connection older than this is retired and replaced. 0 keeps connections until the pool closes.
+  # Hikari requires at least 30 seconds. 1800 is 30 minutes, the same default used when this option is omitted.
+  max-lifetime: 1800
+
 #=============================================================================
 # MESSAGE COLOR SHORTCUTS
 #=============================================================================
@@ -865,8 +870,9 @@ action:
     # If false, items go to their "purchased items" section for later retrieval
     give-item: false
 
-    # If give-item is true, this checks if the player has enough inventory space
-    # If false and no space available, the purchase is blocked
+    # Only used when give-item is true
+    # If true, the purchase is blocked when the player's inventory is full
+    # If false, the purchase goes through and, when the item does not fit, it is placed in "purchased items"
     player-inventory-must-have-free-space: true
 
     # If true, reopens the auction inventory after purchasing

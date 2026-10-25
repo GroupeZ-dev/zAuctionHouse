@@ -131,6 +131,9 @@ items:
     # Tipo di pulsante - gestisce il ciclo delle economie.
     type: ZAUCTIONHOUSE_SELL_ECONOMY
 
+    # Opzionale: seleziona questa economia invece di scorrerle.
+    # economy: vault
+
     # Posizione dello slot - centro della riga inferiore.
     slot: 49
 
@@ -186,6 +189,10 @@ items:
   confirm:
     # Tipo di pulsante - gestisce la conferma della vendita.
     type: ZAUCTIONHOUSE_SELL_CONFIRM
+
+    # Opzionale: vende sempre con questa economia, qualunque sia l'economia selezionata.
+    # Aggiungi un pulsante di conferma per economia per vendere con un solo clic.
+    # economy: level
 
     # Posizione dello slot - estrema destra della riga inferiore.
     slot: 53

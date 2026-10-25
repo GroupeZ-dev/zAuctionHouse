@@ -14,6 +14,12 @@ import java.math.BigDecimal;
  * such as price, amount, expiration time, and economy before the item is listed.
  * <p>
  * Cancelling this event prevents the item from being listed.
+ * <p>
+ * This event is fired once for every listing, whatever the sell path (command,
+ * sell inventory or GUI). When several stacks are listed together, the item stack
+ * is the first stack and the amount is the total amount: changes to the item stack
+ * and the amount are only honoured for single-stack listings, while price,
+ * expiration and economy changes are always honoured.
  *
  * <pre>{@code
  * @EventHandler

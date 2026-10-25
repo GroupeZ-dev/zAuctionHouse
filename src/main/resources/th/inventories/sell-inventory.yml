@@ -131,6 +131,9 @@ items:
     # ประเภทปุ่ม - จัดการการสลับ economy
     type: ZAUCTIONHOUSE_SELL_ECONOMY
 
+    # Optional: select this economy instead of cycling through them.
+    # economy: vault
+
     # ตำแหน่งช่อง - กึ่งกลางของแถวล่าง
     slot: 49
 
@@ -186,6 +189,10 @@ items:
   confirm:
     # ประเภทปุ่ม - จัดการการยืนยันการขาย
     type: ZAUCTIONHOUSE_SELL_CONFIRM
+
+    # Optional: always sell with this economy, whatever economy is selected.
+    # Add one confirm button per economy to list the item in a single click.
+    # economy: level
 
     # ตำแหน่งช่อง - ขวาสุดของแถวล่าง
     slot: 53

@@ -2,6 +2,7 @@ package fr.maxlego08.zauctionhouse.services;
 
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
+import fr.maxlego08.zauctionhouse.api.event.events.stats.AuctionMoneyClaimEvent;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.AuctionClaimService;
 import fr.maxlego08.zauctionhouse.api.services.result.ClaimResult;
@@ -131,6 +132,8 @@ public class ClaimService extends AuctionService implements AuctionClaimService 
 
         final List<Integer> paidIds = new ArrayList<>();
         final List<Integer> unpaidIds = new ArrayList<>();
+        // Montants REELLEMENT deposes, par economie, pour AuctionMoneyClaimEvent
+        final Map<String, BigDecimal> claimedByEconomy = new HashMap<>();
         boolean tokenCleared = false;
         boolean anyDeposit = false;
 
@@ -211,6 +214,7 @@ public class ClaimService extends AuctionService implements AuctionClaimService 
                 anyDeposit = true;
                 economyTransactions.forEach(transaction -> paidIds.add(transaction.id()));
                 totalClaimed = totalClaimed.add(economyTotal);
+                claimedByEconomy.merge(economyName, economyTotal, BigDecimal::add);
                 lastEconomy = economy;
                 message(this.plugin, player, Message.CLAIM_ECONOMY_SUCCESS, "%amount%", economyManager.format(economy, economyTotal), "%economy%", economy.getDisplayName());
             }
@@ -220,6 +224,18 @@ public class ClaimService extends AuctionService implements AuctionClaimService 
 
             if (totalClaimed.compareTo(BigDecimal.ZERO) > 0) {
                 message(this.plugin, player, Message.CLAIM_SUCCESS, "%amount%", totalClaimed.toString());
+
+                // Event post-claim (non annulable) : doClaim tourne sur l'executor du plugin, on
+                // repasse sur le thread principal (global region sur Folia) pour le delivrer.
+                // Event d'observation : un echec de planification (plugin desactive...) ne doit
+                // jamais transformer un claim reussi et clos en echec.
+                try {
+                    var claimEvent = new AuctionMoneyClaimEvent(player, Map.copyOf(claimedByEconomy));
+                    this.plugin.getScheduler().runNextTick(task -> claimEvent.callEvent());
+                } catch (Throwable throwable) {
+                    this.plugin.getLogger().warning("Unable to dispatch AuctionMoneyClaimEvent: " + throwable);
+                }
+
                 return ClaimResult.success("Money claimed successfully", totalClaimed.doubleValue(), lastEconomy);
             }
 

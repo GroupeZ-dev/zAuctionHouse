@@ -23,13 +23,22 @@ import java.util.List;
 /**
  * Button to cycle through available economies for selling.
  * Left click goes to next economy, right click goes to previous.
+ * <p>
+ * With an {@code economy} option the button selects that economy instead of cycling.
  */
 public class SellEconomyButton extends Button {
 
     private final AuctionPlugin plugin;
+    // null = le bouton fait defiler les economies
+    private final String economyName;
 
     public SellEconomyButton(Plugin plugin) {
+        this(plugin, null);
+    }
+
+    public SellEconomyButton(Plugin plugin, String economyName) {
         this.plugin = (AuctionPlugin) plugin;
+        this.economyName = economyName;
     }
 
     @Override
@@ -52,16 +61,22 @@ public class SellEconomyButton extends Button {
         int currentIndex = economies.indexOf(currentEconomy);
         if (currentIndex < 0) currentIndex = 0;
 
-        int newIndex;
-        if (event.getClick() == ClickType.RIGHT || event.getClick() == ClickType.SHIFT_RIGHT) {
+        AuctionEconomy newEconomy;
+        if (this.economyName != null) {
+            var optional = economyManager.getEconomy(this.economyName);
+            if (optional.isEmpty()) {
+                this.plugin.getAuctionManager().message(player, Message.SELL_ERROR_ECONOMY, "%name%", this.economyName);
+                return;
+            }
+            newEconomy = optional.get();
+        } else if (event.getClick() == ClickType.RIGHT || event.getClick() == ClickType.SHIFT_RIGHT) {
             // Previous economy
-            newIndex = (currentIndex - 1 + economies.size()) % economies.size();
+            newEconomy = economies.get((currentIndex - 1 + economies.size()) % economies.size());
         } else {
             // Next economy
-            newIndex = (currentIndex + 1) % economies.size();
+            newEconomy = economies.get((currentIndex + 1) % economies.size());
         }
 
-        AuctionEconomy newEconomy = economies.get(newIndex);
         cache.set(PlayerCacheKey.SELL_ECONOMY, newEconomy);
 
         // Validate price against new economy limits
@@ -88,9 +103,12 @@ public class SellEconomyButton extends Button {
 
         AuctionEconomy defaultEconomy = economyManager.getDefaultEconomy(ItemType.AUCTION);
         if (defaultEconomy == null) return menuItemStack.build(player, false, placeholders);
-        AuctionEconomy economy = cache.get(PlayerCacheKey.SELL_ECONOMY, defaultEconomy);
+        AuctionEconomy selectedEconomy = cache.get(PlayerCacheKey.SELL_ECONOMY, defaultEconomy);
+        // Un bouton a economie fixe affiche SON economie, et indique si elle est selectionnee
+        AuctionEconomy economy = this.economyName == null ? selectedEconomy : economyManager.getEconomy(this.economyName).orElse(selectedEconomy);
         BigDecimal price = cache.get(PlayerCacheKey.SELL_PRICE, BigDecimal.ZERO);
 
+        placeholders.register("selected", String.valueOf(economy.equals(selectedEconomy)));
         placeholders.register("economy", economy.getDisplayName());
         placeholders.register("economy_name", economy.getName());
         placeholders.register("price", economyManager.format(economy, price));
