@@ -1,5 +1,8 @@
 # Unreleased
 
+- **Added** `dialog.enabled` option on `ZAUCTIONHOUSE_SEARCH`: clicking the button opens a native Paper dialog (via zMenu) with a text field pre-filled with the current search and **Search**, **Clear** and **Cancel** buttons, instead of asking in chat. Disabled by default; if the dialog cannot be loaded, the chat input is used. The dialog is configured in the new `dialogs/search.yml` file (title, description, labels), available in every language. Thanks to LIUZAZA007 (#41)
+- **Fixed** After a hot reload of the plugin (PlugMan & co.), zMenu could keep the buttons and inventories of the old instance. They are now unregistered when the plugin is disabled and cleaned up on the next load, and clicks on an interface left open by the old instance are ignored
+
 # 4.0.1.5
 
 - **Fixed** With `enable-sell-inventory: true`, the amount given to `/ah sell <price> <amount>` was ignored and the whole stack held in hand was listed. The amount is now applied when confirming, capped by what the player actually holds
