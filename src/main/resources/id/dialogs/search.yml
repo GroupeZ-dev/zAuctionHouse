@@ -1,0 +1,23 @@
+name: Pencarian Lelang
+type: multi_action
+can-close-with-escape: true
+pause: false
+after-action: CLOSE
+number-of-columns: 3
+body:
+  description:
+    type: plain_message
+    messages:
+    - <gray>Masukkan nama item atau filter, seperti seller = Notch.
+    width: 350
+query-label: Pencarian
+search-label: <aqua>Cari
+clear-label: <yellow>Hapus
+cancel-label: <red>Batal
+multi-actions:
+  search:
+    label: <aqua>Cari
+  clear:
+    label: <yellow>Hapus
+  cancel:
+    label: <red>Batal
