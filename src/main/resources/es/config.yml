@@ -848,6 +848,15 @@ action:
   # Cuando esta desactivado, la busqueda ingresada anteriormente persiste entre aperturas.
   reset-search-on-open: true
 
+  # Clic derecho sobre un anuncio que contiene una caja de shulker (u otro contenedor) para ver su
+  # contenido directamente, sin abrir la confirmacion de compra y sin tener suficiente dinero.
+  # La vista previa abre inventories/shulker-content.yml y no reserva el anuncio.
+  container-preview:
+    enable: true
+    # Tipo de clic que abre la vista previa: RIGHT, LEFT, SHIFT_RIGHT, SHIFT_LEFT, MIDDLE...
+    # Con LEFT, comprar un anuncio que contiene un contenedor solo es posible con otro clic.
+    click: RIGHT
+
   # Comportamiento durante la retirada de un objeto de los anuncios activos (el vendedor cancela la venta)
   remove-listed-item:
     # Si es true, el objeto se da inmediatamente al inventario del jugador
