@@ -357,6 +357,7 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         // TOUTE PREMIERE instruction : les services doivent cesser d'accepter de nouvelles
         // operations avant que quoi que ce soit ne soit ferme (C-022).
         this.shuttingDown = true;
+        if (this.chatSearchListener != null) this.chatSearchListener.clear();
 
         // ZAuctionPlugin melangeait deux notions distinctes : le plugin a fini de demarrer
         // (isEnabled, positionne en toute derniere ligne de onEnable) et les ressources JVM
@@ -369,6 +370,15 @@ public class ZAuctionPlugin extends JavaPlugin implements AuctionPlugin {
         // demarrage complet.
         if (this.teardownDone) return;
         this.teardownDone = true;
+
+        if (this.inventoriesLoader != null) {
+            try {
+                this.inventoriesLoader.getButtonManager().unregisters(this);
+                this.inventoriesLoader.getInventoryManager().deleteInventories(this);
+            } catch (Exception exception) {
+                getLogger().log(Level.WARNING, "Failed to unregister auction menus", exception);
+            }
+        }
 
         // Arret des balayages periodiques avant toute fermeture de ressource.
         this.maintenanceScheduler.stop();

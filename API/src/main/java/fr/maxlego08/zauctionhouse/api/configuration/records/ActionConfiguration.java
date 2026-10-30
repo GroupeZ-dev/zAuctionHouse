@@ -4,6 +4,7 @@ import fr.maxlego08.menu.api.MenuItemStack;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.inventory.ClickType;
 
 import java.io.File;
 
@@ -18,7 +19,9 @@ public record ActionConfiguration(
         // Selling
         SellingConfiguration selling,
         // Expired
-        ExpiredConfiguration expired) {
+        ExpiredConfiguration expired,
+        // Container preview
+        ContainerPreviewConfiguration containerPreview) {
 
     public static ActionConfiguration of(AuctionPlugin plugin, FileConfiguration configuration) {
         return new ActionConfiguration(
@@ -32,7 +35,31 @@ public record ActionConfiguration(
                 // Selling
                 SellingConfiguration.of(plugin, configuration),
                 // Expired
-                ExpiredConfiguration.of(plugin, configuration));
+                ExpiredConfiguration.of(plugin, configuration),
+                // Container preview
+                ContainerPreviewConfiguration.of(plugin, configuration));
+    }
+
+    /**
+     * Apercu du contenu d'un conteneur (shulker, etc.) directement depuis l'hotel des ventes,
+     * sans passer par la confirmation d'achat ni par la verification d'argent (comportement V3).
+     *
+     * @param enable active l'apercu
+     * @param click  type de clic qui declenche l'apercu
+     */
+    public record ContainerPreviewConfiguration(boolean enable, ClickType click) {
+        public static ContainerPreviewConfiguration of(AuctionPlugin plugin, FileConfiguration configuration) {
+            var enable = configuration.getBoolean("action.container-preview.enable", true);
+            var clickName = configuration.getString("action.container-preview.click", "RIGHT");
+            ClickType click;
+            try {
+                click = ClickType.valueOf(clickName.toUpperCase());
+            } catch (IllegalArgumentException exception) {
+                plugin.getLogger().warning("Invalid click type '" + clickName + "' for action.container-preview.click, using RIGHT");
+                click = ClickType.RIGHT;
+            }
+            return new ContainerPreviewConfiguration(enable, click);
+        }
     }
 
     public record ListedConfiguration(boolean giveItem,

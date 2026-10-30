@@ -21,6 +21,7 @@ public class SearchLoader extends ButtonLoader {
         String noneValue = configuration.getString(path + "none-value", "None");
         String activeValue = configuration.getString(path + "active-value", "true");
         String inactiveValue = configuration.getString(path + "inactive-value", "false");
-        return new SearchButton(this.plugin, noneValue, activeValue, inactiveValue);
+        boolean dialogEnabled = configuration.getBoolean(path + "dialog.enabled", false);
+        return new SearchButton(this.plugin, noneValue, activeValue, inactiveValue, dialogEnabled);
     }
 }

@@ -14,6 +14,7 @@ import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.utils.IntList;
 import fr.maxlego08.zauctionhouse.api.utils.Permission;
+import fr.maxlego08.zauctionhouse.buttons.confirm.ConfirmHelper;
 import fr.maxlego08.zauctionhouse.tax.ZPurchaseCharge;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -108,6 +109,10 @@ public class ListedItemsButton extends PaginateButton {
                 return;
             }
 
+            // Apercu du contenu d'un conteneur (V3) : avant l'achat, donc sans verification
+            // d'argent ni statut de confirmation pose sur l'annonce.
+            if (openContainerPreview(player, event, item)) return;
+
             if ((event.getClick() == ClickType.DROP || event.getClick() == ClickType.MIDDLE) && player.hasPermission(Permission.ZAUCTIONHOUSE_ADMIN_REMOVE_INVENTORY.asPermission())) {
 
                 // ToDo
@@ -135,6 +140,46 @@ public class ListedItemsButton extends PaginateButton {
                 processPurchase(player, inventoryEngine, slot, item, itemStack, inventories);
             }
         };
+    }
+
+    /**
+     * Ouvre l'apercu du contenu des conteneurs (shulkers, etc.) d'une annonce si le clic
+     * correspond a {@code action.container-preview.click}.
+     * <p>
+     * L'apercu est en lecture seule : le statut de l'annonce n'est pas modifie, elle reste
+     * achetable par les autres joueurs pendant ce temps. {@link PlayerCacheKey#ITEM_SHOW} est
+     * renseigne pour les boutons de navigation de l'inventaire d'apercu ; avec un statut
+     * AVAILABLE il n'est jamais relache par {@link ConfirmHelper}.
+     *
+     * @param player joueur qui a clique
+     * @param event  evenement de clic
+     * @param item   annonce cliquee
+     * @return {@code true} si l'apercu a ete ouvert et que le clic ne doit pas etre traite davantage
+     */
+    private boolean openContainerPreview(Player player, InventoryClickEvent event, Item item) {
+
+        var previewConfiguration = this.plugin.getConfiguration().getActions().containerPreview();
+        if (!previewConfiguration.enable() || event.getClick() != previewConfiguration.click()) return false;
+        if (!(item instanceof AuctionItem auctionItem)) return false;
+
+        var contentManager = this.plugin.getItemContentManager();
+        List<ItemStack> containers = contentManager.getContainers(auctionItem.getItemStacks());
+        if (containers.isEmpty()) return false;
+
+        var manager = this.plugin.getAuctionManager();
+        var cache = manager.getCache(player);
+
+        // Ne jamais ecraser une reference vers une annonce encore en confirmation : elle
+        // resterait figee en IS_*_CONFIRM sur tout le cluster.
+        ConfirmHelper.releaseConfirmation(this.plugin, player);
+
+        cache.set(PlayerCacheKey.ITEM_SHOW, item);
+        cache.set(PlayerCacheKey.CURRENT_PAGE, this.plugin.getInventoriesLoader().getInventoryManager().getPage(player));
+        cache.set(PlayerCacheKey.SHULKER_INDEX, 0);
+        cache.set(PlayerCacheKey.SHULKER_ITEMS, contentManager.getContents(containers.getFirst()));
+
+        this.plugin.getInventoriesLoader().openInventory(player, Inventories.SHULKER_CONTENT);
+        return true;
     }
 
     /**

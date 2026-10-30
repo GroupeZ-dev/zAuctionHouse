@@ -847,6 +847,15 @@ action:
   # Quand désactivé, la recherche précédemment saisie persiste entre les ouvertures.
   reset-search-on-open: true
 
+  # Clic droit sur une annonce contenant une shulker (ou un autre conteneur) pour voir son contenu
+  # directement, sans ouvrir la confirmation d'achat et sans avoir assez d'argent.
+  # L'aperçu ouvre inventories/shulker-content.yml et ne réserve pas l'annonce.
+  container-preview:
+    enable: true
+    # Type de clic qui ouvre l'aperçu : RIGHT, LEFT, SHIFT_RIGHT, SHIFT_LEFT, MIDDLE...
+    # Avec LEFT, acheter une annonce contenant un conteneur n'est possible qu'avec un autre clic.
+    click: RIGHT
+
   # Comportement lors du retrait d'un item des annonces actives (le vendeur annule sa vente)
   remove-listed-item:
     # Si true, l'item est immédiatement donné à l'inventaire du joueur

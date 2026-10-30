@@ -842,6 +842,15 @@ action:
   # When disabled, the previously entered search query persists between opens.
   reset-search-on-open: true
 
+  # Right-click a listing that contains a shulker box (or another container) to preview its
+  # content directly, without opening the purchase confirmation and without having enough money.
+  # The preview opens inventories/shulker-content.yml and does not reserve the listing.
+  container-preview:
+    enable: true
+    # Click type that opens the preview: RIGHT, LEFT, SHIFT_RIGHT, SHIFT_LEFT, MIDDLE...
+    # With LEFT, buying a listing that contains a container is only possible with another click.
+    click: RIGHT
+
   # Behavior when removing an item from active listings (seller cancels their sale)
   remove-listed-item:
     # If true, the item is immediately given to the player's inventory
