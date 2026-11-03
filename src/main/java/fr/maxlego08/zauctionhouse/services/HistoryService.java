@@ -67,6 +67,19 @@ public class HistoryService extends AuctionService implements AuctionHistoryServ
 
     @Override
     public void handlePlayerJoin(Player player) {
+        CompletableFuture.supplyAsync(() -> plugin.getStorageManager().with(LogRepository.class)
+                .selectUnreadAdminRemovals(player.getUniqueId()), plugin.getExecutorService()).thenAccept(logs -> {
+            if (logs.isEmpty()) return;
+            plugin.getScheduler().runAtEntity(player, task -> {
+                if (!player.isOnline()) return;
+                logs.forEach(log -> message(plugin, player, Message.ADMIN_LISTING_REMOVED, "%items%",
+                        log.additional_data() == null ? "#" + log.item_id() : log.additional_data()));
+                markSalesAsRead(logs.stream().map(LogDTO::id).toList());
+            });
+        }).exceptionally(error -> {
+            plugin.getLogger().warning("Cannot load admin removal notifications: " + error.getMessage());
+            return null;
+        });
         var config = this.plugin.getConfiguration().getSalesNotificationConfiguration();
 
         if (!config.enabled()) {

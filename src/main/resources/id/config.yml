@@ -125,13 +125,15 @@ timezone: auto
 #             Best for: Multi-server setups, large auction houses
 # - MARIADB : MariaDB database server (MySQL-compatible)
 #             Best for: Multi-server setups, large auction houses
-# Note: For multi-server synchronization, use MySQL/MariaDB with the Redis addon.
+# - POSTGRESQL : PostgreSQL database server ('POSTGRES' is also accepted)
+#             Best for: Multi-server setups, large auction houses
+# Note: For multi-server synchronization, use MySQL/MariaDB/PostgreSQL with the Redis addon.
 #
 # WARNING: SQLITE is INCOMPATIBLE with the Redis cluster addon.
 # Each server would keep its OWN database file, item ids would collide between servers and the
 # cluster locks would protect nothing - items WOULD be duplicated.
 # With the addon installed, SQLITE is now refused: the addon disables itself and this server
-# stays in single-server mode. Use MYSQL or MARIADB with a SHARED database instead.
+# stays in single-server mode. Use MYSQL, MARIADB or POSTGRESQL with a SHARED database instead.
 storage-type: SQLITE
 
 # Writes a format marker ("V2:" / "NBT:") at the head of every serialized ItemStack.
@@ -151,8 +153,8 @@ write-itemstack-format-marker: false
 # Recommended: Use a unique, descriptive name (e.g., "skyblock", "survival", "creative").
 server-name: skyblock
 
-# Database connection settings for MySQL/MariaDB.
-# Only used when 'storage-type' is set to MYSQL or MARIADB.
+# Database connection settings for MySQL/MariaDB/PostgreSQL.
+# Only used when 'storage-type' is set to MYSQL, MARIADB or POSTGRESQL.
 database-configuration:
   # Prefix applied to all database tables created by the plugin.
   # Useful when sharing a database with other plugins to avoid table name conflicts.
@@ -167,6 +169,7 @@ database-configuration:
 
   # Port number of the database server.
   # Default MySQL/MariaDB port: 3306
+  # Default PostgreSQL port: 5432
   # Only change if your database uses a non-standard port.
   port: 3306
 
@@ -189,7 +192,7 @@ database-configuration:
   # Recommended: Keep disabled in production.
   debug: false
 
-  # Maximum lifetime of a pooled MySQL or MariaDB connection, in seconds.
+  # Maximum lifetime of a pooled MySQL, MariaDB or PostgreSQL connection, in seconds.
   # A connection older than this is retired and replaced. 0 keeps connections until the pool closes.
   # Hikari requires at least 30 seconds. 1800 is 30 minutes, the same default used when this option is omitted.
   max-lifetime: 1800

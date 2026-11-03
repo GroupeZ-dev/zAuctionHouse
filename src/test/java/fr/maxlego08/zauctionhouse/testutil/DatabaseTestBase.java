@@ -119,7 +119,7 @@ public abstract class DatabaseTestBase {
     /**
      * Remet a zero l'etat STATIQUE de {@code MigrationManager}.
      * <p>
-     * Le jar Sarah 1.26 ne vide pas sa liste privee {@code schemas} au debut de
+     * Le jar Sarah 1.27 ne vide pas sa liste privee {@code schemas} au debut de
      * {@code execute()} : les schemas enregistres par le test precedent seraient rejoues sur la
      * base neuve, et le second {@code CREATE INDEX} (emis sans IF NOT EXISTS) echouerait.
      * {@code getMigrations()} rend la liste vivante, mais {@code schemas} n'est accessible que par

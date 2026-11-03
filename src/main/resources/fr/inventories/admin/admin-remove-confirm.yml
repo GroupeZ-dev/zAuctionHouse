@@ -1,0 +1,43 @@
+# Every option can be toggled independently before confirming.
+name: "#0c1719Retirer cette annonce ?"
+size: 27
+items:
+  show:
+    type: ZAUCTIONHOUSE_SHOW
+    slot: 4
+  notify:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_NOTIFY
+    slot: 11
+    item:
+      material: BELL
+      name: "%state-color%Avertir le joueur"
+      lore:
+        - "#8c8c8cCliquez pour changer"
+  expire:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_EXPIRE
+    slot: 13
+    item:
+      material: CLOCK
+      name: "%state-color%Envoyer aux items expirés"
+      lore:
+        - "#8c8c8cCliquez pour changer"
+  copy:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_COPY
+    slot: 15
+    item:
+      material: CHEST
+      name: "%state-color%Donner une copie à l’admin"
+      lore:
+        - "#8c8c8cCliquez pour changer"
+  confirm:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_CONFIRM
+    slot: 21
+    item:
+      material: LIME_CONCRETE
+      name: "#2CCED2Confirmer le retrait"
+  cancel:
+    type: BACK
+    slot: 23
+    item:
+      material: RED_CONCRETE
+      name: "#ff5555Annuler"

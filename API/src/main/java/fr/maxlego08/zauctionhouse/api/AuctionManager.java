@@ -356,6 +356,11 @@ public interface AuctionManager {
      */
     void adminRemoveItem(Player admin, java.util.UUID targetUniqueId, Item item, StorageType storageType);
 
+    default void adminRemoveItem(Player admin, java.util.UUID targetUniqueId, Item item, StorageType storageType,
+                                 boolean notify, boolean expire, boolean copy) {
+        throw new UnsupportedOperationException("Admin removal options are not supported");
+    }
+
     /**
      * Attempts to purchase the provided item on behalf of the player. The returned future completes
      * once validations, economy transactions, storage updates, and notifications are finished.

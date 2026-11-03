@@ -17,7 +17,7 @@ public class CommandAuctionAdminHistory extends VCommand {
         this.addSubCommand("history");
         this.setPermission(Permission.ZAUCTIONHOUSE_ADMIN_ITEMS);
         this.setDescription(Message.COMMAND_DESCRIPTION_AUCTION_ADMIN_HISTORY);
-        this.addRequireArg("player", (sender, args) -> Bukkit.getOnlinePlayers().stream().map(Player::getName).toList());
+        this.addOptionalArg("player", (sender, args) -> Bukkit.getOnlinePlayers().stream().map(Player::getName).toList());
         this.setConsoleCanUse(false);
     }
 
@@ -26,8 +26,9 @@ public class CommandAuctionAdminHistory extends VCommand {
 
         String targetName = argAsString(0);
         if (targetName == null) {
-            this.auctionManager.message(this.player, Message.ADMIN_TARGET_REQUIRED);
-            return CommandType.SYNTAX_ERROR;
+            this.auctionManager.getCache(this.player).remove(PlayerCacheKey.ADMIN_PLAYERS_DATA);
+            plugin.getInventoriesLoader().openInventory(this.player, Inventories.ADMIN_MAIN);
+            return CommandType.SUCCESS;
         }
 
         plugin.getStorageManager().findUniqueId(targetName).thenAccept(uuid -> {

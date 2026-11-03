@@ -81,6 +81,9 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
             createInventoriesFile();
         }
 
+        for (String name : new String[]{"admin-main", "admin-remove-confirm"}) {
+            if (!new File(folder, "admin/" + name + ".yml").exists()) copyFiles("inventories", "admin/" + name);
+        }
         files(folder, this::loadInventory);
     }
 
@@ -160,6 +163,13 @@ public class ZInventoriesLoader extends ZUtils implements InventoriesLoader {
         this.buttonManager.register(new HistorySortLoader(this.plugin));
 
         // Admin
+        this.buttonManager.register(new NoneLoader(this.plugin, AdminMainButton.class, "ZAUCTIONHOUSE_ADMIN_MAIN"));
+        this.buttonManager.register(new NoneLoader(this.plugin, AdminPlayersButton.class, "ZAUCTIONHOUSE_ADMIN_PLAYERS"));
+        this.buttonManager.register(new NoneLoader(this.plugin, AdminPlayersSortButton.class, "ZAUCTIONHOUSE_ADMIN_PLAYERS_SORT"));
+        this.buttonManager.register(new NoneLoader(this.plugin, AdminRemoveConfirmButton.class, "ZAUCTIONHOUSE_ADMIN_REMOVE_CONFIRM"));
+        this.buttonManager.register(new NoneLoader(this.plugin, AdminRemoveNotifyButton.class, "ZAUCTIONHOUSE_ADMIN_REMOVE_NOTIFY"));
+        this.buttonManager.register(new NoneLoader(this.plugin, AdminRemoveExpireButton.class, "ZAUCTIONHOUSE_ADMIN_REMOVE_EXPIRE"));
+        this.buttonManager.register(new NoneLoader(this.plugin, AdminRemoveCopyButton.class, "ZAUCTIONHOUSE_ADMIN_REMOVE_COPY"));
         this.buttonManager.register(new NoneLoader(this.plugin, AdminSellingItemsButton.class, "ZAUCTIONHOUSE_ADMIN_SELLING_ITEMS"));
         this.buttonManager.register(new NoneLoader(this.plugin, AdminExpiredItemsButton.class, "ZAUCTIONHOUSE_ADMIN_EXPIRED_ITEMS"));
         this.buttonManager.register(new NoneLoader(this.plugin, AdminPurchasedItemsButton.class, "ZAUCTIONHOUSE_ADMIN_PURCHASED_ITEMS"));

@@ -647,3 +647,5 @@ admin-logs-purge-success: "<success>Supprime <white>%amount%<success> logs datan
 admin-logs-player-success: "<success>Supprime <white>%amount%<success> logs pour le joueur <white>%player%<success>."
 admin-logs-clear-migrated-success: "<success>Supprime <white>%amount%<success> logs migres depuis la V3."
 admin-logs-invalid-days: "<error>Veuillez specifier un nombre de jours valide (superieur a 0)."
+
+admin-listing-removed: "<error>Votre annonce <white>%items%<error> a été retirée par un administrateur."

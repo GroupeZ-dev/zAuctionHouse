@@ -262,7 +262,7 @@ public class AdminLogsButton extends LoadingButton {
         return switch (logType) {
             case SALE -> Material.GOLD_INGOT;
             case PURCHASE -> Material.EMERALD;
-            case REMOVE_LISTED -> Material.BARRIER;
+            case REMOVE_LISTED, ADMIN_REMOVE -> Material.BARRIER;
             case REMOVE_SELLING -> Material.CHEST;
             case REMOVE_EXPIRED -> Material.CLOCK;
             case REMOVE_PURCHASED -> Material.HOPPER;

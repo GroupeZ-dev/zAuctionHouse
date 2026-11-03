@@ -856,6 +856,14 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     @Override
     public void adminRemoveItem(Player admin, UUID targetUniqueId, Item item, StorageType storageType) {
 
+        adminRemoveItem(admin, targetUniqueId, item, storageType, false, false, true);
+    }
+
+    @Override
+    public void adminRemoveItem(Player admin, UUID targetUniqueId, Item item, StorageType storageType,
+                                boolean notify, boolean expire, boolean copy) {
+        if (storageType == StorageType.LISTED && !item.isActivelyListed()) return;
+        var destination = expire ? StorageType.EXPIRED : StorageType.DELETED;
         var clusterBridge = this.plugin.getAuctionClusterBridge();
         if (clusterBridge == null) {
             this.plugin.getLogger().severe("Cluster bridge is not initialized");
@@ -888,6 +896,8 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var previousStatus = item.getStatus();
         var tokenHolder = new AtomicReference<LockToken>();
         var statusChanged = new AtomicBoolean(false);
+        var persisted = new AtomicBoolean(false);
+        var previousExpiration = item.getExpiredAt();
 
         clusterBridge.checkAvailability(item, storageType).thenCompose(available -> {
 
@@ -925,15 +935,25 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
                     return this.<Void>failedFuture(new IllegalStateException("Item deja traite sur un autre serveur"));
                 }
 
-                // C-012 : durabilite D'ABORD, diffusion d'un etat TERMINAL ensuite. L'ancienne
-                // surcharge 2 arguments passait destination = null, donc Redis ecrivait
-                // state=REMOVED et ItemRemovedListener rechargeait la ligne (encore LISTED, le
-                // future d'ecriture etant jete) pour la remettre EN VENTE.
-                item.setStatus(ItemStatus.DELETED);
-                statusChanged.set(true);
+                if (getItem(storageType, item.getId()) != item) {
+                    return this.<Void>failedFuture(new IllegalStateException("Stale item under admin lock"));
+                }
+                CompletableFuture<Long> expiration = expire
+                        ? this.plugin.getConfiguration().getExpireExpiration().getExpiration(this.plugin.getOfflinePermission(), item.getSeller())
+                        : CompletableFuture.completedFuture(0L);
+                return expiration.thenCompose(seconds -> {
+                    if (expire) item.setExpiredAt(new Date(seconds > 0 ? System.currentTimeMillis() + seconds * 1000 : 0));
+                    // C-012 : durabilite D'ABORD, diffusion d'un etat TERMINAL ensuite. L'ancienne
+                    // surcharge 2 arguments passait destination = null, donc Redis ecrivait
+                    // state=REMOVED et ItemRemovedListener rechargeait la ligne (encore LISTED, le
+                    // future d'ecriture etant jete) pour la remettre EN VENTE.
+                    item.setStatus(ItemStatus.DELETED);
+                    statusChanged.set(true);
 
-                return storageManager.updateItem(item, storageType, StorageType.DELETED)
-                        .thenCompose(v -> clusterBridge.removeItem(item, storageType, StorageType.DELETED));
+                    return storageManager.updateItem(item, storageType, destination)
+                            .thenRun(() -> persisted.set(true))
+                            .thenCompose(v -> clusterBridge.removeItem(item, storageType, destination));
+                });
             });
 
         }).thenCompose(v -> {
@@ -946,7 +966,20 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             // au lieu d'etre detruite.
             var claimable = storageType == StorageType.PURCHASED ? StorageType.PURCHASED : StorageType.EXPIRED;
 
-            return deliverOrRestore(admin, item, claimable).thenAccept(delivered -> {
+            if (expire) {
+                item.setStatus(ItemStatus.REMOVED);
+                addItem(StorageType.EXPIRED, item);
+            }
+            CompletableFuture<?> delivery = !copy ? CompletableFuture.completedFuture(null)
+                    : expire ? giveItem(admin, item) : deliverOrRestore(admin, item, claimable);
+            return delivery.thenAccept(delivered -> {
+                var target = this.plugin.getServer().getPlayer(targetUniqueId);
+                logItemAction(LogType.ADMIN_REMOVE, item, admin, targetUniqueId, item.getItemDisplay(),
+                        notify && target == null ? null : new Date());
+                if (notify) {
+                    if (target != null) this.plugin.getScheduler().runAtEntity(target, task ->
+                            message(this.plugin, target, Message.ADMIN_LISTING_REMOVED, "%items%", item.getItemDisplay()));
+                }
 
                 var targetName = item.getSellerUniqueId().equals(targetUniqueId) ? item.getSellerName() : item.getBuyerName();
                 message(this.plugin, admin, Message.ADMIN_ITEM_REMOVED, "%items%", item.getItemDisplay(), "%target%", targetName == null ? "unknown" : targetName);
@@ -978,7 +1011,10 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
                     // Restaurer le statut si on l'avait deja passe a DELETED : sinon l'item
                     // resterait invisible localement tout en occupant le store, et deviendrait
                     // ni vendable ni recuperable.
-                    if (statusChanged.get()) item.setStatus(previousStatus);
+                    if (statusChanged.get() && !persisted.get()) {
+                        item.setStatus(previousStatus);
+                        item.setExpiredAt(previousExpiration);
+                    }
                 }
 
                 inventoryManager.updateInventory(admin);

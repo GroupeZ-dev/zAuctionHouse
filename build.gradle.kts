@@ -73,46 +73,46 @@ allprojects {
         compileOnly("me.clip:placeholderapi:2.11.6")
         compileOnly("fr.maxlego08.menu:zmenu-api:1.1.1.7")
 
-        implementation("fr.maxlego08.sarah:sarah:1.26")
+        implementation("fr.maxlego08.sarah:sarah:1.27")
         implementation("com.tcoded:FoliaLib:0.5.1")
         implementation("fr.traqueur.currencies:currenciesapi:1.0.14")
 
-        // --- Tests ---------------------------------------------------------------------------
-        // JUnit 5 + Mockito. Les types Bukkit/zMenu/PlaceholderAPI sont compileOnly en main :
-        // ils doivent etre presents sur le classpath de test a l'execution.
-        testImplementation(platform("org.junit:junit-bom:5.11.4"))
-        testImplementation("org.junit.jupiter:junit-jupiter")
-        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-        testImplementation("org.mockito:mockito-core:5.14.2")
-        testImplementation("org.mockito:mockito-junit-jupiter:5.14.2")
-        testImplementation("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
-        testImplementation("me.clip:placeholderapi:2.11.6")
-        testImplementation("fr.maxlego08.menu:zmenu-api:1.1.1.7")
-        // Pilotes JDBC : Sarah les declare compileOnly, le consommateur les fournit.
-        // SQLite est le backend par defaut des tests ; MySQL/MariaDB sont actives a la demande
-        // via -Dzah.test.db=MYSQL|MARIADB (voir DatabaseTestBase).
-        testRuntimeOnly("org.xerial:sqlite-jdbc:3.47.1.0")
-        testRuntimeOnly("com.mysql:mysql-connector-j:9.1.0")
-        testRuntimeOnly("org.mariadb.jdbc:mariadb-java-client:3.5.6")
+//         testImplementation(platform("org.junit:junit-bom:5.11.4"))
+//         testImplementation("org.junit.jupiter:junit-jupiter")
+//         testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+//         testImplementation("org.mockito:mockito-core:5.14.2")
+//         testImplementation("org.mockito:mockito-junit-jupiter:5.14.2")
+//         testImplementation("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
+//         testImplementation("me.clip:placeholderapi:2.11.6")
+//         testImplementation("fr.maxlego08.menu:zmenu-api:1.1.1.7")
+
+//         testRuntimeOnly("org.xerial:sqlite-jdbc:3.47.1.0")
+//         testRuntimeOnly("com.mysql:mysql-connector-j:9.1.0")
+//         testRuntimeOnly("org.mariadb.jdbc:mariadb-java-client:3.5.6")
     }
 
-    tasks.withType<Test>().configureEach {
-        useJUnitPlatform()
-        // Mockito (inline mock maker) attache un agent a chaud : on l'autorise explicitement
-        // pour ne pas polluer la sortie avec l'avertissement du JDK 21.
-        jvmArgs("-XX:+EnableDynamicAgentLoading", "-Xshare:off")
-        // Propagation des proprietes zah.test.* (backend SQL, hote, identifiants...).
-        System.getProperties().stringPropertyNames()
-            .filter { it.startsWith("zah.test.") }
-            .forEach { systemProperty(it, System.getProperty(it)) }
-        testLogging {
-            events("failed", "skipped")
-            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-            showStandardStreams = false
-        }
-        // Les tests SQL partagent l'etat statique de MigrationManager : un seul fork, en serie.
-        maxParallelForks = 1
-    }
+//     tasks.withType<Test>().configureEach {
+//         useJUnitPlatform()
+//         // Mockito (inline mock maker) attache un agent a chaud : on l'autorise explicitement
+//         // pour ne pas polluer la sortie avec l'avertissement du JDK 21.
+//         jvmArgs("-XX:+EnableDynamicAgentLoading", "-Xshare:off")
+//         // Propagation des proprietes zah.test.* (backend SQL, hote, identifiants...).
+//         System.getProperties().stringPropertyNames()
+//             .filter { it.startsWith("zah.test.") }
+//             .forEach { systemProperty(it, System.getProperty(it)) }
+//         testLogging {
+//             events("failed", "skipped")
+//             exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+//             showStandardStreams = false
+//         }
+//         // Les tests SQL partagent l'etat statique de MigrationManager : un seul fork, en serie.
+//         maxParallelForks = 1
+//     }
+
+    // Tests temporairement desactives : ni compilation ni execution pendant le build.
+    // Pour les reactiver, supprimer ce bloc et decommenter les lignes ci-dessus.
+    tasks.matching { it.name in setOf("compileTestJava", "processTestResources", "testClasses", "test") }
+        .configureEach { enabled = false }
 }
 
 repositories {

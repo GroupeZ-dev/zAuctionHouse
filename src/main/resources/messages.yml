@@ -734,3 +734,5 @@ admin-logs-clear-migrated-success: "<success>Deleted <white>%amount%<success> mi
 
 # Shown when an invalid number of days is provided.
 admin-logs-invalid-days: "<error>Please specify a valid number of days (greater than 0)."
+
+admin-listing-removed: "<error>Your listing <white>%items%<error> was removed by an administrator."

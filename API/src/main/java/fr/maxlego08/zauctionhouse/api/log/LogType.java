@@ -13,6 +13,8 @@ public enum LogType {
      */
     SALE("Sale"),
 
+    ADMIN_REMOVE("Admin Remove"),
+
     /**
      * A purchase was completed - an item was bought by a buyer.
      */

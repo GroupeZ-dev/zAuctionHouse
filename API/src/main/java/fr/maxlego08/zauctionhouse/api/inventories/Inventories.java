@@ -70,6 +70,9 @@ public enum Inventories {
     /**
      * Admin history main menu.
      */
+    ADMIN_MAIN("admin-main"),
+    ADMIN_REMOVE_CONFIRM("admin-remove-confirm"),
+
     ADMIN_HISTORY_MAIN("admin-history-main"),
 
     /**

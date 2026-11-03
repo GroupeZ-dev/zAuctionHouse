@@ -125,14 +125,16 @@ timezone: auto
 #             Idéal pour: Configurations multi-serveurs, grands hôtels des ventes
 # - MARIADB : Serveur de base de données MariaDB (compatible MySQL)
 #             Idéal pour: Configurations multi-serveurs, grands hôtels des ventes
-# Note: Pour la synchronisation multi-serveur, utilisez MySQL/MariaDB avec l'addon Redis.
+# - POSTGRESQL : Serveur de base de données PostgreSQL ('POSTGRES' est aussi accepté)
+#             Idéal pour: Configurations multi-serveurs, grands hôtels des ventes
+# Note: Pour la synchronisation multi-serveur, utilisez MySQL/MariaDB/PostgreSQL avec l'addon Redis.
 #
 # ATTENTION: SQLITE est INCOMPATIBLE avec l'addon cluster Redis.
 # Chaque serveur garderait son PROPRE fichier de base de donnees, les identifiants d'items
 # entreraient en collision d'un serveur a l'autre et les verrous du cluster ne protegeraient
 # rien - les items SERAIENT dupliques.
 # Avec l'addon installe, SQLITE est desormais refuse: l'addon se desactive lui-meme et ce
-# serveur reste en mono-serveur. Utilisez MYSQL ou MARIADB avec une base PARTAGEE.
+# serveur reste en mono-serveur. Utilisez MYSQL, MARIADB ou POSTGRESQL avec une base PARTAGEE.
 storage-type: SQLITE
 
 # Ecrit un marqueur de format ("V2:" / "NBT:") en tete de chaque ItemStack serialise.
@@ -152,8 +154,8 @@ write-itemstack-format-marker: false
 # Recommandé: Utilisez un nom unique et descriptif (ex: "skyblock", "survival", "creative").
 server-name: skyblock
 
-# Paramètres de connexion pour MySQL/MariaDB.
-# Utilisé uniquement quand 'storage-type' est MYSQL ou MARIADB.
+# Paramètres de connexion pour MySQL/MariaDB/PostgreSQL.
+# Utilisé uniquement quand 'storage-type' est MYSQL, MARIADB ou POSTGRESQL.
 database-configuration:
   # Préfixe appliqué à toutes les tables créées par le plugin.
   # Utile pour partager une BDD avec d'autres plugins et éviter les conflits de noms.
@@ -168,6 +170,7 @@ database-configuration:
 
   # Numéro de port du serveur de base de données.
   # Port par défaut MySQL/MariaDB: 3306
+  # Port par défaut PostgreSQL: 5432
   # Ne changez que si votre BDD utilise un port non standard.
   port: 3306
 
@@ -190,7 +193,7 @@ database-configuration:
   # Recommandé: Garder désactivé en production.
   debug: false
 
-  # Durée de vie maximale d'une connexion MySQL ou MariaDB du pool, en secondes.
+  # Durée de vie maximale d'une connexion MySQL, MariaDB ou PostgreSQL du pool, en secondes.
   # Une connexion plus ancienne est retirée et remplacée. 0 garde les connexions jusqu'à la fermeture du pool.
   # Hikari exige au moins 30 secondes. 1800 correspond à 30 minutes, la valeur par défaut si l'option est absente.
   max-lifetime: 1800

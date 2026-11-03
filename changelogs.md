@@ -1,5 +1,8 @@
 # Unreleased
 
+- **Added** PostgreSQL support: set `storage-type: POSTGRESQL` (`POSTGRES` is also accepted) in `config.yml` and fill in `database-configuration` (default PostgreSQL port: `5432`). The JDBC driver is downloaded automatically by the server. PostgreSQL also works as the shared database of the Redis addon
+- **Updated** Sarah to version `1.27`
+
 # 4.0.1.6
 
 - **Added** `dialog.enabled` option on `ZAUCTIONHOUSE_SEARCH`: clicking the button opens a native Paper dialog (via zMenu) with a text field pre-filled with the current search and **Search**, **Clear** and **Cancel** buttons, instead of asking in chat. Disabled by default; if the dialog cannot be loaded, the chat input is used. The dialog is configured in the new `dialogs/search.yml` file (title, description, labels), available in every language. Thanks to LIUZAZA007 (#41)

@@ -125,14 +125,16 @@ timezone: auto
 #             Ideal para: Configuraciones multi-servidor, grandes casas de subastas
 # - MARIADB : Servidor de base de datos MariaDB (compatible con MySQL)
 #             Ideal para: Configuraciones multi-servidor, grandes casas de subastas
-# Nota: Para la sincronizacion multi-servidor, usa MySQL/MariaDB con el addon Redis.
+# - POSTGRESQL : Servidor de base de datos PostgreSQL (tambien se acepta 'POSTGRES')
+#             Ideal para: Configuraciones multi-servidor, grandes casas de subastas
+# Nota: Para la sincronizacion multi-servidor, usa MySQL/MariaDB/PostgreSQL con el addon Redis.
 #
 # ADVERTENCIA: SQLITE es INCOMPATIBLE con el addon de cluster Redis.
 # Cada servidor mantendria su PROPIO archivo de base de datos, los identificadores de objetos
 # colisionarian entre servidores y los bloqueos del cluster no protegerian nada: los objetos
 # SERIAN duplicados.
 # Con el addon instalado, SQLITE ahora se rechaza: el addon se desactiva a si mismo y este
-# servidor permanece en modo servidor unico. Usa MYSQL o MARIADB con una base COMPARTIDA.
+# servidor permanece en modo servidor unico. Usa MYSQL, MARIADB o POSTGRESQL con una base COMPARTIDA.
 storage-type: SQLITE
 
 # Escribe un marcador de formato ("V2:" / "NBT:") al inicio de cada ItemStack serializado.
@@ -152,8 +154,8 @@ write-itemstack-format-marker: false
 # Recomendado: Usa un nombre unico y descriptivo (ej: "skyblock", "survival", "creative").
 server-name: skyblock
 
-# Ajustes de conexion para MySQL/MariaDB.
-# Usado solo cuando 'storage-type' es MYSQL o MARIADB.
+# Ajustes de conexion para MySQL/MariaDB/PostgreSQL.
+# Usado solo cuando 'storage-type' es MYSQL, MARIADB o POSTGRESQL.
 database-configuration:
   # Prefijo aplicado a todas las tablas creadas por el plugin.
   # Util para compartir una BD con otros plugins y evitar conflictos de nombres.
@@ -168,6 +170,7 @@ database-configuration:
 
   # Numero de puerto del servidor de base de datos.
   # Puerto predeterminado MySQL/MariaDB: 3306
+  # Puerto predeterminado PostgreSQL: 5432
   # Cambiar solo si tu BD usa un puerto no estandar.
   port: 3306
 
@@ -190,7 +193,7 @@ database-configuration:
   # Recomendado: Mantener desactivado en produccion.
   debug: false
 
-  # Duracion maxima de una conexion MySQL o MariaDB del pool, en segundos.
+  # Duracion maxima de una conexion MySQL, MariaDB o PostgreSQL del pool, en segundos.
   # Una conexion mas antigua se retira y se reemplaza. 0 mantiene las conexiones hasta que se cierra el pool.
   # Hikari exige al menos 30 segundos. 1800 son 30 minutos, el valor por defecto si se omite esta opcion.
   max-lifetime: 1800

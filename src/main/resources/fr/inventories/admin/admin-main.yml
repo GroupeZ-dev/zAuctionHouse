@@ -1,0 +1,43 @@
+# Admin player directory. Counts are auction listings/lots, including historical purchases.
+name: "#0c1719Administration des joueurs"
+size: 54
+patterns:
+  - zauctionhouse-pagination
+items:
+  players:
+    type: ZAUCTIONHOUSE_ADMIN_PLAYERS
+    slots:
+      - 0-44
+    item:
+      material: PLAYER_HEAD
+      player-head: "%target%"
+      name: "#2CCED2%target%"
+      lore:
+        - "#92ffffEn vente: #2CCED2%listed%"
+        - "#92ffffVendus: #2CCED2%sold%"
+        - "#92ffffAchetés: #2CCED2%purchased%"
+        - ""
+        - "#92ffffCliquez pour consulter son historique"
+    else:
+      item:
+        material: BARRIER
+        name: "#ff5555Aucun historique"
+      slot: 22
+  sort:
+    type: ZAUCTIONHOUSE_ADMIN_PLAYERS_SORT
+    slot: 49
+    item:
+      material: HOPPER
+      name: "#2CCED2Trier les joueurs"
+      lore:
+        - "%name-color%• Nom"
+        - "%listed-color%• En vente (décroissant)"
+        - "%sold-color%• Vendus (décroissant)"
+        - "%purchased-color%• Achetés (décroissant)"
+        - "#8c8c8cClic gauche / droit pour changer"
+  refresh:
+    type: ZAUCTIONHOUSE_ADMIN_MAIN
+    slot: 45
+    item:
+      material: SUNFLOWER
+      name: "#2CCED2Actualiser"
