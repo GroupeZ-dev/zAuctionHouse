@@ -66,6 +66,7 @@ public enum Message {
     ADMIN_OPEN_INVENTORY("<success>Opening %type% items for <white>%target%<success>."),
     ADMIN_FORCEOPEN_INVENTORY("<success>Opening inventory <white>%inventory%<success> for <white>%target%<success> at page <white>%page%<success>."),
     ADMIN_OPEN_HISTORY("<success>Opening history for <white>%target%<success>."),
+    ADMIN_LISTING_REMOVED("<error>Your listing <white>%items%<error> was removed by an administrator."),
     ADMIN_ITEM_REMOVED("<success>You removed <white>%items%<success> from <white>%target%<success>."),
     ADMIN_ITEM_NOT_AVAILABLE("<error>The item <white>%items%<error> is no longer available: it was sold, claimed or removed on another server."),
     ADMIN_ITEM_ADDED("<success>You added <white>%items%<success> to <white>%target%<success> in <white>%type%<success>."),

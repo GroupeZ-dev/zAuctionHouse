@@ -1,0 +1,49 @@
+# แต่ละตัวเลือกสามารถเปิด/ปิดแยกกันได้ก่อนยืนยัน
+name: "#0c1719ต้องการลบประกาศนี้หรือไม่?"
+size: 27
+items:
+  show:
+    type: ZAUCTIONHOUSE_SHOW
+    slot: 4
+  notify:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_NOTIFY
+    enable-material: BELL
+    disable-material: BARRIER
+    slot: 11
+    item:
+      material: '%material%'
+      name: "%state-color%แจ้งเตือนผู้เล่น"
+      lore:
+        - "#8c8c8cคลิกเพื่อสลับ"
+  expire:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_EXPIRE
+    enable-material: CLOCK
+    disable-material: BARRIER
+    slot: 13
+    item:
+      material: '%material%'
+      name: "%state-color%ส่งไปยังไอเทมหมดอายุ"
+      lore:
+        - "#8c8c8cคลิกเพื่อสลับ"
+  copy:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_COPY
+    enable-material: CHEST
+    disable-material: BARRIER
+    slot: 15
+    item:
+      material: '%material%'
+      name: "%state-color%มอบสำเนาให้แอดมิน"
+      lore:
+        - "#8c8c8cคลิกเพื่อสลับ"
+  confirm:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_CONFIRM
+    slot: 21
+    item:
+      material: LIME_CONCRETE
+      name: "#2CCED2ยืนยันการลบ"
+  cancel:
+    type: BACK
+    slot: 23
+    item:
+      material: RED_CONCRETE
+      name: "#ff5555ยกเลิก"

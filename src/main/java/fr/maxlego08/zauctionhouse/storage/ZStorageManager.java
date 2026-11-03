@@ -43,7 +43,6 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
     private static final long ORPHAN_RESERVATION_GRACE_MS = 10L * 60L * 1000L;
 
     private final AuctionPlugin plugin;
-    private AuctionLoader auctionLoader;
     private Repositories repositories;
     private DatabaseConnection databaseConnection;
 
@@ -155,8 +154,8 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
 
     @Override
     public void loadItems() {
-        this.auctionLoader = new AuctionLoader(plugin, this);
-        this.auctionLoader.loadItems();
+        AuctionLoader auctionLoader = new AuctionLoader(plugin, this);
+        auctionLoader.loadItems();
     }
 
     @Override
@@ -194,7 +193,7 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
     private @NotNull DatabaseConfiguration getDatabaseConfiguration() {
 
         var config = this.plugin.getConfig();
-        var storageType = DatabaseType.valueOf(config.getString("storage-type", "SQLITE").toUpperCase());
+        var storageType = databaseType(config.getString("storage-type", "SQLITE"));
 
         GlobalDatabaseConfiguration globalDatabaseConfiguration = new GlobalDatabaseConfiguration(config);
 
@@ -214,6 +213,17 @@ public class ZStorageManager extends ItemLoaderUtils implements StorageManager {
         }
 
         return databaseConfiguration;
+    }
+
+
+    private DatabaseType databaseType(@NotNull String storageType) {
+        return switch (storageType.toUpperCase(Locale.ROOT)) {
+            case "SQLITE" -> DatabaseType.SQLITE;
+            case "MYSQL" -> DatabaseType.MYSQL;
+            case "MARIADB" -> DatabaseType.MARIADB;
+            case "POSTGRESQL", "POSTGRES" -> DatabaseType.POSTGRESQL;
+            default -> null;
+        };
     }
 
     @Override

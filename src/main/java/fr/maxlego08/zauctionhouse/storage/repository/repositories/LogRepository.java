@@ -77,9 +77,14 @@ public class LogRepository extends Repository {
      * Selects all unread purchase logs where the player is the seller (target_unique_id).
      * These are sales made while the player was offline.
      *
-     * @param sellerUniqueId the seller's UUID
+     * @param targetUniqueId the seller's UUID
      * @return list of unread purchase logs
      */
+    public List<LogDTO> selectUnreadAdminRemovals(UUID targetUniqueId) {
+        return selectOrFail(LogDTO.class, schema -> schema.where("target_unique_id", targetUniqueId.toString())
+                .where("log_type", LogType.ADMIN_REMOVE.name()).whereNull("readed_at"));
+    }
+
     public List<LogDTO> selectUnreadSales(UUID sellerUniqueId) {
         return select(LogDTO.class, schema -> schema.where("target_unique_id", sellerUniqueId.toString()).where("log_type", LogType.PURCHASE.name()).whereNull("readed_at").orderByDesc("created_at"));
     }

@@ -158,3 +158,9 @@ items:
       lore:
         - ''
         - '#8c8c8c• #2CCED2คลิก #92ffffเพื่อเปิดดู'
+  players:
+    type: ZAUCTIONHOUSE_ADMIN_MAIN
+    slot: 49
+    item:
+      material: BOOK
+      name: "#2CCED2All players"

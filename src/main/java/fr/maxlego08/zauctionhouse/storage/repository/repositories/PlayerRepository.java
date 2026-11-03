@@ -5,6 +5,7 @@ import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.storage.Repository;
 import fr.maxlego08.zauctionhouse.api.storage.Tables;
 import fr.maxlego08.zauctionhouse.api.storage.dto.PlayerDTO;
+import fr.maxlego08.zauctionhouse.api.storage.dto.AdminPlayerDTO;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -14,6 +15,50 @@ public class PlayerRepository extends Repository {
 
     public PlayerRepository(AuctionPlugin plugin, DatabaseConnection connection) {
         super(plugin, connection, Tables.PLAYERS);
+    }
+
+    /** One row per player with auction activity; no item contents are loaded for this directory. */
+    public List<AdminPlayerDTO> selectAdminPlayers() {
+        String sql = """
+                SELECT p.unique_id, p.name, SUM(h.listed) AS listed, SUM(h.sold) AS sold,
+                       SUM(h.purchased) AS purchased
+                FROM %prefix%players p
+                JOIN (
+                    SELECT seller_unique_id AS unique_id,
+                           SUM(CASE WHEN storage_type = 'LISTED' AND (expired_at > ? OR expired_at = ?) THEN 1 ELSE 0 END) AS listed,
+                           0 AS sold, 0 AS purchased
+                    FROM %prefix%items WHERE pending_publish IS NULL OR pending_publish = 0
+                    GROUP BY seller_unique_id
+                    UNION ALL
+                    SELECT buyer_unique_id, 0, 0, 0 FROM %prefix%items
+                    WHERE buyer_unique_id IS NOT NULL GROUP BY buyer_unique_id
+                    UNION ALL
+                    SELECT player_unique_id, 0, 0,
+                           SUM(CASE WHEN log_type = 'PURCHASE' THEN 1 ELSE 0 END)
+                    FROM %prefix%logs GROUP BY player_unique_id
+                    UNION ALL
+                    SELECT target_unique_id, 0,
+                           SUM(CASE WHEN log_type = 'PURCHASE' THEN 1 ELSE 0 END), 0
+                    FROM %prefix%logs WHERE target_unique_id IS NOT NULL GROUP BY target_unique_id
+                    UNION ALL
+                    SELECT player_unique_id, 0, 0, 0 FROM %prefix%transactions GROUP BY player_unique_id
+                ) h ON h.unique_id = p.unique_id
+                GROUP BY p.unique_id, p.name
+                """;
+        sql = this.connection.getDatabaseConfiguration().replacePrefix(sql);
+        var result = new java.util.ArrayList<AdminPlayerDTO>();
+        try (var jdbc = this.connection.getConnection(); var statement = jdbc.prepareStatement(sql)) {
+            statement.setTimestamp(1, new java.sql.Timestamp(System.currentTimeMillis()));
+            statement.setTimestamp(2, new java.sql.Timestamp(0));
+            try (var rows = statement.executeQuery()) {
+                while (rows.next()) result.add(new AdminPlayerDTO(
+                        UUID.fromString(rows.getString("unique_id")), rows.getString("name"),
+                        rows.getLong("listed"), rows.getLong("sold"), rows.getLong("purchased")));
+            }
+        } catch (java.sql.SQLException exception) {
+            throw new IllegalStateException("Cannot load admin player statistics", exception);
+        }
+        return result;
     }
 
     public void upsertPlayer(Player player) {

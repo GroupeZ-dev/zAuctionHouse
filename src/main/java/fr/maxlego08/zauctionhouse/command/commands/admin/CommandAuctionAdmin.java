@@ -33,8 +33,10 @@ public class CommandAuctionAdmin extends VCommand {
 
     @Override
     protected CommandType perform(AuctionPlugin plugin) {
-        this.syntaxMessage(this.sender);
-        return CommandType.SYNTAX_ERROR;
+        if (!this.player.hasPermission(Permission.ZAUCTIONHOUSE_ADMIN_ITEMS.asPermission())) return CommandType.SYNTAX_ERROR;
+        this.auctionManager.getCache(this.player).remove(fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey.ADMIN_PLAYERS_DATA);
+        plugin.getInventoriesLoader().openInventory(this.player, fr.maxlego08.zauctionhouse.api.inventories.Inventories.ADMIN_MAIN);
+        return CommandType.SUCCESS;
     }
 
 }

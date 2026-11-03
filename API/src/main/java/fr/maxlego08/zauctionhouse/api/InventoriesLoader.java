@@ -86,4 +86,15 @@ public interface InventoriesLoader {
      * @param page        page index to display
      */
     void openInventory(Player player, Inventories inventories, int page);
+
+    /**
+     * Opens the specified inventory for the player at the requested page index, optionally using
+     * previously loaded inventory data.
+     *
+     * @param player            the player who should view the inventory
+     * @param inventories       the type of inventory to open, as defined in the {@link Inventories} enum
+     * @param page              the page index to display in the inventory
+     * @param useOldInventories whether to use previously loaded inventory data instead of reloading
+     */
+    void openInventory(Player player, Inventories inventories, int page, boolean useOldInventories);
 }

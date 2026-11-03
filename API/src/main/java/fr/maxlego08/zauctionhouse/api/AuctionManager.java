@@ -357,6 +357,37 @@ public interface AuctionManager {
     void adminRemoveItem(Player admin, java.util.UUID targetUniqueId, Item item, StorageType storageType);
 
     /**
+     * Removes a specified item from the target player's storage, with options for notification,
+     * expiration, and whether the operation involves a copy of the item.
+     *
+     * @param admin          The administrator performing the item removal action.
+     * @param targetUniqueId The unique identifier of the target player whose item is to be removed.
+     * @param item           The item to be removed from the player's storage.
+     * @param storageType    The type of storage from which the item will be removed.
+     * @param notify         Whether the target player should be notified about the removal.
+     * @param expire         Whether the item should expire upon removal.
+     * @param copy           Whether the removal operation involves a duplicate (copy) of the item.
+     */
+    void adminRemoveItem(Player admin, java.util.UUID targetUniqueId, Item item, StorageType storageType, boolean notify, boolean expire, boolean copy);
+
+    /**
+     * Removes a specified item from the target player's storage, with various administrative options.
+     *
+     * @param admin           The admin player performing the removal.
+     * @param targetUniqueId  The unique identifier of the target player.
+     * @param item            The item to be removed from the target player's storage.
+     * @param storageType     The type of storage from which the item is to be removed.
+     * @param notify          Whether the target player should be notified about the removal.
+     * @param expire          Whether the item should be marked as expired upon removal.
+     * @param copy            Whether to create a copy of the item before removal.
+     * @param updateInventory Whether to update the target player's inventory after item removal.
+     */
+    default void adminRemoveItem(Player admin, java.util.UUID targetUniqueId, Item item, StorageType storageType,
+                                 boolean notify, boolean expire, boolean copy, boolean updateInventory) {
+        throw new UnsupportedOperationException("Admin removal options are not supported");
+    }
+
+    /**
      * Attempts to purchase the provided item on behalf of the player. The returned future completes
      * once validations, economy transactions, storage updates, and notifications are finished.
      *

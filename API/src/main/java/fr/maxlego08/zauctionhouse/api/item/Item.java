@@ -195,6 +195,52 @@ public interface Item {
     void setStatus(ItemStatus status);
 
     /**
+     * Player who holds the confirmation reservation ({@link ItemStatus#IS_PURCHASE_CONFIRM} or
+     * {@link ItemStatus#IS_REMOVE_CONFIRM}) on this server. Only meaningful while the item carries
+     * one of these statuses; reset when the item goes back to {@link ItemStatus#AVAILABLE}, so a
+     * release coming from another server or from the maintenance sweep invalidates it.
+     *
+     * @return the reservation owner, or {@code null} if none is known locally
+     */
+    default java.util.UUID getReservationOwner() {
+        return null;
+    }
+
+    /**
+     * Records the player who holds the confirmation reservation. Must be called right after the
+     * confirmation status has been set.
+     *
+     * @param owner reservation owner
+     */
+    default void setReservationOwner(java.util.UUID owner) {
+    }
+
+    /**
+     * Atomically reserves an {@link ItemStatus#AVAILABLE} item: sets the confirmation status and
+     * its owner together, or does nothing if the item is no longer available.
+     *
+     * @param confirmStatus {@link ItemStatus#IS_PURCHASE_CONFIRM} or {@link ItemStatus#IS_REMOVE_CONFIRM}
+     * @param owner         player taking the reservation
+     * @return {@code true} if the reservation was taken
+     */
+    default boolean tryReserve(ItemStatus confirmStatus, java.util.UUID owner) {
+        if (getStatus() != ItemStatus.AVAILABLE) return false;
+        setStatus(confirmStatus);
+        setReservationOwner(owner);
+        return true;
+    }
+
+    /**
+     * @param playerUniqueId player to test
+     * @return {@code true} if this item carries a confirmation status reserved by this player
+     */
+    default boolean isReservedBy(java.util.UUID playerUniqueId) {
+        var status = getStatus();
+        return (status == ItemStatus.IS_PURCHASE_CONFIRM || status == ItemStatus.IS_REMOVE_CONFIRM)
+                && playerUniqueId != null && playerUniqueId.equals(getReservationOwner());
+    }
+
+    /**
      * Indicates whether the player is allowed to receive the physical item stack (e.g., has
      * inventory space or permissions).
      *

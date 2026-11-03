@@ -30,6 +30,11 @@ public abstract class ZItem implements Item {
     protected AuctionEconomy auctionEconomy;
     protected Date expiredAt;
     protected ItemStatus itemStatus = ItemStatus.AVAILABLE;
+    /**
+     * Detenteur LOCAL de la reservation de confirmation (achat, retrait vendeur, retrait admin).
+     * Volatile : lu depuis les fils asynchrones des services et du pont cluster.
+     */
+    protected volatile UUID reservationOwner;
     protected UUID buyerUniqueId;
     protected String buyerName;
     protected Set<Category> categories = new HashSet<>();
@@ -180,8 +185,37 @@ public abstract class ZItem implements Item {
     }
 
     @Override
-    public void setStatus(ItemStatus status) {
+    public synchronized void setStatus(ItemStatus status) {
         this.itemStatus = status;
+        // Toute remise en vente (fermeture d'une confirmation, balayage de maintenance, message
+        // d'un autre serveur) met fin a la reservation : une reservation posee ensuite par un
+        // autre joueur, ici ou ailleurs, ne pourra jamais etre prise pour celle de l'ancien
+        // detenteur. Les restaurations IS_BEING_* -> IS_*_CONFIRM conservent le detenteur.
+        if (status == ItemStatus.AVAILABLE) this.reservationOwner = null;
+    }
+
+    /**
+     * Version atomique : statut et detenteur sont poses sous le meme moniteur que
+     * {@link #setStatus}, si bien qu'une remise en vente concurrente (autre region Folia,
+     * message du cluster) ne peut ni s'intercaler entre les deux ni laisser un detenteur perime
+     * sur une reservation posee ensuite par un autre serveur.
+     */
+    @Override
+    public synchronized boolean tryReserve(ItemStatus confirmStatus, UUID owner) {
+        if (this.itemStatus != ItemStatus.AVAILABLE) return false;
+        this.itemStatus = confirmStatus;
+        this.reservationOwner = owner;
+        return true;
+    }
+
+    @Override
+    public UUID getReservationOwner() {
+        return this.reservationOwner;
+    }
+
+    @Override
+    public synchronized void setReservationOwner(UUID owner) {
+        this.reservationOwner = owner;
     }
 
     @Override
