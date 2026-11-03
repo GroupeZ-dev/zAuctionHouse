@@ -1,0 +1,49 @@
+# Cada opcion se puede activar o desactivar de forma independiente antes de confirmar.
+name: "#0c1719Retirar este anuncio?"
+size: 27
+items:
+  show:
+    type: ZAUCTIONHOUSE_SHOW
+    slot: 4
+  notify:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_NOTIFY
+    enable-material: BELL
+    disable-material: BARRIER
+    slot: 11
+    item:
+      material: '%material%'
+      name: "%state-color%Avisar al jugador"
+      lore:
+        - "#8c8c8cHaz clic para cambiar"
+  expire:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_EXPIRE
+    enable-material: CLOCK
+    disable-material: BARRIER
+    slot: 13
+    item:
+      material: '%material%'
+      name: "%state-color%Enviar a objetos expirados"
+      lore:
+        - "#8c8c8cHaz clic para cambiar"
+  copy:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_COPY
+    enable-material: CHEST
+    disable-material: BARRIER
+    slot: 15
+    item:
+      material: '%material%'
+      name: "%state-color%Dar una copia al admin"
+      lore:
+        - "#8c8c8cHaz clic para cambiar"
+  confirm:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_CONFIRM
+    slot: 21
+    item:
+      material: LIME_CONCRETE
+      name: "#2CCED2Confirmar retiro"
+  cancel:
+    type: BACK
+    slot: 23
+    item:
+      material: RED_CONCRETE
+      name: "#ff5555Cancelar"

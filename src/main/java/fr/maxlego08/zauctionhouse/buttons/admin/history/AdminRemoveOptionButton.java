@@ -1,4 +1,4 @@
-package fr.maxlego08.zauctionhouse.buttons.admin;
+package fr.maxlego08.zauctionhouse.buttons.admin.history;
 
 import fr.maxlego08.menu.api.button.Button;
 import fr.maxlego08.menu.api.engine.InventoryEngine;
@@ -15,10 +15,14 @@ public abstract class AdminRemoveOptionButton extends Button {
 
     private final AuctionPlugin plugin;
     private final PlayerCacheKey key;
+    private final String enableMaterial;
+    private final String disableMaterial;
 
-    protected AdminRemoveOptionButton(Plugin plugin, PlayerCacheKey key) {
+    protected AdminRemoveOptionButton(Plugin plugin, PlayerCacheKey key, String enableMaterial, String disableMaterial) {
         this.plugin = (AuctionPlugin) plugin;
         this.key = key;
+        this.enableMaterial = enableMaterial;
+        this.disableMaterial = disableMaterial;
     }
 
     @Override
@@ -26,6 +30,7 @@ public abstract class AdminRemoveOptionButton extends Button {
         boolean enabled = this.plugin.getAuctionManager().getCache(player).get(this.key);
         placeholders.register("enabled", String.valueOf(enabled));
         placeholders.register("state-color", enabled ? "#55ff55" : "#ff5555");
+        placeholders.register("material", enabled ? this.enableMaterial : this.disableMaterial);
         return super.getCustomItemStack(player, false, placeholders);
     }
 

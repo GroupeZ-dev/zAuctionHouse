@@ -5,6 +5,7 @@ import fr.maxlego08.zauctionhouse.ZAuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.AuctionManager;
 import fr.maxlego08.zauctionhouse.api.AuctionPlugin;
 import fr.maxlego08.zauctionhouse.api.cache.PlayerCacheKey;
+import fr.maxlego08.zauctionhouse.api.configuration.Configuration;
 import fr.maxlego08.zauctionhouse.api.economy.AuctionEconomy;
 import fr.maxlego08.zauctionhouse.api.event.events.sell.AuctionPreSellEvent;
 import fr.maxlego08.zauctionhouse.api.event.events.stats.AuctionItemListedEvent;
@@ -860,7 +861,7 @@ public class SellService extends ZUtils implements AuctionSellService {
         sendSellMessages(player, auctionItem, auctionEconomy, taxResult);
 
         // L'annonce est DEJA publiee : un contenu recalcitrant ne doit plus faire remonter
-        // d'exception apres commit, le log admin est le seul a en souffrir.
+        // d'exception apres commit, le log admin est le seul à en souffrir.
         String encodedItemStack;
         try {
             encodedItemStack = auctionItem.getItemStacks().stream()
@@ -884,7 +885,7 @@ public class SellService extends ZUtils implements AuctionSellService {
         new AuctionItemListedEvent(player, auctionItem, taxResult.hasTax() ? taxResult : null).callEvent();
 
         this.plugin.getAuctionClusterBridge().notifyItemListed(auctionItem).thenAccept(v -> {
-            this.plugin.getLogger().info("Cluster notify item sold");
+            if (this.plugin.getConfiguration().isEnableDebug()) this.plugin.getLogger().info("Cluster notify item sold");
         }).exceptionally(throwable -> {
             this.plugin.getLogger().severe("Unable to notify item sold: " + throwable.getMessage());
             return null;

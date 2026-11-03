@@ -7,25 +7,31 @@ items:
     slot: 4
   notify:
     type: ZAUCTIONHOUSE_ADMIN_REMOVE_NOTIFY
+    enable-material: BELL
+    disable-material: BARRIER
     slot: 11
     item:
-      material: BELL
+      material: '%material%'
       name: "%state-color%Notify player"
       lore:
         - "#8c8c8cClick to toggle"
   expire:
     type: ZAUCTIONHOUSE_ADMIN_REMOVE_EXPIRE
+    enable-material: CLOCK
+    disable-material: BARRIER
     slot: 13
     item:
-      material: CLOCK
+      material: '%material%'
       name: "%state-color%Send to expired items"
       lore:
         - "#8c8c8cClick to toggle"
   copy:
     type: ZAUCTIONHOUSE_ADMIN_REMOVE_COPY
+    enable-material: CHEST
+    disable-material: BARRIER
     slot: 15
     item:
-      material: CHEST
+      material: '%material%'
       name: "%state-color%Give admin a copy"
       lore:
         - "#8c8c8cClick to toggle"

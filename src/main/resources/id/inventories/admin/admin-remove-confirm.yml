@@ -1,0 +1,49 @@
+# Tiap opsi bisa dinyalain/dimatiin sendiri-sendiri sebelum konfirmasi.
+name: "#0c1719Tarik listing ini?"
+size: 27
+items:
+  show:
+    type: ZAUCTIONHOUSE_SHOW
+    slot: 4
+  notify:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_NOTIFY
+    enable-material: BELL
+    disable-material: BARRIER
+    slot: 11
+    item:
+      material: '%material%'
+      name: "%state-color%Kabarin pemain"
+      lore:
+        - "#8c8c8cKlik buat ganti"
+  expire:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_EXPIRE
+    enable-material: CLOCK
+    disable-material: BARRIER
+    slot: 13
+    item:
+      material: '%material%'
+      name: "%state-color%Kirim ke barang kedaluwarsa"
+      lore:
+        - "#8c8c8cKlik buat ganti"
+  copy:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_COPY
+    enable-material: CHEST
+    disable-material: BARRIER
+    slot: 15
+    item:
+      material: '%material%'
+      name: "%state-color%Kasih salinan ke admin"
+      lore:
+        - "#8c8c8cKlik buat ganti"
+  confirm:
+    type: ZAUCTIONHOUSE_ADMIN_REMOVE_CONFIRM
+    slot: 21
+    item:
+      material: LIME_CONCRETE
+      name: "#2CCED2Konfirmasi tarik"
+  cancel:
+    type: BACK
+    slot: 23
+    item:
+      material: RED_CONCRETE
+      name: "#ff5555Batal"

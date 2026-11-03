@@ -25,7 +25,6 @@ import fr.maxlego08.zauctionhouse.api.item.items.AuctionItem;
 import fr.maxlego08.zauctionhouse.api.log.LogType;
 import fr.maxlego08.zauctionhouse.api.messages.Message;
 import fr.maxlego08.zauctionhouse.api.services.*;
-import fr.maxlego08.zauctionhouse.api.services.AuctionOptionService;
 import fr.maxlego08.zauctionhouse.api.services.result.RemoveFailReason;
 import fr.maxlego08.zauctionhouse.api.services.result.RemoveResult;
 import fr.maxlego08.zauctionhouse.api.storage.StaleItemException;
@@ -145,7 +144,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     }
 
     private void openAuctionInventory(Player player, int page) {
-        var inventoriesLoader = this.plugin.getInventoriesLoader();
+
         var cache = getCache(player);
 
         // Check if player's cache is already ready (fast path)
@@ -153,17 +152,16 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         boolean globalCacheReady = !sortedItemsCache.isDirty();
 
         if (playerCacheReady && globalCacheReady) {
-            inventoriesLoader.openInventory(player, Inventories.AUCTION, page);
+            openFinalAuctionPage(player, page);
         } else {
             // Cache needs preparation - do it async then open on the entity thread
-            prepareCacheAsync(player).thenRun(() -> {
-                this.plugin.getScheduler().runAtEntity(player, w -> {
-                    if (player.isOnline()) {
-                        inventoriesLoader.openInventory(player, Inventories.AUCTION, page);
-                    }
-                });
-            });
+            prepareCacheAsync(player).thenRun(() -> openFinalAuctionPage(player, page));
         }
+    }
+
+    private void openFinalAuctionPage(Player player, int page) {
+        var inventoriesLoader = this.plugin.getInventoriesLoader();
+        inventoriesLoader.openInventory(player, Inventories.AUCTION, page);
     }
 
     /**
@@ -855,13 +853,16 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public void adminRemoveItem(Player admin, UUID targetUniqueId, Item item, StorageType storageType) {
-
         adminRemoveItem(admin, targetUniqueId, item, storageType, false, false, true);
     }
 
     @Override
-    public void adminRemoveItem(Player admin, UUID targetUniqueId, Item item, StorageType storageType,
-                                boolean notify, boolean expire, boolean copy) {
+    public void adminRemoveItem(Player admin, UUID targetUniqueId, Item item, StorageType storageType, boolean notify, boolean expire, boolean copy) {
+        adminRemoveItem(admin, targetUniqueId, item, storageType, notify, expire, copy, true);
+    }
+
+    @Override
+    public void adminRemoveItem(Player admin, UUID targetUniqueId, Item item, StorageType storageType, boolean notify, boolean expire, boolean copy, boolean updateInventory) {
         if (storageType == StorageType.LISTED && !item.isActivelyListed()) return;
         var destination = expire ? StorageType.EXPIRED : StorageType.DELETED;
         var clusterBridge = this.plugin.getAuctionClusterBridge();
@@ -888,7 +889,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         if (getItem(storageType, item.getId()) != item) {
             this.plugin.getLogger().info("Stale item reference for item " + item.getId() + " in " + storageType + ", admin removal refused");
             message(this.plugin, admin, Message.ADMIN_ITEM_NOT_AVAILABLE, "%items%", item.getItemDisplay());
-            inventoryManager.updateInventory(admin);
+            if (updateInventory) inventoryManager.updateInventory(admin);
             return;
         }
 
@@ -904,7 +905,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             if (!Boolean.TRUE.equals(available)) {
                 this.plugin.getLogger().info("Item " + item.getId() + " is not available on the cluster");
                 message(this.plugin, admin, Message.ADMIN_ITEM_NOT_AVAILABLE, "%items%", item.getItemDisplay());
-                return this.<LockToken>failedFuture(new IllegalStateException("Item indisponible"));
+                return this.failedFuture(new IllegalStateException("Item indisponible"));
             }
 
             return clusterBridge.lockItem(item, admin.getUniqueId(), storageType);
@@ -920,7 +921,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             if (lockToken == null || !lockToken.isAcquired()) {
                 this.plugin.getLogger().info("Item " + item.getId() + " is already locked, admin removal aborted");
                 message(this.plugin, admin, Message.ADMIN_ITEM_NOT_AVAILABLE, "%items%", item.getItemDisplay());
-                return this.<Void>failedFuture(new IllegalStateException("Item deja verrouille"));
+                return this.failedFuture(new IllegalStateException("Item deja verrouille"));
             }
 
             // C-060 : relecture autoritaire SOUS VERROU. Sans elle, un clic admin sur un noeud
@@ -932,17 +933,16 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
                     removeItem(storageType, item.getId()); // purge du fantome + marquage terminal
                     clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_EXPIRED, PlayerCacheKey.ITEMS_PURCHASED, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_SEARCH);
                     message(this.plugin, admin, Message.ADMIN_ITEM_NOT_AVAILABLE, "%items%", item.getItemDisplay());
-                    return this.<Void>failedFuture(new IllegalStateException("Item deja traite sur un autre serveur"));
+                    return this.failedFuture(new IllegalStateException("Item deja traite sur un autre serveur"));
                 }
 
                 if (getItem(storageType, item.getId()) != item) {
-                    return this.<Void>failedFuture(new IllegalStateException("Stale item under admin lock"));
+                    return this.failedFuture(new IllegalStateException("Stale item under admin lock"));
                 }
-                CompletableFuture<Long> expiration = expire
-                        ? this.plugin.getConfiguration().getExpireExpiration().getExpiration(this.plugin.getOfflinePermission(), item.getSeller())
-                        : CompletableFuture.completedFuture(0L);
+                CompletableFuture<Long> expiration = expire ? this.plugin.getConfiguration().getExpireExpiration().getExpiration(this.plugin.getOfflinePermission(), item.getSeller()) : CompletableFuture.completedFuture(0L);
                 return expiration.thenCompose(seconds -> {
-                    if (expire) item.setExpiredAt(new Date(seconds > 0 ? System.currentTimeMillis() + seconds * 1000 : 0));
+                    if (expire)
+                        item.setExpiredAt(new Date(seconds > 0 ? System.currentTimeMillis() + seconds * 1000 : 0));
                     // C-012 : durabilite D'ABORD, diffusion d'un etat TERMINAL ensuite. L'ancienne
                     // surcharge 2 arguments passait destination = null, donc Redis ecrivait
                     // state=REMOVED et ItemRemovedListener rechargeait la ligne (encore LISTED, le
@@ -950,9 +950,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
                     item.setStatus(ItemStatus.DELETED);
                     statusChanged.set(true);
 
-                    return storageManager.updateItem(item, storageType, destination)
-                            .thenRun(() -> persisted.set(true))
-                            .thenCompose(v -> clusterBridge.removeItem(item, storageType, destination));
+                    return storageManager.updateItem(item, storageType, destination).thenRun(() -> persisted.set(true)).thenCompose(v -> clusterBridge.removeItem(item, storageType, destination));
                 });
             });
 
@@ -970,21 +968,19 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
                 item.setStatus(ItemStatus.REMOVED);
                 addItem(StorageType.EXPIRED, item);
             }
-            CompletableFuture<?> delivery = !copy ? CompletableFuture.completedFuture(null)
-                    : expire ? giveItem(admin, item) : deliverOrRestore(admin, item, claimable);
+            CompletableFuture<?> delivery = !copy ? CompletableFuture.completedFuture(null) : expire ? giveItem(admin, item) : deliverOrRestore(admin, item, claimable);
             return delivery.thenAccept(delivered -> {
                 var target = this.plugin.getServer().getPlayer(targetUniqueId);
-                logItemAction(LogType.ADMIN_REMOVE, item, admin, targetUniqueId, item.getItemDisplay(),
-                        notify && target == null ? null : new Date());
+                logItemAction(LogType.ADMIN_REMOVE, item, admin, targetUniqueId, item.getItemDisplay(), notify && target == null ? null : new Date());
                 if (notify) {
-                    if (target != null) this.plugin.getScheduler().runAtEntity(target, task ->
-                            message(this.plugin, target, Message.ADMIN_LISTING_REMOVED, "%items%", item.getItemDisplay()));
+                    if (target != null)
+                        this.plugin.getScheduler().runAtEntity(target, task -> message(this.plugin, target, Message.ADMIN_LISTING_REMOVED, "%items%", item.getItemDisplay()));
                 }
 
                 var targetName = item.getSellerUniqueId().equals(targetUniqueId) ? item.getSellerName() : item.getBuyerName();
                 message(this.plugin, admin, Message.ADMIN_ITEM_REMOVED, "%items%", item.getItemDisplay(), "%target%", targetName == null ? "unknown" : targetName);
 
-                inventoryManager.updateInventory(admin);
+                if (updateInventory) inventoryManager.updateInventory(admin);
             });
 
         }).whenComplete((v, throwable) -> {
@@ -996,8 +992,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
                     // Course perdue en base : la ligne ne portait plus l'etat source. On converge
                     // vers la base, on ne restaure surtout pas le statut precedent (le rediffuser
                     // remettrait en vente sur tout le cluster un item traite ailleurs).
-                    this.plugin.getLogger().severe("ADMIN REMOVE LOST THE RACE - item " + item.getId() + " admin " + admin.getName()
-                            + " : the row was already taken by another server, nothing was handed over, manual check advised");
+                    this.plugin.getLogger().severe("ADMIN REMOVE LOST THE RACE - item " + item.getId() + " admin " + admin.getName() + " : the row was already taken by another server, nothing was handed over, manual check advised");
                     removeItem(storageType, item.getId());
                     clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_EXPIRED, PlayerCacheKey.ITEMS_PURCHASED, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_SEARCH);
                     // Site (b) de ITEM_NO_LONGER_AVAILABLE : on distingue la course PERDUE EN BASE
@@ -1017,7 +1012,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
                     }
                 }
 
-                inventoryManager.updateInventory(admin);
+                if (updateInventory) inventoryManager.updateInventory(admin);
             }
 
             // Le verrou n'etait relache que sur le chemin nominal : toute sortie par exception
@@ -1054,11 +1049,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
         var timeoutMs = this.plugin.getConfiguration().getPerformance().checkAvailabilityTimeoutMs();
 
-        return selectItemRow(item.getId())
-                .orTimeout(timeoutMs, TimeUnit.MILLISECONDS)
-                .thenApply(optional -> optional.isPresent()
-                        && optional.get().storage_type() == storageType
-                        && (storageType != StorageType.LISTED || optional.get().buyer_unique_id() == null));
+        return selectItemRow(item.getId()).orTimeout(timeoutMs, TimeUnit.MILLISECONDS).thenApply(optional -> optional.isPresent() && optional.get().storage_type() == storageType && (storageType != StorageType.LISTED || optional.get().buyer_unique_id() == null));
     }
 
     @Override
@@ -1106,20 +1097,15 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         } else if (taxResult.hasTax()) {
 
             if (taxResult.isReduced()) {
-                message(this.plugin, player, Message.TAX_REDUCED, "%percentage%",
-                        String.format("%.1f", 100 - taxResult.reductionPercentage()));
+                message(this.plugin, player, Message.TAX_REDUCED, "%percentage%", String.format("%.1f", 100 - taxResult.reductionPercentage()));
             }
 
             if (taxResult.appliedType() == TaxType.CAPITALISM) {
                 // TVA : l'acheteur paie price + taxe, le vendeur touche le prix plein.
-                message(player, Message.TAX_CAPITALISM_INFO,
-                        "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()),
-                        "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
+                message(player, Message.TAX_CAPITALISM_INFO, "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()), "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
             } else {
                 // PURCHASE / BOTH : l'acheteur paie le prix plein, le vendeur touche price - taxe.
-                message(player, Message.TAX_PURCHASE_APPLIED,
-                        "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()),
-                        "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
+                message(player, Message.TAX_PURCHASE_APPLIED, "%tax%", economyManager.format(auctionEconomy, taxResult.taxAmount()), "%percentage%", String.format("%.1f", taxResult.taxPercentage()));
             }
         }
 
@@ -1127,16 +1113,11 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         if (resolvedSellerName == null) {
             resolvedSellerName = storageManager.getPlayerName(auctionItem.getSellerUniqueId());
             if (resolvedSellerName != null) {
-                this.plugin.getLogger().info("[ZAH] Resolved missing seller name for UUID "
-                        + auctionItem.getSellerUniqueId() + " -> " + resolvedSellerName
-                        + " (cross-server purchase, item " + auctionItem.getId() + ")");
+                this.plugin.getLogger().info("[ZAH] Resolved missing seller name for UUID " + auctionItem.getSellerUniqueId() + " -> " + resolvedSellerName + " (cross-server purchase, item " + auctionItem.getId() + ")");
             } else {
 
                 resolvedSellerName = auctionItem.getSellerUniqueId().toString();
-                this.plugin.getLogger().warning("[ZAH] Could not resolve seller name for UUID "
-                        + auctionItem.getSellerUniqueId() + " (item " + auctionItem.getId()
-                        + "). Using UUID string as fallback. Check that all servers share"
-                        + " the same MySQL database and that upsertPlayer is being called.");
+                this.plugin.getLogger().warning("[ZAH] Could not resolve seller name for UUID " + auctionItem.getSellerUniqueId() + " (item " + auctionItem.getId() + "). Using UUID string as fallback. Check that all servers share" + " the same MySQL database and that upsertPlayer is being called.");
             }
         }
         final String sellerName = resolvedSellerName;
@@ -1144,13 +1125,10 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         // On retire l'argent de l'acheteur. withdrawChecked pre-controle le solde SOUS VERROU
         // et rend false quand le provider refuse : l'achat s'arrete AVANT que l'item ne bouge,
         // AVANT que le vendeur ne soit credite et AVANT toute ecriture d'etat.
-        boolean withdrawn = auctionEconomy.withdrawChecked(player.getUniqueId(), buyerPays,
-                args(auctionEconomy.getWithdrawReason(), "%seller%", sellerName, "%items%", items));
+        boolean withdrawn = auctionEconomy.withdrawChecked(player.getUniqueId(), buyerPays, args(auctionEconomy.getWithdrawReason(), "%seller%", sellerName, "%items%", items));
 
         if (!withdrawn) {
-            this.plugin.getLogger().severe("Withdraw of " + buyerPays + " from buyer " + player.getName()
-                    + " was refused for item " + auctionItem.getId()
-                    + ". Purchase aborted before any item or status movement.");
+            this.plugin.getLogger().severe("Withdraw of " + buyerPays + " from buyer " + player.getName() + " was refused for item " + auctionItem.getId() + ". Purchase aborted before any item or status movement.");
             message(this.plugin, player, Message.NOT_ENOUGH_MONEY);
             // Remonte dans le .exceptionally de PurchaseService, qui restaure le statut et
             // relache le verrou. Rien n'a bouge : c'est le comportement voulu.
@@ -1161,9 +1139,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         TransactionStatus transactionStatus;
         var clusterBridge = this.plugin.getAuctionClusterBridge();
         boolean sellerOnThisServer = seller.isOnline();
-        boolean deferDeposit = !auctionEconomy.isAutoClaim()
-                || (!sellerOnThisServer && auctionEconomy.mustBeOnline())
-                || (!sellerOnThisServer && clusterBridge.isDistributed())
+        boolean deferDeposit = !auctionEconomy.isAutoClaim() || (!sellerOnThisServer && auctionEconomy.mustBeOnline()) || (!sellerOnThisServer && clusterBridge.isDistributed())
                 // C-032 : ces economies (LEVEL, EXPERIENCE, ITEM) ne savent pas crediter un
                 // joueur hors ligne et se contentent d'un no-op silencieux. Le paiement doit
                 // devenir une transaction PENDING au lieu d'etre detruit.
@@ -1176,18 +1152,13 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
             transactionStatus = TransactionStatus.RETRIEVED;
 
-            boolean deposited = auctionEconomy.depositChecked(seller.getUniqueId(), sellerReceives,
-                    args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items));
+            boolean deposited = auctionEconomy.depositChecked(seller.getUniqueId(), sellerReceives, args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items));
 
             if (!deposited) {
-                this.plugin.getLogger().severe("Failed to deposit " + sellerReceives + " to seller " + sellerName
-                        + " for item " + auctionItem.getId() + ". Refunding the buyer and aborting the purchase.");
+                this.plugin.getLogger().severe("Failed to deposit " + sellerReceives + " to seller " + sellerName + " for item " + auctionItem.getId() + ". Refunding the buyer and aborting the purchase.");
 
-                if (!auctionEconomy.depositChecked(player.getUniqueId(), buyerPays,
-                        args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items))) {
-                    this.plugin.getLogger().severe("CRITICAL: buyer refund of " + buyerPays + " to "
-                            + player.getName() + " ALSO failed for item " + auctionItem.getId()
-                            + ". Manual reconciliation required.");
+                if (!auctionEconomy.depositChecked(player.getUniqueId(), buyerPays, args(auctionEconomy.getDepositReason(), "%buyer%", player.getName(), "%items%", items))) {
+                    this.plugin.getLogger().severe("CRITICAL: buyer refund of " + buyerPays + " to " + player.getName() + " ALSO failed for item " + auctionItem.getId() + ". Manual reconciliation required.");
                 }
 
                 throw new IllegalStateException("Failed to deposit seller payment for item " + auctionItem.getId());
@@ -1205,21 +1176,17 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
         try {
             BigDecimal buyerBalance = readBalanceOrZero(auctionEconomy, player.getUniqueId());
-            storageManager.createTransaction(auctionItem, player.getUniqueId(), economyName,
-                    buyerBalance.add(finalBuyerPays), buyerBalance, finalBuyerPays.negate(), TransactionStatus.RETRIEVED);
+            storageManager.createTransaction(auctionItem, player.getUniqueId(), economyName, buyerBalance.add(finalBuyerPays), buyerBalance, finalBuyerPays.negate(), TransactionStatus.RETRIEVED);
         } catch (Exception exception) {
-            this.plugin.getLogger().severe("Failed to create buyer transaction for item "
-                    + auctionItem.getId() + ": " + exception.getMessage());
+            this.plugin.getLogger().severe("Failed to create buyer transaction for item " + auctionItem.getId() + ": " + exception.getMessage());
         }
 
         try {
             BigDecimal sellerBalance = readBalanceOrZero(auctionEconomy, seller.getUniqueId());
             var beforeBalance = deferred ? sellerBalance : sellerBalance.subtract(finalSellerReceives);
-            storageManager.createTransaction(auctionItem, seller.getUniqueId(), economyName,
-                    beforeBalance, sellerBalance, finalSellerReceives, transactionStatus);
+            storageManager.createTransaction(auctionItem, seller.getUniqueId(), economyName, beforeBalance, sellerBalance, finalSellerReceives, transactionStatus);
         } catch (Exception exception) {
-            this.plugin.getLogger().severe("Failed to create seller transaction for item "
-                    + auctionItem.getId() + ": " + exception.getMessage());
+            this.plugin.getLogger().severe("Failed to create seller transaction for item " + auctionItem.getId() + ": " + exception.getMessage());
         }
 
         // ------------------------------------------------------------------
@@ -1314,10 +1281,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             // L'argent a deja bouge : si la ligne nous echappe ici, il faut la trace complete
             // pour un remboursement manuel.
             if (throwable != null && StaleItemException.unwrap(throwable) != null) {
-                this.plugin.getLogger().severe("PURCHASE LOST THE RACE - item " + auctionItem.getId()
-                        + " buyer " + player.getUniqueId() + " (" + player.getName() + ") price " + displayedBuyerPays
-                        + " economy " + auctionEconomy.getName()
-                        + " : money was moved but the row was already taken by another server, manual refund required");
+                this.plugin.getLogger().severe("PURCHASE LOST THE RACE - item " + auctionItem.getId() + " buyer " + player.getUniqueId() + " (" + player.getName() + ") price " + displayedBuyerPays + " economy " + auctionEconomy.getName() + " : money was moved but the row was already taken by another server, manual refund required");
             }
         });
     }
@@ -1343,8 +1307,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             var balance = auctionEconomy.get(playerId).join();
             return balance == null ? BigDecimal.ZERO : balance;
         } catch (Exception exception) {
-            this.plugin.getLogger().severe("Unable to read the balance of " + playerId + " for economy "
-                    + auctionEconomy.getName() + ": " + exception.getMessage());
+            this.plugin.getLogger().severe("Unable to read the balance of " + playerId + " for economy " + auctionEconomy.getName() + ": " + exception.getMessage());
             return BigDecimal.ZERO;
         }
     }
@@ -1352,44 +1315,6 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
     @Override
     public void message(Player player, Message message, Object... args) {
         this.message(this.plugin, player, message, args);
-    }
-
-    /**
-     * Resultat d'une remise physique.
-     *
-     * @param executed  true si la tache a reellement tourne sur le thread de l'entite
-     * @param delivered nombre d'ItemStack effectivement remis (ou deposes au sol)
-     * @param total     nombre d'ItemStack que portait l'annonce
-     * @param inventoryFull true si la remise a ete refusee parce que le lot ne rentrait pas en entier
-     */
-    public record GiveResult(boolean executed, int delivered, int total, boolean inventoryFull) {
-
-        public GiveResult(boolean executed, int delivered, int total) {
-            this(executed, delivered, total, false);
-        }
-
-        /**
-         * @param total nombre d'ItemStack que portait l'annonce
-         * @return un resultat marquant qu'aucune remise n'a eu lieu
-         */
-        public static GiveResult notExecuted(int total) {
-            return new GiveResult(false, 0, total);
-        }
-
-        /**
-         * @param total nombre d'ItemStack que portait l'annonce
-         * @return un resultat marquant que rien n'a ete remis faute de place
-         */
-        public static GiveResult noSpace(int total) {
-            return new GiveResult(true, 0, total, true);
-        }
-
-        /**
-         * @return true si RIEN n'a ete remis : le lot doit etre rendu reclamable en base
-         */
-        public boolean isNothingDelivered() {
-            return this.delivered == 0;
-        }
     }
 
     /**
@@ -1447,8 +1372,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             // compensation : dans ce cas il ne faut SURTOUT pas remettre les items, on
             // dupliquerait le lot.
             if (!settled.compareAndSet(false, true)) {
-                this.plugin.getLogger().severe("[ZAH] Give aborted for item #" + item.getId()
-                        + ": the delivery was already compensated, the item is claimable again.");
+                this.plugin.getLogger().severe("[ZAH] Give aborted for item #" + item.getId() + ": the delivery was already compensated, the item is claimable again.");
                 return;
             }
 
@@ -1470,8 +1394,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
                         continue;
                     }
                     try {
-                        player.getInventory().addItem(itemStack.clone())
-                                .forEach((slot, dropItemStack) -> player.getWorld().dropItem(player.getLocation(), dropItemStack));
+                        player.getInventory().addItem(itemStack.clone()).forEach((slot, dropItemStack) -> player.getWorld().dropItem(player.getLocation(), dropItemStack));
                         delivered++;
                     } catch (Throwable throwable) {
                         this.plugin.getLogger().severe("[ZAH] Unable to give a stack of item #" + item.getId() + ": " + throwable);
@@ -1491,8 +1414,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         // Filet 2 : l'entite est retiree APRES la planification, personne ne complete le future.
         this.plugin.getScheduler().runLaterAsync(wrappedTask -> {
             if (settled.compareAndSet(false, true)) {
-                this.plugin.getLogger().severe("[ZAH] Give timed out for item #" + item.getId()
-                        + " (player " + player.getName() + "), the item will be made claimable again.");
+                this.plugin.getLogger().severe("[ZAH] Give timed out for item #" + item.getId() + " (player " + player.getName() + "), the item will be made claimable again.");
                 future.complete(GiveResult.notExecuted(total));
             }
         }, GIVE_ITEM_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -1580,17 +1502,14 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
             if (!giveResult.isNothingDelivered()) return CompletableFuture.completedFuture(Boolean.TRUE);
 
             if (giveResult.inventoryFull()) {
-                this.plugin.getLogger().info("[ZAH] Item #" + item.getId() + " does not fit in the inventory of "
-                        + player.getName() + ", moving it to " + claimableStorage + ".");
+                this.plugin.getLogger().info("[ZAH] Item #" + item.getId() + " does not fit in the inventory of " + player.getName() + ", moving it to " + claimableStorage + ".");
             } else {
-                this.plugin.getLogger().severe("[ZAH] Item #" + item.getId() + " could not be delivered to "
-                        + player.getName() + ", restoring it as " + claimableStorage + " so it stays claimable.");
+                this.plugin.getLogger().severe("[ZAH] Item #" + item.getId() + " could not be delivered to " + player.getName() + ", restoring it as " + claimableStorage + " so it stays claimable.");
             }
 
             return restoreClaimable(item, claimableStorage).thenApply(restored -> {
                 if (!Boolean.TRUE.equals(restored)) {
-                    this.plugin.getLogger().severe("[ZAH] CRITICAL: item #" + item.getId()
-                            + " is neither delivered nor claimable, a manual restore is required.");
+                    this.plugin.getLogger().severe("[ZAH] CRITICAL: item #" + item.getId() + " is neither delivered nor claimable, a manual restore is required.");
                 } else if (giveResult.inventoryFull()) {
                     message(player, inventoryFullMessage);
                 }
@@ -1837,8 +1756,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var items = new ArrayList<>(getExpiredItems(player));
         if (items.isEmpty()) return;
 
-        processBulkItems(player, items, item -> this.auctionRemoveService.removeExpiredItem(player, item, false))
-                .thenAccept(progress -> finishBulkRemoval(player, progress, items.size(), this.plugin.getConfiguration().getActions().expired().openInventory(), PlayerCacheKey.ITEMS_EXPIRED));
+        processBulkItems(player, items, item -> this.auctionRemoveService.removeExpiredItem(player, item, false)).thenAccept(progress -> finishBulkRemoval(player, progress, items.size(), this.plugin.getConfiguration().getActions().expired().openInventory(), PlayerCacheKey.ITEMS_EXPIRED));
     }
 
     @Override
@@ -1846,8 +1764,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var items = new ArrayList<>(getPlayerSellingItems(player));
         if (items.isEmpty()) return;
 
-        processBulkItems(player, items, item -> this.auctionRemoveService.removeSellingItem(player, item, false))
-                .thenAccept(progress -> finishBulkRemoval(player, progress, items.size(), true, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED));
+        processBulkItems(player, items, item -> this.auctionRemoveService.removeSellingItem(player, item, false)).thenAccept(progress -> finishBulkRemoval(player, progress, items.size(), true, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_EXPIRED));
     }
 
     @Override
@@ -1855,8 +1772,7 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var items = new ArrayList<>(getPurchasedItems(player));
         if (items.isEmpty()) return;
 
-        processBulkItems(player, items, item -> this.auctionRemoveService.removePurchasedItem(player, item, false))
-                .thenAccept(progress -> finishBulkRemoval(player, progress, items.size(), this.plugin.getConfiguration().getActions().purchased().openInventory(), PlayerCacheKey.ITEMS_PURCHASED));
+        processBulkItems(player, items, item -> this.auctionRemoveService.removePurchasedItem(player, item, false)).thenAccept(progress -> finishBulkRemoval(player, progress, items.size(), this.plugin.getConfiguration().getActions().purchased().openInventory(), PlayerCacheKey.ITEMS_PURCHASED));
     }
 
     private CompletableFuture<BulkRemovalProgress> processBulkItems(Player player, List<Item> items, Function<Item, CompletableFuture<RemoveResult>> removal) {
@@ -1951,5 +1867,44 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         });
     }
 
-    private record BulkRemovalProgress(int given, int processed, boolean stopped) { }
+    /**
+     * Resultat d'une remise physique.
+     *
+     * @param executed      true si la tache a reellement tourne sur le thread de l'entite
+     * @param delivered     nombre d'ItemStack effectivement remis (ou deposes au sol)
+     * @param total         nombre d'ItemStack que portait l'annonce
+     * @param inventoryFull true si la remise a ete refusee parce que le lot ne rentrait pas en entier
+     */
+    public record GiveResult(boolean executed, int delivered, int total, boolean inventoryFull) {
+
+        public GiveResult(boolean executed, int delivered, int total) {
+            this(executed, delivered, total, false);
+        }
+
+        /**
+         * @param total nombre d'ItemStack que portait l'annonce
+         * @return un resultat marquant qu'aucune remise n'a eu lieu
+         */
+        public static GiveResult notExecuted(int total) {
+            return new GiveResult(false, 0, total);
+        }
+
+        /**
+         * @param total nombre d'ItemStack que portait l'annonce
+         * @return un resultat marquant que rien n'a ete remis faute de place
+         */
+        public static GiveResult noSpace(int total) {
+            return new GiveResult(true, 0, total, true);
+        }
+
+        /**
+         * @return true si RIEN n'a ete remis : le lot doit etre rendu reclamable en base
+         */
+        public boolean isNothingDelivered() {
+            return this.delivered == 0;
+        }
+    }
+
+    private record BulkRemovalProgress(int given, int processed, boolean stopped) {
+    }
 }
