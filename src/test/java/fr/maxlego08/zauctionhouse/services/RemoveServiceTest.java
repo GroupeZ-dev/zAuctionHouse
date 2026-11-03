@@ -184,16 +184,46 @@ class RemoveServiceTest extends ServiceTestBase {
         }
 
         @Test
-        @DisplayName("statut IS_REMOVE_CONFIRM accepte : le retrait aboutit")
+        @DisplayName("IS_REMOVE_CONFIRM detenu par le joueur, depuis sa confirmation : le retrait aboutit")
         void removeListedItem_removeConfirmStatus_accepted() throws Exception {
             configureActions(true, false, false, false);
             TestAuctionItem item = listed();
             item.setStatus(ItemStatus.IS_REMOVE_CONFIRM);
+            item.setReservationOwner(player.getUniqueId());
 
-            RemoveResult result = join(service.removeListedItem(player, item));
+            RemoveResult result = join(service.removeListedItem(player, item, true));
 
             assertTrue(result.isSuccess(), result.getMessage());
             assertEquals("DELETED", storageTypeOf(item.getId()));
+        }
+
+        @Test
+        @DisplayName("IS_REMOVE_CONFIRM hors confirmation (clic direct / API) : INVALID_ITEM_STATUS")
+        void removeListedItem_removeConfirmStatus_directPath_refused() throws Exception {
+            TestAuctionItem item = listed();
+            item.setStatus(ItemStatus.IS_REMOVE_CONFIRM);
+            item.setReservationOwner(player.getUniqueId());
+
+            RemoveResult result = join(service.removeListedItem(player, item));
+
+            assertFalse(result.isSuccess());
+            assertEquals(RemoveFailReason.INVALID_ITEM_STATUS, result.getFailReason());
+            assertEquals("LISTED", storageTypeOf(item.getId()));
+        }
+
+        @Test
+        @DisplayName("IS_REMOVE_CONFIRM detenu par un administrateur : le vendeur ne peut pas retirer")
+        void removeListedItem_reservedByAdmin_refused() throws Exception {
+            TestAuctionItem item = listed();
+            item.setStatus(ItemStatus.IS_REMOVE_CONFIRM);
+            item.setReservationOwner(java.util.UUID.randomUUID());
+
+            RemoveResult result = join(service.removeListedItem(player, item, true));
+
+            assertFalse(result.isSuccess());
+            assertEquals(RemoveFailReason.INVALID_ITEM_STATUS, result.getFailReason());
+            assertEquals(ItemStatus.IS_REMOVE_CONFIRM, item.getStatus());
+            assertEquals("LISTED", storageTypeOf(item.getId()));
         }
 
         @Test

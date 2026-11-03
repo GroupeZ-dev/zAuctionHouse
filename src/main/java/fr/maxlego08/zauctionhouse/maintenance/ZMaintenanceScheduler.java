@@ -145,6 +145,8 @@ public class ZMaintenanceScheduler {
 
                 this.confirmationSince.remove(item.getId());
                 var target = targetStatusFor(pending.storageType());
+                // setStatus(AVAILABLE) oublie aussi le detenteur de la reservation (ZItem) : la
+                // confirmation restee ouverte ne pourra plus la revendiquer.
                 item.setStatus(target);
 
                 this.plugin.getLogger().warning("Item " + item.getId() + " stayed in " + status + " for more than "

@@ -227,10 +227,17 @@ public class ListedItemsButton extends PaginateButton {
             return;
         }
 
+        // Statut et detenteur poses ATOMIQUEMENT : une remise en vente concurrente ne peut ni
+        // s'intercaler ni laisser un detenteur perime (cf. ZItem#tryReserve).
+        if (!item.tryReserve(confirmStatus, player.getUniqueId())) {
+            cache.set(PlayerCacheKey.PURCHASE_ITEM, false);
+            manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_SEARCH);
+            inventoryManager.updateInventory(player);
+            return;
+        }
+
         cache.set(PlayerCacheKey.ITEM_SHOW, item);
         cache.set(PlayerCacheKey.CURRENT_PAGE, inventoryManager.getPage(player));
-
-        item.setStatus(confirmStatus);
 
         // Le garde anti-double-clic n'est relache qu'APRES l'engagement, jamais avant.
         cache.set(PlayerCacheKey.PURCHASE_ITEM, false);

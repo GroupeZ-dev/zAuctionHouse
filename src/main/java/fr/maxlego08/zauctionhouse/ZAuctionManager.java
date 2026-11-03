@@ -863,7 +863,11 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
 
     @Override
     public void adminRemoveItem(Player admin, UUID targetUniqueId, Item item, StorageType storageType, boolean notify, boolean expire, boolean copy, boolean updateInventory) {
-        if (storageType == StorageType.LISTED && !item.isActivelyListed()) return;
+        // Une annonce en IS_REMOVE_CONFIRM n'est traitable que si c'est la reservation de CET
+        // administrateur (inventaire de confirmation admin : ITEM_SHOW pointe encore dessus).
+        // Toute autre confirmation en cours (achat, retrait par le vendeur, autre admin) bloque.
+        boolean adminReservation = isAdminReservation(admin, item, storageType);
+        if (storageType == StorageType.LISTED && !item.isActivelyListed() && !adminReservation) return;
         var destination = expire ? StorageType.EXPIRED : StorageType.DELETED;
         var clusterBridge = this.plugin.getAuctionClusterBridge();
         if (clusterBridge == null) {
@@ -874,12 +878,14 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         var inventoriesLoader = this.plugin.getInventoriesLoader();
         if (inventoriesLoader == null) {
             this.plugin.getLogger().severe("Inventories loader is not initialized");
+            if (adminReservation) releaseAdminReservation(admin, item);
             return;
         }
 
         var inventoryManager = inventoriesLoader.getInventoryManager();
         if (inventoryManager == null) {
             this.plugin.getLogger().severe("Inventory manager is not initialized");
+            if (adminReservation) releaseAdminReservation(admin, item);
             return;
         }
 
@@ -1010,6 +1016,11 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
                         item.setStatus(previousStatus);
                         item.setExpiredAt(previousExpiration);
                     }
+
+                    // Retrait depuis l'inventaire de confirmation admin : la reservation
+                    // IS_REMOVE_CONFIRM n'a plus de proprietaire (ITEM_SHOW est purge apres le
+                    // clic), on rend l'annonce comme le ferait une fermeture sans confirmer.
+                    if (adminReservation) releaseAdminReservation(admin, item);
                 }
 
                 if (updateInventory) inventoryManager.updateInventory(admin);
@@ -1030,6 +1041,47 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
                 });
             }
         });
+    }
+
+    /**
+     * L'annonce est-elle reservee par l'inventaire de confirmation de retrait de CET
+     * administrateur ? Le detenteur est porte par l'annonce elle-meme
+     * ({@link Item#getReservationOwner()}) et remis a zero a chaque retour en AVAILABLE, d'ou
+     * qu'il vienne : une reservation reprise ensuite par le vendeur ou un acheteur, ici ou sur un
+     * autre serveur, ne peut jamais etre prise pour celle de l'administrateur.
+     */
+    private boolean isAdminReservation(Player admin, Item item, StorageType storageType) {
+        return storageType == StorageType.LISTED && item.getStatus() == ItemStatus.IS_REMOVE_CONFIRM && !item.isExpired() && item.isReservedBy(admin.getUniqueId());
+    }
+
+    /**
+     * Rend disponible une annonce reservee par l'inventaire de confirmation admin dont le
+     * retrait a echoue avant toute ecriture. Memes gardes que la fermeture d'une confirmation
+     * ({@code ConfirmHelper}) : on ne rediffuse que si l'annonce porte toujours la reservation
+     * de CET administrateur et reste l'exemplaire detenu en vente par ce serveur.
+     */
+    private void releaseAdminReservation(Player admin, Item item) {
+        if (item.getStatus() != ItemStatus.IS_REMOVE_CONFIRM || !item.isReservedBy(admin.getUniqueId())) return;
+        if (getItem(StorageType.LISTED, item.getId()) != item) return;
+
+        if (item.isExpired()) {
+            getExpireService().processExpiredItem(item, StorageType.LISTED);
+            clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_SEARCH, PlayerCacheKey.ITEMS_SELLING);
+            return;
+        }
+
+        item.setStatus(ItemStatus.AVAILABLE);
+        var clusterBridge = this.plugin.getAuctionClusterBridge();
+        if (clusterBridge != null) {
+            clusterBridge.notifyItemStatusChange(item, ItemStatus.IS_REMOVE_CONFIRM, ItemStatus.AVAILABLE)
+                    .exceptionally(throwable -> {
+                        this.plugin.getLogger().warning("Failed to release admin removal reservation for item " + item.getId() + ": " + throwable.getMessage());
+                        return null;
+                    });
+        }
+
+        clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_SEARCH);
+        updateListedItems(item, true, admin);
     }
 
     /**

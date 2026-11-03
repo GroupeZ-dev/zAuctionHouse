@@ -38,6 +38,16 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
 
     @Override
     public CompletableFuture<RemoveResult> removeListedItem(Player player, Item item) {
+        return removeListedItem(player, item, false);
+    }
+
+    /**
+     * @param fromConfirmation {@code true} uniquement depuis l'inventaire de confirmation de
+     *                         retrait du vendeur ({@code ConfirmRemoveListedButton}) : seul ce
+     *                         chemin peut traiter une annonce en IS_REMOVE_CONFIRM. Tout autre
+     *                         appel (clic direct, API) exige AVAILABLE.
+     */
+    public CompletableFuture<RemoveResult> removeListedItem(Player player, Item item, boolean fromConfirmation) {
 
         var event = new AuctionPreRemoveListedItemEvent(item, player);
         if (!event.callEvent()) {
@@ -54,7 +64,14 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
             return CompletableFuture.completedFuture(RemoveResult.failure("Item expired", RemoveFailReason.ITEM_EXPIRED));
         }
 
-        if (item.getStatus() != ItemStatus.AVAILABLE && item.getStatus() != ItemStatus.IS_REMOVE_CONFIRM) {
+        // IS_REMOVE_CONFIRM n'est accepte que depuis la confirmation de CE joueur, qui doit en
+        // etre le detenteur. ITEM_SHOW ne prouve rien (il survit a un apercu ou a une
+        // confirmation abandonnee) ; si un administrateur detient la reservation (inventaire de
+        // retrait admin), le vendeur ne doit pas pouvoir retirer l'annonce sous ses pieds.
+        boolean ownConfirmation = fromConfirmation
+                && item.getStatus() == ItemStatus.IS_REMOVE_CONFIRM
+                && item.isReservedBy(player.getUniqueId());
+        if (item.getStatus() != ItemStatus.AVAILABLE && !ownConfirmation) {
             logger.info("Item not available (Remove Listed)");
             manager.clearPlayerCache(player, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_LISTED);
             manager.openMainAuction(player);
@@ -309,6 +326,18 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
             return failedFuture(new IllegalStateException("Item déjà en cours de traitement"));
         }
 
+        // Re-verification au point d'engagement : entre la garde d'entree et l'obtention du
+        // verrou (allers-retours Redis), l'annonce a pu changer de mains, par exemple etre
+        // reservee par un administrateur dans l'inventaire de retrait admin. Ne rien muter.
+        var currentStatus = context.item.getStatus();
+        boolean stillOurs = currentStatus == context.oldStatus
+                && (!isConfirmationStatus(currentStatus) || context.item.isReservedBy(context.player.getUniqueId()));
+        if (!stillOurs) {
+            context.onUnavailable.run();
+            context.result = RemoveResult.failure("Item not available", RemoveFailReason.INVALID_ITEM_STATUS);
+            return failedFuture(new IllegalStateException("Statut modifie avant le retrait"));
+        }
+
         // Change status after acquiring lock to ensure atomicity
         context.item.setStatus(context.targetStatus);
         context.statusChanged = true;
@@ -520,12 +549,18 @@ public class RemoveService extends AuctionService implements AuctionRemoveServic
      * If the local removal already completed (item given to player, DB updated),
      * we must NOT restore the status as it would create a ghost item on other servers.
      */
+    private static boolean isConfirmationStatus(ItemStatus status) {
+        return status == ItemStatus.IS_PURCHASE_CONFIRM || status == ItemStatus.IS_REMOVE_CONFIRM;
+    }
+
     private void restoreStatusOnError(RemovalContext context, AuctionClusterBridge clusterBridge) {
         if (!context.statusChanged || context.localRemovalCompleted) return;
 
         // Restauration LOCALE systématique : sans elle, un objet non purgé resterait figé en
         // IS_BEING_REMOVED et deviendrait invendable ET inréclamable.
         context.item.setStatus(context.oldStatus);
+        // Une confirmation restauree reste celle du joueur : sa fermeture doit pouvoir la relacher.
+        if (isConfirmationStatus(context.oldStatus)) context.item.setReservationOwner(context.player.getUniqueId());
 
         // C-009 : mais quand la relecture autoritaire a montré que l'item ne nous appartient
         // plus, on ne DIFFUSE rien. Republier AVAILABLE le remettrait en vente sur tous les

@@ -31,6 +31,11 @@ public abstract class ConfirmHelper extends Button {
     @Override
     public void onInventoryClose(@NonNull Player player, @NonNull InventoryEngine inventory) {
         super.onInventoryClose(player, inventory);
+        // zMenu appelle aussi onInventoryClose quand le MEME menu est re-ouvert pour etre
+        // rafraichi (InventoryManager#updateInventory -> onInventorySwitch -> onClose), par
+        // exemple par les options de l'inventaire de retrait admin. Ce n'est pas une sortie :
+        // le joueur est toujours dans la confirmation, la reservation doit tenir.
+        if (isSameMenuReopened(player, inventory)) return;
         releaseConfirmationState(player);
     }
 
@@ -38,6 +43,12 @@ public abstract class ConfirmHelper extends Button {
     public void onBackClick(@NonNull Player player, @NonNull InventoryClickEvent event, @NonNull InventoryEngine inventory, @NonNull List<Inventory> oldInventories, @NonNull Inventory toInventory, int slot) {
         super.onBackClick(player, event, inventory, oldInventories, toInventory, slot);
         releaseConfirmationState(player);
+    }
+
+    private static boolean isSameMenuReopened(@NonNull Player player, @NonNull InventoryEngine closed) {
+        if (!player.isOnline()) return false;
+        var holder = player.getOpenInventory().getTopInventory().getHolder();
+        return holder instanceof InventoryEngine current && current.getMenuInventory() == closed.getMenuInventory();
     }
 
     /**
@@ -67,6 +78,15 @@ public abstract class ConfirmHelper extends Button {
         // surtout ne rien rediffuser : c'est a cette chaine-la de conclure.
         if (item.getStatus() != this.previous) return;
 
+        // Le statut est le bon mais la reservation n'est pas (plus) celle de ce joueur : son
+        // ITEM_SHOW est perime (apercu, confirmation deja relachee puis reprise par un autre
+        // joueur ou par un administrateur, ici ou sur un autre serveur). Rendre l'annonce
+        // casserait la reservation de quelqu'un d'autre : on purge seulement la reference.
+        if (!item.isReservedBy(player.getUniqueId())) {
+            cache.remove(PlayerCacheKey.ITEM_SHOW);
+            return;
+        }
+
         // Second filet, independant du statut : ce serveur ne detient plus cette annonce en
         // vente. Voir isStillHeldForSale : on purge la reference morte et on sort sans rien
         // rediffuser.
@@ -95,8 +115,18 @@ public abstract class ConfirmHelper extends Button {
         super.onClick(player, event, inventory, slot, placeholders);
 
         var manager = this.plugin.getAuctionManager();
-        Item item = manager.getCache(player).get(PlayerCacheKey.ITEM_SHOW);
+        var cache = manager.getCache(player);
+        Item item = cache.get(PlayerCacheKey.ITEM_SHOW);
         if (item == null) {
+            manager.openMainAuction(player);
+            return;
+        }
+
+        // La confirmation porte le bon statut mais au nom d'un AUTRE joueur : la notre a ete
+        // relachee (balayage de maintenance, autre serveur) puis reprise. Confirmer ici
+        // acheterait ou retirerait l'annonce sous ses pieds.
+        if (item.getStatus() == this.previous && !item.isReservedBy(player.getUniqueId())) {
+            cache.remove(PlayerCacheKey.ITEM_SHOW);
             manager.openMainAuction(player);
             return;
         }
@@ -163,6 +193,10 @@ public abstract class ConfirmHelper extends Button {
         if (status != ItemStatus.IS_PURCHASE_CONFIRM && status != ItemStatus.IS_REMOVE_CONFIRM) return;
 
         cache.remove(PlayerCacheKey.ITEM_SHOW);
+
+        // ITEM_SHOW perime : la reservation en cours appartient a un autre joueur (ou a un
+        // administrateur). Un depart, une mort ou un apercu de CE joueur ne doit pas la casser.
+        if (!item.isReservedBy(player.getUniqueId())) return;
 
         // Meme filet que sur le chemin de fermeture d'inventaire : une annonce que ce serveur
         // ne detient plus en vente ne doit jamais etre re-annoncee disponible.

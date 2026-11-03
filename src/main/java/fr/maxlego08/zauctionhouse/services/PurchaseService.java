@@ -166,6 +166,16 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
                         return this.<Boolean>failedFuture(new IllegalStateException("Item déjà en cours d'achat"));
                     }
 
+                    // Re-verification au point d'engagement : entre la garde d'entree et
+                    // l'obtention du verrou (allers-retours Redis), la reservation a pu etre
+                    // relachee (fermeture, balayage de maintenance, autre serveur) puis reprise
+                    // par quelqu'un d'autre, un administrateur par exemple. Ne rien muter.
+                    if (item.getStatus() != ItemStatus.IS_PURCHASE_CONFIRM || !item.isReservedBy(player.getUniqueId())) {
+                        onPlayerThread(this.plugin, player, () -> auctionManager.openMainAuction(player));
+                        resultHolder.set(PurchaseResult.failure("Item not in purchase state", PurchaseFailReason.ITEM_NOT_IN_PURCHASE_STATE));
+                        return this.<Boolean>failedFuture(new IllegalStateException("Reservation perdue avant l'achat"));
+                    }
+
                     // Set status AFTER acquiring lock to ensure atomicity.
                     // Le drapeau est arme AVANT la mutation, jamais apres : une restauration
                     // manquante figerait l'annonce en IS_BEING_PURCHASED sur tout le cluster,
@@ -299,6 +309,9 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
                     resultHolder.set(PurchaseResult.failure("Insufficient funds", PurchaseFailReason.INSUFFICIENT_FUNDS));
                     var previousStatus = previousStatusHolder.get();
                     item.setStatus(previousStatus);
+                    // La confirmation restauree reste celle de l'acheteur : sa fermeture doit
+                    // pouvoir la relacher.
+                    item.setReservationOwner(player.getUniqueId());
                     return clusterBridge.notifyItemStatusChange(item, ItemStatus.IS_BEING_PURCHASED, previousStatus)
                             .orTimeout(performanceConfig.unlockItemTimeoutMs(), TimeUnit.MILLISECONDS)
                             .thenCompose(v -> unlockIssued.compareAndSet(false, true)
@@ -371,6 +384,7 @@ public class PurchaseService extends AuctionService implements AuctionPurchaseSe
                         // mutation est annulable, l'annonce revient a l'etat d'avant l'achat.
                         var previousStatus = previousStatusHolder.get();
                         item.setStatus(previousStatus);
+                        item.setReservationOwner(player.getUniqueId());
                         clusterBridge.notifyItemStatusChange(item, ItemStatus.IS_BEING_PURCHASED, previousStatus)
                                 .exceptionally(restoreError -> {
                                     logger.severe("Failed to restore item status for item " + item.getId() + ": " + restoreError.getMessage());
