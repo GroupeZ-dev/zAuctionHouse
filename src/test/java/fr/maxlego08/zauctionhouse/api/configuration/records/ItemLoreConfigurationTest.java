@@ -51,8 +51,23 @@ class ItemLoreConfigurationTest {
         assertEquals(LogType.values().length, lore.logTypeNames().size());
         assertTrue(lore.sellerStatus().contains("ʀᴇᴛʀɪᴇᴠᴇ"));
         assertTrue(lore.buyerStatus().contains("ʙᴜʏ"));
-        assertTrue(lore.rightSellerStatus().contains("ʀɪɢʜᴛ"));
-        assertTrue(lore.rightBuyerStatus().contains("ʀɪɢʜᴛ"));
+        assertTrue(lore.rightSellerStatus().contains("ʀᴇᴛʀɪᴇᴠᴇ"));
+        assertTrue(lore.rightBuyerStatus().contains("ʙᴜʏ"));
+        assertFalse(lore.rightBuyerStatus().contains("ʀɪɢʜᴛ"), "le clic droit ouvre l'apercu des conteneurs");
+        assertEquals(ItemLoreConfiguration.DEFAULT_CONTAINER_PREVIEW, lore.containerPreview());
+    }
+
+    @Test
+    @DisplayName("container-preview : texte configure lu et placeholder detecte")
+    void of_containerPreview() {
+        YamlConfiguration yaml = new YamlConfiguration();
+        yaml.set("item-lore.container-preview", "Right-click to view contents");
+        yaml.set("item-lore.listed-auction-item", List.of("%container-preview%", "%status%"));
+
+        ItemLoreConfiguration lore = ItemLoreConfiguration.of(plugin, yaml);
+
+        assertEquals("Right-click to view contents", lore.containerPreview());
+        assertEquals(Set.of(ItemPlaceholder.CONTAINER_PREVIEW, ItemPlaceholder.STATUS), lore.listedAuctionPlaceholders());
     }
 
     @Test

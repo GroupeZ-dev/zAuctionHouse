@@ -80,7 +80,7 @@ class ZItemTest {
         return new ItemLoreConfiguration(false,
                 List.of(), Set.of(), List.of(), Set.of(), List.of(), Set.of(), List.of(), Set.of(), List.of(), Set.of(), List.of(), Set.of(),
                 List.of(), List.of(), List.of(), List.of(), Map.of(),
-                "seller-status", "buyer-status", "right-seller-status", "right-buyer-status");
+                "seller-status", "buyer-status", "right-seller-status", "right-buyer-status", "preview-hint");
     }
 
     private static TimeConfiguration timeConfiguration() {

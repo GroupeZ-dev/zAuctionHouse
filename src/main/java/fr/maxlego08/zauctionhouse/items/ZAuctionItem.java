@@ -35,11 +35,36 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
 
     @Override
     public ItemStack buildItemStack(Player player) {
+        return buildAuctionItemStack(player, false);
+    }
+
+    @Override
+    public ItemStack buildListedItemStack(Player player) {
+        return buildAuctionItemStack(player, true);
+    }
+
+    /**
+     * @param listing {@code true} uniquement depuis la liste de l'HDV : c'est le seul endroit ou
+     *                le clic d'apercu du contenu est gere, l'indication n'a de sens que la.
+     */
+    private ItemStack buildAuctionItemStack(Player player, boolean listing) {
         var configuration = this.plugin.getConfiguration().getItemLore();
         boolean single = this.itemStacks.size() == 1;
-        return this.buildItemStack(player,
-                single ? configuration.listedAuctionLore() : configuration.multipleListedAuctionLore(),
-                single ? configuration.listedAuctionPlaceholders() : configuration.multipleListedAuctionPlaceholders());
+        var lore = single ? configuration.listedAuctionLore() : configuration.multipleListedAuctionLore();
+        var needed = single ? configuration.listedAuctionPlaceholders() : configuration.multipleListedAuctionPlaceholders();
+        String hint = listing && needed.contains(ItemPlaceholder.CONTAINER_PREVIEW) && canPreviewContainer() ? configuration.containerPreview() : null;
+        return this.buildItemStack(player, lore, needed, hint);
+    }
+
+    /**
+     * Meme condition que {@code ListedItemsButton#openContainerPreview} : apercu actif et au
+     * moins un conteneur reconnu par un {@code ItemContentProvider}. Volontairement non mis en
+     * cache : les providers peuvent etre enregistres apres le chargement des annonces.
+     */
+    private boolean canPreviewContainer() {
+        if (!this.plugin.getConfiguration().getActions().containerPreview().enable()) return false;
+        var contentManager = this.plugin.getItemContentManager();
+        return contentManager != null && contentManager.containsContainer(this.itemStacks);
     }
 
     @Override
@@ -49,6 +74,36 @@ public class ZAuctionItem extends ZItem implements AuctionItem {
 
     @Override
     public ItemStack buildItemStack(Player player, List<String> lore, Set<ItemPlaceholder> needed) {
+        return buildItemStack(player, lore, needed, null);
+    }
+
+    /**
+     * Remplace {@code %container-preview%} par l'indication, ou le retire quand elle ne
+     * s'applique pas : une ligne ne contenant que ce placeholder est supprimee pour ne pas
+     * laisser de ligne vide dans le lore.
+     *
+     * @param lore lignes du template
+     * @param hint indication a afficher, {@code null} ou vide si l'annonce n'est pas previsualisable
+     * @return les lignes a afficher
+     */
+    static List<String> applyContainerPreview(List<String> lore, String hint) {
+        String pattern = ItemPlaceholder.CONTAINER_PREVIEW.getPattern();
+        boolean show = hint != null && !hint.isEmpty();
+        List<String> result = new ArrayList<>(lore.size());
+        for (String line : lore) {
+            if (!line.contains(pattern)) {
+                result.add(line);
+            } else if (show) {
+                result.add(line.replace(pattern, hint));
+            } else if (!line.trim().equals(pattern)) {
+                result.add(line.replace(pattern, ""));
+            }
+        }
+        return result;
+    }
+
+    private ItemStack buildItemStack(Player player, List<String> template, Set<ItemPlaceholder> needed, String containerPreviewHint) {
+        var lore = needed.contains(ItemPlaceholder.CONTAINER_PREVIEW) ? applyContainerPreview(template, containerPreviewHint) : template;
         return this.performanceDebug.measureWithContext("item.BuildItemStack", () -> {
             var meta = this.plugin.getInventoriesLoader().getInventoryManager().getMeta();
 

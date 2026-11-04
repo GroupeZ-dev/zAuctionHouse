@@ -96,6 +96,19 @@ public interface Item {
     ItemStack buildItemStack(Player player);
 
     /**
+     * Builds the item as displayed in the auction listing. Unlike {@link #buildItemStack(Player)}
+     * (also used by confirmation and admin inventories), this variant may fill the
+     * {@code %container-preview%} placeholder, because the listing is the only place where the
+     * container preview click is handled.
+     *
+     * @param player viewer for whom the item is being rendered
+     * @return item stack with placeholders resolved for the player
+     */
+    default ItemStack buildListedItemStack(Player player) {
+        return buildItemStack(player);
+    }
+
+    /**
      * Builds the visual {@link ItemStack} representation using custom lore lines.
      *
      * @param player viewer for whom the item is being rendered

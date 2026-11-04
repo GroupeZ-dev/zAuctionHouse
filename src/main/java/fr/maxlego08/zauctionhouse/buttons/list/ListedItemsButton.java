@@ -64,7 +64,7 @@ public class ListedItemsButton extends PaginateButton {
         for (Item item : pageItems) {
             if (!item.isActivelyListed()) continue;
             int slot = slots.get(slotIndex++);
-            var itemStack = item.buildItemStack(player);
+            var itemStack = item.buildListedItemStack(player);
             var button = inventoryEngine.addItem(isPlayerInventory(), slot, itemStack);
             if (button != null) {
                 button.setClick(createClick(player, inventoryEngine, slot, item, itemStack));
@@ -452,7 +452,7 @@ public class ListedItemsButton extends PaginateButton {
         }
 
         // Create a new item stack for the inserted item
-        var itemStack = item.buildItemStack(player);
+        var itemStack = item.buildListedItemStack(player);
         // Add the inserted item to the inventory
         var itemButton = inventoryEngine.addItem(newItemSlot, itemStack);
         if (itemButton != null) itemButton.setClick(createClick(player, inventoryEngine, newItemSlot, item, itemStack));
@@ -504,7 +504,7 @@ public class ListedItemsButton extends PaginateButton {
         // If there was an item at the end of the page that needed to be moved, add it now
         if (itemToAddAtEnd != null) {
             int lastSlot = slots.getLast();
-            var lastItemStack = itemToAddAtEnd.buildItemStack(player);
+            var lastItemStack = itemToAddAtEnd.buildListedItemStack(player);
             var itemButton = inventoryEngine.addItem(lastSlot, lastItemStack);
             if (itemButton != null) {
                 itemButton.setClick(createClick(player, inventoryEngine, lastSlot, itemToAddAtEnd, lastItemStack));

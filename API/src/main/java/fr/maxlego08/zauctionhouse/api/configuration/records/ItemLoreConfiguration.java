@@ -33,8 +33,11 @@ public record ItemLoreConfiguration(
         String sellerStatus,
         String buyerStatus,
         String rightSellerStatus,
-        String rightBuyerStatus
+        String rightBuyerStatus,
+        String containerPreview
 ) {
+
+    public static final String DEFAULT_CONTAINER_PREVIEW = "#8c8c8c• #2CCED2ʀɪɢʜᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ᴠɪᴇᴡ ᴛʜᴇ ᴄᴏɴᴛᴇɴᴛs";
 
     public static ItemLoreConfiguration of(AuctionPlugin plugin, FileConfiguration config) {
         var listedAuctionLore = config.getStringList("item-lore.listed-auction-item");
@@ -65,8 +68,10 @@ public record ItemLoreConfiguration(
                 loadLogTypeNames(config),
                 config.getString("item-lore.status.seller", "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"),
                 config.getString("item-lore.status.buyer", "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"),
-                config.getString("item-lore.status.right-seller", "#8c8c8c• #2CCED2ʀɪɢʜᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"),
-                config.getString("item-lore.status.right-buyer", "#8c8c8c• #2CCED2ʀɪɢʜᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ")
+                // Ventes en lot : plus de mention du clic droit, qui ouvre l'apercu quand le lot contient un conteneur
+                config.getString("item-lore.status.right-seller", "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"),
+                config.getString("item-lore.status.right-buyer", "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"),
+                config.getString("item-lore.container-preview", DEFAULT_CONTAINER_PREVIEW)
         );
     }
 

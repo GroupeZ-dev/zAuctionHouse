@@ -623,6 +623,7 @@ banned-worlds:
 #   %time-remaining% - Temps restant avant expiration
 #   %date%           - Date de la transaction
 #   %status%         - Message de statut dynamique (acheter/récupérer)
+#   %container-preview% - Indication d'aperçu pour les annonces contenant une shulker
 #   %items%          - Nom d'affichage de l'item
 #   %type%           - Type d'entrée de log (pour les logs admin)
 #   %player%         - Joueur impliqué dans l'action
@@ -641,6 +642,7 @@ item-lore:
     - "<white>☆ #92ffffPrix#8c8c8c: #2CCED2%price%"
     - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
     - ""
+    - "%container-preview%"
     - "%status%"
 
   # Lore pour les ventes en lot (plusieurs items dans une annonce, ex: boîtes shulker)
@@ -651,6 +653,7 @@ item-lore:
     - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
     - ""
     - "#8c8c8c• #2CCED2ᴄʟɪᴄ ɢᴀᴜᴄʜᴇ #92ffffᴘᴏᴜʀ ᴠᴏɪʀ ʟᴇ ᴄᴏɴᴛᴇɴᴜ"
+    - "%container-preview%"
     - "%status%"
 
   # Lore pour les items dans l'inventaire des items expirés
@@ -717,16 +720,21 @@ item-lore:
     - ''
     - '#8c8c8c• #2CCED2ᴄʟɪᴄ ɢᴀᴜᴄʜᴇ #92ffffᴘᴏᴜʀ ʀᴇᴛɪʀᴇʀ ᴄᴇᴛ ɪᴛᴇᴍ'
 
+  # Ligne affichée sur les annonces contenant une shulker (ou un autre conteneur) quand action.container-preview est actif.
+  # S'utilise via %container-preview% dans listed-auction-item / multiple-listed-auction-item. Une ligne de lore
+  # contenant uniquement %container-preview% est supprimée si l'annonce ne contient pas de conteneur.
+  container-preview: "#8c8c8c• #2CCED2ᴄʟɪᴄ ᴅʀᴏɪᴛ #92ffffᴘᴏᴜʀ ᴠᴏɪʀ ʟᴇ ᴄᴏɴᴛᴇɴᴜ"
+
   # Messages de statut dynamiques basés sur la relation du spectateur avec l'item
   status:
     # Affiché au vendeur voyant son propre item (clic pour retirer de la vente)
     seller: "#8c8c8c• #2CCED2ᴄʟɪqᴜᴇᴢ #92ffffᴘᴏᴜʀ ʀᴇᴄᴜᴘᴇʀᴇʀ ᴄᴇᴛ ɪᴛᴇᴍ"
     # Affiché aux acheteurs potentiels (clic pour acheter)
     buyer: "#8c8c8c• #2CCED2ᴄʟɪqᴜᴇᴢ #92ffffᴘᴏᴜʀ ᴀᴄʜᴇᴛᴇʀ ᴄᴇᴛ ɪᴛᴇᴍ"
-    # Affiché au vendeur pour l'action clic droit
-    right-seller: "#8c8c8c• #2CCED2ᴄʟɪᴄ ᴅʀᴏɪᴛ #92ffffᴘᴏᴜʀ ʀᴇᴄᴜᴘᴇʀᴇʀ ᴄᴇᴛ ɪᴛᴇᴍ"
-    # Affiché à l'acheteur pour l'action clic droit
-    right-buyer: "#8c8c8c• #2CCED2ᴄʟɪᴄ ᴅʀᴏɪᴛ #92ffffᴘᴏᴜʀ ᴀᴄʜᴇᴛᴇʀ ᴄᴇᴛ ɪᴛᴇᴍ"
+    # Affiché au vendeur sur les ventes en lot (plusieurs items)
+    right-seller: "#8c8c8c• #2CCED2ᴄʟɪqᴜᴇᴢ #92ffffᴘᴏᴜʀ ʀᴇᴄᴜᴘᴇʀᴇʀ ᴄᴇᴛ ɪᴛᴇᴍ"
+    # Affiché aux acheteurs sur les ventes en lot (plusieurs items)
+    right-buyer: "#8c8c8c• #2CCED2ᴄʟɪqᴜᴇᴢ #92ffffᴘᴏᴜʀ ᴀᴄʜᴇᴛᴇʀ ᴄᴇᴛ ɪᴛᴇᴍ"
 
   # Noms lisibles pour les types d'entrées de log
   log-type-names:

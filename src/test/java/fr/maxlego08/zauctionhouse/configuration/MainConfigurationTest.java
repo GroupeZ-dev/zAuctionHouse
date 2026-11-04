@@ -211,8 +211,10 @@ class MainConfigurationTest {
             var lore = configuration.getItemLore();
 
             assertFalse(lore.forceAmountOne());
-            assertEquals(6, lore.listedAuctionLore().size());
-            assertTrue(lore.listedAuctionPlaceholders().containsAll(List.of(ItemPlaceholder.SELLER, ItemPlaceholder.PRICE, ItemPlaceholder.TIME_REMAINING, ItemPlaceholder.STATUS)));
+            assertEquals(7, lore.listedAuctionLore().size());
+            assertTrue(lore.listedAuctionPlaceholders().containsAll(List.of(ItemPlaceholder.SELLER, ItemPlaceholder.PRICE, ItemPlaceholder.TIME_REMAINING, ItemPlaceholder.STATUS, ItemPlaceholder.CONTAINER_PREVIEW)));
+            assertTrue(lore.multipleListedAuctionPlaceholders().contains(ItemPlaceholder.CONTAINER_PREVIEW));
+            assertTrue(lore.containerPreview().contains("ᴠɪᴇᴡ"));
             assertFalse(lore.listedAuctionPlaceholders().contains(ItemPlaceholder.ITEM_COUNT));
             assertEquals(4, lore.expiredLore().size());
             assertEquals(List.of(ItemPlaceholder.TIME_REMAINING), List.copyOf(lore.expiredPlaceholders()));

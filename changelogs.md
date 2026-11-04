@@ -1,5 +1,9 @@
 # Unreleased
 
+- **Added** `item-lore.container-preview` option in `config.yml` and `%container-preview%` placeholder for `listed-auction-item` and `multiple-listed-auction-item`: listings that contain a shulker box (or another container) show a line such as "Right-click to view the contents" when `action.container-preview` is enabled. A lore line containing only `%container-preview%` is removed for listings without a container. The line is only shown in the auction listing, not in the confirmation or admin inventories. The default lores include it; on an existing installation, add `- "%container-preview%"` to these two lores to display it
+- **Changed** `item-lore.status.right-seller` and `item-lore.status.right-buyer` (status of bulk listings) no longer say "right click": a right click on a bulk listing that contains a container now opens the preview. They now read "Click to retrieve / buy this item" in every language. Existing `config.yml` files are not changed
+- **API** `ItemPlaceholder.CONTAINER_PREVIEW`, `ItemPlaceholder#getPattern`, `Item#buildListedItemStack(Player)` (default method) and `ItemLoreConfiguration#containerPreview`
+
 # 4.0.1.7
 
 - **Added** PostgreSQL support: set `storage-type: POSTGRESQL` (`POSTGRES` is also accepted) in `config.yml` and fill in `database-configuration` (default PostgreSQL port: `5432`). The JDBC driver is downloaded automatically by the server. PostgreSQL also works as the shared database of the Redis addon

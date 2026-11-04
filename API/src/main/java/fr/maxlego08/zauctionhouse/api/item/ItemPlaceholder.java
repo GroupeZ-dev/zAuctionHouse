@@ -23,7 +23,13 @@ public enum ItemPlaceholder {
     PRICE_WITHOUT_DECIMAL("price-price-without-decimal"),
     TIME_REMAINING("time-remaining"),
     FORMATTED_EXPIRE_DATE("formatted-expire-date"),
-    ITEM_COUNT("item_count");
+    ITEM_COUNT("item_count"),
+    /**
+     * Hint telling the viewer that the listing's container content can be previewed
+     * ({@code item-lore.container-preview}). Only filled in the auction listing; a lore line
+     * containing nothing but this placeholder is removed when the hint does not apply.
+     */
+    CONTAINER_PREVIEW("container-preview");
 
     private static final Set<ItemPlaceholder> ALL = Set.copyOf(EnumSet.allOf(ItemPlaceholder.class));
 
@@ -64,5 +70,12 @@ public enum ItemPlaceholder {
 
     public String getKey() {
         return key;
+    }
+
+    /**
+     * @return the placeholder as written in lore templates, e.g. {@code %status%}
+     */
+    public String getPattern() {
+        return pattern;
     }
 }

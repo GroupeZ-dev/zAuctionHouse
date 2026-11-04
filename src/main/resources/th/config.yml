@@ -576,6 +576,7 @@ banned-worlds:
 #   %time-remaining% - เวลาที่เหลือก่อนหมดอายุ
 #   %date%           - วันที่ของธุรกรรม
 #   %status%         - ข้อความสถานะ dynamic (ซื้อ/กดรับ)
+#   %container-preview% - Preview hint for listings containing a shulker box
 #   %items%          - ชื่อไอเท็ม
 #   %type%           - ประเภท log (สำหรับ admin logs)
 #   %player%         - ผู้เล่นที่เกี่ยวข้อง
@@ -594,6 +595,7 @@ item-lore:
     - "<white>☆ #92ffffPrice#8c8c8c: #2CCED2%price%"
     - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
     - ""
+    - "%container-preview%"
     - "%status%"
 
   # Lore ของประกาศขายแบบรวมหลายไอเท็ม (เช่นในกล่อง shulker)
@@ -604,6 +606,7 @@ item-lore:
     - "<white>⌚ #92ffffExpire#8c8c8c: #969696%time-remaining%"
     - ""
     - "#8c8c8c• #2CCED2ʟᴇғᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ sᴇᴇ ᴛʜᴇ ᴄᴏɴᴛᴇɴᴛ"
+    - "%container-preview%"
     - "%status%"
 
   # Lore ของไอเท็มในหน้า expired
@@ -669,16 +672,21 @@ item-lore:
     - ''
     - '#8c8c8c• #2CCED2ʟᴇғᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴍᴏᴠᴇ ᴛʜɪs ɪᴛᴇᴍ'
 
+  # Line shown on listings that contain a shulker box (or another container) when action.container-preview is enabled.
+  # Use %container-preview% in listed-auction-item / multiple-listed-auction-item. A lore line containing only
+  # %container-preview% is removed when the listing has no container.
+  container-preview: "#8c8c8c• #2CCED2ʀɪɢʜᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ᴠɪᴇᴡ ᴛʜᴇ ᴄᴏɴᴛᴇɴᴛs"
+
   # ข้อความสถานะ dynamic ตามมุมมอง (ผู้ขาย/ผู้ซื้อ)
   status:
     # แสดงให้ผู้ขายเห็น (กดเพื่อตัวเองดึงไอเท็มคืน)
     seller: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
     # แสดงให้ผู้ซื้อเห็น (กดเพื่อซื้อ)
     buyer: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"
-    # สถานะสำหรับ right-click ฝั่งผู้ขาย
-    right-seller: "#8c8c8c• #2CCED2ʀɪɢʜᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
-    # สถานะสำหรับ right-click ฝั่งผู้ซื้อ
-    right-buyer: "#8c8c8c• #2CCED2ʀɪɢʜᴛ ᴄʟɪᴄᴋ #92ffffᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"
+    # สถานะฝั่งผู้ขาย สำหรับการขายแบบหลายไอเท็ม
+    right-seller: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʀᴇᴛʀɪᴇᴠᴇ ᴛʜɪs ɪᴛᴇᴍ"
+    # สถานะฝั่งผู้ซื้อ สำหรับการขายแบบหลายไอเท็ม
+    right-buyer: "#8c8c8c• #2CCED2ᴄʟɪᴄᴋ #92ffffᴛᴏ ʙᴜʏ ᴛʜɪs ɪᴛᴇᴍ"
 
   # ชื่อแบบอ่านง่ายของประเภท log ต่าง ๆ
   log-type-names:

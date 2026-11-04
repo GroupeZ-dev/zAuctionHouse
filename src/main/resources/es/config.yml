@@ -624,6 +624,7 @@ banned-worlds:
 #   %time-remaining% - Tiempo restante antes de la caducidad
 #   %date%           - Fecha de la transaccion
 #   %status%         - Mensaje de estado dinamico (comprar/retirar)
+#   %container-preview% - Indicacion de vista previa para anuncios con una caja de shulker
 #   %items%          - Nombre de visualizacion del objeto
 #   %type%           - Tipo de entrada de log (para los logs admin)
 #   %player%         - Jugador involucrado en la accion
@@ -642,6 +643,7 @@ item-lore:
     - "<white>☆ #92ffffPrecio#8c8c8c: #2CCED2%price%"
     - "<white>⌚ #92ffffCaduca#8c8c8c: #969696%time-remaining%"
     - ""
+    - "%container-preview%"
     - "%status%"
 
   # Lore para las ventas en lote (varios objetos en un anuncio, ej: cajas shulker)
@@ -652,6 +654,7 @@ item-lore:
     - "<white>⌚ #92ffffCaduca#8c8c8c: #969696%time-remaining%"
     - ""
     - "#8c8c8c• #2CCED2ᴄʟɪᴄ ɪᴢqᴜɪᴇʀᴅᴏ #92ffffᴘᴀʀᴀ ᴠᴇʀ ᴇʟ ᴄᴏɴᴛᴇɴɪᴅᴏ"
+    - "%container-preview%"
     - "%status%"
 
   # Lore para los objetos en el inventario de objetos caducados
@@ -718,16 +721,21 @@ item-lore:
     - ''
     - '#8c8c8c• #2CCED2ᴄʟɪᴄ ɪᴢqᴜɪᴇʀᴅᴏ #92ffffᴘᴀʀᴀ ᴇʟɪᴍɪɴᴀʀ ᴇsᴛᴇ ᴏʙᴊᴇᴛᴏ'
 
+  # Linea mostrada en los anuncios que contienen una caja de shulker (u otro contenedor) cuando action.container-preview esta activo.
+  # Se usa con %container-preview% en listed-auction-item / multiple-listed-auction-item. Una linea del lore que solo
+  # contiene %container-preview% se elimina si el anuncio no tiene contenedor.
+  container-preview: "#8c8c8c• #2CCED2ᴄʟɪᴄ ᴅᴇʀᴇᴄʜᴏ #92ffffᴘᴀʀᴀ ᴠᴇʀ ᴇʟ ᴄᴏɴᴛᴇɴɪᴅᴏ"
+
   # Mensajes de estado dinamicos basados en la relacion del espectador con el objeto
   status:
     # Mostrado al vendedor que ve su propio objeto (clic para retirar de la venta)
     seller: "#8c8c8c• #2CCED2ᴄʟɪᴄᴄᴀ #92ffffᴘᴀʀᴀ ʀᴇᴛɪʀᴀʀ ᴇsᴛᴇ ᴏʙᴊᴇᴛᴏ"
     # Mostrado a los potenciales compradores (clic para comprar)
     buyer: "#8c8c8c• #2CCED2ᴄʟɪᴄᴄᴀ #92ffffᴘᴀʀᴀ ᴄᴏᴍᴘʀᴀʀ ᴇsᴛᴇ ᴏʙᴊᴇᴛᴏ"
-    # Mostrado al vendedor para la accion clic derecho
-    right-seller: "#8c8c8c• #2CCED2ᴄʟɪᴄ ᴅᴇʀᴇᴄʜᴏ #92ffffᴘᴀʀᴀ ʀᴇᴛɪʀᴀʀ ᴇsᴛᴇ ᴏʙᴊᴇᴛᴏ"
-    # Mostrado al comprador para la accion clic derecho
-    right-buyer: "#8c8c8c• #2CCED2ᴄʟɪᴄ ᴅᴇʀᴇᴄʜᴏ #92ffffᴘᴀʀᴀ ᴄᴏᴍᴘʀᴀʀ ᴇsᴛᴇ ᴏʙᴊᴇᴛᴏ"
+    # Mostrado al vendedor en las ventas por lote (varios objetos)
+    right-seller: "#8c8c8c• #2CCED2ᴄʟɪᴄᴄᴀ #92ffffᴘᴀʀᴀ ʀᴇᴛɪʀᴀʀ ᴇsᴛᴇ ᴏʙᴊᴇᴛᴏ"
+    # Mostrado a los compradores en las ventas por lote (varios objetos)
+    right-buyer: "#8c8c8c• #2CCED2ᴄʟɪᴄᴄᴀ #92ffffᴘᴀʀᴀ ᴄᴏᴍᴘʀᴀʀ ᴇsᴛᴇ ᴏʙᴊᴇᴛᴏ"
 
   # Nombres legibles para los tipos de entradas de log
   log-type-names:

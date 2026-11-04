@@ -80,8 +80,36 @@ class ZAuctionItemTest {
         ItemLoreConfiguration lore = new ItemLoreConfiguration(false,
                 List.of(), Set.of(), List.of(), Set.of(), List.of(), Set.of(), List.of(), Set.of(), List.of(), Set.of(), List.of(), Set.of(),
                 List.of(), List.of(), List.of(), List.of(), Map.of(),
-                "seller-status", "buyer-status", "right-seller-status", "right-buyer-status");
+                "seller-status", "buyer-status", "right-seller-status", "right-buyer-status", "preview-hint");
         when(configuration.getItemLore()).thenReturn(lore);
+    }
+
+    @Nested
+    @DisplayName("applyContainerPreview")
+    class ApplyContainerPreview {
+
+        @Test
+        @DisplayName("indication presente : le placeholder est remplace, y compris au milieu d'une ligne")
+        void hint_replaces() {
+            assertEquals(List.of("a", "HINT", "> HINT <", "%status%"),
+                    ZAuctionItem.applyContainerPreview(List.of("a", "%container-preview%", "> %container-preview% <", "%status%"), "HINT"));
+        }
+
+        @Test
+        @DisplayName("sans indication : la ligne seule est supprimee, le placeholder est retire ailleurs")
+        void noHint_removesLine() {
+            List<String> lore = List.of("", "  %container-preview%  ", "> %container-preview% <", "%status%");
+            assertEquals(List.of("", ">  <", "%status%"), ZAuctionItem.applyContainerPreview(lore, null));
+            assertEquals(List.of("", ">  <", "%status%"), ZAuctionItem.applyContainerPreview(lore, ""));
+        }
+
+        @Test
+        @DisplayName("lore sans placeholder : inchange")
+        void noPlaceholder_unchanged() {
+            List<String> lore = List.of("a", "", "%status%");
+            assertEquals(lore, ZAuctionItem.applyContainerPreview(lore, "HINT"));
+            assertEquals(lore, ZAuctionItem.applyContainerPreview(lore, null));
+        }
     }
 
     private void itemDisplay(boolean mergeSimilar) {
