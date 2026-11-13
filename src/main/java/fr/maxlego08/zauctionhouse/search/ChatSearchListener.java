@@ -23,7 +23,18 @@ public class ChatSearchListener implements Listener {
 
     public ChatSearchListener(AuctionPlugin plugin) {
         this.plugin = plugin;
-        this.searchDialog = plugin instanceof ZAuctionPlugin zAuctionPlugin ? new SearchDialog(zAuctionPlugin) : null;
+        // L'API Dialog de Paper n'existe qu'a partir de 1.21.6 : sur une version plus ancienne,
+        // charger SearchDialog leve un NoClassDefFoundError, on retombe donc sur la saisie tchat.
+        this.searchDialog = plugin instanceof ZAuctionPlugin zAuctionPlugin && isDialogApiAvailable() ? new SearchDialog(zAuctionPlugin) : null;
+    }
+
+    private static boolean isDialogApiAvailable() {
+        try {
+            Class.forName("io.papermc.paper.registry.data.dialog.action.DialogAction", false, ChatSearchListener.class.getClassLoader());
+            return true;
+        } catch (ClassNotFoundException | LinkageError exception) {
+            return false;
+        }
     }
 
     public void startDialogSearch(Player player) {
