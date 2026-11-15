@@ -7,23 +7,22 @@ on:
     types: [ opened, synchronize, reopened ]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  packages: write
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref_name != 'main' }}
 
 jobs:
   build:
-    name: Build and Publish zAuctionHouse
-    uses: GroupeZ-dev/actions/.github/workflows/build.yml@main
+    name: Build and Publish zAuctionHouse v4
+    uses: GroupeZ-dev/actions/.github/workflows/build.yml@v1.0.0
     with:
       project-name: "zAuctionHouse"
+      java-version: '25'
       publish: true
       project-to-publish: "API:publish"
-      discord-avatar-url: "https://groupez.dev/storage/images/1.png"
+      discord-avatar-url: "https://groupez.dev/storage/images/resources/icons/1.webp"
+      artifact-glob: "target/*.jar"
+      changelog-exclude-pattern: '^[a-f0-9]+\s+(build|chore)\(deps\)'
     secrets:
       WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
       MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
