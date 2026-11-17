@@ -1043,6 +1043,126 @@ public class ZAuctionManager extends ZUtils implements AuctionManager {
         });
     }
 
+    @Override
+    public CompletableFuture<Integer> removePlayerItems(UUID uniqueId, StorageType... storageTypes) {
+        Objects.requireNonNull(uniqueId, "uniqueId");
+
+        var clusterBridge = this.plugin.getAuctionClusterBridge();
+        if (clusterBridge == null) {
+            return failedFuture(new IllegalStateException("Cluster bridge is not initialized"));
+        }
+
+        // Instantane des items vises, pris AVANT tout retrait : les listes rendues sont des
+        // copies, on peut donc vider les conteneurs en les parcourant.
+        var targets = new ArrayList<Map.Entry<StorageType, Item>>();
+        for (var storageType : EnumSet.copyOf(storageTypes.length == 0 ? List.of(StorageType.LISTED, StorageType.EXPIRED, StorageType.PURCHASED) : Arrays.asList(storageTypes))) {
+            List<Item> items = switch (storageType) {
+                case LISTED -> getPlayerSellingItems(uniqueId);
+                case EXPIRED -> getExpiredItems(uniqueId);
+                case PURCHASED -> getPurchasedItems(uniqueId);
+                case DELETED -> List.of();
+            };
+            items.forEach(item -> targets.add(Map.entry(storageType, item)));
+        }
+
+        if (targets.isEmpty()) return CompletableFuture.completedFuture(0);
+
+        var futures = targets.stream().map(entry -> deletePlayerItem(uniqueId, entry.getValue(), entry.getKey(), clusterBridge)).toList();
+
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenApply(v -> {
+            int deleted = (int) futures.stream().filter(future -> Boolean.TRUE.equals(future.join())).count();
+            clearPlayersCache(PlayerCacheKey.ITEMS_LISTED, PlayerCacheKey.ITEMS_EXPIRED, PlayerCacheKey.ITEMS_PURCHASED, PlayerCacheKey.ITEMS_SELLING, PlayerCacheKey.ITEMS_SEARCH);
+            this.plugin.getLogger().info("Deleted " + deleted + "/" + targets.size() + " auction items of player " + uniqueId);
+            return deleted;
+        });
+    }
+
+    /**
+     * Suppression definitive d'un item d'un joueur, sans remise ni remboursement. Meme chaine
+     * que {@link #adminRemoveItem} (garde d'identite, verrou cluster, relecture sous verrou,
+     * durabilite avant diffusion) mais sans administrateur : rien n'est livre, aucun message.
+     *
+     * @return {@code true} si l'item a ete supprime, {@code false} s'il a ete ignore (en cours de
+     * traitement ailleurs, deja sorti du conteneur, erreur)
+     */
+    private CompletableFuture<Boolean> deletePlayerItem(UUID ownerUniqueId, Item item, StorageType storageType, AuctionClusterBridge clusterBridge) {
+
+        // Une annonce en confirmation (achat, retrait) appartient a une operation en cours : on
+        // ne la vole pas. Une annonce AVAILABLE mais expiree reste supprimable.
+        if (storageType == StorageType.LISTED && item.getStatus() != ItemStatus.AVAILABLE) return CompletableFuture.completedFuture(false);
+        if (item.getStatus() == ItemStatus.DELETED) return CompletableFuture.completedFuture(false);
+        if (getItem(storageType, item.getId()) != item) return CompletableFuture.completedFuture(false);
+
+        var storageManager = this.plugin.getStorageManager();
+        var previousStatus = item.getStatus();
+        var tokenHolder = new AtomicReference<LockToken>();
+        var statusChanged = new AtomicBoolean(false);
+        var persisted = new AtomicBoolean(false);
+
+        return clusterBridge.checkAndLock(item, ownerUniqueId, storageType).thenCompose(lockToken -> {
+
+            tokenHolder.set(lockToken);
+            if (lockToken == null || !lockToken.isAcquired()) {
+                return CompletableFuture.completedFuture(false);
+            }
+
+            return revalidateAdminRemoval(item, storageType, clusterBridge).thenCompose(fresh -> {
+
+                if (!Boolean.TRUE.equals(fresh)) {
+                    removeItem(storageType, item.getId()); // purge du fantome + marquage terminal
+                    return CompletableFuture.completedFuture(false);
+                }
+
+                if (getItem(storageType, item.getId()) != item || (storageType == StorageType.LISTED && item.getStatus() != ItemStatus.AVAILABLE)) {
+                    return CompletableFuture.completedFuture(false);
+                }
+
+                item.setStatus(ItemStatus.DELETED);
+                statusChanged.set(true);
+
+                return storageManager.updateItem(item, storageType, StorageType.DELETED)
+                        .thenRun(() -> persisted.set(true))
+                        .thenCompose(v -> clusterBridge.removeItem(item, storageType, StorageType.DELETED))
+                        .thenApply(v -> {
+                            removeItem(storageType, item);
+                            return true;
+                        });
+            });
+
+        }).handle((deleted, throwable) -> {
+
+            if (throwable != null) {
+                var stale = StaleItemException.unwrap(throwable);
+                if (stale != null) {
+                    this.plugin.getLogger().warning("Item " + item.getId() + " was already taken by another server, not deleted");
+                    removeItem(storageType, item.getId());
+                } else {
+                    this.plugin.getLogger().log(Level.SEVERE, "Failed to delete item " + item.getId() + " of player " + ownerUniqueId + ": " + throwable.getMessage(), throwable);
+                    if (persisted.get()) {
+                        // Ecrit en base mais diffusion en echec : la ligne est DELETED, on
+                        // converge localement.
+                        removeItem(storageType, item);
+                    } else if (statusChanged.get()) {
+                        item.setStatus(previousStatus);
+                    }
+                }
+            }
+
+            var token = tokenHolder.get();
+            if (token != null && token.isAcquired()) {
+                clusterBridge.releaseLock(item, token, storageType).whenComplete((released, unlockError) -> {
+                    if (unlockError != null) {
+                        this.plugin.getLogger().severe("Failed to unlock item " + item.getId() + " after player items deletion: " + unlockError.getMessage());
+                    } else if (!Boolean.TRUE.equals(released)) {
+                        this.plugin.getLogger().severe("Cluster lock for item " + item.getId() + " was NOT held by this server at release time (player items deletion).");
+                    }
+                });
+            }
+
+            return throwable == null ? Boolean.TRUE.equals(deleted) : persisted.get();
+        });
+    }
+
     /**
      * L'annonce est-elle reservee par l'inventaire de confirmation de retrait de CET
      * administrateur ? Le detenteur est porte par l'annonce elle-meme

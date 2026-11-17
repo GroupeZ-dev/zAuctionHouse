@@ -388,6 +388,49 @@ public interface AuctionManager {
     }
 
     /**
+     * Permanently deletes every item belonging to a player, in all storages: the items they are
+     * selling ({@link StorageType#LISTED}), their expired items ({@link StorageType#EXPIRED}) and the
+     * items they bought and have not claimed yet ({@link StorageType#PURCHASED}).
+     * <p>
+     * The items are moved to {@link StorageType#DELETED}: they are not given back to anyone and no
+     * money is refunded. Each item goes through the same cluster lock and database checks as an
+     * admin removal, so an item currently being bought, claimed or removed elsewhere is skipped and
+     * not counted. The player does not need to be online.
+     *
+     * @param uniqueId unique identifier of the player whose items should be deleted
+     * @return future resolving to the number of items actually deleted
+     */
+    default CompletableFuture<Integer> removePlayerItems(java.util.UUID uniqueId) {
+        return removePlayerItems(uniqueId, StorageType.LISTED, StorageType.EXPIRED, StorageType.PURCHASED);
+    }
+
+    /**
+     * Version of {@link #removePlayerItems(java.util.UUID)} restricted to the given storages.
+     * {@link StorageType#LISTED} and {@link StorageType#EXPIRED} target the items the player sold,
+     * {@link StorageType#PURCHASED} the items the player bought. {@link StorageType#DELETED} is ignored.
+     *
+     * @param uniqueId     unique identifier of the player whose items should be deleted
+     * @param storageTypes storages to empty for this player
+     * @return future resolving to the number of items actually deleted
+     */
+    CompletableFuture<Integer> removePlayerItems(java.util.UUID uniqueId, StorageType... storageTypes);
+
+    /**
+     * Permanently deletes all the auction house content of a player: every item, like
+     * {@link #removePlayerItems(java.util.UUID)}, then every pending transaction (money waiting to
+     * be claimed), like {@code getClaimService().clearPendingTransactions(uniqueId, false)}.
+     * <p>
+     * Nothing is given back and no money is paid: the pending transactions are closed without
+     * payment. The player does not need to be online.
+     *
+     * @param uniqueId unique identifier of the player whose content should be deleted
+     * @return future resolving to the number of items deleted, once the pending transactions are cleared too
+     */
+    default CompletableFuture<Integer> removePlayerContent(java.util.UUID uniqueId) {
+        return removePlayerItems(uniqueId).thenCompose(deleted -> getClaimService().clearPendingTransactions(uniqueId, false).thenApply(v -> deleted));
+    }
+
+    /**
      * Attempts to purchase the provided item on behalf of the player. The returned future completes
      * once validations, economy transactions, storage updates, and notifications are finished.
      *
